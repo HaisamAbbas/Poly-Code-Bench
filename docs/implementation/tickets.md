@@ -380,40 +380,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `09`.
 - Dependencies: task/sandbox/model gateway ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/core/src/polycodebench_core/solve_contracts.py` (frozen `SolveProtocol`, per-task `EffectiveProtocol`), `solve_extraction.py`, `solve_prompts.py`, `config/protocols/{single-shot-v1,standard-agent-v1}.yaml`, `packages/services/src/polycodebench_services/solve_protocols.py` and `packages/orchestration/src/polycodebench_orchestration/solve/session.py`; protocol digest and effective-protocol digest are recorded in every session, checkpoint and candidate; gateway capability validation runs before the first turn; extraction is deterministic, model-free and marks ambiguity invalid for files, patch, text, typed JSON and findings contracts.
+- Verification: `passed` (unit, fixture, real PostgreSQL + object store; agent parts in a real local Docker sandbox): 29 extraction fixtures incl. ambiguous fenced blocks, duplicate keys, over-limit findings; protocol/effective-protocol identity and narrowing; model is a FIXTURE throughout.
 - Required verification scope: E2E-13, E2E-14.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_solve_core.py`, `tests/fixtures/solve_extraction/cases.json` (FIXTURE), `tests/test_solve_sessions.py::{test_e2e13_*,test_single_shot_extraction_failures_are_model_failures_with_evidence_kept,test_a_task_can_narrow_the_tool_set_and_the_model_gets_no_extra_tools}`; `docs/implementation/evidence/prompt-09-integration.json`.
 - Acceptance criteria: — Implement single-shot extraction and standard-agent protocol selection, capability validation and family output contracts. DoD: deterministic extraction never uses another LLM to select a better candidate, and protocol identity is part of the run.
 
 ## PCB-09-2 - Prompt 09: — Implement single-shot and agent execution
 
 - Owner prompt: `09`.
 - Dependencies: task/sandbox/model gateway ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/runner/src/polycodebench_runner/guest_helper.py` (runs only inside the guest, shipped per call in the argument vector), `guest_tools.py`, `packages/orchestration/src/polycodebench_orchestration/solve/tools.py` and the tool schemas in `solve_contracts.py`; strict schemas, caps, protected and reserved paths, symlink refusal, all-or-nothing unified-diff engine, sequential provider-order execution, per-command process-tree cleanup (subreaper) and sweeps.
+- Verification: `passed` in a real local Docker sandbox (development isolation): forbidden and protected paths, invalid schemas, unknown/unavailable tools, output truncation with archived raw output, timeouts, background descendants killed with no zombies, links removed before snapshots, pathological regex bounded, helper hijack attempts ineffective.
 - Required verification scope: E2E-13, E2E-14.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_solve_guest_helper.py` (29, host), `tests/test_solve_guest_docker.py` (11, Docker), `tests/test_solve_sessions.py::{test_tool_errors_*,test_outputs_are_truncated_*,test_a_command_that_edits_a_protected_file_*}`; `docs/implementation/evidence/prompt-09-integration.json`.
 - Acceptance criteria: — Implement list_files, read_file, search, apply_patch, run_command and run_public_tests with schemas, caps, protected paths and sequential tool-call ordering. DoD: only allowed visible inputs/feedback reach the model; shell execution remains inside the guest; command descendants are cleaned up.
 
 ## PCB-09-3 - Prompt 09: — Implement single-shot and agent execution
 
 - Owner prompt: `09`.
 - Dependencies: task/sandbox/model gateway ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/orchestration/src/polycodebench_orchestration/solve/session.py`, `packages/core/src/polycodebench_core/solve_context.py`, `packages/persistence/src/polycodebench_persistence/solve_state.py` and migration `b2f6d4a91c73`; events plus a checkpoint (workspace archive, transcript manifest, protocol, binding digest) commit in one transaction with a sequence compare-and-swap; the latest eight turns stay in full, older tool output becomes deterministic metadata summaries, over-ceiling truncation and compaction are recorded, and a context that cannot fit is a declared budget exhaustion.
+- Verification: `passed` on PostgreSQL 17.6 and SeaweedFS 4.48: a workspace paired with a different transcript or protocol is refused on restore, a stale controller cannot fork the transcript, and rebuilt budgets must equal the checkpoint's; context policy invariants (determinism, call/result pairing, latest-turn retention) unit tested.
 - Required verification scope: E2E-13, E2E-14.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_solve_core.py::test_*context*`, `tests/test_solve_sessions.py::{test_restore_refuses_*,test_compare_and_swap_*,test_e2e14_*}`; `docs/implementation/evidence/prompt-09-integration.json`.
 - Acceptance criteria: — Implement transcript events, bounded context policy, compaction/truncation records and atomic workspace/transcript checkpoints. DoD: restoring a checkpoint never pairs one workspace revision with a different conversation state.
 
 ## PCB-09-4 - Prompt 09: — Implement single-shot and agent execution
 
 - Owner prompt: `09`.
 - Dependencies: task/sandbox/model gateway ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/orchestration/src/polycodebench_orchestration/solve/session.py`, `executor.py`, `loader.py`, `inspection.py`, `cli.py` (`pcb-solve`) and `solve_state.freeze_candidate`; budget exhaustion on turns, tool calls, tokens, active time, gateway spending and context freezes a valid workspace or records a model failure; candidates are immutable; hidden identity is enforced as a fail-closed request guard; stored model responses are consumed once; only a started, uncommitted command is replayed, and the repeat is recorded; infrastructure interruptions raise and never become outcomes.
+- Verification: `passed` on PostgreSQL + object store + local Docker: E2E-14 guest killed mid-command then resumed in a fresh guest, response recorded-but-uncommitted consumed once (single-shot and agent), exhaustion variants, terminal idempotency, lease loss before any request, worker-executor mapping (model failure completes the stage with a failed gate).
 - Required verification scope: E2E-13, E2E-14.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_solve_sessions.py` (19), `tests/test_solve_loader.py` (4); `docs/implementation/evidence/prompt-09-integration.json`.
 - Acceptance criteria: — Implement stopping, budget exhaustion, candidate freezing and infrastructure recovery. DoD: candidate bytes are immutable, no hidden feedback reaches solving, stored provider responses are consumed once, and only an uncommitted command can be replayed under the documented policy.
 
 ## PCB-10-1 - Prompt 10: — Implement Python support

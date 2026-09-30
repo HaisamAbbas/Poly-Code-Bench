@@ -253,3 +253,22 @@ All database/object-store commands ran against the local PostgreSQL 17.6 and Sea
 | `pcb-model plan --config <cfg> --protocol <protocol> --tasks 10 --samples 3 --max-request-bytes 4000` | exit 0 with labeled estimate; exit 4 when the configuration has no price snapshot. |
 | `pcb-model register ...` without / with `PCB_ROLES=administrator`; `pcb-model check <id>`; `pcb-model account <id>` | exit 3 (permission) / exit 0 pending registration; static check resolves DNS under the policy, reports the secret provisioned, `contacted_endpoint: false`; account summary shows zero ledger discrepancies. |
 | `Get-Command`/environment-variable name scan for provider credentials (`OPENAI*`, `ANTHROPIC*`, `GOOGLE*`, `GEMINI*`, `PCBSECRET*`) | None present. Secret values were not read. A local Ollama on 127.0.0.1:11434 was used for the live local check. |
+
+## Prompt 09 checks (2026-10-01)
+
+Database and object-store commands ran against the local PostgreSQL 17.6 and SeaweedFS 4.48 containers; the dedicated test database was the freshly created `pcb_prompt09_test` (11 Alembic revisions, drift check clean, grants applied). Credential-bearing values are local development values and are not recorded. Docker tests use the pinned `python:3.12-slim` digest in the local engine (development isolation only).
+
+| Command / check | Result |
+|---|---|
+| `alembic ... upgrade head` on an empty `pcb_prompt09_test`; `alembic ... check`; `psql ... < grant_permissions.sql` | PASS: 11 revisions including `b2f6d4a91c73`; no drift; grants applied. |
+| `pytest -q tests/test_solve_core.py tests/test_solve_guest_helper.py` | PASS: 70 + 29 (one symlink case skipped on this Windows host): protocol/effective identity, tool schemas, context policy, 29 extraction fixtures, patch engine, path safety. |
+| `PCB_TEST_DOCKER=1 pytest -q tests/test_solve_guest_docker.py` | PASS: 12: tools and process cleanup inside a real container. |
+| `PCB_TEST_DATABASE_URL=<test db> PCB_OBJECT_STORE_ENDPOINT=http://127.0.0.1:8333 AWS_ACCESS_KEY_ID=<local> AWS_SECRET_ACCESS_KEY=<local> PCB_TEST_DOCKER=1 pytest -q tests/test_solve_sessions.py tests/test_solve_families.py tests/test_solve_loader.py` | PASS: 22 + 4 + 4 (E2E-13, E2E-14, recovery, budgets, families, loader/executor), FIXTURE model. |
+| `PCB_TEST_DATABASE_URL=<test db> PCB_OBJECT_STORE_ENDPOINT=http://127.0.0.1:8333 AWS_ACCESS_KEY_ID=<local> AWS_SECRET_ACCESS_KEY=<local> PCB_TEST_DOCKER=1 pytest -q` | PASS: 390 passed, 5 skipped (4 live-provider smoke tests unconfigured, 1 symlink case on this Windows host). |
+| `ruff format --check .`; `ruff check .` | PASS. |
+| `mypy packages/core/src packages/persistence/src/polycodebench_persistence/solve_state.py packages/runner/src packages/orchestration/src/polycodebench_orchestration/{solve,gateway,worker.py} packages/services/src/polycodebench_services/{model_endpoints,rbac}.py` | PASS: 48 source files, strict (the guest helper is excluded by a documented mypy override: POSIX-only plain stdlib source). |
+| `mypy packages/configuration/src scripts` | FAIL (pre-existing, unchanged): `scripts/` imports workspace packages without `py.typed`. |
+| `python scripts/check_boundaries.py`; `scripts/smoke_workspace.py`; `scripts/export_startup_schema.py --check`; `docs/implementation/verify_prompt00.py` | PASS. |
+| `uv build --all-packages --offline --out-dir <scratch>` | PASS: all workspace packages built. |
+| `pcb-solve protocols` | Lists both installed protocols with digests, tools, budgets and ceilings. |
+| `pcb-solve inspect <attempt-id>` | Exercised through `inspect_attempt` on the E2E-13 and E2E-14 attempts (tests assert its output); the CLI wrapper only adds environment wiring and was not run against a live stack. |

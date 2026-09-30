@@ -39,6 +39,7 @@ from polycodebench_core.model_planning import (
     compute_cost_micro_usd,
     cost_bound,
     effective_capabilities,
+    map_provider_seed,
     require_cost_bound,
 )
 from polycodebench_core.models import ProtocolDefinition
@@ -243,6 +244,29 @@ class ModelGateway:
             intent_id=str(handle.intent_id),
             exposure_retained=await self._exposure_retained(handle.intent_id),
         )
+
+    # -------------------------------------------------------------- planning helpers
+
+    def check_compatibility(
+        self,
+        config: ModelConfig,
+        protocol: ProtocolDefinition,
+        *,
+        requires_structured_output: bool = False,
+    ) -> None:
+        """Preflight: raises if the approved endpoint cannot run this protocol as configured."""
+        endpoint = self._endpoints.get_approved(config.endpoint_id)
+        adapter = self._adapter_for(config, endpoint.provider_kind)
+        adapter.validate(config, protocol, requires_structured_output=requires_structured_output)
+
+    def provider_seed(self, config: ModelConfig, sample_seed: int) -> int | None:
+        """Deterministic provider seed for a sample, or ``None`` when policy or support says no."""
+        if config.seed_policy == "omit":
+            return None
+        endpoint = self._endpoints.get_approved(config.endpoint_id)
+        adapter = self._adapter_for(config, endpoint.provider_kind)
+        caps = effective_capabilities(adapter.capabilities(), config.declared_capabilities)
+        return map_provider_seed(sample_seed, caps)
 
     # ------------------------------------------------------------------ delivery
 

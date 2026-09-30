@@ -1,0 +1,10 @@
+{
+  "prompt": "09",
+  "date": "2026-10-01",
+  "evidence_level": "FIXTURE model transport; real PostgreSQL 17, SeaweedFS object store, local Docker sandbox (development isolation)",
+  "live_model_evidence": false,
+  "tests": {"core": 70, "guest_helper": 29, "guest_docker": 12, "sessions": 22, "families": 4, "loader": 4},
+  "full_suite": {"passed": 390, "skipped": 5, "failed": 0},
+  "e2e": {"E2E-13": "passed (fixture model)", "E2E-14": "passed (fixture model)"},
+  "migration": "b2f6d4a91c73"
+}

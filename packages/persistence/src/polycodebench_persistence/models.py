@@ -1130,8 +1130,18 @@ attempt_checkpoint = Table(
     fk("transcript_manifest_id", "artifact.id"),
     Column("accumulated_budget", JSONB, nullable=False),
     Column("pending_call_ids", JSONB, nullable=False),
+    Column("protocol_digest", String(71), nullable=False),
+    Column("workspace_digest", String(71), nullable=False),
+    Column("transcript_digest", String(71), nullable=False),
+    Column("binding_digest", String(71), nullable=False),
     created_at(),
     UniqueConstraint("attempt_id", "event_seq"),
+    CheckConstraint(
+        "protocol_digest ~ '^sha256:[0-9a-f]{64}$' AND workspace_digest ~ '^sha256:[0-9a-f]{64}$' "
+        "AND transcript_digest ~ '^sha256:[0-9a-f]{64}$' "
+        "AND binding_digest ~ '^sha256:[0-9a-f]{64}$'",
+        name="digest_format",
+    ),
 )
 
 # The artifact/execution cycle is deferred until all referenced tables exist.

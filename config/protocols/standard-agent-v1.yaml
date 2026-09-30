@@ -1,0 +1,30 @@
+# Frozen solve protocol. Changing any value creates a new protocol version and a new cohort.
+# Budgets mirror config/budgets/pilot-v1.yaml (proposed, not authorized for live spend).
+# The per-request context ceiling (60000 estimated tokens) is a proposed harness choice recorded
+# in decision D-09-03; the spec fixes cumulative budgets but not a per-request window.
+schema_version: 1
+kind: solve_protocol
+protocol_id: standard-agent-v1
+version: 1
+mode: standard_agent
+tools: [list_files, read_file, search, apply_patch, run_command, run_public_tests]
+public_test_feedback: true
+single_shot_extraction: null
+freeze_on_budget_exhaustion: true
+prompt_policy: pcb-solve-v1
+context:
+  schema_version: 1
+  kind: context_policy
+  retain_recent_turns: 8
+  max_input_context_tokens: 60000
+  token_counter: utf8_bytes_div4_v1
+  summarizer: none
+budget:
+  schema_version: 1
+  kind: solve_budget
+  model_turns: 30
+  tool_calls: 100
+  active_solve_seconds: 600
+  per_command_seconds: 60
+  input_tokens: 250000
+  output_tokens: 30000

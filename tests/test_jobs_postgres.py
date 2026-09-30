@@ -739,7 +739,11 @@ def test_e2e09_cancelled_live_docker_tool_guest_is_destroyed(
             ).scalars()
         )
         model_deliveries = connection.execute(
-            text("SELECT count(*) FROM call_delivery")
+            text(
+                "SELECT count(*) FROM call_delivery d JOIN call_intent i ON i.id = d.intent_id "
+                "WHERE i.attempt_id = :id"
+            ),
+            {"id": attempt_id},
         ).scalar_one()
     assert tuple(attempt_state) == ("cancelled", None)
     assert job_state == "cancelled" and slot.state == "available" and slot.guest_id is None

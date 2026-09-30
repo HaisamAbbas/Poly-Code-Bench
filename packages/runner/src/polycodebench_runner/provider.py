@@ -70,6 +70,29 @@ STAGE_WRITER = (
 )
 
 
+SNAPSHOT_WRITER = (
+    "import os,stat,sys,tarfile\n"
+    "root='/workspace'; entries=[]\n"
+    "for base,dirs,files in os.walk(root,followlinks=False):\n"
+    " dirs.sort()\n"
+    " for name in dirs+files:\n"
+    "  path=os.path.join(base,name); mode=os.lstat(path).st_mode\n"
+    "  if not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)): sys.exit(41)\n"
+    "  entries.append((os.path.relpath(path,root),path,mode))\n"
+    "entries.sort()\n"
+    "out=tarfile.open(fileobj=sys.stdout.buffer,mode='w|',format=tarfile.GNU_FORMAT)\n"
+    "for rel,path,mode in entries:\n"
+    " info=tarfile.TarInfo(rel); info.mtime=0; info.uid=info.gid=0; info.uname=info.gname=''\n"
+    " info.mode=mode&0o7777\n"
+    " if stat.S_ISDIR(mode):\n"
+    "  info.type=tarfile.DIRTYPE; out.addfile(info)\n"
+    " else:\n"
+    "  info.size=os.path.getsize(path)\n"
+    "  with open(path,'rb') as handle: out.addfile(info,handle)\n"
+    "out.close()\n"
+)
+
+
 class SandboxError(RuntimeError):
     """A bounded, sanitized sandbox operation failure."""
 
@@ -950,28 +973,15 @@ class LocalDockerSandboxProvider:
 
     def _snapshot(self, handle: SandboxHandle) -> WorkspaceManifest:
         self._assert_owned(handle)
-        validation = run_bounded_process(
-            [
-                self.docker_executable,
-                "exec",
-                handle.resource_id,
-                "python",
-                "-I",
-                "-B",
-                "-S",
-                "-c",
-                "import os,stat,sys\n"
-                "for base,dirs,files in os.walk('/workspace',followlinks=False):\n"
-                " for name in dirs+files:\n"
-                "  mode=os.lstat(os.path.join(base,name)).st_mode\n"
-                "  if not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)): sys.exit(41)\n",
-            ],
-            self.operation_timeout_seconds,
-            1024,
-        )
-        if validation[0] != 0 or validation[3]:
-            raise SandboxError("workspace contains link or special file")
-        raw = self._docker(["cp", f"{handle.resource_id}:/workspace/.", "-"])
+        # The workspace is a tmpfs, which `docker cp` cannot read (it returns an empty archive).
+        # The archive is therefore produced inside the guest and read from stdout. The guest
+        # writer refuses links and special files before emitting a single byte.
+        try:
+            raw = self._docker(
+                ["exec", handle.resource_id, "python", "-I", "-B", "-S", "-c", SNAPSHOT_WRITER]
+            )
+        except SandboxError as exc:
+            raise SandboxError("workspace contains link or special file, or is too large") from exc
         files: list[WorkspaceFile] = []
         total = 0
         try:

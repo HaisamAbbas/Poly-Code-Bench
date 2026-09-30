@@ -13,6 +13,7 @@ dependencies = [
 [project.scripts]
 pcb-scheduler = "polycodebench_orchestration.cli:main"
 pcb-model = "polycodebench_orchestration.gateway.cli:main"
+pcb-solve = "polycodebench_orchestration.solve.cli:main"
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }

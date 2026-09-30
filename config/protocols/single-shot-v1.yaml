@@ -1,0 +1,28 @@
+# Frozen solve protocol. Changing any value creates a new protocol version and a new cohort.
+# Budgets mirror config/budgets/pilot-v1.yaml (proposed, not authorized for live spend).
+schema_version: 1
+kind: solve_protocol
+protocol_id: single-shot-v1
+version: 1
+mode: single_shot
+tools: []
+public_test_feedback: false
+single_shot_extraction: json_envelope
+freeze_on_budget_exhaustion: false
+prompt_policy: pcb-solve-v1
+context:
+  schema_version: 1
+  kind: context_policy
+  retain_recent_turns: 8
+  max_input_context_tokens: 32000
+  token_counter: utf8_bytes_div4_v1
+  summarizer: none
+budget:
+  schema_version: 1
+  kind: solve_budget
+  model_turns: 1
+  tool_calls: 0
+  active_solve_seconds: 180
+  per_command_seconds: null
+  input_tokens: 32000
+  output_tokens: 8000

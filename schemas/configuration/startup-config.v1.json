@@ -1,0 +1,479 @@
+{
+  "$defs": {
+    "Environment": {
+      "enum": [
+        "dev",
+        "integration",
+        "staging",
+        "production"
+      ],
+      "title": "Environment",
+      "type": "string"
+    },
+    "ProcessRole": {
+      "enum": [
+        "api",
+        "scheduler",
+        "model-gateway",
+        "solve-supervisor",
+        "eval-supervisor",
+        "judge-gateway",
+        "scorer",
+        "publisher",
+        "web"
+      ],
+      "title": "ProcessRole",
+      "type": "string"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/configuration/startup-config.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "api"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "database_dsn_ref",
+          "oidc_issuer",
+          "oidc_audience"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "scheduler"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "database_dsn_ref",
+          "worker_queue_classes",
+          "max_concurrency"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "model-gateway"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "model_secret_namespace"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "solve-supervisor"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "sandbox_provider",
+          "approved_vm_image",
+          "worker_queue_classes",
+          "max_concurrency"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "eval-supervisor"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "database_dsn_ref",
+          "sandbox_provider",
+          "approved_vm_image",
+          "worker_queue_classes",
+          "max_concurrency"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "judge-gateway"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "judge_secret_namespace"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "scorer"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "database_dsn_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "publisher"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "database_dsn_ref",
+          "signing_key_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "web"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "public_api_base_url"
+        ]
+      }
+    }
+  ],
+  "description": "Role-specific service settings. Values are references, never resolved secrets.",
+  "properties": {
+    "approved_vm_image": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved Vm Image"
+    },
+    "artifact_max_bytes": {
+      "default": 10485760,
+      "maximum": 1073741824,
+      "minimum": 1,
+      "title": "Artifact Max Bytes",
+      "type": "integer"
+    },
+    "bucket_hidden": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bucket Hidden"
+    },
+    "bucket_internal": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bucket Internal"
+    },
+    "bucket_public": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bucket Public"
+    },
+    "database_dsn_ref": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Database Dsn Ref"
+    },
+    "environment": {
+      "$ref": "#/$defs/Environment"
+    },
+    "judge_secret_namespace": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Judge Secret Namespace"
+    },
+    "log_max_bytes": {
+      "default": 1048576,
+      "maximum": 67108864,
+      "minimum": 1,
+      "title": "Log Max Bytes",
+      "type": "integer"
+    },
+    "max_concurrency": {
+      "anyOf": [
+        {
+          "maximum": 1024,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Concurrency"
+    },
+    "metrics_port": {
+      "anyOf": [
+        {
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Metrics Port"
+    },
+    "model_secret_namespace": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Model Secret Namespace"
+    },
+    "object_store_endpoint": {
+      "anyOf": [
+        {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Object Store Endpoint"
+    },
+    "oci_registry": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Oci Registry"
+    },
+    "oidc_audience": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Oidc Audience"
+    },
+    "oidc_issuer": {
+      "anyOf": [
+        {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Oidc Issuer"
+    },
+    "otel_endpoint": {
+      "anyOf": [
+        {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Otel Endpoint"
+    },
+    "public_api_base_url": {
+      "anyOf": [
+        {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Public Api Base Url"
+    },
+    "role": {
+      "$ref": "#/$defs/ProcessRole"
+    },
+    "sandbox_provider": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sandbox Provider"
+    },
+    "service_identity": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Service Identity",
+      "type": "string"
+    },
+    "signing_key_ref": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Signing Key Ref"
+    },
+    "worker_queue_classes": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Worker Queue Classes"
+    }
+  },
+  "required": [
+    "environment",
+    "role",
+    "service_identity"
+  ],
+  "title": "PolyCodeBench role-specific startup configuration",
+  "type": "object"
+}

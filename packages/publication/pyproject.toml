@@ -1,0 +1,14 @@
+[project]
+name = "polycodebench-publication"
+version = "0.1.0"
+description = "PolyCodeBench reviewed release publication ownership boundary"
+requires-python = ">=3.12,<3.13"
+dependencies = ["polycodebench-core==0.1.0", "polycodebench-scoring==0.1.0"]
+
+[tool.uv.sources]
+polycodebench-core = { workspace = true }
+polycodebench-scoring = { workspace = true }
+
+[build-system]
+requires = ["uv_build==0.12.15"]
+build-backend = "uv_build"

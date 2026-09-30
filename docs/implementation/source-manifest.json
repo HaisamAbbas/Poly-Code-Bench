@@ -1,0 +1,42 @@
+{
+  "manifest_version": 1,
+  "created_at": "2026-09-30",
+  "workspace": "D:\\Poly-Code-Bench",
+  "git_repository": false,
+  "authoritative_sources": [
+    {
+      "path": "D:\\Poly-Code-Bench\\PolyCodeBench-Architecture-v1.md",
+      "workspace_path": "PolyCodeBench-Architecture-v1.md",
+      "version": "1.0",
+      "sha256": "6dfee84b9787f315d7d5aa7afd9b1de29760aac16b5d3ac887b7ecd76d899d69",
+      "pack_expected_sha256": "6dfee84b9787f315d7d5aa7afd9b1de29760aac16b5d3ac887b7ecd76d899d69",
+      "matches_pack_expected": true,
+      "status": "present_read_in_full"
+    },
+    {
+      "path": "D:\\Poly-Code-Bench\\PolyCodeBench-Technical-Implementation-Spec-v1.md",
+      "workspace_path": "PolyCodeBench-Technical-Implementation-Spec-v1.md",
+      "version": "1.0",
+      "sha256": "2dbfd0f00c561b9348419a2659794913658fb47d15090e09a3e905a89cdea7bd",
+      "pack_expected_sha256": "2dbfd0f00c561b9348419a2659794913658fb47d15090e09a3e905a89cdea7bd",
+      "matches_pack_expected": true,
+      "status": "present_read_in_full"
+    },
+    {
+      "path": "D:\\Poly-Code-Bench\\PolyCodeBench-Codex-End-to-End-Prompt-Pack-v1.md",
+      "workspace_path": "PolyCodeBench-Codex-End-to-End-Prompt-Pack-v1.md",
+      "version": "1.0",
+      "sha256": "0687c2e1e6340fd3b0f69b553418c290aeb59aa7cdf3a88b9d2ef3159c7e1344",
+      "pack_expected_sha256": null,
+      "matches_pack_expected": null,
+      "status": "present_read_in_full"
+    }
+  ],
+  "referenced_but_absent_sources": [
+    "Pasted markdown(5).md (identified as original requirements in Architecture section 1 and Technical Spec preamble; not present in workspace file inventory)"
+  ],
+  "notes": [
+    "The Architecture and Technical Spec hashes recorded in the prompt pack match the current file bytes.",
+    "The prompt pack does not record its own expected hash."
+  ]
+}

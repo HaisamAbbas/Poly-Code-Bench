@@ -1,0 +1,14 @@
+.venv/
+.cache/
+node_modules/
+.next/
+dist/
+build/
+__pycache__/
+.pytest_cache/
+pytest-cache-files-*/
+.ruff_cache/
+.mypy_cache/
+.env
+.env.*
+!.env.example

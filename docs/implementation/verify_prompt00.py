@@ -32,7 +32,7 @@ for line in (DOCS / "e2e-matrix.md").read_text(encoding="utf-8").splitlines():
     if line.startswith("| E2E-"):
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         assert cells[3] and re.search(r"\b\d{2}\b", cells[3]), line
-        assert cells[4] and cells[5] == "not_run", line
+        assert cells[4] and cells[5] in {"not_run", "passed", "failed", "blocked"}, line
 
 progress = json.loads((DOCS / "progress.json").read_text(encoding="utf-8"))
 assert len(progress["prompt_statuses"]) == 35

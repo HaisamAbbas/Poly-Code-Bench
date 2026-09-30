@@ -40,7 +40,8 @@
     "The prompt pack does not record its own expected hash.",
     "At Prompt 01 resume, Git metadata was present and the baseline commit was pushed; source document hashes were revalidated by docs/implementation/verify_prompt00.py and remain unchanged.",
     "On the subsequent Prompt 01 resume, the prior resume changes remained the only working-tree modifications; source hashes still pass the consistency checker.",
-    "Prompt 01 completion: uv.lock and pnpm-lock.yaml generated; locked sync/install and local CI passed. Development-only image identities and pulled linux/amd64 digests are recorded in decisions.md D-01-04; signature provenance is not independently verified."
+    "Prompt 01 completion: uv.lock and pnpm-lock.yaml generated; locked sync/install and local CI passed. Development-only image identities and pulled linux/amd64 digests are recorded in decisions.md D-01-04; signature provenance is not independently verified.",
+    "Prompt 02 revalidated all three available source hashes; they remain unchanged. Prompt 01 is committed at b682e7ed3442849b70149f9839f1fa936e6b25c9. An unrelated untracked Constitution/production_quality_software_engineering_prompt-3.md was observed during Prompt 02 and left untouched."
   ],
   "repository_state_at_first_prompt01_resume": {
     "branch": "main",
@@ -56,5 +57,14 @@
     "head": "08a0edd4b674e8da62f6a6f5e65cdd53db1a086b",
     "working_tree_at_inspection": "dirty; 15 pre-existing resume files plus Prompt 01 completion changes",
     "additional_unrelated_changes": false
+  },
+  "repository_state_at_prompt02": {
+    "date": "2026-09-30",
+    "branch": "main",
+    "head": "b682e7ed3442849b70149f9839f1fa936e6b25c9",
+    "author": "Haisam Abbas <HaisamAbbas@outlook.com>",
+    "remote": "https://github.com/HaisamAbbas/Poly-Code-Bench.git",
+    "working_tree_at_inspection": "Prompt 02 files and ledgers modified/untracked; Constitution/production_quality_software_engineering_prompt-3.md is unrelated and preserved",
+    "additional_unrelated_changes": true
   }
 }

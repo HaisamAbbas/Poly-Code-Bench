@@ -1,0 +1,52 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/BudgetProfile.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "budget_profile_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Budget Profile Id",
+      "type": "string"
+    },
+    "kind": {
+      "const": "budget_profile",
+      "title": "Kind",
+      "type": "string"
+    },
+    "max_cost_usd_micros": {
+      "maxLength": 20,
+      "pattern": "^(?:0|[1-9][0-9]*|-[1-9][0-9]*)$",
+      "title": "Max Cost Usd Micros",
+      "type": "string"
+    },
+    "max_input_tokens": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Max Input Tokens",
+      "type": "integer"
+    },
+    "max_output_tokens": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Max Output Tokens",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "budget_profile_id",
+    "max_cost_usd_micros",
+    "max_input_tokens",
+    "max_output_tokens"
+  ],
+  "title": "BudgetProfile",
+  "type": "object"
+}

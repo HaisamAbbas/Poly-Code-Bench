@@ -1,0 +1,295 @@
+{
+  "$defs": {
+    "Confidence": {
+      "enum": [
+        "confirmed",
+        "unreviewed",
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "MeasurementStatus": {
+      "enum": [
+        "measured",
+        "gated",
+        "not_applicable",
+        "missing",
+        "needs_review",
+        "invalidated"
+      ],
+      "title": "MeasurementStatus",
+      "type": "string"
+    },
+    "ScoreDimension": {
+      "enum": [
+        "correctness",
+        "security",
+        "efficiency",
+        "code_quality",
+        "idiomatic",
+        "robustness"
+      ],
+      "title": "ScoreDimension",
+      "type": "string"
+    },
+    "SourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "base_or_candidate_digest": {
+          "maxLength": 71,
+          "minLength": 71,
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Base Or Candidate Digest",
+          "type": "string"
+        },
+        "end_column": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End Column"
+        },
+        "end_line": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "source_location",
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "description": "UTF-8 relative POSIX path; rejects absolute, NUL, dot and parent components.",
+          "format": "pcb-relative-posix-path",
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "start_column": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start Column"
+        },
+        "start_line": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "path",
+        "start_line",
+        "end_line",
+        "start_column",
+        "end_column",
+        "base_or_candidate_digest"
+      ],
+      "title": "SourceLocation",
+      "type": "object"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/Observation.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "baseline_relation": {
+      "anyOf": [
+        {
+          "enum": [
+            "introduced",
+            "worsened",
+            "unfixed",
+            "inherited",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Baseline Relation"
+    },
+    "candidate_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Candidate Digest",
+      "type": "string"
+    },
+    "check_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Check Id",
+      "type": "string"
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Confidence"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "explanation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Explanation"
+    },
+    "issue_key": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Issue Key"
+    },
+    "kind": {
+      "const": "observation",
+      "title": "Kind",
+      "type": "string"
+    },
+    "location": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SourceLocation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "primary_owner": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ScoreDimension"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "raw_artifact_ids": {
+      "items": {
+        "maxLength": 36,
+        "minLength": 36,
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "title": "Raw Artifact Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "severity": {
+      "anyOf": [
+        {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Severity"
+    },
+    "status": {
+      "$ref": "#/$defs/MeasurementStatus"
+    },
+    "tool_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Tool Digest",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "check_id",
+    "tool_digest",
+    "candidate_digest",
+    "status",
+    "value",
+    "severity",
+    "confidence",
+    "location",
+    "baseline_relation",
+    "issue_key",
+    "primary_owner",
+    "raw_artifact_ids",
+    "explanation"
+  ],
+  "title": "Observation",
+  "type": "object"
+}

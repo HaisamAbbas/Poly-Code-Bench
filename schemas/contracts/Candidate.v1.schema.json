@@ -1,0 +1,106 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/Candidate.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_ids": {
+      "items": {
+        "maxLength": 36,
+        "minLength": 36,
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "title": "Artifact Ids",
+      "type": "array"
+    },
+    "candidate_id": {
+      "maxLength": 36,
+      "minLength": 36,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "frozen_at": {
+      "anyOf": [
+        {
+          "maxLength": 35,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Frozen At"
+    },
+    "kind": {
+      "const": "candidate",
+      "title": "Kind",
+      "type": "string"
+    },
+    "payload_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Payload Digest",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 36,
+      "minLength": 36,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "sample_index": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Sample Index",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "submission_kind": {
+      "enum": [
+        "source_bundle",
+        "unified_diff",
+        "findings",
+        "answer",
+        "typed_value"
+      ],
+      "title": "Submission Kind",
+      "type": "string"
+    },
+    "task_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_version": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Task Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "candidate_id",
+    "run_id",
+    "task_id",
+    "task_version",
+    "sample_index",
+    "submission_kind",
+    "payload_digest",
+    "artifact_ids",
+    "frozen_at"
+  ],
+  "title": "Candidate",
+  "type": "object"
+}

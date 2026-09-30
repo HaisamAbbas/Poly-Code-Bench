@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "json": [
+    {
+      "name": "duplicate-object-key",
+      "raw": "{\"kind\":\"x\",\"schema_version\":1,\"payload\":{\"a\":1,\"a\":2}}",
+      "error_code": "duplicate_key"
+    },
+    {
+      "name": "unsafe-integer",
+      "raw": "9007199254740992",
+      "error_code": "invalid_canonical_value"
+    },
+    {
+      "name": "negative-unsafe-integer",
+      "raw": "-9007199254740992",
+      "error_code": "invalid_canonical_value"
+    },
+    {
+      "name": "fractional-number",
+      "raw": "{\"n\":1.25}",
+      "error_code": "invalid_canonical_value"
+    },
+    {
+      "name": "exponent-number",
+      "raw": "1e2",
+      "error_code": "invalid_canonical_value"
+    },
+    {
+      "name": "non-ascii-object-key",
+      "raw": "{\"\\u00e9\":1}",
+      "error_code": "invalid_canonical_value"
+    },
+    {
+      "name": "lone-surrogate",
+      "raw": "\"\\ud800\"",
+      "error_code": "invalid_canonical_value"
+    }
+  ],
+  "byte_inputs": [
+    {
+      "name": "utf8-bom",
+      "hex": "efbbbf7b7d",
+      "error_code": "invalid_utf8"
+    },
+    {
+      "name": "invalid-utf8",
+      "hex": "c328",
+      "error_code": "invalid_utf8"
+    }
+  ],
+  "unsafe_paths": [
+    "",
+    "/absolute/path",
+    "C:/drive/path",
+    "../escape",
+    "a/../escape",
+    "./dot",
+    "a//b",
+    "a\\\\b",
+    "a\u0000b"
+  ],
+  "invalid_seed_strings": [
+    "-1",
+    "01",
+    "18446744073709551616",
+    "1.0",
+    " 1"
+  ],
+  "invalid_money_strings": [
+    "-0",
+    "00",
+    "9223372036854775808",
+    "-9223372036854775809",
+    "+1"
+  ]
+}

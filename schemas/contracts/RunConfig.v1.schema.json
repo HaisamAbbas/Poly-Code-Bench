@@ -1,0 +1,168 @@
+{
+  "$defs": {
+    "SamplingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "sampling_config",
+          "title": "Kind",
+          "type": "string"
+        },
+        "master_seed": {
+          "maxLength": 20,
+          "pattern": "^(?:0|[1-9][0-9]*)$",
+          "title": "Master Seed",
+          "type": "string"
+        },
+        "provider_seed_policy": {
+          "enum": [
+            "pass_if_supported",
+            "omit",
+            "deterministic_mapping"
+          ],
+          "title": "Provider Seed Policy",
+          "type": "string"
+        },
+        "samples_per_task": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Samples Per Task",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "temperature": {
+          "maxLength": 64,
+          "pattern": "^(?:0|[1-9][0-9]*)\\.[0-9]{6}$",
+          "title": "Temperature",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "samples_per_task",
+        "master_seed",
+        "temperature",
+        "provider_seed_policy"
+      ],
+      "title": "SamplingConfig",
+      "type": "object"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/RunConfig.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "budget_profile": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Budget Profile",
+      "type": "string"
+    },
+    "evaluation_policy_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Evaluation Policy Digest",
+      "type": "string"
+    },
+    "hardware_class": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Hardware Class",
+      "type": "string"
+    },
+    "harness_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Harness Digest",
+      "type": "string"
+    },
+    "judge_panel_digest": {
+      "anyOf": [
+        {
+          "maxLength": 71,
+          "minLength": 71,
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Judge Panel Digest"
+    },
+    "kind": {
+      "const": "run_config",
+      "title": "Kind",
+      "type": "string"
+    },
+    "model_config_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Model Config Digest",
+      "type": "string"
+    },
+    "protocol_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 36,
+      "minLength": 36,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "sampling": {
+      "$ref": "#/$defs/SamplingConfig"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "split": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Split",
+      "type": "string"
+    },
+    "task_set_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Task Set Digest",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "task_set_digest",
+    "model_config_digest",
+    "harness_digest",
+    "protocol_id",
+    "sampling",
+    "budget_profile",
+    "evaluation_policy_digest",
+    "hardware_class",
+    "judge_panel_digest",
+    "split"
+  ],
+  "title": "RunConfig",
+  "type": "object"
+}

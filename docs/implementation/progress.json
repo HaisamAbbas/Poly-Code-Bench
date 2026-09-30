@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "project": "PolyCodeBench",
-  "last_completed_prompt": "01",
-  "active_prompt": "02",
-  "active_scope": "WP-02: canonical contracts and schemas",
+  "last_completed_prompt": "02",
+  "active_prompt": "03",
+  "active_scope": "WP-03: persistence, identity and idempotency",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "in_progress",
@@ -16,7 +16,7 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_01_passed; local_locked_installs_builds_ci_and_services_passed; phase_1_aggregate_pending",
+  "verification_status": "prompt_02_passed; phase_1_aggregate_pending",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
@@ -32,13 +32,13 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 3
+    "application_tests_run": 14
   },
-  "exact_next_action": "Prompt 02 — Implement canonical contracts and schemas.",
+  "exact_next_action": "Prompt 03 - Build persistence, identity and idempotency.",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
-    "02": "not_started",
+    "02": "done",
     "03": "not_started",
     "04": "not_started",
     "05": "not_started",
@@ -74,37 +74,24 @@
   },
   "last_resume_review": {
     "date": "2026-09-30",
-    "active_prompt": "01",
-    "baseline_commit": "08a0edd4b674e8da62f6a6f5e65cdd53db1a086b",
-    "working_tree_at_start": "dirty with 15 prior-resume changes; reviewed and preserved",
-    "source_hashes": "unchanged; docs/implementation/verify_prompt00.py passed",
+    "active_prompt": "02",
+    "baseline_commit": "b682e7ed3442849b70149f9839f1fa936e6b25c9",
+    "working_tree_at_start": "Prompt 01 committed and pushed; Prompt 02 changes made in this turn; unrelated untracked Constitution/ observed and preserved",
+    "source_hashes": "Architecture, Technical Spec and prompt pack match source-manifest.json; source consistency checker passed",
     "fresh_passes": [
-      "uv sync --locked --all-packages --group dev",
-      "pnpm install --frozen-lockfile (343 packages; supply-chain policy pass)",
-      "uv build --all-packages (10 package sdists and wheels)",
-      "Ruff format and lint",
-      "mypy",
-      "pytest (3 passed)",
-      "package boundaries/import/config/schema checks",
-      "web typecheck",
-      "web lint",
-      "Next production build",
-      "Compose config and healthy local services",
-      "PostgreSQL pg_isready",
-      "pinned image index/content digests",
-      "ledger/source consistency",
-      "git diff --check"
+      "Python contract tests: 11 passed",
+      "Ruff format and lint; mypy for core and scripts",
+      "Python and TypeScript shared canonical golden/invalid fixture checks",
+      "TypeScript contracts typecheck, build and 256 deterministic property cases",
+      "generated JSON Schema/OpenAPI/TypeScript drift check (15 outputs)",
+      "package dependency boundary check",
+      "offline builds: source and wheel for all 10 Python packages",
+      "ledger/source consistency, JSON parsing and git diff --check"
     ],
-    "lockfiles": {
-      "uv.lock": "generated and frozen sync passed",
-      "pnpm-lock.yaml": "generated and frozen install passed"
-    },
-    "images": {
-      "postgres": "postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
-      "seaweedfs": "chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
-      "signature_provenance": "not independently verified; development-only approval"
-    },
-    "no_paid_or_remote_product_actions": true
+    "no_paid_or_remote_product_actions": true,
+    "unrelated_untracked_preserved": [
+      "Constitution/production_quality_software_engineering_prompt-3.md"
+    ]
   },
   "resume_history": [
     {
@@ -160,6 +147,27 @@
         "signature_provenance": "not independently verified; development-only approval"
       },
       "no_paid_or_remote_product_actions": true
+    },
+    {
+      "date": "2026-09-30",
+      "active_prompt": "02",
+      "baseline_commit": "b682e7ed3442849b70149f9839f1fa936e6b25c9",
+      "working_tree_at_start": "Prompt 01 committed and pushed; Prompt 02 changes made in this turn; unrelated untracked Constitution/ observed and preserved",
+      "source_hashes": "Architecture, Technical Spec and prompt pack match source-manifest.json; source consistency checker passed",
+      "fresh_passes": [
+        "Python contract tests: 11 passed",
+        "Ruff format and lint; mypy for core and scripts",
+        "Python and TypeScript shared canonical golden/invalid fixture checks",
+        "TypeScript contracts typecheck, build and 256 deterministic property cases",
+        "generated JSON Schema/OpenAPI/TypeScript drift check (15 outputs)",
+        "package dependency boundary check",
+        "offline builds: source and wheel for all 10 Python packages",
+        "ledger/source consistency, JSON parsing and git diff --check"
+      ],
+      "no_paid_or_remote_product_actions": true,
+      "unrelated_untracked_preserved": [
+        "Constitution/production_quality_software_engineering_prompt-3.md"
+      ]
     }
   ]
 }

@@ -1,0 +1,75 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/BundleFile.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "byte_size": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Byte Size",
+      "type": "integer"
+    },
+    "digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Digest",
+      "type": "string"
+    },
+    "executable": {
+      "title": "Executable",
+      "type": "boolean"
+    },
+    "file_type": {
+      "enum": [
+        "regular_file",
+        "symlink"
+      ],
+      "title": "File Type",
+      "type": "string"
+    },
+    "kind": {
+      "const": "bundle_file",
+      "title": "Kind",
+      "type": "string"
+    },
+    "path": {
+      "description": "UTF-8 relative POSIX path; rejects absolute, NUL, dot and parent components.",
+      "format": "pcb-relative-posix-path",
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "symlink_target": {
+      "anyOf": [
+        {
+          "description": "UTF-8 relative POSIX path; rejects absolute, NUL, dot and parent components.",
+          "format": "pcb-relative-posix-path",
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Symlink Target"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "path",
+    "digest",
+    "byte_size",
+    "file_type",
+    "executable",
+    "symlink_target"
+  ],
+  "title": "BundleFile",
+  "type": "object"
+}

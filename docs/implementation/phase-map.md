@@ -60,15 +60,16 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 
 - Prompt 00: DONE (baseline and ledgers established; see `reports/prompt-00.md`).
 - Phase 0 aggregate gate: PASS for baseline completeness after correcting the WP registration count to 24 and verifying all ledgers; product implementation remains incomplete.
-- Prompt 01: PARTIAL (workspace/config/methodology scaffolds present; dependency locks, clean installs/builds, and Docker-backed service validation are blocked; see `reports/prompt-01.md`).
+- Prompt 01: DONE (workspace, locked installs/builds, CI-equivalent checks and local services verified; see `reports/prompt-01.md`).
+- Prompt 02: DONE (contract models, canonical serialization, identity helpers, generated schemas and cross-runtime contract evidence; see `reports/prompt-02.md`).
 
 ## Prompt register
 
 | Prompt | Owner | Title | Work package | Deliverable | Status |
 |---|---|---|---|---|---|
 | 00 | Prompt 00 | — Read the documents and establish the implementation baseline | Prerequisite to all | Gap map, source manifest, execution contract and complete work ledger | done |
-| 01 | Prompt 01 | — Bootstrap the workspace and methodology register | WP-01 | Workspace, dependency locks, CI, startup configuration and methodology register | partial |
-| 02 | Prompt 02 | — Implement canonical contracts and schemas | WP-02 | Canonical types, serialization, JSON Schemas and cross-language fixtures | not_started |
+| 01 | Prompt 01 | — Bootstrap the workspace and methodology register | WP-01 | Workspace, dependency locks, CI, startup configuration and methodology register | done |
+| 02 | Prompt 02 | — Implement canonical contracts and schemas | WP-02 | Canonical types, serialization, JSON Schemas and cross-language fixtures | done |
 | 03 | Prompt 03 | — Build persistence, identity and idempotency | WP-03 | Database/migrations, repository services, identity, audit and idempotency | not_started |
 | 04 | Prompt 04 | — Implement artifact storage and visibility | WP-04 | Verified artifacts, visibility enforcement and safe lifecycle management | not_started |
 | 05 | Prompt 05 | — Build task admission and freeze the methodology contracts | WP-05 | Task packages, admission/freezing, splits and source methodology records | not_started |

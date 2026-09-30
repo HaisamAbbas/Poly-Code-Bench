@@ -1,0 +1,85 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/PluginManifest.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Api Version",
+      "type": "integer"
+    },
+    "capabilities": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+        "type": "string"
+      },
+      "title": "Capabilities",
+      "type": "array"
+    },
+    "config_schema_digest": {
+      "anyOf": [
+        {
+          "maxLength": 71,
+          "minLength": 71,
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Config Schema Digest"
+    },
+    "kind": {
+      "const": "plugin_manifest",
+      "title": "Kind",
+      "type": "string"
+    },
+    "plugin_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Plugin Id",
+      "type": "string"
+    },
+    "plugin_kind": {
+      "enum": [
+        "suite_adapter",
+        "language_plugin",
+        "analyzer_plugin",
+        "model_adapter",
+        "sandbox_provider",
+        "judge_adapter",
+        "scoring_policy"
+      ],
+      "title": "Plugin Kind",
+      "type": "string"
+    },
+    "plugin_version": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Plugin Version",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "plugin_id",
+    "plugin_kind",
+    "api_version",
+    "plugin_version",
+    "config_schema_digest",
+    "capabilities"
+  ],
+  "title": "PluginManifest",
+  "type": "object"
+}

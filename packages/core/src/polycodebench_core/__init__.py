@@ -1,1 +1,74 @@
-"""Domain ownership boundary. Domain contracts are introduced in Prompt 02."""
+"""Canonical PolyCodeBench domain contracts and identity primitives."""
+
+from polycodebench_core.canonical import (
+    canonical_document_bytes,
+    canonical_envelope_bytes,
+    canonical_json_bytes,
+    parse_json_strict,
+    sha256_bytes,
+)
+from polycodebench_core.identity import (
+    MonotonicTimer,
+    derive_sample_seed,
+    new_entity_id,
+    validate_relative_path,
+)
+from polycodebench_core.models import (
+    Artifact,
+    BudgetProfile,
+    BundleFile,
+    BundleFileManifest,
+    Candidate,
+    ContractGraph,
+    Observation,
+    PluginManifest,
+    ProtocolDefinition,
+    RunConfig,
+    Scorecard,
+    StatusVocabulary,
+    TaskVersion,
+)
+from polycodebench_core.plugins import (
+    AnalyzerPlugin,
+    JudgeAdapter,
+    LanguagePlugin,
+    ModelAdapter,
+    SandboxProvider,
+    ScoringPolicy,
+    SuiteAdapter,
+)
+from polycodebench_core.validation import parse_document, validate_document
+
+__all__ = [
+    "Artifact",
+    "AnalyzerPlugin",
+    "BudgetProfile",
+    "BundleFile",
+    "BundleFileManifest",
+    "Candidate",
+    "ContractGraph",
+    "MonotonicTimer",
+    "Observation",
+    "JudgeAdapter",
+    "LanguagePlugin",
+    "ModelAdapter",
+    "PluginManifest",
+    "ProtocolDefinition",
+    "RunConfig",
+    "Scorecard",
+    "SandboxProvider",
+    "ScoringPolicy",
+    "SuiteAdapter",
+    "StatusVocabulary",
+    "TaskVersion",
+    "canonical_document_bytes",
+    "canonical_envelope_bytes",
+    "canonical_json_bytes",
+    "derive_sample_seed",
+    "new_entity_id",
+    "parse_json_strict",
+    "parse_document",
+    "sha256_bytes",
+    "validate_document",
+    "validate_relative_path",
+]

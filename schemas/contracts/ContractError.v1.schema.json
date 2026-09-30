@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "ContractErrorCode": {
+      "enum": [
+        "invalid_document",
+        "invalid_reference",
+        "invalid_range",
+        "invalid_utf8",
+        "duplicate_key",
+        "unsafe_path",
+        "invalid_canonical_value"
+      ],
+      "title": "ContractErrorCode",
+      "type": "string"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/ContractError.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "$ref": "#/$defs/ContractErrorCode"
+    },
+    "kind": {
+      "const": "contract_error",
+      "title": "Kind",
+      "type": "string"
+    },
+    "message": {
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    },
+    "path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Path"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "code",
+    "message"
+  ],
+  "title": "ContractError",
+  "type": "object"
+}

@@ -20,11 +20,12 @@ jobs:
       - run: uv sync --locked --all-packages --group dev
       - run: uv run --locked --all-packages --group dev ruff format --check .
       - run: uv run --locked --all-packages --group dev ruff check .
-      - run: uv run --locked --all-packages --group dev mypy packages/configuration/src scripts
+      - run: uv run --locked --all-packages --group dev mypy packages/core/src packages/configuration/src scripts
       - run: uv run --locked --all-packages --group dev pytest -p no:cacheprovider
       - run: uv run --locked --all-packages --group dev python scripts/check_boundaries.py
       - run: uv run --locked --all-packages --group dev python scripts/smoke_workspace.py
       - run: uv run --locked --all-packages --group dev python scripts/export_startup_schema.py --check
+      - run: uv run --locked --all-packages --group dev python scripts/export_contract_schemas.py --check
       - run: uv build --all-packages
 
   web:
@@ -38,6 +39,9 @@ jobs:
       - run: corepack enable
       - run: corepack prepare pnpm@12.5.1 --activate
       - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm --filter @polycodebench/contracts typecheck
+      - run: corepack pnpm --filter @polycodebench/contracts build
+      - run: corepack pnpm --filter @polycodebench/contracts test:contracts
       - run: corepack pnpm --filter @polycodebench/web typecheck
       - run: corepack pnpm --filter @polycodebench/web lint
       - run: corepack pnpm --filter @polycodebench/web build

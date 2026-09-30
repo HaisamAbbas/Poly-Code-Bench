@@ -92,4 +92,18 @@ No Node package install/typecheck/lint/build, complete locked CI run, PostgreSQL
 | `python docs/implementation/verify_prompt00.py`; JSON parse of `progress.json`/`source-manifest.json`; `git diff --check` | PASS after ledger updates: requirements/work package/E2E/prompt/ticket counts and source hashes; valid JSON; no whitespace errors. |
 | GitHub Actions hosted workflow | Not run remotely. Its constituent Python and web commands above were run locally; no remote CI action was dispatched. |
 
+## Prompt 02 verification (2026-09-30)
+
+| Command / check | Result |
+|---|---|
+| `uv sync --locked --all-packages --group dev --offline` | PASS: locked workspace and dev dependencies available locally; no network access required. |
+| `\.venv\Scripts\python.exe -m ruff format --check .`; `\.venv\Scripts\python.exe -m ruff check .`; `\.venv\Scripts\python.exe -m mypy packages/core/src packages/configuration/src scripts`; `\.venv\Scripts\python.exe -m pytest -p no:cacheprovider`; `\.venv\Scripts\python.exe scripts/check_boundaries.py`; `\.venv\Scripts\python.exe scripts/smoke_workspace.py`; `\.venv\Scripts\python.exe scripts/export_startup_schema.py --check`; `\.venv\Scripts\python.exe scripts/export_contract_schemas.py --check` | PASS: 44 files formatted; Ruff clean; mypy clean for 13 files; all 14 tests passed; 10 packages imported; startup and contract schemas match their generators. |
+| `python scripts/export_contract_schemas.py --check` | PASS: 15 generated JSON Schema/OpenAPI/TypeScript contract outputs match the authoritative models. |
+| `python scripts/check_boundaries.py` | PASS: package dependency boundaries. |
+| `corepack pnpm --filter @polycodebench/contracts typecheck`; `build`; `test:contracts` | PASS on Node 24.21.0 / pnpm 12.5.1: TypeScript typecheck and build; shared golden/invalid fixtures and 256 deterministic key-order property cases; shared seed/bundle digest, path, UTF-8, UUID and monotonic-time checks. |
+| `uv --offline build --all-packages --out-dir .cache/prompt02-dist` | PASS: source distributions and wheels built for all 10 Python workspace packages. An initial online attempt retried against the unavailable package index and was interrupted; the offline build passed. |
+| `python -m pytest tests/test_core_contracts.py -q -p no:cacheprovider` | PASS: 11 contract tests passed. A prior cache-enabled run emitted a Windows cache permission warning; it did not affect results, and final evidence used the no-cache-provider form. |
+| `python docs/implementation/verify_prompt00.py`; parse `progress.json` and `source-manifest.json`; `git diff --check` | PASS after ledger updates: 14 requirements, 24 work packages, 43 E2E scenarios, 35 prompts and 142 tickets with owners; source hashes unchanged; valid JSON and clean diff. |
+| Full application E2E, hosted GitHub Actions, provider/judge tests, production sandbox and browser tests | Not run: this prompt establishes contracts only; no application workflow/provider authorization or production sandbox is part of the available implementation. |
+
 Earlier records in this file document the initial registry/engine blockers; the Auxiliary R1 results above supersede those environment observations. No benchmark workload, model/judge request, paid work, cloud provisioning, upload, or release occurred.

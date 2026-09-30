@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "vectors": [
+    {
+      "name": "unicode-controls-and-key-order",
+      "kind": "golden_document",
+      "schema_version": 1,
+      "payload": {
+        "z": "café 雪 🚀",
+        "nested": {
+          "z": "tail",
+          "a": [
+            0,
+            true,
+            null,
+            "line\n\t\b\f\r\u0001"
+          ]
+        },
+        "money_usd_micros": "9223372036854775807",
+        "master_seed": "18446744073709551615",
+        "empty": []
+      },
+      "reordered_payload": {
+        "empty": [],
+        "master_seed": "18446744073709551615",
+        "money_usd_micros": "9223372036854775807",
+        "nested": {
+          "a": [
+            0,
+            true,
+            null,
+            "line\n\t\b\f\r\u0001"
+          ],
+          "z": "tail"
+        },
+        "z": "café 雪 🚀"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"golden_document\",\"payload\":{\"empty\":[],\"master_seed\":\"18446744073709551615\",\"money_usd_micros\":\"9223372036854775807\",\"nested\":{\"a\":[0,true,null,\"line\\n\\t\\b\\f\\r\\u0001\"],\"z\":\"tail\"},\"z\":\"café 雪 🚀\"},\"schema_version\":1}",
+      "expected_digest": "sha256:3f39485416bee5a2e5714f8efeab81503247d12997d010c63d9e09a3c00bb1e3"
+    },
+    {
+      "name": "decimal-and-u64-boundaries",
+      "kind": "boundary_values",
+      "schema_version": 1,
+      "payload": {
+        "master_seed": "18446744073709551615",
+        "money_max": "9223372036854775807",
+        "money_min": "-9223372036854775808",
+        "small_decimal": "0.000001",
+        "empty": []
+      },
+      "reordered_payload": {
+        "empty": [],
+        "small_decimal": "0.000001",
+        "money_min": "-9223372036854775808",
+        "money_max": "9223372036854775807",
+        "master_seed": "18446744073709551615"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"boundary_values\",\"payload\":{\"empty\":[],\"master_seed\":\"18446744073709551615\",\"money_max\":\"9223372036854775807\",\"money_min\":\"-9223372036854775808\",\"small_decimal\":\"0.000001\"},\"schema_version\":1}",
+      "expected_digest": "sha256:06c2c5275768463748cafe67092fdbe303f887d80cd0ff62c850ae572d9cacb4"
+    }
+  ],
+  "bundle_files": [
+    {
+      "path": "src/z.rs",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "byte_size": 12,
+      "file_type": "regular_file",
+      "executable": false,
+      "symlink_target": null
+    },
+    {
+      "path": "café.txt",
+      "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "byte_size": 8,
+      "file_type": "regular_file",
+      "executable": false,
+      "symlink_target": null
+    },
+    {
+      "path": "docs/readme.md",
+      "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "byte_size": 0,
+      "file_type": "symlink",
+      "executable": false,
+      "symlink_target": "docs/guide.md"
+    }
+  ],
+  "expected_bundle_digest": "sha256:961e1c81d4951e777713358bd4bb5c064f3b244313d90880c1b74d003d5f5538",
+  "seed_cases": [
+    {
+      "master_seed": "18446744073709551615",
+      "task_version_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "sample_index": 9007199254740991,
+      "expected_seed": "14508848083296507376"
+    }
+  ]
+}

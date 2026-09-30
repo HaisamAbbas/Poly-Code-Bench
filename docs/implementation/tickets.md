@@ -96,40 +96,40 @@ Total registered tickets: 142. Every ticket is owned by the numbered prompt enco
 
 - Owner prompt: `02`.
 - Dependencies: Prompt 01 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-01.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (strict versioned models, status vocabulary, typed errors, and cross-document reference validation).
+- Verification: `passed` (contract unit checks and generated schema drift check).
+- Required verification scope: unknown-field/coercion/reference/range rejection; E2E-01 contract slice.
+- Evidence: `packages/core/src/polycodebench_core/models.py`, `errors.py`, `validation.py`, `plugins.py`; `tests/test_core_contracts.py`; `schemas/contracts/`; Prompt 02 report.
 - Acceptance criteria: — Implement strict task, run, candidate, observation, artifact, scorecard, protocol and plugin contract models, statuses and typed errors. DoD: unknown fields, invalid references/ranges and forbidden coercions are rejected; schema versions are explicit.
 
 ## PCB-02-2 - Prompt 02: — Implement canonical contracts and schemas
 
 - Owner prompt: `02`.
 - Dependencies: Prompt 01 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-01.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (`pcb-json-v1` canonical bytes, strict duplicate-key parsing, semantic content digests, UTF-8 bundle sorting and bundle digests in both runtimes).
+- Verification: `passed` (shared expected bytes/digests and invalid-input/property checks passed in Python and TypeScript).
+- Required verification scope: E2E-01; safe integers, decimal strings, UTF-8, duplicate keys, reordered keys, file manifests.
+- Evidence: `packages/core/src/polycodebench_core/canonical.py`, `apps/contracts/src/canonical.ts`, `tests/fixtures/contracts/`, both runtime test suites; Prompt 02 report.
 - Acceptance criteria: — Implement pcb-json-v1 canonical bytes and content/bundle digests. Enforce ASCII sorted keys, safe JSON integer bounds, decimal-string money/64-bit seeds, UTF-8 rules, duplicate-key rejection and deterministic file manifests. DoD: Python and TypeScript match byte-for-byte on shared vectors.
 
 ## PCB-02-3 - Prompt 02: — Implement canonical contracts and schemas
 
 - Owner prompt: `02`.
 - Dependencies: Prompt 01 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-01.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (UUIDv4 IDs, UTC validation, monotonic timers, safe POSIX relative paths, unsigned 64-bit decimal seed derivation and unnormalized source-byte hashing).
+- Verification: `passed` (boundary fixtures and identity checks in both runtimes).
+- Required verification scope: uint64 maximum, invalid timestamp/path/seed cases, source-byte preservation.
+- Evidence: `packages/core/src/polycodebench_core/identity.py`, `apps/contracts/src/canonical.ts`, `tests/test_core_contracts.py`, `apps/contracts/test/contracts.mjs`, shared fixtures.
 - Acceptance criteria: — Implement IDs, UTC timestamps, monotonic-duration handling, validated relative paths and deterministic task/sample seed derivation. DoD: unsigned 64-bit seeds are stored/serialized without loss or signed overflow; source/provider bytes are not silently normalized.
 
 ## PCB-02-4 - Prompt 02: — Implement canonical contracts and schemas
 
 - Owner prompt: `02`.
 - Dependencies: Prompt 01 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-01.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (13 standalone JSON Schemas, OpenAPI 3.1 components and generated shared TypeScript declarations; CI checks generated drift).
+- Verification: `passed` (generation/check and both runtime package build/type checks).
+- Required verification scope: generated outputs match authoritative models; consumers import generated contract declarations.
+- Evidence: `scripts/export_contract_schemas.py`, `schemas/contracts/`, `apps/contracts/src/generated.ts`, `apps/contracts/src/consumer-contracts.ts`, `.github/workflows/ci.yml`.
 - Acceptance criteria: — Generate committed JSON Schemas and initial OpenAPI/shared-client contracts from authoritative models. DoD: schema drift is detectable in CI and consumers use the generated contracts rather than handwritten conflicting types.
 
 ## PCB-03-1 - Prompt 03: — Build persistence, identity and idempotency

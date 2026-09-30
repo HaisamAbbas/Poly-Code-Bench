@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "Visibility": {
+      "enum": [
+        "hidden",
+        "internal",
+        "public"
+      ],
+      "title": "Visibility",
+      "type": "string"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/Artifact.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "maxLength": 36,
+      "minLength": 36,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "byte_size": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Byte Size",
+      "type": "integer"
+    },
+    "digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Digest",
+      "type": "string"
+    },
+    "kind": {
+      "const": "artifact",
+      "title": "Kind",
+      "type": "string"
+    },
+    "media_type": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Media Type",
+      "type": "string"
+    },
+    "producing_stage": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Producing Stage",
+      "type": "string"
+    },
+    "retention_policy": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Retention Policy",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "visibility": {
+      "$ref": "#/$defs/Visibility"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "artifact_id",
+    "digest",
+    "media_type",
+    "byte_size",
+    "visibility",
+    "producing_stage",
+    "retention_policy"
+  ],
+  "title": "Artifact",
+  "type": "object"
+}

@@ -1,10 +1,10 @@
 # End-to-end scenario evidence matrix
 
-All scenarios are requirements, not executed tests. No application test or E2E evidence is claimed. "Required evidence" records the source assertion and closure detail/owner from the prompt pack.
+All scenarios are requirements. E2E-01 has passed contract-fixture evidence only; no application workflow E2E is claimed, and E2E-02 through E2E-43 remain unrun. "Required evidence" records the source assertion and closure detail/owner from the prompt pack.
 
 | Scenario | Setup / action | Required assertion | Owner prompt(s) | Required evidence / closure | Status |
 |---|---|---|---|---|
-| E2E-01 | Hash semantically identical canonical configs in Python/TypeScript; reorder keys; change one semantic field | Identical canonical bytes/digests for equivalent config; changed semantic field changes digest; invalid numbers/duplicate keys rejected. | 02 | Actual Python and TypeScript canonical-byte equality and invalid-input checks | not_run |
+| E2E-01 | Hash semantically identical canonical configs in Python/TypeScript; reorder keys; change one semantic field | Identical canonical bytes/digests for equivalent config; changed semantic field changes digest; invalid numbers/duplicate keys rejected. | 02 | Contract-level cross-runtime shared golden/invalid fixtures and 256-key-order property cases passed; `tests/test_core_contracts.py`, `apps/contracts/test/contracts.mjs`; no application workflow is claimed. | passed |
 | E2E-02 | Create run twice with same idempotency key; repeat with changed request | One run/attempt set; original response replayed; changed request returns 409. | 03, 07, 17 | Database/service idempotency plus integrated run creation | not_run |
 | E2E-03 | Upload altered bytes with a claimed digest | Finalization fails; no verified artifact/result reference. | 04 | Real object-store altered-byte rejection | not_run |
 | E2E-04 | Admit reference, faulty, alternative-valid task fixtures | Reference/alternative pass; intended faulty variant fails; unstable reference blocks freezing. | 05, 10, 11, 12, 17 | Reference/faulty/alternative admission, including actual pilot tasks | not_run |

@@ -26,3 +26,8 @@ Cloud account/region, OIDC identities, provider/judge endpoint credentials, expl
 - **SD-01-03 - MinIO image no longer usable here:** the configured Docker Hub image returned `pull access denied`; Quay returned `401 Unauthorized`. MinIO's upstream release instructions now direct container users to build from source. Replace it for local development with the pinned SeaweedFS S3 endpoint rather than asserting the unavailable MinIO image was verified. References: https://github.com/minio/minio/releases and https://github.com/seaweedfs/seaweedfs/blob/master/docker/README.md.
 
 - **D-01-05 - pnpm install policy:** keep dependency lifecycle scripts blocked by default and explicitly allow only the reviewed `unrs-resolver` native-binding postinstall. The exact pinned Next 16.3.7 packages are listed in `minimumReleaseAgeExclude` to account for their release metadata; the lockfile supply-chain policy passed for all 402 entries.
+
+## Prompt 02 decisions and discrepancies
+
+- **D-02-01 - Seed wire representation:** Technical Spec §3 requires unsigned 64-bit seeds to survive serialization without signed overflow, so `master_seed` is a canonical decimal string throughout the versioned contracts. A numeric `master_seed: 4096` example in Technical Spec §4 is treated as illustrative shorthand; the narrow wire-safe representation in §3 governs. No score or sampling semantics are changed.
+- **D-02-02 - Contract E2E evidence boundary:** E2E-01 passed using the shared cross-runtime contract fixtures and property checks. This is contract-level verification, not an application workflow or benchmark execution result; broader immutable persistence and score replay remain pending under REQ-09.

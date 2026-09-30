@@ -1,0 +1,209 @@
+{
+  "$defs": {
+    "AttemptState": {
+      "enum": [
+        "planned",
+        "preparing",
+        "solving",
+        "frozen",
+        "model_failed",
+        "infra_blocked",
+        "cancelled"
+      ],
+      "title": "AttemptState",
+      "type": "string"
+    },
+    "EvaluationState": {
+      "enum": [
+        "pending",
+        "evaluating",
+        "needs_review",
+        "ready",
+        "infra_blocked",
+        "quarantined",
+        "cancelled"
+      ],
+      "title": "EvaluationState",
+      "type": "string"
+    },
+    "FailureClass": {
+      "enum": [
+        "model",
+        "candidate_runtime",
+        "infrastructure",
+        "evaluator",
+        "task_defect",
+        "policy_violation",
+        "cancelled"
+      ],
+      "title": "FailureClass",
+      "type": "string"
+    },
+    "Gate": {
+      "enum": [
+        "pass",
+        "fail",
+        "unknown",
+        "not_applicable"
+      ],
+      "title": "Gate",
+      "type": "string"
+    },
+    "JobState": {
+      "enum": [
+        "blocked",
+        "queued",
+        "leased",
+        "succeeded",
+        "retry_wait",
+        "dead",
+        "cancelled",
+        "skipped"
+      ],
+      "title": "JobState",
+      "type": "string"
+    },
+    "MeasurementStatus": {
+      "enum": [
+        "measured",
+        "gated",
+        "not_applicable",
+        "missing",
+        "needs_review",
+        "invalidated"
+      ],
+      "title": "MeasurementStatus",
+      "type": "string"
+    },
+    "ReleaseState": {
+      "enum": [
+        "draft",
+        "validating",
+        "review_required",
+        "approved",
+        "published",
+        "withdrawn"
+      ],
+      "title": "ReleaseState",
+      "type": "string"
+    },
+    "Visibility": {
+      "enum": [
+        "hidden",
+        "internal",
+        "public"
+      ],
+      "title": "Visibility",
+      "type": "string"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/StatusVocabulary.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AttemptState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evaluation_state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluationState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "failure_class": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FailureClass"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "gate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Gate"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "job_state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/JobState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "const": "status_vocabulary",
+      "title": "Kind",
+      "type": "string"
+    },
+    "measurement_status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MeasurementStatus"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "release_state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReleaseState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "visibility": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Visibility"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "attempt_state",
+    "evaluation_state",
+    "job_state",
+    "gate",
+    "measurement_status",
+    "visibility",
+    "failure_class",
+    "release_state"
+  ],
+  "title": "StatusVocabulary",
+  "type": "object"
+}

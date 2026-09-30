@@ -1,0 +1,105 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/ProtocolDefinition.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowed_tools": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+        "type": "string"
+      },
+      "title": "Allowed Tools",
+      "type": "array"
+    },
+    "hidden_feedback": {
+      "title": "Hidden Feedback",
+      "type": "boolean"
+    },
+    "kind": {
+      "const": "protocol",
+      "title": "Kind",
+      "type": "string"
+    },
+    "maximum_input_context_tokens": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Maximum Input Context Tokens",
+      "type": "integer"
+    },
+    "maximum_tool_calls": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Maximum Tool Calls",
+      "type": "integer"
+    },
+    "maximum_turns": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Maximum Turns",
+      "type": "integer"
+    },
+    "maximum_wall_seconds": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Maximum Wall Seconds",
+      "type": "integer"
+    },
+    "mode": {
+      "enum": [
+        "single_shot",
+        "standard_agent"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "network_policy": {
+      "enum": [
+        "disabled",
+        "allowlisted"
+      ],
+      "title": "Network Policy",
+      "type": "string"
+    },
+    "protocol_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "public_test_feedback": {
+      "title": "Public Test Feedback",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "version": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "protocol_id",
+    "version",
+    "mode",
+    "allowed_tools",
+    "public_test_feedback",
+    "hidden_feedback",
+    "network_policy",
+    "maximum_turns",
+    "maximum_tool_calls",
+    "maximum_wall_seconds",
+    "maximum_input_context_tokens"
+  ],
+  "title": "ProtocolDefinition",
+  "type": "object"
+}

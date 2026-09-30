@@ -1,6 +1,6 @@
 # Requirement-to-code gap matrix
 
-Status is based on inspected files. This workspace contains only the three specification documents: no application code, tests, configuration, CI, or implementation ledgers existed before Prompt 00. Specification prose is not implementation evidence.
+Status reflects the current inspected files and recorded verification. At the original Prompt 00 baseline, the workspace had only the three source documents and no implementation; historical baseline notes do not describe the current tree. Specification prose and package names alone are not implementation evidence.
 
 | Requirement | Obligation | Status | Existing code paths / evidence | Owner work packages | Required E2E |
 |---|---|---|---|---|---|
@@ -12,7 +12,7 @@ Status is based on inspected files. This workspace contains only the three speci
 | REQ-06 | Single-shot and standard agent protocols; API and local-model adapters; budgets and complete available usage records. | absent | None observed | WP-08, WP-09 | E2E-10-14 |
 | REQ-07 | Offline isolated execution, separate solving/grading, resource limits, protected secrets. | absent | None observed | WP-06, WP-12 | E2E-05, E2E-06, E2E-17, E2E-26 |
 | REQ-08 | Durable parallel jobs; bounded infrastructure retries; no answer-shopping retries. | absent | None observed | WP-07 | E2E-07-09 |
-| REQ-09 | Immutable task, config, evidence, scoring, and release versions; deterministic score replay. | absent | None observed | WP-02-04, WP-15, WP-16 | E2E-01-03, E2E-24, E2E-30 |
+| REQ-09 | Immutable task, config, evidence, scoring, and release versions; deterministic score replay. | partial | Strict versioned contract models and semantic document digests in `packages/core/src/polycodebench_core/{models,canonical}.py`; deterministic cross-runtime config serialization verified by E2E-01. Persistence, evidence immutability, scoring replay and releases remain unimplemented. | WP-02-04, WP-15, WP-16 | E2E-01 passed at contract level; E2E-02-03, E2E-24, E2E-30 pending |
 | REQ-10 | Public/date-based/private task splits; cutoff provenance; common-cohort contamination filters. | absent | None observed | WP-05, WP-16, WP-21 | E2E-27, E2E-28 |
 | REQ-11 | All seven website pages, including reviewed model-submission requests. | absent | None observed | WP-21-23 | E2E-39-41 |
 | REQ-12 | Exact score explanations, intervals, coverage, versioned corrections, and public/private evidence controls. | absent | None observed | WP-15, WP-16, WP-21 | E2E-23, E2E-26, E2E-28-30 |
@@ -24,7 +24,7 @@ Status is based on inspected files. This workspace contains only the three speci
 | Work package | Deliverable | Status | Inspected implementation evidence | Acceptance evidence required |
 |---|---|---|---|---|
 | WP-01 | Workspace, lockfiles, formatting/type checks, CI, config loader, dependency-boundary checks, method-source register | present | `uv.lock` and `pnpm-lock.yaml` generated; locked Python/Node installs, Python package builds, mypy, frontend typecheck/lint/build, Python tests/config/boundary checks, and local Compose service startup passed. Methodology/source register is present; rights remain open for source/task admission. | Prompt 01 local CI passed; source rights remain tracked per benchmark/task admission. |
-| WP-02 | Core types, JSON Schemas, canonical serialization, IDs/digests, status/error vocabularies, Python/TS golden fixtures | absent | None observed; no application source exists in workspace | E2E-01; schema docs generated. |
+| WP-02 | Core types, JSON Schemas, canonical serialization, IDs/digests, status/error vocabularies, Python/TS golden fixtures | present | Strict Pydantic contracts, `pcb-json-v1` serializers in Python/TypeScript, identity/path/seed helpers, 13 generated JSON Schemas, generated OpenAPI components and TypeScript types, shared valid/invalid vectors; see Prompt 02 report. | Python and TypeScript contract fixtures/property checks; generated schema drift check; package type/build checks. |
 | WP-03 | SQL models/migrations, repositories, transactions, RBAC foundations, audit/idempotency records | absent | None observed; no application source exists in workspace | E2E-02, E2E-25; migration upgrade from prior fixture. |
 | WP-04 | Artifact upload/finalize/read service, digest verification, visibility roles, provisional cleanup | absent | None observed; no application source exists in workspace | E2E-03, E2E-26. |
 | WP-05 | Task import/admission/freeze, split/cluster registry, rights/provenance, method records, task-set CLI/API | absent | None observed; no application source exists in workspace | E2E-04, E2E-27; reference/faulty/alternative fixtures. |

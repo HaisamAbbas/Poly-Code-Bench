@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "project": "PolyCodeBench",
-  "last_completed_prompt": "03",
-  "active_prompt": "04",
-  "active_scope": "WP-04: artifact storage and visibility",
+  "last_completed_prompt": "04",
+  "active_prompt": "05",
+  "active_scope": "WP-05: task admission, split/cluster registry, rights provenance and methodology contracts",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "in_progress",
@@ -16,7 +16,7 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_03_passed; phase_1_aggregate_pending",
+  "verification_status": "prompt_04_passed; phase_1_aggregate_pending",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
@@ -24,7 +24,10 @@
     "Model/judge endpoints, credentials, and explicit spend budgets are not configured or verified",
     "Source/task rights and human calibration evidence remain required before benchmark data admission or scoring",
     "Publication target and signing configuration are absent",
-    "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only"
+    "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
+    "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
+    "Short-lived one-object stage transfer credentials and lease/fence-bound artifact slots await Prompt 07 stage-control contracts",
+    "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending"
   ],
   "evidence_summary": {
     "requirements_registered": 14,
@@ -32,15 +35,15 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 18
+    "application_tests_run": 24
   },
-  "exact_next_action": "Prompt 04 — Implement artifact storage and visibility.",
+  "exact_next_action": "Prompt 05 — Build task admission and freeze the methodology contracts.",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
     "02": "done",
     "03": "done",
-    "04": "not_started",
+    "04": "done",
     "05": "not_started",
     "06": "not_started",
     "07": "not_started",
@@ -74,19 +77,23 @@
   },
   "last_resume_review": {
     "date": "2026-09-30",
-    "active_prompt": "02",
-    "baseline_commit": "b682e7ed3442849b70149f9839f1fa936e6b25c9",
-    "working_tree_at_start": "Prompt 01 committed and pushed; Prompt 02 changes made in this turn; unrelated untracked Constitution/ observed and preserved",
-    "source_hashes": "Architecture, Technical Spec and prompt pack match source-manifest.json; source consistency checker passed",
+    "active_prompt": "04",
+    "baseline_commit": "3253dfd6a858af88c4bd45bd51c63aef226aa9ef",
+    "working_tree_at_start": "Prompt 03 committed and pushed; Prompt 04 source, migration, dependency lock and tests modified in this turn; unrelated untracked Constitution/ preserved",
+    "source_hashes": "Architecture, Technical Spec and prompt pack match source-manifest.json; no normative source document changed",
     "fresh_passes": [
-      "Python contract tests: 11 passed",
-      "Ruff format and lint; mypy for core and scripts",
-      "Python and TypeScript shared canonical golden/invalid fixture checks",
-      "TypeScript contracts typecheck, build and 256 deterministic property cases",
-      "generated JSON Schema/OpenAPI/TypeScript drift check (15 outputs)",
-      "package dependency boundary check",
-      "offline builds: source and wheel for all 10 Python packages",
-      "ledger/source consistency, JSON parsing and git diff --check"
+      "PostgreSQL 17.6 fresh migration, role provisioning/grants, repeat upgrade and Alembic drift check",
+      "SeaweedFS 4.48 local S3 integration: integrity rejection, visibility/role denials, deduplication, manifest, quota, resume, projection, retention hold and 30-day provisional/canonical orphan cleanup with active-finalizer protection; artifact tests repeated",
+      "Full workspace test suite: 21 passed",
+      "Ruff formatting/lint; mypy across 35 files; package boundaries and ten-package smoke checks",
+      "Startup and contract schema drift checks; locked offline synchronization; ten Python package sdist/wheel builds and persistence-wheel content inspection",
+      "Compose config validation, source/ledger consistency checks and git diff whitespace validation"
+    ],
+    "pending_or_unrun": [
+      "Hosted GitHub Actions not dispatched",
+      "Production S3 IAM/bucket policies, encryption/lifecycle and deployed role denial unavailable without a production target/principals",
+      "Full E2E-26 public API/page/download/export variants remain with later public product prompts",
+      "Short-lived stage upload permissions and lease/fence checks await Prompt 07"
     ],
     "no_paid_or_remote_product_actions": true,
     "unrelated_untracked_preserved": [

@@ -62,6 +62,9 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 - Phase 0 aggregate gate: PASS for baseline completeness after correcting the WP registration count to 24 and verifying all ledgers; product implementation remains incomplete.
 - Prompt 01: DONE (workspace, locked installs/builds, CI-equivalent checks and local services verified; see `reports/prompt-01.md`).
 - Prompt 02: DONE (contract models, canonical serialization, identity helpers, generated schemas and cross-runtime contract evidence; see `reports/prompt-02.md`).
+- Prompt 03: DONE for foundational PostgreSQL schema, identity, audit and idempotent run creation; full route E2Es remain pending (see `reports/prompt-03.md`).
+- Prompt 04: DONE for local artifact integrity, visibility, quota, manifest, retention and reviewed-projection foundation; production object-store policies and public routes remain pending (see `reports/prompt-04.md`).
+- Phase 1 aggregate gate: PENDING Prompt 05 task admission/methodology contracts; phase completion is not claimed.
 
 ## Prompt register
 
@@ -71,7 +74,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 01 | Prompt 01 | — Bootstrap the workspace and methodology register | WP-01 | Workspace, dependency locks, CI, startup configuration and methodology register | done |
 | 02 | Prompt 02 | — Implement canonical contracts and schemas | WP-02 | Canonical types, serialization, JSON Schemas and cross-language fixtures | done |
 | 03 | Prompt 03 | — Build persistence, identity and idempotency | WP-03 | Database/migrations, repository services, identity, audit and idempotency | done (foundation); complete route scenarios remain pending |
-| 04 | Prompt 04 | — Implement artifact storage and visibility | WP-04 | Verified artifacts, visibility enforcement and safe lifecycle management | not_started |
+| 04 | Prompt 04 | — Implement artifact storage and visibility | WP-04 | Verified artifacts, visibility enforcement and safe lifecycle management | done (local storage scope); production policy validation and public routes remain pending |
 | 05 | Prompt 05 | — Build task admission and freeze the methodology contracts | WP-05 | Task packages, admission/freezing, splits and source methodology records | not_started |
 | 06 | Prompt 06 | — Implement sandbox drivers and isolation | WP-06 | Development and production VM sandbox drivers | not_started |
 | 07 | Prompt 07 | — Implement durable jobs and recovery | WP-07 | Job DAG, leases/fences, recovery, cancellation and capacity slots | not_started |

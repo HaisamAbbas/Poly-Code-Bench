@@ -13,7 +13,7 @@ GRANT SELECT ON public_published_release, public_release_entry TO pcb_public_rea
 GRANT USAGE ON SCHEMA public TO
     pcb_public_reader, pcb_submitter, pcb_curator, pcb_operator, pcb_reviewer,
     pcb_publisher, pcb_scheduler, pcb_solve_supervisor, pcb_evaluator,
-    pcb_scorer, pcb_administrator;
+    pcb_scorer, pcb_artifact_finalizer, pcb_administrator;
 
 GRANT SELECT, INSERT ON model_submission TO pcb_submitter;
 GRANT SELECT ON model_submission TO pcb_reviewer, pcb_administrator;
@@ -52,6 +52,30 @@ GRANT SELECT ON attempt, task_version, task_set, task_set_member, config_documen
 GRANT SELECT, INSERT, UPDATE ON evaluation TO pcb_evaluator;
 GRANT INSERT, SELECT ON observation, judge_packet, call_intent, call_delivery, usage_record, adjudication, bug_match TO pcb_evaluator;
 GRANT INSERT ON audit_event TO pcb_evaluator;
+
+-- The finalizer is a dedicated service identity. Object-store IAM remains an
+-- independently provisioned, visibility-scoped control outside PostgreSQL.
+GRANT SELECT, INSERT ON artifact, artifact_upload TO pcb_artifact_finalizer;
+GRANT UPDATE (status) ON artifact TO pcb_artifact_finalizer;
+GRANT UPDATE (state, failure_code, artifact_id) ON artifact_upload TO pcb_artifact_finalizer;
+GRANT SELECT ON artifact_quota TO pcb_artifact_finalizer;
+GRANT UPDATE (used_bytes, reserved_bytes, row_version) ON artifact_quota TO pcb_artifact_finalizer;
+GRANT SELECT, INSERT ON artifact_edge TO pcb_artifact_finalizer;
+GRANT SELECT ON artifact_projection_approval TO pcb_artifact_finalizer;
+GRANT SELECT, INSERT ON artifact_declassification TO pcb_artifact_finalizer;
+GRANT INSERT ON audit_event TO pcb_artifact_finalizer;
+
+GRANT SELECT, INSERT ON artifact_retention_hold TO pcb_reviewer, pcb_administrator;
+GRANT UPDATE (released_by, released_at) ON artifact_retention_hold TO pcb_reviewer, pcb_administrator;
+GRANT SELECT ON artifact_declassification TO pcb_reviewer, pcb_publisher, pcb_administrator;
+GRANT INSERT ON artifact_declassification TO pcb_publisher, pcb_administrator;
+GRANT SELECT ON artifact_projection_approval TO pcb_reviewer, pcb_publisher, pcb_administrator;
+GRANT INSERT ON artifact_projection_approval TO pcb_reviewer, pcb_administrator;
+GRANT INSERT ON artifact TO pcb_publisher, pcb_administrator;
+GRANT UPDATE (status) ON artifact TO pcb_publisher, pcb_administrator;
+GRANT SELECT, INSERT ON artifact_quota TO pcb_publisher, pcb_administrator;
+GRANT UPDATE (used_bytes, reserved_bytes, row_version) ON artifact_quota TO pcb_publisher, pcb_administrator;
+GRANT INSERT ON audit_event TO pcb_reviewer, pcb_publisher;
 
 GRANT SELECT ON evaluation, observation, candidate, task_version, config_document TO pcb_scorer;
 GRANT SELECT, INSERT ON scorecard, score_item TO pcb_scorer;

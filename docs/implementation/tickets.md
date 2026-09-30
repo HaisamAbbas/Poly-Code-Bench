@@ -176,41 +176,43 @@ Total registered tickets: 142. Every ticket is owned by the numbered prompt enco
 
 - Owner prompt: `04`.
 - Dependencies: Prompt 03 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented (S3 provisional write, expected byte/SHA validation, independent canonical readback, conditional immutable registration, retry-safe finalizer)`.
+- Verification: `passed (PostgreSQL 17.6 + SeaweedFS 4.48; changed-size, wrong-digest and truncated bytes rejected; verified retry and duplicate identity checks)`.
 - Required verification scope: E2E-03, E2E-26 storage subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: packages/persistence/src/polycodebench_persistence/{object_store.py,artifacts.py,migrations/versions/a4f04c4f5a12_artifact_integrity_and_visibility.py}, tests/test_artifacts_postgres.py, docs/implementation/reports/prompt-04.md.
 - Acceptance criteria: — Implement provisional upload, expected size/hash validation, independent finalization and immutable verified artifact registration. DoD: an object-store ETag is never substituted for SHA-256; altered or truncated bytes cannot become verified evidence.
 
 ## PCB-04-2 - Prompt 04: — Implement artifact storage and visibility
 
 - Owner prompt: `04`.
 - Dependencies: Prompt 03 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented (visibility-selected buckets, role-scoped upload/read service and solve DB role without artifact enumeration grant)`.
+- Verification: `passed for local storage variants: hidden/public UUID probes, hidden/public same-byte separation, solve-role SELECT denial and upload-role denial. Production IAM/bucket policy remains unvalidated separately`.
 - Required verification scope: E2E-03, E2E-26 storage subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: packages/services/src/polycodebench_services/artifacts.py, packages/persistence/sql/grant_permissions.sql, tests/test_artifacts_postgres.py, E2E-26 scope in e2e-matrix.md.
 - Acceptance criteria: — Enforce hidden/internal/public visibility domains and role-scoped reads/writes. DoD: digest knowledge does not authorize access, private/public deduplication does not leak data, and a solve identity cannot list/read hidden assets.
 
 ## PCB-04-3 - Prompt 04: — Implement artifact storage and visibility
 
 - Owner prompt: `04`.
 - Dependencies: Prompt 03 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented (same-domain digest uniqueness, atomic byte reservations, immutable verified manifest edges, domain/cycle guards and upload replay recovery)`.
+- Verification: `passed for quota refusal, within-domain duplicate retry, cross-visibility separation, interrupted provisional upload recovery and cycle/scope rejection`.
 - Required verification scope: E2E-03, E2E-26 storage subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: packages/persistence/src/polycodebench_persistence/{models.py,artifacts.py,migrations/versions/a4f04c4f5a12_artifact_integrity_and_visibility.py}, tests/test_artifacts_postgres.py.
 - Acceptance criteria: — Implement manifest edges, safe artifact references, byte quotas and retry-safe deduplication. DoD: authoritative database references are committed only after verification; upload/commit interruption does not create contradictory identities.
 
 ## PCB-04-4 - Prompt 04: — Implement artifact storage and visibility
 
 - Owner prompt: `04`.
 - Dependencies: Prompt 03 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented (expired provisional and unreferenced canonical-object cleanup with in-flight finalization protection, audited retention holds, strict public metadata projection from separate object, inert attachment response)`.
+- Verification: `passed for quota release at upload expiry, provisional-byte retention through day 30 and cleanup after the retention interval; verified/held/published objects retained; distinct reviewer/publisher requirement, projection retry and unchanged private source key/visibility. Production policy validation and public routes remain pending`.
 - Required verification scope: E2E-03, E2E-26 storage subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: packages/persistence/src/polycodebench_persistence/artifacts.py, packages/services/src/polycodebench_services/{artifacts.py,artifact_publication.py}, tests/test_artifacts_postgres.py, packages/persistence/README.md.
 - Acceptance criteria: — Add provisional garbage collection and allowlisted public projection/export support. DoD: referenced/published/held artifacts are retained; publication makes reviewed projection objects without changing a private object's ACL in place; downloads are inert and authorized.
+
+Prompt 04 review follow-up (2026-09-30): upload finalization now locks the upload row before quota release; expired finalization retains staged bytes. Reviewer approval is persisted against the exact canonical projection digest in migration `b5e17f2c4096`; migration `c6a90d17f20e` requires that approval for declassification. Public artifact registration and declassification commit together, and public reads require the approval link. Six local artifact integration tests and the full 24-test suite passed; production policy and full public-route E2E remain pending.
 
 ## PCB-05-1 - Prompt 05: — Build task admission and freeze the methodology contracts
 

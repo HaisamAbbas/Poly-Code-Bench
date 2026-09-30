@@ -133,4 +133,29 @@ No Node package install/typecheck/lint/build, complete locked CI run, PostgreSQL
 | `python docs/implementation/verify_prompt00.py`; parse `progress.json` and `source-manifest.json`; `git diff --check` | PASS after ledger updates: 14 requirements, 24 work packages, 43 E2E scenarios, 35 prompts and 142 tickets with owners; source hashes unchanged; valid JSON and clean diff. |
 | Full application E2E, hosted GitHub Actions, provider/judge tests, production sandbox and browser tests | Not run: this prompt establishes contracts only; no application workflow/provider authorization or production sandbox is part of the available implementation. |
 
-Earlier records in this file document the initial registry/engine blockers; the Auxiliary R1 results above supersede those environment observations. No benchmark workload, model/judge request, paid work, cloud provisioning, upload, or release occurred.
+Earlier records in this file document the initial registry/engine blockers; the Auxiliary R1 results above supersede those environment observations. Prompts 01–03 ran no benchmark workload, model/judge request, paid work, cloud provisioning, upload or release. Prompt 04 uploaded only synthetic fixture bytes to the local SeaweedFS development service for integration tests; no production upload or publication occurred.
+
+## Prompt 04 verified commands and results (2026-09-30)
+
+| Command / check actually run | Result |
+|---|---|
+| `docker compose ps` | PASS with approved elevated Docker access: local PostgreSQL 17.6 healthy on host port 55432 and SeaweedFS 4.48 S3 endpoint on 8333. |
+| `docker compose exec -T postgres createdb -U polycodebench pcb_prompt04_test7`; piped `provision_roles.sql` and `grant_permissions.sql` into local PostgreSQL | PASS: disposable `pcb_prompt04_test7` database provisioned, non-login groups created and grants applied. |
+| `PCB_MIGRATION_DATABASE_URL=<local test URL> uv run --locked alembic -c packages/persistence/alembic.ini upgrade head`; repeated upgrade; `... alembic ... check` | PASS from an empty PostgreSQL 17.6 database; repeat upgrade no-op; no model/schema drift. An initial check found two implicit unique-constraint name mismatches; migration names were aligned, then the fresh-database upgrade and drift check passed. |
+| `PCB_TEST_DATABASE_URL=<dedicated local test URL> PCB_OBJECT_STORE_ENDPOINT=http://127.0.0.1:8333 AWS_ACCESS_KEY_ID=<local development credential> AWS_SECRET_ACCESS_KEY=<local development credential> uv run --locked --all-packages --group dev pytest -q -p no:cacheprovider` | PASS: 21 tests, including three actual PostgreSQL + SeaweedFS artifact integration tests. They cover altered-size/digest/truncated upload rejection, duplicate upload/finalize replay, cross-visibility dedup separation, DB/app role denial, quota refusal, manifest cycles/scope, upload interruption recovery, reviewer-gated projection, 24-hour quota expiry and provisional/canonical orphan cleanup after the 30-day retention interval. Active in-flight artifact identities are protected from canonical orphan collection. Repeated the three artifact tests on the same DB: 3 passed. |
+| `uv sync --locked --all-packages --group dev --offline` | PASS: all 42 locked packages already available and synchronized. |
+| `ruff format --check .`; `ruff check .`; `MYPYPATH=packages/core/src mypy packages/core/src packages/configuration/src packages/persistence/src packages/services/src scripts` | PASS: 67 Python files formatted, lint clean, 34 source files type-check. |
+| `scripts/check_boundaries.py`; `scripts/smoke_workspace.py`; `scripts/export_startup_schema.py --check`; `scripts/export_contract_schemas.py --check` | PASS: package boundaries, ten package imports/startup checks and all 15 generated schema/OpenAPI/shared TypeScript outputs. |
+| `docker compose config --quiet` | PASS. |
+| `uv build --all-packages --out-dir .cache/prompt04-build` | PASS: source and wheel built for all ten packages. Ordinary sandboxed network access could not fetch isolated `uv-build`; the retry through the already approved PyPI path succeeded. Persistence wheel listing confirmed `artifacts.py`, `object_store.py` and the Prompt 04 migration are packaged. |
+| Hosted GitHub Actions; production S3/IAM policy validation; public API/page/download/export privacy probes | NOT RUN: hosted CI was not dispatched; no production object-store target/principals exist; those public routes are later prompts. Local emulator tests do not establish production policy behavior. |
+
+## Prompt 04 review-fix verification (2026-09-30)
+
+| Command / check actually run | Result |
+|---|---|
+| `.venv/Scripts/alembic.exe -c packages/persistence/alembic.ini upgrade head` against existing dedicated `pcb_prompt04_test7` PostgreSQL database | PASS: applied approval and declassification-guard revisions. |
+| Updated `grant_permissions.sql` applied to the dedicated test database | PASS. |
+| `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --tb=short` with local PostgreSQL 17.6 and SeaweedFS 4.48 test environment | PASS: 24 tests, including six artifact integration tests for concurrent finalization, exact approval, publication conflict and expiry retention. |
+| `.venv/Scripts/ruff.exe check` and `format --check` on changed Python files; `.venv/Scripts/mypy.exe` on source packages and scripts | PASS: lint and formatting clean; 36 source files type checked. |
+| `.venv/Scripts/alembic.exe -c packages/persistence/alembic.ini check` | PASS: no schema drift. |

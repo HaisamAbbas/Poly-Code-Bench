@@ -92,6 +92,114 @@ artifact = Table(
     CheckConstraint("content_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
 )
 
+artifact_quota = Table(
+    "artifact_quota",
+    metadata,
+    Column("visibility", String(16), primary_key=True),
+    Column("encryption_domain", String(128), primary_key=True),
+    Column("max_bytes", BigInteger, nullable=False),
+    Column("used_bytes", BigInteger, nullable=False, server_default=text("0")),
+    Column("reserved_bytes", BigInteger, nullable=False, server_default=text("0")),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    CheckConstraint("visibility IN ('public','internal','hidden')", name="visibility"),
+    CheckConstraint("max_bytes >= 0", name="max_bytes_nonnegative"),
+    CheckConstraint("used_bytes >= 0 AND reserved_bytes >= 0", name="usage_nonnegative"),
+    CheckConstraint("used_bytes + reserved_bytes <= max_bytes", name="within_quota"),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+artifact_upload = Table(
+    "artifact_upload",
+    metadata,
+    pk(),
+    Column("owner_subject", String(255), nullable=False),
+    Column("visibility", String(16), nullable=False),
+    Column("encryption_domain", String(128), nullable=False),
+    Column("expected_digest", String(71), nullable=False),
+    Column("expected_size_bytes", BigInteger, nullable=False),
+    Column("media_type", String(255), nullable=False),
+    Column("provisional_key", Text, nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("failure_code", String(64), nullable=True),
+    fk("artifact_id", "artifact.id", nullable=True),
+    Column("expires_at", DateTime(timezone=True), nullable=False),
+    Column("garbage_collect_after", DateTime(timezone=True), nullable=False),
+    created_at(),
+    UniqueConstraint("provisional_key"),
+    CheckConstraint("visibility IN ('public','internal','hidden')", name="visibility"),
+    CheckConstraint("expected_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+    CheckConstraint("expected_size_bytes >= 0", name="size_nonnegative"),
+    CheckConstraint(
+        "state IN ('reserved','uploaded','finalizing','verified','rejected','expired')",
+        name="state",
+    ),
+    CheckConstraint(
+        "(state = 'verified' AND artifact_id IS NOT NULL) OR "
+        "(state <> 'verified' AND artifact_id IS NULL)",
+        name="artifact_link_state",
+    ),
+    CheckConstraint("garbage_collect_after >= expires_at", name="gc_after_expiry"),
+    Index("ix_artifact_upload_expiry", "state", "expires_at"),
+    Index("ix_artifact_upload_gc", "state", "garbage_collect_after"),
+)
+
+artifact_retention_hold = Table(
+    "artifact_retention_hold",
+    metadata,
+    pk(),
+    fk("artifact_id", "artifact.id"),
+    Column("reason", Text, nullable=False),
+    Column("held_by", String(255), nullable=False),
+    created_at("held_at"),
+    Column("released_by", String(255), nullable=True),
+    Column("released_at", DateTime(timezone=True), nullable=True),
+    CheckConstraint("length(trim(reason)) > 0", name="reason_nonempty"),
+    CheckConstraint(
+        "(released_by IS NULL AND released_at IS NULL) OR "
+        "(released_by IS NOT NULL AND released_at IS NOT NULL)",
+        name="release_shape",
+    ),
+    Index("ix_artifact_hold_active", "artifact_id", postgresql_where=text("released_at IS NULL")),
+)
+
+artifact_declassification = Table(
+    "artifact_declassification",
+    metadata,
+    Column(
+        "source_artifact_id",
+        Uuid(as_uuid=True),
+        ForeignKey("artifact.id", ondelete="RESTRICT"),
+        primary_key=True,
+    ),
+    Column(
+        "public_artifact_id",
+        Uuid(as_uuid=True),
+        ForeignKey("artifact.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column("review_digest", String(71), nullable=False),
+    Column("approved_by", String(255), nullable=False),
+    Column("reason", Text, nullable=False),
+    created_at(),
+    CheckConstraint("source_artifact_id <> public_artifact_id", name="distinct_artifacts"),
+    CheckConstraint("review_digest ~ '^sha256:[0-9a-f]{64}$'", name="review_digest_format"),
+    CheckConstraint("length(trim(reason)) > 0", name="reason_nonempty"),
+)
+
+artifact_projection_approval = Table(
+    "artifact_projection_approval",
+    metadata,
+    pk(),
+    fk("source_artifact_id", "artifact.id"),
+    Column("projection_digest", String(71), nullable=False),
+    Column("approved_by", String(255), nullable=False),
+    Column("reason", Text, nullable=False),
+    created_at(),
+    CheckConstraint("projection_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+    CheckConstraint("length(trim(reason)) > 0", name="reason_nonempty"),
+)
+
 task = Table(
     "task",
     metadata,
@@ -935,6 +1043,11 @@ TABLE_GROUPS: dict[str, tuple[str, ...]] = {
     ),
     "artifacts": (
         "artifact",
+        "artifact_quota",
+        "artifact_upload",
+        "artifact_retention_hold",
+        "artifact_declassification",
+        "artifact_projection_approval",
         "artifact_edge",
         "observation",
         "judge_packet",

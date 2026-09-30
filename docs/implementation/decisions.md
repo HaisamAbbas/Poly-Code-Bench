@@ -27,6 +27,13 @@ Cloud account/region, OIDC identities, provider/judge endpoint credentials, expl
 
 - **D-01-05 - pnpm install policy:** keep dependency lifecycle scripts blocked by default and explicitly allow only the reviewed `unrs-resolver` native-binding postinstall. The exact pinned Next 16.3.7 packages are listed in `minimumReleaseAgeExclude` to account for their release metadata; the lockfile supply-chain policy passed for all 402 entries.
 
+## Prompt 03 decisions and scope notes
+
+- **D-03-01 - Non-destructive initial downgrade:** the first schema revision refuses downgrade because dropping task provenance, attempts, evaluations, audit, accounting and published evidence would destroy benchmark records. Schema retirement requires a separately reviewed backup and retention plan.
+- **D-03-02 - Database workload identities:** SQL role groups are provisioned as `NOLOGIN`; deployment creates managed per-service login identities and attaches them to a single narrow group. Passwords and tokens remain in deployment secret management and are not checked into SQL, audit records or logs. The local test connection used the PostgreSQL cluster's trust-authenticated ephemeral test administrator and explicitly `SET ROLE`d in permission tests; it does not verify deployed credentials.
+- **D-03-03 - Cyclic artifact/execution identity:** both tables are created before the artifact-to-execution foreign key is added. An initial schema drift check caught the missing edge in the first draft; a fresh-database migration plus repeat-upgrade and drift check passed after correction.
+- **D-03-04 - Prompt 03 evidence boundary:** PostgreSQL 18.4 integration tests cover the transaction/repository and selected DB-role/service foundation. The CI job targets pinned PostgreSQL 17.6, but hosted CI was not run; HTTP/API routes, full administrative-role coverage, provider execution and all remaining E2E-02/25 variants remain pending by their later owners.
+
 ## Prompt 02 decisions and discrepancies
 
 - **D-02-01 - Seed wire representation:** Technical Spec §3 requires unsigned 64-bit seeds to survive serialization without signed overflow, so `master_seed` is a canonical decimal string throughout the versioned contracts. A numeric `master_seed: 4096` example in Technical Spec §4 is treated as illustrative shorthand; the narrow wire-safe representation in §3 governs. No score or sampling semantics are changed.

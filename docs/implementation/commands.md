@@ -74,6 +74,33 @@ No durable model/job/upload/release identity exists to retry; the persisted stat
 
 No Node package install/typecheck/lint/build, complete locked CI run, PostgreSQL connectivity check, container startup, model call, paid work, upload, or release action was performed.
 
+## Prompt 03 checks (2026-09-30)
+
+| Command / check | Result |
+|---|---|
+| PostgreSQL 18.4 ephemeral UTF-8 cluster on `127.0.0.1:55434`; provision dedicated `pcb_prompt03_final2_test` DB and role groups | PASS: actual local PostgreSQL; Docker Desktop Linux engine was unavailable. A prior migration attempt exposed the cyclic FK missing from the database; migration corrected to add the FK after both tables exist. |
+| `$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_MIGRATION_DATABASE_URL='postgresql://postgres@127.0.0.1:55434/pcb_prompt03_final2_test'; uv run --locked alembic -c packages/persistence/alembic.ini upgrade head` | PASS on empty DB; 42 domain tables plus Alembic bookkeeping, guards/views, artifact/execution cyclic FK. |
+| `psql ... -f packages/persistence/sql/provision_roles.sql`; `psql ... -f packages/persistence/sql/grant_permissions.sql` | PASS: no-login role groups provisioned; scoped grants and submitter/reviewer RLS applied. Exact local commands used the test DB URL above and `-v ON_ERROR_STOP=1`; no credential-bearing URL was emitted. |
+| `uv run --locked alembic -c packages/persistence/alembic.ini upgrade head` (second invocation); `uv run --locked alembic -c packages/persistence/alembic.ini check` | PASS: repeat upgrade was a no-op; Alembic reported “No new upgrade operations detected.” |
+| `$env:PCB_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:55434/pcb_prompt03_final2_test'; uv run --locked pytest -q -p no:cacheprovider --tb=short tests/test_persistence_postgres.py` | PASS: 4 PostgreSQL integration tests (same-key concurrent replay, changed-body conflict, atomic rollback after injected attempt insert failure, immutable writes, DB grants/RLS, RBAC, identity/audit and optimistic version rejection). |
+| `uv run --locked alembic -c packages/persistence/alembic.ini upgrade head` on initial pre-fix draft DB; `alembic check` | Initial check FAILED because the cyclic `artifact.producer_execution_id` FK was represented in metadata but absent from the actual migration. The migration was fixed; fresh empty DB migration and drift check above both passed. |
+| `git diff --check`; `python -m json.tool docs/implementation/progress.json`; `python docs/implementation/verify_prompt00.py` | Run after ledger reconciliation below; PASS required before final report. |
+| PostgreSQL 17.6 hosted CI job | Configured with the pinned development image and role setup/migration/drift/integration checks. Remote GitHub Actions was not run during this session; local actual DB evidence is PostgreSQL 18.4. |
+| HTTP/API routes, all administrative permission routes/roles, live model/provider work, PG17 local Docker service | Not run: HTTP/application routes and provider endpoints do not yet exist; every E2E-25 route variant is explicitly pending; Docker Linux engine unavailable. |
+
+### Final Prompt 03 verification results
+
+| Command / check | Result |
+|---|---|
+| `uv run --locked --all-packages --group dev ruff format --check .`; `ruff check .` | PASS: all 60 files formatted; all lint checks passed. A migration-only E501 exception covers long generated constraint/embedded DDL lines. |
+| `uv run --locked --all-packages --group dev mypy packages/core/src packages/configuration/src packages/persistence/src packages/services/src scripts` | PASS: 29 source files, no issues. Initial typing findings were fixed and the command rerun. |
+| `uv run --locked --all-packages --group dev pytest -q -p no:cacheprovider` with `PCB_TEST_DATABASE_URL` pointing to the dedicated local PG18.4 test database | PASS: 18 tests total, including 4 PostgreSQL integration tests. |
+| `uv run --locked python scripts/check_boundaries.py`; `uv run --locked python scripts/smoke_workspace.py`; startup and contract schema `--check` commands | PASS: package boundaries, ten imports/startup checks, startup schema and 15 generated contract outputs. |
+| `uv run --locked alembic -c packages/persistence/alembic.ini upgrade head`; `uv run --locked alembic -c packages/persistence/alembic.ini check` | PASS on the migrated integration DB: repeat upgrade is a no-op and no schema drift detected. Empty-database upgrade had already passed before test rows were inserted. |
+| `uv build --all-packages --out-dir .cache/prompt03-build` using approved PyPI access | PASS: source distributions and wheels for all 10 packages. An offline attempt and an ordinary sandboxed online attempt could not find/fetch the pinned `uv-build==0.12.15` backend; the authorized elevated PyPI retry passed. |
+| `python -c` wheel listing for `.cache/prompt03-build/polycodebench_persistence-0.1.0-py3-none-any.whl` | PASS: packaged wheel includes Alembic env, template, and `5c9545180d80_initial_persistence_schema.py`. |
+| `python docs/implementation/verify_prompt00.py`; `python -m json.tool docs/implementation/progress.json`; `git diff --check` | PASS: 14 requirements, 24 work packages, 43 scenarios, Prompts 00–34, 142 tickets with owners/evidence, valid progress JSON and clean whitespace. |
+
 
 ## Auxiliary R1 completion checks (2026-09-30)
 

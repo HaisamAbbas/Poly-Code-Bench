@@ -3,7 +3,12 @@ name = "polycodebench-persistence"
 version = "0.1.0"
 description = "PolyCodeBench persistence and migration ownership boundary"
 requires-python = ">=3.12,<3.13"
-dependencies = ["polycodebench-core==0.1.0"]
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "sqlalchemy==2.0.54",
+  "alembic==1.20.0",
+  "psycopg[binary]==3.3.6",
+]
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }

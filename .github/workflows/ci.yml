@@ -11,6 +11,21 @@ permissions:
 jobs:
   python:
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PCB_MIGRATION_DATABASE_URL: postgresql://postgres@localhost:5432/pcb_prompt03_ci_test
+      PCB_TEST_DATABASE_URL: postgresql://postgres@localhost:5432/pcb_prompt03_ci_test
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -21,6 +36,10 @@ jobs:
       - run: uv run --locked --all-packages --group dev ruff format --check .
       - run: uv run --locked --all-packages --group dev ruff check .
       - run: uv run --locked --all-packages --group dev mypy packages/core/src packages/configuration/src scripts
+      - run: psql "$PCB_MIGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 -f packages/persistence/sql/provision_roles.sql
+      - run: uv run --locked alembic -c packages/persistence/alembic.ini upgrade head
+      - run: psql "$PCB_MIGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 -f packages/persistence/sql/grant_permissions.sql
+      - run: uv run --locked alembic -c packages/persistence/alembic.ini check
       - run: uv run --locked --all-packages --group dev pytest -p no:cacheprovider
       - run: uv run --locked --all-packages --group dev python scripts/check_boundaries.py
       - run: uv run --locked --all-packages --group dev python scripts/smoke_workspace.py

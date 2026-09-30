@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "project": "PolyCodeBench",
-  "last_completed_prompt": "02",
-  "active_prompt": "03",
-  "active_scope": "WP-03: persistence, identity and idempotency",
+  "last_completed_prompt": "03",
+  "active_prompt": "04",
+  "active_scope": "WP-04: artifact storage and visibility",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "in_progress",
@@ -16,7 +16,7 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_02_passed; phase_1_aggregate_pending",
+  "verification_status": "prompt_03_passed; phase_1_aggregate_pending",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
@@ -32,14 +32,14 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 14
+    "application_tests_run": 18
   },
-  "exact_next_action": "Prompt 03 - Build persistence, identity and idempotency.",
+  "exact_next_action": "Prompt 04 — Implement artifact storage and visibility.",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
     "02": "done",
-    "03": "not_started",
+    "03": "done",
     "04": "not_started",
     "05": "not_started",
     "06": "not_started",
@@ -163,6 +163,30 @@
         "package dependency boundary check",
         "offline builds: source and wheel for all 10 Python packages",
         "ledger/source consistency, JSON parsing and git diff --check"
+      ],
+      "no_paid_or_remote_product_actions": true,
+      "unrelated_untracked_preserved": [
+        "Constitution/production_quality_software_engineering_prompt-3.md"
+      ]
+    },
+    {
+      "date": "2026-09-30",
+      "active_prompt": "03",
+      "baseline_commit": "c66455eaf04aaf4e02a9e19aa83c45e358d3b7a8",
+      "working_tree_at_start": "Prompt 02 committed; preserved unrelated untracked Constitution/production_quality_software_engineering_prompt-3.md",
+      "source_hashes": "Architecture, Technical Spec and prompt pack remain identical to source-manifest.json; no normative source document changed",
+      "fresh_passes": [
+        "PostgreSQL 18.4 UTF-8 fresh database migration and role grant setup",
+        "Second Alembic upgrade idempotence and alembic check: no schema drift",
+        "Four PostgreSQL integration tests: concurrent idempotency replay, changed-payload conflict, atomic rollback, immutable rows, RLS/grants, RBAC, identity audit and optimistic version checks",
+        "Ruff format/lint; mypy across 29 files; 18 full workspace tests; package boundaries; workspace startup and generated schema checks",
+        "Source and wheel builds for all ten packages; packaged migration presence verified in persistence wheel",
+        "Prompt 00 consistency checker: 14 REQ, 24 WP, 43 E2E, 35 prompts and 142 tickets with owners/evidence; progress JSON and git diff checks"
+      ],
+      "pending_or_unrun": [
+        "Hosted CI against pinned PostgreSQL 17.6 not dispatched",
+        "HTTP/API permission route variants do not exist; full E2E-02 and E2E-25 remain partial",
+        "Managed deployment login credentials and provider endpoints are external deployment inputs"
       ],
       "no_paid_or_remote_product_actions": true,
       "unrelated_untracked_preserved": [

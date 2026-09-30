@@ -136,40 +136,40 @@ Total registered tickets: 142. Every ticket is owned by the numbered prompt enco
 
 - Owner prompt: `03`.
 - Dependencies: Prompt 02 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`.
+- Verification: `passed` for PostgreSQL 18.4 empty-database migration, cyclic artifact/execution FK, second-upgrade idempotence, grants, and Alembic model/schema drift check; PG17.6 run is configured in CI but hosted CI has not run in this session.
 - Required verification scope: E2E-02, E2E-25 foundational subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/persistence/src/polycodebench_persistence/models.py`; packaged Alembic revision and SQL role scripts; `tests/test_persistence_postgres.py`; local command/evidence in `docs/implementation/commands.md` and `docs/implementation/reports/prompt-03.md`.
 - Acceptance criteria: — Add schema/migrations for tasks/configs, runs/attempts/evaluations, jobs/dependencies/executions, workers/capacity slots, artifact references, evidence/review, scorecards/releases, endpoint requests, ledgers and audit/idempotency records. DoD: empty-database creation and upgrade paths work; cyclic foreign-key creation order is handled correctly; constraints match semantics.
 
 ## PCB-03-2 - Prompt 03: — Build persistence, identity and idempotency
 
 - Owner prompt: `03`.
 - Dependencies: Prompt 02 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`.
+- Verification: `passed` for atomic run/attempt inserts, max uint64 seed persistence, immutable task-version/audit rejection, and independently stored attempt/evaluation schema; no evaluation workflow exists yet.
 - Required verification scope: E2E-02, E2E-25 foundational subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/persistence/src/polycodebench_persistence/{runs.py,models.py}` and `tests/test_persistence_postgres.py`; published-release immutability is enforced by database triggers but full publication workflow is future scope.
 - Acceptance criteria: — Implement service/repository transactions and immutable-record protections. DoD: attempt/evaluation separation is real, no published evidence is overwritten, and foreign keys/unique constraints enforce identities and retry boundaries.
 
 ## PCB-03-3 - Prompt 03: — Build persistence, identity and idempotency
 
 - Owner prompt: `03`.
 - Dependencies: Prompt 02 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` for RBAC/identity foundations, non-login role groups, row-version CAS, append-only audit storage and scoped DB grants/RLS.
+- Verification: `passed` for service authorization, submitter RLS own-row visibility/cross-subject insert denial, base-table denial, role assignment audit, and stale role-version rejection. No API routes or separately managed deployment login credentials exist yet; deployment must attach workload logins and supply secrets externally.
 - Required verification scope: E2E-02, E2E-25 foundational subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/services/src/polycodebench_services/{identity.py,rbac.py}`; `packages/persistence/src/polycodebench_persistence/identities.py`; `packages/persistence/sql/{provision_roles.sql,grant_permissions.sql}`; PostgreSQL test evidence in `tests/test_persistence_postgres.py`.
 - Acceptance criteria: — Implement administrative identity/RBAC foundations, optimistic version checks and append-only audit events. DoD: permissions are enforced in services/API boundaries, with role-specific database credentials and no secret values in records/logs.
 
 ## PCB-03-4 - Prompt 03: — Build persistence, identity and idempotency
 
 - Owner prompt: `03`.
 - Dependencies: Prompt 02 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`.
+- Verification: `passed` for simultaneous same-key requests returning one run and attempt set, changed-payload key conflict, and injected attempt-write failure rolling back run, attempts, idempotency claim and audit event.
 - Required verification scope: E2E-02, E2E-25 foundational subcases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/services/src/polycodebench_services/runs.py`, `packages/persistence/src/polycodebench_persistence/runs.py`, and PostgreSQL integration evidence in `tests/test_persistence_postgres.py`.
 - Acceptance criteria: — Implement request idempotency and transaction-safe run/attempt creation service behavior. DoD: same key and request replay one result; changed request conflicts; creation cannot leave partial attempt sets. This foundational service may be integration-tested before the scheduler exists.
 
 ## PCB-04-1 - Prompt 04: — Implement artifact storage and visibility

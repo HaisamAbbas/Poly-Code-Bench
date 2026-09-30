@@ -1,0 +1,990 @@
+"""PostgreSQL relational schema for durable benchmark records.
+
+The metadata is the authoritative source for migrations and repository SQL.
+JSONB fields hold already validated extension documents; identities and
+relationships remain relational constraints.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from uuid import UUID, uuid4
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    MetaData,
+    Numeric,
+    PrimaryKeyConstraint,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    func,
+    text,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+
+NAMING_CONVENTION = {
+    "ix": "ix_%(table_name)s_%(column_0_name)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+def pk() -> Column[UUID]:
+    return Column(
+        "id",
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+
+
+def created_at(name: str = "created_at") -> Column[datetime]:
+    return Column(name, DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+def fk(
+    name: str,
+    target: str,
+    *,
+    nullable: bool = False,
+    use_alter: bool = False,
+) -> Column[UUID]:
+    return Column(
+        name,
+        Uuid(as_uuid=True),
+        ForeignKey(target, ondelete="RESTRICT", use_alter=use_alter),
+        nullable=nullable,
+    )
+
+
+artifact = Table(
+    "artifact",
+    metadata,
+    pk(),
+    Column("visibility", String(16), nullable=False),
+    Column("content_digest", String(71), nullable=False),
+    Column("size_bytes", BigInteger, nullable=False),
+    Column("media_type", String(255), nullable=False),
+    Column("storage_key", Text, nullable=False),
+    Column("encryption_domain", String(128), nullable=False),
+    Column("status", String(24), nullable=False),
+    Column("producer_execution_id", Uuid(as_uuid=True), nullable=True),
+    created_at(),
+    UniqueConstraint("visibility", "encryption_domain", "content_digest"),
+    CheckConstraint("visibility IN ('public','internal','hidden')", name="visibility"),
+    CheckConstraint("status IN ('provisional','verified','quarantined','deleted')", name="status"),
+    CheckConstraint("size_bytes >= 0", name="size_bytes_nonnegative"),
+    CheckConstraint("content_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+)
+
+task = Table(
+    "task",
+    metadata,
+    pk(),
+    Column("slug", String(160), nullable=False),
+    Column("family", String(64), nullable=False),
+    Column("source_identity", String(512), nullable=False),
+    Column("primary_language", String(32), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("slug"),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+task_version = Table(
+    "task_version",
+    metadata,
+    pk(),
+    fk("task_id", "task.id"),
+    Column("version", Integer, nullable=False),
+    Column("digest", String(71), nullable=False),
+    fk("manifest_artifact_id", "artifact.id"),
+    fk("visible_artifact_id", "artifact.id"),
+    fk("hidden_artifact_id", "artifact.id"),
+    Column("language", String(32), nullable=False),
+    Column("family", String(64), nullable=False),
+    Column("cluster_id", String(160), nullable=False),
+    Column("stratum_id", String(160), nullable=False),
+    Column("first_public_at", DateTime(timezone=True), nullable=True),
+    Column("frozen_at", DateTime(timezone=True), nullable=True),
+    Column("schema_version", Integer, nullable=False),
+    Column("document", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("task_id", "version"),
+    UniqueConstraint("digest"),
+    CheckConstraint("version > 0", name="version_positive"),
+    CheckConstraint("schema_version > 0", name="schema_version_positive"),
+    CheckConstraint("digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+    Index("ix_task_version_language", "language"),
+    Index("ix_task_version_family", "family"),
+)
+
+task_set = Table(
+    "task_set",
+    metadata,
+    pk(),
+    Column("name", String(160), nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("digest", String(71), nullable=False),
+    Column("split", String(32), nullable=False),
+    Column("status", String(24), nullable=False),
+    fk("manifest_artifact_id", "artifact.id"),
+    Column("frozen_at", DateTime(timezone=True), nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("name", "version"),
+    UniqueConstraint("digest"),
+    CheckConstraint("version > 0", name="version_positive"),
+    CheckConstraint("status IN ('draft','validating','frozen','withdrawn')", name="status"),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+task_set_member = Table(
+    "task_set_member",
+    metadata,
+    Column(
+        "task_set_id",
+        Uuid(as_uuid=True),
+        ForeignKey("task_set.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column(
+        "task_version_id",
+        Uuid(as_uuid=True),
+        ForeignKey("task_version.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column("stratum_id", String(160), nullable=False),
+    Column("sampling_weight_bp", Integer, nullable=False),
+    PrimaryKeyConstraint("task_set_id", "task_version_id"),
+    CheckConstraint("sampling_weight_bp > 0", name="sampling_weight_positive"),
+)
+
+config_document = Table(
+    "config_document",
+    metadata,
+    pk(),
+    Column("kind", String(64), nullable=False),
+    Column("version_label", String(128), nullable=False),
+    Column("digest", String(71), nullable=False),
+    fk("canonical_artifact_id", "artifact.id"),
+    Column("schema_version", Integer, nullable=False),
+    Column("document", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("kind", "digest"),
+    CheckConstraint("schema_version > 0", name="schema_version_positive"),
+    CheckConstraint("digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+)
+
+endpoint_registration = Table(
+    "endpoint_registration",
+    metadata,
+    pk(),
+    Column("provider_kind", String(48), nullable=False),
+    Column("base_url_ref", Text, nullable=False),
+    Column("secret_ref", Text, nullable=False),
+    Column("network_policy_id", String(160), nullable=False),
+    Column("approval_status", String(24), nullable=False),
+    Column("capabilities_digest", String(71), nullable=False),
+    Column("registered_by", String(255), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    CheckConstraint(
+        "approval_status IN ('pending','approved','rejected','revoked')", name="approval_status"
+    ),
+    CheckConstraint(
+        "capabilities_digest ~ '^sha256:[0-9a-f]{64}$'", name="capabilities_digest_format"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+model_revision = Table(
+    "model_revision",
+    metadata,
+    pk(),
+    Column("provider", String(64), nullable=False),
+    Column("name", String(255), nullable=False),
+    Column("immutable_revision", String(255), nullable=True),
+    fk("endpoint_registration_id", "endpoint_registration.id", nullable=True),
+    Column("cutoff_at", DateTime(timezone=True), nullable=True),
+    Column("cutoff_source", Text, nullable=True),
+    fk("capabilities_config_id", "config_document.id"),
+    created_at(),
+    UniqueConstraint("provider", "name", "immutable_revision"),
+)
+
+budget_account = Table(
+    "budget_account",
+    metadata,
+    pk(),
+    Column("scope_kind", String(32), nullable=False),
+    Column("scope_id", String(255), nullable=False),
+    Column("hard_limit_micro_usd", BigInteger, nullable=False),
+    Column("spent_confirmed", BigInteger, nullable=False, server_default=text("0")),
+    Column("reserved_open", BigInteger, nullable=False, server_default=text("0")),
+    Column("uncertain_committed", BigInteger, nullable=False, server_default=text("0")),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("scope_kind", "scope_id"),
+    CheckConstraint("hard_limit_micro_usd >= 0", name="hard_limit_nonnegative"),
+    CheckConstraint(
+        "spent_confirmed >= 0 AND reserved_open >= 0 AND uncertain_committed >= 0",
+        name="balance_nonnegative",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+campaign = Table(
+    "campaign",
+    metadata,
+    pk(),
+    Column("name", String(160), nullable=False),
+    Column("status", String(24), nullable=False),
+    Column("owner_subject", String(255), nullable=False),
+    fk("budget_account_id", "budget_account.id", nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    CheckConstraint(
+        "status IN ('draft','planned','running','cancelling','completed','failed','cancelled')",
+        name="status",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_campaign_status", "status"),
+)
+
+run = Table(
+    "run",
+    metadata,
+    pk(),
+    fk("campaign_id", "campaign.id"),
+    fk("config_document_id", "config_document.id"),
+    fk("task_set_id", "task_set.id"),
+    fk("model_revision_id", "model_revision.id"),
+    Column("status", String(24), nullable=False),
+    Column("created_by", String(255), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("campaign_id", "config_document_id"),
+    CheckConstraint(
+        "status IN ('planned','queued','running','cancelling','completed','failed','cancelled')",
+        name="status",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_run_task_set", "task_set_id"),
+)
+
+attempt = Table(
+    "attempt",
+    metadata,
+    pk(),
+    fk("run_id", "run.id"),
+    fk("task_version_id", "task_version.id"),
+    Column("sample_index", Integer, nullable=False),
+    Column("seed", Numeric(20, 0), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("failure_class", String(64), nullable=True),
+    fk("checkpoint_artifact_id", "artifact.id", nullable=True),
+    fk("candidate_artifact_id", "artifact.id", nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("run_id", "task_version_id", "sample_index"),
+    CheckConstraint("sample_index >= 0", name="sample_index_nonnegative"),
+    CheckConstraint("seed >= 0 AND seed <= 18446744073709551615", name="seed_unsigned_64"),
+    CheckConstraint(
+        "state IN ('queued','running','completed','failed','cancelled','skipped')", name="state"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_attempt_run_state", "run_id", "state"),
+)
+
+candidate = Table(
+    "candidate",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id"),
+    Column("revision", Integer, nullable=False),
+    Column("payload_digest", String(71), nullable=False),
+    Column("submission_kind", String(32), nullable=False),
+    Column("payload", JSONB, nullable=False),
+    fk("canonical_artifact_id", "artifact.id"),
+    Column("frozen_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    created_at(),
+    UniqueConstraint("attempt_id", "revision"),
+    CheckConstraint("revision > 0", name="revision_positive"),
+    CheckConstraint("payload_digest ~ '^sha256:[0-9a-f]{64}$'", name="payload_digest_format"),
+)
+
+evaluation = Table(
+    "evaluation",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id"),
+    fk("policy_config_id", "config_document.id"),
+    Column("oracle_digest", String(71), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("gate", String(24), nullable=False),
+    fk("evidence_manifest_id", "artifact.id", nullable=True),
+    fk("supersedes_id", "evaluation.id", nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("attempt_id", "policy_config_id", "oracle_digest"),
+    CheckConstraint("state IN ('queued','running','ready','failed','superseded')", name="state"),
+    CheckConstraint("gate IN ('pass','fail','unknown','not_applicable')", name="gate"),
+    CheckConstraint("oracle_digest ~ '^sha256:[0-9a-f]{64}$'", name="oracle_digest_format"),
+    CheckConstraint(
+        "state <> 'ready' OR (gate <> 'unknown' AND evidence_manifest_id IS NOT NULL)",
+        name="ready_has_known_gate_and_evidence",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_evaluation_attempt", "attempt_id"),
+)
+
+stage_job = Table(
+    "stage_job",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id", nullable=True),
+    fk("evaluation_id", "evaluation.id", nullable=True),
+    fk("release_id", "release.id", nullable=True),
+    Column("stage", String(48), nullable=False),
+    Column("shard_key", String(255), nullable=False, server_default=text("''")),
+    Column("input_digest", String(71), nullable=False),
+    Column("logical_key", String(71), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("required", Boolean, nullable=False, server_default=text("true")),
+    Column("queue_class", String(64), nullable=False),
+    Column("priority", Integer, nullable=False, server_default=text("0")),
+    Column("available_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("lease_until", DateTime(timezone=True), nullable=True),
+    Column("owner_id", String(255), nullable=True),
+    Column("fence", BigInteger, nullable=False, server_default=text("0")),
+    Column("deliveries", Integer, nullable=False, server_default=text("0")),
+    Column("max_deliveries", Integer, nullable=False, server_default=text("3")),
+    fk("output_artifact_id", "artifact.id", nullable=True),
+    Column("error_code", String(64), nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("logical_key"),
+    CheckConstraint("num_nonnulls(attempt_id,evaluation_id,release_id) = 1", name="one_scope"),
+    CheckConstraint(
+        "state IN ('blocked','queued','leased','succeeded','retry_wait','dead','cancelled',"
+        "'skipped')",
+        name="state",
+    ),
+    CheckConstraint(
+        "fence >= 0 AND deliveries >= 0 AND max_deliveries >= 1", name="delivery_bounds"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    CheckConstraint(
+        "(state = 'leased' AND lease_until IS NOT NULL AND owner_id IS NOT NULL) OR "
+        "(state <> 'leased' AND lease_until IS NULL AND owner_id IS NULL)",
+        name="lease_shape",
+    ),
+    Index(
+        "ix_stage_job_ready",
+        "queue_class",
+        "priority",
+        "available_at",
+        postgresql_where=text("state IN ('queued','retry_wait')"),
+    ),
+    Index("ix_stage_job_expired", "lease_until", postgresql_where=text("state = 'leased'")),
+)
+
+stage_dependency = Table(
+    "stage_dependency",
+    metadata,
+    Column(
+        "job_id",
+        Uuid(as_uuid=True),
+        ForeignKey("stage_job.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column(
+        "prerequisite_job_id",
+        Uuid(as_uuid=True),
+        ForeignKey("stage_job.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    PrimaryKeyConstraint("job_id", "prerequisite_job_id"),
+    CheckConstraint("job_id <> prerequisite_job_id", name="not_self_dependency"),
+)
+
+worker_registration = Table(
+    "worker_registration",
+    metadata,
+    pk(),
+    Column("workload_identity", String(255), nullable=False),
+    Column("lane", String(32), nullable=False),
+    Column("hardware_class", String(128), nullable=False),
+    Column("allowed_queue_classes", JSONB, nullable=False),
+    Column("status", String(24), nullable=False),
+    Column("last_heartbeat_at", DateTime(timezone=True), nullable=True),
+    Column("driver_identity", String(255), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("workload_identity"),
+    CheckConstraint("status IN ('active','draining','disabled','quarantined')", name="status"),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+capacity_slot = Table(
+    "capacity_slot",
+    metadata,
+    pk(),
+    fk("worker_id", "worker_registration.id"),
+    fk("resource_spec_config_id", "config_document.id"),
+    Column("slot_key", String(128), nullable=False),
+    Column("state", String(24), nullable=False),
+    fk("job_id", "stage_job.id", nullable=True),
+    Column("fence", BigInteger, nullable=True),
+    Column("guest_id", String(255), nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    UniqueConstraint("worker_id", "slot_key"),
+    CheckConstraint("state IN ('available','reserved','busy','draining','disabled')", name="state"),
+    CheckConstraint(
+        "(state = 'busy' AND job_id IS NOT NULL AND fence IS NOT NULL) OR state <> 'busy'",
+        name="busy_has_job",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+stage_execution = Table(
+    "stage_execution",
+    metadata,
+    pk(),
+    fk("job_id", "stage_job.id"),
+    Column("fence", BigInteger, nullable=False),
+    Column("worker_id", String(255), nullable=False),
+    created_at("started_at"),
+    Column("finished_at", DateTime(timezone=True), nullable=True),
+    Column("result", String(24), nullable=True),
+    Column("failure_class", String(64), nullable=True),
+    fk("environment_artifact_id", "artifact.id", nullable=True),
+    fk("output_manifest_id", "artifact.id", nullable=True),
+    UniqueConstraint("job_id", "fence"),
+    CheckConstraint("fence >= 0", name="fence_nonnegative"),
+    CheckConstraint(
+        "result IS NULL OR result IN ('succeeded','failed','cancelled','lost')", name="result"
+    ),
+)
+
+artifact_edge = Table(
+    "artifact_edge",
+    metadata,
+    Column(
+        "parent_artifact_id",
+        Uuid(as_uuid=True),
+        ForeignKey("artifact.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column(
+        "child_artifact_id",
+        Uuid(as_uuid=True),
+        ForeignKey("artifact.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column("relation", String(48), nullable=False),
+    PrimaryKeyConstraint("parent_artifact_id", "child_artifact_id", "relation"),
+    CheckConstraint("parent_artifact_id <> child_artifact_id", name="not_self_edge"),
+)
+
+observation = Table(
+    "observation",
+    metadata,
+    pk(),
+    fk("evaluation_id", "evaluation.id"),
+    fk("stage_execution_id", "stage_execution.id"),
+    fk("canonical_artifact_id", "artifact.id"),
+    Column("check_id", String(160), nullable=False),
+    Column("issue_key", String(255), nullable=True),
+    Column("status", String(32), nullable=False),
+    Column("primary_owner", String(64), nullable=True),
+    Column("baseline_relation", String(32), nullable=True),
+    Column("document", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("evaluation_id", "check_id", "canonical_artifact_id"),
+)
+
+call_intent = Table(
+    "call_intent",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id", nullable=True),
+    fk("evaluation_id", "evaluation.id", nullable=True),
+    Column("logical_call_key", String(255), nullable=False),
+    Column("request_digest", String(71), nullable=False),
+    fk("model_config_id", "config_document.id"),
+    Column("price_snapshot", JSONB, nullable=False),
+    fk("request_artifact_id", "artifact.id", nullable=True),
+    Column("state", String(24), nullable=False),
+    created_at(),
+    CheckConstraint("num_nonnulls(attempt_id,evaluation_id) = 1", name="one_scope"),
+    CheckConstraint("request_digest ~ '^sha256:[0-9a-f]{64}$'", name="request_digest_format"),
+    CheckConstraint(
+        "state IN ('reserved','dispatching','settled','uncertain','failed')", name="state"
+    ),
+)
+Index(
+    "uq_call_intent_attempt_key",
+    call_intent.c.attempt_id,
+    call_intent.c.logical_call_key,
+    unique=True,
+    postgresql_where=call_intent.c.attempt_id.is_not(None),
+)
+Index(
+    "uq_call_intent_evaluation_key",
+    call_intent.c.evaluation_id,
+    call_intent.c.logical_call_key,
+    unique=True,
+    postgresql_where=call_intent.c.evaluation_id.is_not(None),
+)
+
+call_delivery = Table(
+    "call_delivery",
+    metadata,
+    pk(),
+    fk("intent_id", "call_intent.id"),
+    Column("delivery_index", Integer, nullable=False),
+    Column("dispatched_at", DateTime(timezone=True), nullable=False),
+    Column("responded_at", DateTime(timezone=True), nullable=True),
+    Column("provider_request_id", String(255), nullable=True),
+    Column("status", String(24), nullable=False),
+    Column("failure_code", String(64), nullable=True),
+    fk("raw_response_artifact_id", "artifact.id", nullable=True),
+    UniqueConstraint("intent_id", "delivery_index"),
+    CheckConstraint("delivery_index >= 0", name="delivery_index_nonnegative"),
+    CheckConstraint("status IN ('dispatching','responded','failed','ambiguous')", name="status"),
+)
+
+usage_record = Table(
+    "usage_record",
+    metadata,
+    pk(),
+    fk("delivery_id", "call_delivery.id"),
+    Column("input_tokens", BigInteger, nullable=True),
+    Column("output_tokens", BigInteger, nullable=True),
+    Column("reasoning_tokens", BigInteger, nullable=True),
+    Column("usage_available", JSONB, nullable=False),
+    Column("source", String(32), nullable=False),
+    Column("actual_cost_micro_usd", BigInteger, nullable=True),
+    Column("estimated_cost_micro_usd", BigInteger, nullable=True),
+    Column("settlement_revision", Integer, nullable=False),
+    created_at(),
+    UniqueConstraint("delivery_id", "settlement_revision"),
+    CheckConstraint("settlement_revision > 0", name="settlement_revision_positive"),
+    CheckConstraint(
+        "COALESCE(input_tokens,0) >= 0 AND COALESCE(output_tokens,0) >= 0 AND "
+        "COALESCE(reasoning_tokens,0) >= 0",
+        name="tokens_nonnegative",
+    ),
+)
+
+budget_reservation = Table(
+    "budget_reservation",
+    metadata,
+    pk(),
+    fk("account_id", "budget_account.id"),
+    fk("call_intent_id", "call_intent.id"),
+    Column("amount_micro_usd", BigInteger, nullable=False),
+    Column("state", String(24), nullable=False),
+    created_at(),
+    UniqueConstraint("account_id", "call_intent_id"),
+    CheckConstraint("amount_micro_usd >= 0", name="amount_nonnegative"),
+    CheckConstraint("state IN ('open','settled','released','uncertain')", name="state"),
+)
+
+accounting_entry = Table(
+    "accounting_entry",
+    metadata,
+    pk(),
+    fk("account_id", "budget_account.id"),
+    fk("call_intent_id", "call_intent.id", nullable=True),
+    fk("delivery_id", "call_delivery.id", nullable=True),
+    Column("entry_kind", String(24), nullable=False),
+    Column("amount_micro_usd", BigInteger, nullable=False),
+    Column("reason", Text, nullable=False),
+    created_at(),
+    CheckConstraint(
+        "entry_kind IN ('reservation','charge','release','adjustment')", name="entry_kind"
+    ),
+    CheckConstraint("num_nonnulls(call_intent_id,delivery_id) >= 1", name="linked_call"),
+)
+
+judge_packet = Table(
+    "judge_packet",
+    metadata,
+    pk(),
+    fk("evaluation_id", "evaluation.id"),
+    Column("packet_digest", String(71), nullable=False),
+    Column("rubric_digest", String(71), nullable=False),
+    Column("panel_digest", String(71), nullable=False),
+    Column("required_votes", Integer, nullable=False),
+    created_at(),
+    UniqueConstraint("evaluation_id", "packet_digest", "panel_digest"),
+    CheckConstraint("required_votes >= 3", name="minimum_votes"),
+)
+
+judge_vote = Table(
+    "judge_vote",
+    metadata,
+    pk(),
+    fk("packet_id", "judge_packet.id"),
+    Column("vote_index", Integer, nullable=False),
+    fk("call_delivery_id", "call_delivery.id"),
+    fk("normalized_artifact_id", "artifact.id", nullable=True),
+    Column("status", String(24), nullable=False),
+    created_at(),
+    UniqueConstraint("packet_id", "vote_index"),
+    CheckConstraint("vote_index >= 0", name="vote_index_nonnegative"),
+)
+
+adjudication = Table(
+    "adjudication",
+    metadata,
+    pk(),
+    fk("evaluation_id", "evaluation.id"),
+    Column("target_kind", String(48), nullable=False),
+    Column("target_id", String(255), nullable=False),
+    fk("resolution_artifact_id", "artifact.id"),
+    Column("reviewer_subject", String(255), nullable=False),
+    Column("reason", Text, nullable=False),
+    fk("supersedes_id", "adjudication.id", nullable=True),
+    created_at(),
+)
+
+bug_annotation = Table(
+    "bug_annotation",
+    metadata,
+    pk(),
+    fk("task_version_id", "task_version.id"),
+    Column("oracle_digest", String(71), nullable=False),
+    Column("bug_key", String(255), nullable=False),
+    fk("private_artifact_id", "artifact.id"),
+    created_at(),
+    UniqueConstraint("task_version_id", "oracle_digest", "bug_key"),
+)
+
+bug_match = Table(
+    "bug_match",
+    metadata,
+    pk(),
+    fk("evaluation_id", "evaluation.id"),
+    Column("submitted_finding_id", String(255), nullable=False),
+    fk("bug_annotation_id", "bug_annotation.id", nullable=True),
+    Column("decision", String(24), nullable=False),
+    fk("evidence_artifact_id", "artifact.id"),
+    fk("adjudication_id", "adjudication.id", nullable=True),
+    created_at(),
+    CheckConstraint(
+        "decision IN ('accepted','rejected','unverified','duplicate')", name="decision"
+    ),
+)
+
+scorecard = Table(
+    "scorecard",
+    metadata,
+    pk(),
+    fk("evaluation_id", "evaluation.id"),
+    Column("scorer_digest", String(71), nullable=False),
+    Column("evidence_digest", String(71), nullable=False),
+    fk("artifact_id", "artifact.id"),
+    Column("gate", String(24), nullable=False),
+    Column("composite", Numeric(12, 8), nullable=True),
+    created_at(),
+    UniqueConstraint("evaluation_id", "scorer_digest", "evidence_digest"),
+    CheckConstraint("gate IN ('pass','fail','unknown','not_applicable')", name="gate"),
+    CheckConstraint(
+        "composite IS NULL OR (composite >= 0 AND composite <= 1)", name="composite_range"
+    ),
+)
+
+score_item = Table(
+    "score_item",
+    metadata,
+    pk(),
+    fk("scorecard_id", "scorecard.id"),
+    Column("dimension", String(64), nullable=False),
+    Column("item_id", String(160), nullable=False),
+    Column("status", String(32), nullable=False),
+    Column("applicable", Boolean, nullable=False),
+    Column("raw_value", Numeric(12, 8), nullable=True),
+    Column("effective_weight", Numeric(12, 8), nullable=True),
+    Column("contribution", Numeric(16, 10), nullable=True),
+    Column("reason", Text, nullable=True),
+    Column("evidence_refs", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("scorecard_id", "dimension", "item_id"),
+    CheckConstraint("raw_value IS NULL OR raw_value BETWEEN 0 AND 1", name="raw_value_range"),
+    CheckConstraint(
+        "effective_weight IS NULL OR effective_weight BETWEEN 0 AND 1", name="weight_range"
+    ),
+    CheckConstraint(
+        "contribution IS NULL OR contribution BETWEEN 0 AND 1", name="contribution_range"
+    ),
+)
+
+release = Table(
+    "release",
+    metadata,
+    pk(),
+    Column("slug", String(160), nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("state", String(24), nullable=False),
+    fk("policy_config_id", "config_document.id"),
+    Column("membership_digest", String(71), nullable=True),
+    Column("validation_digest", String(71), nullable=True),
+    Column("approval_digest", String(71), nullable=True),
+    fk("public_manifest_id", "artifact.id", nullable=True),
+    fk("supersedes_id", "release.id", nullable=True),
+    Column("withdrawal_reason", Text, nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("slug", "version"),
+    CheckConstraint("version > 0", name="version_positive"),
+    CheckConstraint(
+        "state IN ('draft','validating','review_required','approved','published','withdrawn')",
+        name="state",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+release_entry = Table(
+    "release_entry",
+    metadata,
+    Column(
+        "release_id",
+        Uuid(as_uuid=True),
+        ForeignKey("release.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column(
+        "model_config_id",
+        Uuid(as_uuid=True),
+        ForeignKey("config_document.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column(
+        "scorecard_id",
+        Uuid(as_uuid=True),
+        ForeignKey("scorecard.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    PrimaryKeyConstraint("release_id", "model_config_id", "scorecard_id"),
+)
+
+publication_pointer = Table(
+    "publication_pointer",
+    metadata,
+    pk(),
+    Column("board_slug", String(160), nullable=False),
+    fk("release_id", "release.id"),
+    Column("generation", BigInteger, nullable=False, server_default=text("0")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    UniqueConstraint("board_slug"),
+    CheckConstraint("generation >= 0", name="generation_nonnegative"),
+)
+
+model_submission = Table(
+    "model_submission",
+    metadata,
+    pk(),
+    Column("requester_subject", String(255), nullable=False),
+    fk("metadata_artifact_id", "artifact.id"),
+    Column("status", String(24), nullable=False),
+    Column("reviewer_subject", String(255), nullable=True),
+    Column("rejection_reason", Text, nullable=True),
+    fk("resulting_run_id", "run.id", nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    CheckConstraint(
+        "status IN ('pending','under_review','approved','rejected','withdrawn')", name="status"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_model_submission_requester", "requester_subject", "created_at"),
+)
+
+idempotency_record = Table(
+    "idempotency_record",
+    metadata,
+    pk(),
+    Column("subject", String(255), nullable=False),
+    Column("route", String(255), nullable=False),
+    Column("key", String(255), nullable=False),
+    Column("request_digest", String(71), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("response_code", Integer, nullable=True),
+    Column("response_payload", JSONB, nullable=True),
+    fk("response_artifact_id", "artifact.id", nullable=True),
+    Column("expires_at", DateTime(timezone=True), nullable=False),
+    created_at(),
+    UniqueConstraint("subject", "route", "key"),
+    CheckConstraint("request_digest ~ '^sha256:[0-9a-f]{64}$'", name="request_digest_format"),
+    CheckConstraint("state IN ('in_progress','completed')", name="state"),
+    CheckConstraint(
+        "(state = 'completed' AND response_code IS NOT NULL AND response_payload IS NOT NULL) OR "
+        "state = 'in_progress'",
+        name="response_shape",
+    ),
+)
+
+audit_event = Table(
+    "audit_event",
+    metadata,
+    pk(),
+    Column("actor_subject", String(255), nullable=False),
+    Column("action", String(160), nullable=False),
+    Column("resource_type", String(96), nullable=False),
+    Column("resource_id", String(255), nullable=False),
+    Column("before_digest", String(71), nullable=True),
+    Column("after_digest", String(71), nullable=True),
+    Column("request_id", String(128), nullable=False),
+    Column("details", JSONB, nullable=False),
+    created_at(),
+    Index("ix_audit_resource", "resource_type", "resource_id", "created_at"),
+    Index("ix_audit_actor", "actor_subject", "created_at"),
+)
+
+subject_role = Table(
+    "subject_role",
+    metadata,
+    Column("subject_id", String(255), nullable=False),
+    Column("role", String(32), nullable=False),
+    Column("granted_by", String(255), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at("granted_at"),
+    Column("revoked_at", DateTime(timezone=True), nullable=True),
+    PrimaryKeyConstraint("subject_id", "role"),
+    CheckConstraint(
+        "role IN ('submitter','curator','operator','reviewer','publisher','administrator')",
+        name="role",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+attempt_event = Table(
+    "attempt_event",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id"),
+    Column("event_seq", BigInteger, nullable=False),
+    Column("event_kind", String(64), nullable=False),
+    fk("payload_artifact_id", "artifact.id"),
+    created_at(),
+    UniqueConstraint("attempt_id", "event_seq"),
+    CheckConstraint("event_seq >= 0", name="event_seq_nonnegative"),
+)
+
+attempt_checkpoint = Table(
+    "attempt_checkpoint",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id"),
+    Column("event_seq", BigInteger, nullable=False),
+    fk("workspace_manifest_id", "artifact.id"),
+    fk("transcript_manifest_id", "artifact.id"),
+    Column("accumulated_budget", JSONB, nullable=False),
+    Column("pending_call_ids", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("attempt_id", "event_seq"),
+)
+
+# The artifact/execution cycle is deferred until all referenced tables exist.
+artifact.append_constraint(
+    ForeignKeyConstraint(
+        ["producer_execution_id"],
+        ["stage_execution.id"],
+        name="fk_artifact_producer_execution_id_stage_execution",
+        ondelete="RESTRICT",
+        use_alter=True,
+    )
+)
+
+TABLE_GROUPS: dict[str, tuple[str, ...]] = {
+    "core": (
+        "task",
+        "task_version",
+        "task_set",
+        "task_set_member",
+        "config_document",
+        "model_revision",
+        "endpoint_registration",
+    ),
+    "runs": ("campaign", "run", "attempt", "candidate", "evaluation"),
+    "jobs": (
+        "stage_job",
+        "stage_dependency",
+        "stage_execution",
+        "worker_registration",
+        "capacity_slot",
+    ),
+    "artifacts": (
+        "artifact",
+        "artifact_edge",
+        "observation",
+        "judge_packet",
+        "judge_vote",
+        "adjudication",
+        "bug_annotation",
+        "bug_match",
+    ),
+    "scoring_publication": (
+        "scorecard",
+        "score_item",
+        "release",
+        "release_entry",
+        "publication_pointer",
+        "model_submission",
+    ),
+    "accounting": (
+        "budget_account",
+        "budget_reservation",
+        "call_intent",
+        "call_delivery",
+        "usage_record",
+        "accounting_entry",
+    ),
+    "identity_events": (
+        "subject_role",
+        "audit_event",
+        "idempotency_record",
+        "attempt_event",
+        "attempt_checkpoint",
+    ),
+}
+
+IMMUTABLE_TABLES = (
+    "task_version",
+    "config_document",
+    "model_revision",
+    "candidate",
+    "observation",
+    "judge_packet",
+    "judge_vote",
+    "adjudication",
+    "bug_annotation",
+    "bug_match",
+    "scorecard",
+    "score_item",
+    "release_entry",
+    "accounting_entry",
+    "audit_event",
+    "attempt_event",
+    "attempt_checkpoint",
+    "stage_dependency",
+)

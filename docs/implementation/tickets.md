@@ -56,30 +56,30 @@ Total registered tickets: 142. Every ticket is owned by the numbered prompt enco
 
 - Owner prompt: `01`.
 - Dependencies: Prompt 00 baseline.
-- Implementation: `in_progress` (Prompt 01 work recorded against current files).
-- Verification: `blocked` (see Prompt 01 evidence and blockers).
+- Implementation: `implemented` (Prompt 01 deliverable completed).
+- Verification: `passed` (checks and evidence recorded in the Prompt 01 resume report and command registry).
 - Required verification scope: package imports/builds and prohibited dependency rules in CI.
-- Evidence: Python package ownership scaffold, Next.js workspace, `scripts/check_boundaries.py`, `scripts/smoke_workspace.py`; package builds still unverified.
+- Evidence: Python workspace packages: `uv build --all-packages` built sdists and wheels for all 10 packages; `python scripts/smoke_workspace.py` imported all 10; `python scripts/check_boundaries.py` passed. Ruff format/lint and locked mypy passed. No production benchmark behavior was added.
 - Acceptance criteria: — Create or reconcile the Python/TypeScript workspace and module boundaries. Establish core/services/persistence/orchestration/runner/evaluation/scoring/publication/plugin ownership. DoD: packages build/import and prohibited dependencies are checked; no fake production behavior is added.
 
 ## PCB-01-2 - Prompt 01: — Bootstrap the workspace and methodology register
 
 - Owner prompt: `01`.
 - Dependencies: Prompt 00 baseline.
-- Implementation: `in_progress` (Prompt 01 work recorded against current files).
-- Verification: `blocked` (see Prompt 01 evidence and blockers).
+- Implementation: `implemented` (Prompt 01 deliverable completed).
+- Verification: `passed` (checks and evidence recorded in the Prompt 01 resume report and command registry).
 - Required verification scope: clean locked Python/Node installs, builds, runtime compatibility, and pinned development image resolution.
-- Evidence: Runtime/dependency pins in `.python-version`, `.node-version`, Python pyprojects and `apps/web/package.json`; lock generation attempts and proxy failures in `commands.md` and `reports/prompt-01.md`; lockfiles absent.
+- Evidence: `uv.lock` and `pnpm-lock.yaml` generated; `uv sync --locked --all-packages --group dev` and `pnpm install --frozen-lockfile` passed (pnpm 12.5.1 supply-chain policy verified, 343 locked packages installed). All Python package builds and web typecheck/lint/build passed. Docker Registry index and linux/amd64 image digests are pinned and were inspected after pull; see D-01-04 and `commands.md`. PostgreSQL 17.6 and SeaweedFS 4.48 are development-only.
 - Acceptance criteria: — Resolve compatible runtime/package versions and commit reproducible lockfiles plus approved development images. DoD: a clean environment can install the locked dependencies without floating latest tags or undocumented PATH assumptions.
 
 ## PCB-01-3 - Prompt 01: — Bootstrap the workspace and methodology register
 
 - Owner prompt: `01`.
 - Dependencies: Prompt 00 baseline.
-- Implementation: `in_progress` (Prompt 01 work recorded against current files).
-- Verification: `blocked` (see Prompt 01 evidence and blockers).
+- Implementation: `implemented` (Prompt 01 deliverable completed).
+- Verification: `passed` (checks and evidence recorded in the Prompt 01 resume report and command registry).
 - Required verification scope: invalid/missing role config rejection; format/type/test/build checks; service config parse and smoke execution.
-- Evidence: `packages/configuration/`, `schemas/configuration/startup-config.v1.json`, `compose.yaml`, `.github/workflows/ci.yml`, `tests/test_startup_config.py`; config/import/boundary checks passed, full CI locked install/build pending.
+- Evidence: `uv run ... ruff format --check`, Ruff lint, mypy, pytest (3 passed), package boundary, import/config smoke, and schema checks passed; `uv build --all-packages` built all 10 packages. Node 24.21.0/pnpm 12.5.1 frozen install, web typecheck/lint/Next build passed. `docker compose config --quiet` and `docker compose up -d --wait` passed; PostgreSQL health/readiness passed, S3 API responded on localhost:8333. See exact commands in `commands.md`.
 - Acceptance criteria: — Implement validated role-specific startup configuration, development service definitions and a minimal CI pipeline for format/type/test/build checks. DoD: invalid/missing required config fails safely and the existing smoke checks actually run.
 
 ## PCB-01-4 - Prompt 01: — Bootstrap the workspace and methodology register

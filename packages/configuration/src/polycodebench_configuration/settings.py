@@ -1,7 +1,7 @@
 """Validated settings; secret values are never accepted from this environment."""
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Mapping
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, model_validator
@@ -60,27 +60,54 @@ class StartupConfig(BaseModel):
         required = ROLE_REQUIRED_FIELDS[self.role]
         missing = [name for name in required if getattr(self, name) is None]
         if missing:
-            raise ValueError(f"missing required settings for {self.role.value}: {', '.join(missing)}")
+            raise ValueError(
+                f"missing required settings for {self.role.value}: {', '.join(missing)}"
+            )
         if self.environment != Environment.DEV:
-            production_required = ("database_dsn_ref",) if self.role not in {ProcessRole.MODEL_GATEWAY, ProcessRole.JUDGE_GATEWAY, ProcessRole.WEB, ProcessRole.SOLVE_SUPERVISOR} else ()
+            production_required: tuple[str, ...] = (
+                ("database_dsn_ref",)
+                if self.role
+                not in {
+                    ProcessRole.MODEL_GATEWAY,
+                    ProcessRole.JUDGE_GATEWAY,
+                    ProcessRole.WEB,
+                    ProcessRole.SOLVE_SUPERVISOR,
+                }
+                else ()
+            )
             if self.role == ProcessRole.API:
                 production_required += ("oidc_issuer", "oidc_audience")
             if self.role == ProcessRole.PUBLISHER:
                 production_required += ("signing_key_ref",)
             if self.role in {ProcessRole.MODEL_GATEWAY, ProcessRole.JUDGE_GATEWAY}:
-                production_required += ("model_secret_namespace",) if self.role == ProcessRole.MODEL_GATEWAY else ("judge_secret_namespace",)
+                production_required += (
+                    ("model_secret_namespace",)
+                    if self.role == ProcessRole.MODEL_GATEWAY
+                    else ("judge_secret_namespace",)
+                )
             if self.role in {ProcessRole.SOLVE_SUPERVISOR, ProcessRole.EVAL_SUPERVISOR}:
                 production_required += ("sandbox_provider", "approved_vm_image")
             missing = [name for name in production_required if getattr(self, name) is None]
             if missing:
                 raise ValueError(f"missing non-development settings: {', '.join(missing)}")
-            for name in ("oidc_issuer", "public_api_base_url", "object_store_endpoint", "otel_endpoint"):
+            for name in (
+                "oidc_issuer",
+                "public_api_base_url",
+                "object_store_endpoint",
+                "otel_endpoint",
+            ):
                 endpoint = getattr(self, name)
                 if endpoint is not None and urlparse(str(endpoint)).scheme != "https":
                     raise ValueError(f"{name} must use HTTPS outside development")
             if self.approved_vm_image and "@sha256:" not in self.approved_vm_image:
-                raise ValueError("approved_vm_image must use an immutable digest outside development")
-        bucket_names = [value for value in (self.bucket_hidden, self.bucket_internal, self.bucket_public) if value]
+                raise ValueError(
+                    "approved_vm_image must use an immutable digest outside development"
+                )
+        bucket_names = [
+            value
+            for value in (self.bucket_hidden, self.bucket_internal, self.bucket_public)
+            if value
+        ]
         if len(set(bucket_names)) != len(bucket_names):
             raise ValueError("artifact bucket names must be distinct")
         return self
@@ -116,11 +143,17 @@ ROLE_REQUIRED_FIELDS = {
     ProcessRole.SCHEDULER: ("database_dsn_ref", "worker_queue_classes", "max_concurrency"),
     ProcessRole.MODEL_GATEWAY: ("model_secret_namespace",),
     ProcessRole.SOLVE_SUPERVISOR: (
-        "sandbox_provider", "approved_vm_image", "worker_queue_classes", "max_concurrency"
+        "sandbox_provider",
+        "approved_vm_image",
+        "worker_queue_classes",
+        "max_concurrency",
     ),
     ProcessRole.EVAL_SUPERVISOR: (
-        "database_dsn_ref", "sandbox_provider", "approved_vm_image",
-        "worker_queue_classes", "max_concurrency"
+        "database_dsn_ref",
+        "sandbox_provider",
+        "approved_vm_image",
+        "worker_queue_classes",
+        "max_concurrency",
     ),
     ProcessRole.JUDGE_GATEWAY: ("judge_secret_namespace",),
     ProcessRole.SCORER: ("database_dsn_ref",),

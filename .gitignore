@@ -9,6 +9,7 @@ __pycache__/
 pytest-cache-files-*/
 .ruff_cache/
 .mypy_cache/
+*.tsbuildinfo
 .env
 .env.*
 !.env.example

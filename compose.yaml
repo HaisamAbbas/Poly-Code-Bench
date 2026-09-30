@@ -1,13 +1,13 @@
 name: polycodebench-local
 services:
   postgres:
-    image: postgres:17.6
+    image: postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
     environment:
       POSTGRES_DB: polycodebench
       POSTGRES_USER: polycodebench
       POSTGRES_PASSWORD: local-development-only
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:55432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U polycodebench -d polycodebench"]
       interval: 5s
@@ -16,14 +16,14 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
   object-store:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-    command: ["server", "/data", "--console-address", ":9001"]
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+    command: ["mini", "-dir=/data"]
     environment:
-      MINIO_ROOT_USER: local-development-only
-      MINIO_ROOT_PASSWORD: local-development-only
+      AWS_ACCESS_KEY_ID: local-development-only
+      AWS_SECRET_ACCESS_KEY: local-development-only
+      S3_BUCKET: pcb-local
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "127.0.0.1:8333:8333"
     volumes:
       - object-store-data:/data
 volumes:

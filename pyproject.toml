@@ -21,6 +21,11 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+exclude = [
+  "PolyCodeBench-Architecture-v1.md",
+  "PolyCodeBench-Technical-Implementation-Spec-v1.md",
+  "PolyCodeBench-Codex-End-to-End-Prompt-Pack-v1.md",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

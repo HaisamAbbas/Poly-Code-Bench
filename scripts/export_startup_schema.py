@@ -30,7 +30,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--check", action="store_true")
 if parser.parse_args().check:
     if not target.exists() or target.read_text(encoding="utf-8") != rendered:
-        raise SystemExit("startup config schema is stale; run python scripts/export_startup_schema.py")
+        raise SystemExit(
+            "startup config schema is stale; run python scripts/export_startup_schema.py"
+        )
     print("Startup configuration schema: PASS")
 else:
     target.parent.mkdir(parents=True, exist_ok=True)

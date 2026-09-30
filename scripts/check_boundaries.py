@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import ast
-from pathlib import Path
 import re
 import tomllib
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OWNERS = {
@@ -50,17 +50,22 @@ def main() -> int:
         metadata_path = path / "pyproject.toml"
         if not metadata_path.exists():
             continue
-        owner = path.name.replace("-", "_")
+        declaring_package_owner = path.name.replace("-", "_")
         metadata = tomllib.loads(metadata_path.read_text(encoding="utf-8"))
         dependencies = metadata.get("project", {}).get("dependencies", [])
         for dependency in dependencies:
             distribution = re.split(r"[<>=!~; ]", dependency, maxsplit=1)[0].replace("-", "_")
-            target = distributions.get(distribution)
-            if target and target not in ALLOWED[owner]:
-                violations.append(f"{metadata_path.relative_to(ROOT)} declares prohibited dependency {distribution}")
+            dependency_owner = distributions.get(distribution)
+            if dependency_owner and dependency_owner not in ALLOWED[declaring_package_owner]:
+                violations.append(
+                    f"{metadata_path.relative_to(ROOT)} declares prohibited "
+                    f"dependency {distribution}"
+                )
     for path in (ROOT / "packages").rglob("*.py"):
-        owner = next((key for prefix, key in OWNERS.items() if path.parts[-2].startswith(prefix)), None)
-        if owner is None:
+        module_owner = next(
+            (key for prefix, key in OWNERS.items() if path.parts[-2].startswith(prefix)), None
+        )
+        if module_owner is None:
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -74,10 +79,24 @@ def main() -> int:
             elif isinstance(node, ast.ImportFrom) and node.module:
                 names = [node.module]
             for name in names:
-                if any(name == bad or name.startswith(bad + ".") for bad in FORBIDDEN_IMPORTS.get(owner, ())):
+                if any(
+                    name == bad or name.startswith(bad + ".")
+                    for bad in FORBIDDEN_IMPORTS.get(module_owner, ())
+                ):
                     violations.append(f"{path.relative_to(ROOT)} imports prohibited {name}")
-                target = next((OWNERS[item] for item in OWNERS if name == item or name.startswith(item + ".")), None)
-                if target and target != owner and target not in ALLOWED[owner]:
+                imported_owner = next(
+                    (
+                        OWNERS[item]
+                        for item in OWNERS
+                        if name == item or name.startswith(item + ".")
+                    ),
+                    None,
+                )
+                if (
+                    imported_owner
+                    and imported_owner != module_owner
+                    and imported_owner not in ALLOWED[module_owner]
+                ):
                     violations.append(f"{path.relative_to(ROOT)} imports prohibited {name}")
     web_sources = list((ROOT / "apps/web/src").rglob("*.ts")) + list(
         (ROOT / "apps/web/src").rglob("*.tsx")
@@ -85,7 +104,9 @@ def main() -> int:
     for path in web_sources:
         for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             if re.search(r"(?:hidden[_/-]?task|schemas/hidden)", line, re.IGNORECASE):
-                violations.append(f"{path.relative_to(ROOT)}:{line_no} references a hidden-task schema")
+                violations.append(
+                    f"{path.relative_to(ROOT)}:{line_no} references a hidden-task schema"
+                )
     if violations:
         print("\n".join(violations))
         return 1

@@ -36,11 +36,12 @@ for line in (DOCS / "e2e-matrix.md").read_text(encoding="utf-8").splitlines():
 
 progress = json.loads((DOCS / "progress.json").read_text(encoding="utf-8"))
 assert len(progress["prompt_statuses"]) == 35
-assert progress["last_completed_prompt"] == "00"
-assert progress["active_prompt"] == "01"
-assert progress["prompt_statuses"]["00"] == "done"
-assert progress["prompt_statuses"]["01"] == "partial"
-assert all(progress["prompt_statuses"][f"{i:02d}"] == "not_started" for i in range(2, 35))
+last_completed = int(progress["last_completed_prompt"])
+active = int(progress["active_prompt"])
+assert progress["prompt_statuses"][f"{last_completed:02d}"] == "done"
+assert active == last_completed + 1
+assert progress["prompt_statuses"][f"{active:02d}"] in {"not_started", "in_progress", "partial"}
+assert all(progress["prompt_statuses"][f"{i:02d}"] == "not_started" for i in range(active + 1, 35))
 assert progress["evidence_summary"]["requirements_registered"] == 14
 assert progress["evidence_summary"]["work_packages_registered"] == 24
 assert progress["evidence_summary"]["e2e_scenarios_registered"] == 43
@@ -54,4 +55,7 @@ for source in manifest["authoritative_sources"]:
     if source["pack_expected_sha256"]:
         assert actual == source["pack_expected_sha256"], source["workspace_path"]
 
-print("PASS: 14 REQ, 24 WP, 43 E2E, Prompts 00-34, 142 PCB tickets, owners/evidence, progress, and source hashes")
+print(
+    "PASS: 14 REQ, 24 WP, 43 E2E, Prompts 00-34, 142 PCB tickets, "
+    "owners/evidence, progress, and source hashes"
+)

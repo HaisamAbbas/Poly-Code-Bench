@@ -66,6 +66,8 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 - Prompt 04: DONE for local artifact integrity, visibility, quota, manifest, retention and reviewed-projection foundation; production object-store policies and public routes remain pending (see `reports/prompt-04.md`).
 - Prompt 05: DONE for WP-05 structural/authored-fixture admission, task-set freeze and versioned pilot/methodology contracts; see `reports/prompt-05.md`.
 - Phase 1 aggregate gate: PASS. The project owner approved the specified v1 pilot weights on 2026-09-30 (D-05-04). Scoring remains inactive pending human/judge calibration; production task admission, later language/evaluation variants, and source/data rights remain explicit prerequisites. No scored task set is authorized.
+- Prompt 06: PARTIAL. Typed sandbox contracts, local Docker enforcement, EC2 driver/guest/bootstrap and Terraform plan implemented; live Docker adversarial subcases passed. The owner deferred production VM/IaC validation because cloud access is unavailable; the required target/principal/approved AMI/budget are not configured. Resume per `progress.json` and `reports/prompt-06.md`.
+- Prompt 07: PARTIAL. Durable PostgreSQL DAG/lease/fence/recovery, worker/sandbox integration, fairness, retry, cancellation and operator control implemented. E2E-07/08 passed on local PostgreSQL/SeaweedFS; E2E-09 local Docker cancellation and completed-evidence preservation passed. Durable model-usage retention waits for Prompt 08/17; see `reports/prompt-07.md`.
 
 ## Prompt register
 
@@ -77,8 +79,8 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 03 | Prompt 03 | — Build persistence, identity and idempotency | WP-03 | Database/migrations, repository services, identity, audit and idempotency | done (foundation); complete route scenarios remain pending |
 | 04 | Prompt 04 | — Implement artifact storage and visibility | WP-04 | Verified artifacts, visibility enforcement and safe lifecycle management | done (local storage scope); production policy validation and public routes remain pending |
 | 05 | Prompt 05 | — Build task admission and freeze the methodology contracts | WP-05 | Task packages, admission/freezing, splits and source methodology records | done (foundation; full E2E variants pending) |
-| 06 | Prompt 06 | — Implement sandbox drivers and isolation | WP-06 | Development and production VM sandbox drivers | not_started |
-| 07 | Prompt 07 | — Implement durable jobs and recovery | WP-07 | Job DAG, leases/fences, recovery, cancellation and capacity slots | not_started |
+| 06 | Prompt 06 | — Implement sandbox drivers and isolation | WP-06 | Development and production VM sandbox drivers | partial (local/driver implementation complete; production evidence blocked) |
+| 07 | Prompt 07 | — Implement durable jobs and recovery | WP-07 | Job DAG, leases/fences, recovery, cancellation and capacity slots | partial (E2E-09 usage-retention variant pending Prompt 08/17) |
 | 08 | Prompt 08 | — Implement model adapters and budget accounting | WP-08 | Model adapters, endpoint registration, usage and budget gateway | not_started |
 | 09 | Prompt 09 | — Implement single-shot and agent execution | WP-09 | Single-shot and standard agent with durable tools/checkpoints | not_started |
 | 10 | Prompt 10 | — Implement Python support | WP-10 | Python plugin, pinned toolchain, task fixtures and profiles | not_started |

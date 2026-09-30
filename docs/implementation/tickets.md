@@ -258,80 +258,82 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `06`.
 - Dependencies: artifact/task contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/runner/src/polycodebench_runner/{contracts.py,provider.py}`; typed create/stage/execute/snapshot/terminate/destroy operations, scoped handles, fixed argv boundaries, bounded subprocess handling and operation logs.
+- Verification: `blocked` for required production-driver acceptance; provider lifecycle/unit coverage and live local Docker containment passed. Production VM/E2E-05/06 evidence awaits an authorized deployment target.
 - Required verification scope: E2E-05, E2E-06.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_sandbox.py`; live development-tier evidence `docs/implementation/evidence/prompt-06-local-docker.json`; production gate remains pending.
 - Acceptance criteria: — Implement SandboxProvider and typed create/stage/execute/snapshot/terminate/destroy operations. DoD: lifecycle actions are scoped, idempotent where specified, logged and timeout-bounded; candidate arguments never become host-shell interpolation.
 
 ## PCB-06-2 - Prompt 06: — Implement sandbox drivers and isolation
 
 - Owner prompt: `06`.
 - Dependencies: artifact/task contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/runner/src/polycodebench_runner/provider.py`, `infra/sandbox/guest/pcb-guest-control.py`, and `config/sandbox-policies/development.v1.json`; limits, safe path handling, non-root identity, no network/socket/host namespaces, bounded resources and development-only tier enforced.
+- Verification: `blocked` for full required production-driver evidence; local adversarial containment passed. See `docs/implementation/evidence/prompt-06-local-docker.json`.
 - Required verification scope: E2E-05, E2E-06.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_sandbox.py` and opt-in real Docker run; Terraform/AWS plan and production isolation remain unverified because the cloud target/authorization and Terraform CLI are absent.
 - Acceptance criteria: — Complete LocalDockerSandboxProvider and guest resource/path/process policy. DoD: limits, safe extraction, no exposed Docker socket/host namespaces/secrets, and development-only result identity are enforced externally to candidate code.
 
 ## PCB-06-3 - Prompt 06: — Implement sandbox drivers and isolation
 
 - Owner prompt: `06`.
 - Dependencies: artifact/task contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/runner/src/polycodebench_runner/provider.py`, `infra/sandbox/aws/`, `infra/sandbox/guest/`, and `config/sandbox-policies/`; principal verification, metadata/public-IP denial, distinct lanes, no egress, stage capability and production attestation are encoded.
+- Verification: `blocked` pending `terraform validate/plan` and live VM evidence. No AWS target, approved AMI, supervisor identity or explicit budget was available or provisioned.
 - Required verification scope: E2E-05, E2E-06.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: fake-control/identity/attestation tests in `tests/test_sandbox.py`; local Docker evidence does not count as EC2 production evidence. Required E2E-05/06 production variants remain unrun.
 - Acceptance criteria: — Implement Ec2VmSandboxProvider and deployment configuration for disposable guests. DoD: supervisor credentials remain outside guests, no instance role/metadata access, restricted control channel, offline candidate container, stage-scoped transfer capabilities and distinct solve/grading lanes.
 
 ## PCB-06-4 - Prompt 06: — Implement sandbox drivers and isolation
 
 - Owner prompt: `06`.
 - Dependencies: artifact/task contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/runner/src/polycodebench_runner/provider.py` with expired-resource collection, destroy confirmation, snapshot/checkpoint manifest and tier-bound attestation. Production attestation cannot be requested for a development handle.
+- Verification: `blocked` for production destruction verification and isolation attestation; local TTL/orphan cleanup, cancellation and destroy verification passed.
 - Required verification scope: E2E-05, E2E-06.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_sandbox.py`, `docs/implementation/evidence/prompt-06-local-docker.json`; live production cleanup remains blocked on authorized EC2 deployment.
 - Acceptance criteria: — Implement TTL/orphan cleanup, destruction verification, checkpoint collection and isolation attestation. DoD: guest/resource cleanup is confirmed before capacity reuse; a developer cannot request a production isolation badge.
 
 ## PCB-07-1 - Prompt 07: — Implement durable jobs and recovery
 
 - Owner prompt: `07`.
 - Dependencies: persistence/artifacts/sandbox ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/core/src/polycodebench_core/jobs.py` and `packages/persistence/src/polycodebench_persistence/jobs.py`; DAG creation is atomic and replay-safe, cycles/references are checked, only named scheduler-authored skips satisfy matching branches, and gate-pass/gate-fail jobs diverge without treating a wrong answer as infrastructure failure.
+- Verification: `passed` for the tested PostgreSQL gate and skip variants; full E2E-09 remains partial for model usage evidence.
 - Required verification scope: E2E-07–09.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_jobs_postgres.py::test_job_dag_uses_gate_conditions_and_only_accepts_named_scheduler_skips`; E2E-07/08/09 evidence `docs/implementation/evidence/prompt-07-integration.json`.
+- Review fixes: terminal failures propagate; unused branches skip explicitly; parallel completions unblock joins. Independently validated by `tests/test_scheduler_regressions.py` and the isolated full suite (124 passed, no skips).
 - Acceptance criteria: — Implement the stage DAG, branch-specific skip semantics and transactional job creation/unblocking. DoD: unknown/failed prerequisites cannot be mistaken for successful quality inputs; a successfully executed wrong model answer is not an infrastructure retry.
 
 ## PCB-07-2 - Prompt 07: — Implement durable jobs and recovery
 
 - Owner prompt: `07`.
 - Dependencies: persistence/artifacts/sandbox ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/persistence/src/polycodebench_persistence/jobs.py` and `packages/orchestration/src/polycodebench_orchestration/worker.py`; claims use short PostgreSQL transactions, slot-first `SKIP LOCKED`, database-timed 120-second leases, 30-second heartbeats, 1-second revocation polling, execution rows, fencing and same-worker/same-output replay.
+- Verification: `passed` for competing claims, lease expiry, new-fence reclaim, stale commit denial and idempotent/different-output commit behavior on PostgreSQL.
 - Required verification scope: E2E-07–09.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_jobs_postgres.py::test_e2e07_competing_workers_fence_stale_delivery_and_idempotent_commit`; migration/drift evidence and exact command in `docs/implementation/evidence/prompt-07-integration.json`.
+- Review fixes: complete outcome identity and event integrity, provisioning heartbeats, fail-closed supervision, cancellation task drainage and worker identity are covered by `tests/test_scheduler_regressions.py` and 30 cases in `tests/test_worker.py`.
 - Acceptance criteria: — Implement short SQL claims, 120-second leases, 30-second heartbeats, fencing tokens and execution records according to the spec. DoD: stale workers cannot dispatch or commit authoritative results and duplicate completion is idempotent only for the same output.
 
 ## PCB-07-3 - Prompt 07: — Implement durable jobs and recovery
 
 - Owner prompt: `07`.
 - Dependencies: persistence/artifacts/sandbox ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/persistence/src/polycodebench_persistence/jobs.py`; resource-compatible capacity slots, bounded campaign/provider concurrency, append-only delivery/event records, deterministic 10/60-second retry delays with bounded jitter, max-three deliveries, reaping and explicit guest-cleanup confirmation are persisted.
+- Verification: `passed` for two-worker over-allocation prevention, campaign/provider caps, three-delivery exhaustion, slot drain/resume, expiry/reclaim and cleanup; only local Docker lifecycle tier was exercised.
 - Required verification scope: E2E-07–09.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_jobs_postgres.py::{test_e2e07_competing_workers_fence_stale_delivery_and_idempotent_commit,test_infrastructure_deliveries_are_visible_bounded_and_worker_can_resume,test_campaign_and_provider_fairness_cap_concurrent_leases,test_e2e09_cancelled_live_docker_tool_guest_is_destroyed}`; full workspace run and evidence path in `docs/implementation/evidence/prompt-07-integration.json`.
 - Acceptance criteria: — Implement capacity-slot claims, matching resource classes, cleanup states, campaign/provider fairness and bounded retry/reaper rules. DoD: no over-allocation or premature reuse of a still-running guest; all deliveries and failure classes remain visible.
 
 ## PCB-07-4 - Prompt 07: — Implement durable jobs and recovery
 
 - Owner prompt: `07`.
 - Dependencies: persistence/artifacts/sandbox ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/persistence/src/polycodebench_persistence/jobs.py`, `packages/orchestration/src/polycodebench_orchestration/worker.py`, and `packages/orchestration/src/polycodebench_orchestration/cli.py`; cancellation revokes before dispatch, preserves completed job/artifact records, terminates live guests, and worker drain/resume plus operator cancel/reaper entrypoints are available.
+- Verification: `not_run` for the complete ticket gate; PostgreSQL/local-Docker cancellation proved no new dispatch, guest destruction, cleanup, completed-artifact preservation and no synthetic model usage. The required model-call usage-retention variant remains pending until Prompt 08/17 provides durable model calls/usage.
 - Required verification scope: E2E-07–09.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_jobs_postgres.py::test_e2e09_cancelled_live_docker_tool_guest_is_destroyed`; local development evidence in `docs/implementation/evidence/prompt-07-integration.json`. Full E2E-09 usage evidence is pending Prompt 08/17.
 - Acceptance criteria: — Implement cancel/revoke/resume semantics and progress events. DoD: cancellation prevents new dispatch, terminates work, preserves completed evidence/usage and does not turn unrun tasks into model failures.
 
 ## PCB-08-1 - Prompt 08: — Implement model adapters and budget accounting

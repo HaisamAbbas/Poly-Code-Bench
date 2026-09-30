@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "driver": "local_docker",
+  "isolation_tier": "development",
+  "network": "none",
+  "require_digest_pinned_image": true,
+  "read_only_root_filesystem": true,
+  "drop_all_capabilities": true,
+  "no_new_privileges": true,
+  "non_root_uid": 65532,
+  "workspace": "bounded_tmpfs",
+  "docker_socket_mount": false,
+  "host_namespace_sharing": false,
+  "production_attestation_allowed": false
+}

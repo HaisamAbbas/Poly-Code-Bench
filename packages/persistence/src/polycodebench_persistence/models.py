@@ -448,12 +448,15 @@ evaluation = Table(
     Column("oracle_digest", String(71), nullable=False),
     Column("state", String(24), nullable=False),
     Column("gate", String(24), nullable=False),
+    Column("failure_class", String(64), nullable=True),
     fk("evidence_manifest_id", "artifact.id", nullable=True),
     fk("supersedes_id", "evaluation.id", nullable=True),
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
     created_at(),
     UniqueConstraint("attempt_id", "policy_config_id", "oracle_digest"),
-    CheckConstraint("state IN ('queued','running','ready','failed','superseded')", name="state"),
+    CheckConstraint(
+        "state IN ('queued','running','ready','failed','superseded','cancelled')", name="state"
+    ),
     CheckConstraint("gate IN ('pass','fail','unknown','not_applicable')", name="gate"),
     CheckConstraint("oracle_digest ~ '^sha256:[0-9a-f]{64}$'", name="oracle_digest_format"),
     CheckConstraint(
@@ -471,6 +474,7 @@ stage_job = Table(
     fk("attempt_id", "attempt.id", nullable=True),
     fk("evaluation_id", "evaluation.id", nullable=True),
     fk("release_id", "release.id", nullable=True),
+    fk("input_artifact_id", "artifact.id", nullable=True),
     Column("stage", String(48), nullable=False),
     Column("shard_key", String(255), nullable=False, server_default=text("''")),
     Column("input_digest", String(71), nullable=False),
@@ -478,6 +482,12 @@ stage_job = Table(
     Column("state", String(24), nullable=False),
     Column("required", Boolean, nullable=False, server_default=text("true")),
     Column("queue_class", String(64), nullable=False),
+    Column("resource_class", String(64), nullable=False, server_default=text("'default'")),
+    fk("fairness_campaign_id", "campaign.id", nullable=True),
+    Column("provider_key", String(128), nullable=False, server_default=text("'system'")),
+    Column("quality_gate", String(24), nullable=True),
+    Column("result_document", JSONB, nullable=True),
+    Column("skip_reason", String(64), nullable=True),
     Column("priority", Integer, nullable=False, server_default=text("0")),
     Column("available_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("lease_until", DateTime(timezone=True), nullable=True),
@@ -501,6 +511,15 @@ stage_job = Table(
     ),
     CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
     CheckConstraint(
+        "quality_gate IS NULL OR quality_gate IN ('pass','fail','unknown','not_applicable')",
+        name="quality_gate",
+    ),
+    CheckConstraint(
+        "(state = 'skipped' AND skip_reason IS NOT NULL) OR "
+        "(state <> 'skipped' AND skip_reason IS NULL)",
+        name="skip_reason_shape",
+    ),
+    CheckConstraint(
         "(state = 'leased' AND lease_until IS NOT NULL AND owner_id IS NOT NULL) OR "
         "(state <> 'leased' AND lease_until IS NULL AND owner_id IS NULL)",
         name="lease_shape",
@@ -513,6 +532,7 @@ stage_job = Table(
         postgresql_where=text("state IN ('queued','retry_wait')"),
     ),
     Index("ix_stage_job_expired", "lease_until", postgresql_where=text("state = 'leased'")),
+    Index("ix_stage_job_fairness", "fairness_campaign_id", "provider_key", "state"),
 )
 
 stage_dependency = Table(
@@ -530,8 +550,13 @@ stage_dependency = Table(
         ForeignKey("stage_job.id", ondelete="RESTRICT"),
         nullable=False,
     ),
+    Column("condition", String(24), nullable=False, server_default=text("'success'")),
+    Column("accepted_skip_reasons", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
     PrimaryKeyConstraint("job_id", "prerequisite_job_id"),
     CheckConstraint("job_id <> prerequisite_job_id", name="not_self_dependency"),
+    CheckConstraint(
+        "condition IN ('success','gate_pass','gate_fail','terminal')", name="condition"
+    ),
 )
 
 worker_registration = Table(
@@ -542,6 +567,7 @@ worker_registration = Table(
     Column("lane", String(32), nullable=False),
     Column("hardware_class", String(128), nullable=False),
     Column("allowed_queue_classes", JSONB, nullable=False),
+    Column("allowed_resource_classes", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
     Column("status", String(24), nullable=False),
     Column("last_heartbeat_at", DateTime(timezone=True), nullable=True),
     Column("driver_identity", String(255), nullable=False),
@@ -559,6 +585,7 @@ capacity_slot = Table(
     fk("worker_id", "worker_registration.id"),
     fk("resource_spec_config_id", "config_document.id"),
     Column("slot_key", String(128), nullable=False),
+    Column("resource_class", String(64), nullable=False, server_default=text("'default'")),
     Column("state", String(24), nullable=False),
     fk("job_id", "stage_job.id", nullable=True),
     Column("fence", BigInteger, nullable=True),
@@ -566,12 +593,39 @@ capacity_slot = Table(
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     UniqueConstraint("worker_id", "slot_key"),
-    CheckConstraint("state IN ('available','reserved','busy','draining','disabled')", name="state"),
     CheckConstraint(
-        "(state = 'busy' AND job_id IS NOT NULL AND fence IS NOT NULL) OR state <> 'busy'",
-        name="busy_has_job",
+        "state IN ('available','reserved','busy','cleanup','draining','disabled')", name="state"
+    ),
+    CheckConstraint(
+        "(state IN ('reserved','busy','cleanup') AND job_id IS NOT NULL AND fence IS NOT NULL) OR "
+        "(state IN ('available','draining','disabled') AND job_id IS NULL AND fence IS NULL "
+        "AND guest_id IS NULL)",
+        name="assignment_shape",
     ),
     CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+Index(
+    "uq_capacity_slot_active_job",
+    capacity_slot.c.job_id,
+    unique=True,
+    postgresql_where=capacity_slot.c.state.in_(["reserved", "busy", "cleanup"]),
+)
+
+stage_job_event = Table(
+    "stage_job_event",
+    metadata,
+    pk(),
+    fk("job_id", "stage_job.id"),
+    Column("event_seq", BigInteger, nullable=False),
+    Column("event_kind", String(64), nullable=False),
+    Column("actor", String(255), nullable=False),
+    Column("fence", BigInteger, nullable=True),
+    Column("details", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("job_id", "event_seq"),
+    CheckConstraint("event_seq >= 1", name="event_seq_positive"),
+    Index("ix_stage_job_event_job", "job_id", "event_seq"),
 )
 
 stage_execution = Table(
@@ -1040,6 +1094,7 @@ TABLE_GROUPS: dict[str, tuple[str, ...]] = {
         "stage_job",
         "stage_dependency",
         "stage_execution",
+        "stage_job_event",
         "worker_registration",
         "capacity_slot",
     ),
@@ -1102,4 +1157,5 @@ IMMUTABLE_TABLES = (
     "attempt_event",
     "attempt_checkpoint",
     "stage_dependency",
+    "stage_job_event",
 )

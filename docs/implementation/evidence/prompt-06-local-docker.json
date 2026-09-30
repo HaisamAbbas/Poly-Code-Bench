@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-09-30",
+  "environment": {
+    "driver": "LocalDockerSandboxProvider",
+    "tier": "development",
+    "docker_server": "29.7.2",
+    "image": "docker.io/library/python:3.12-slim@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+    "production_attestation": false
+  },
+  "command": "$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DOCKER='1'; uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short tests/test_sandbox.py::test_live_docker_containment_and_cleanup",
+  "result": "PASS: 1 passed in 9.19s",
+  "observed_subcases": [
+    "staged fixture bytes can be read by candidate process",
+    "replaying identical staged bytes is idempotent",
+    "candidate network and metadata IP probes are blocked",
+    "process count is capped",
+    "Docker socket is not mounted",
+    "snapshot rejects symlinks",
+    "tmpfs disk limit is enforced",
+    "memory and swap limit rejects over-limit allocation",
+    "execution timeout stops execution",
+    "caller cancellation stops execution",
+    "destroy removes the container",
+    "expired provider-owned orphan is collected"
+  ],
+  "not_established": [
+    "EC2 or production VM isolation",
+    "production AWS IAM/security-group policy at a deployed target",
+    "production isolation attestation",
+    "E2E-05/E2E-06 full required production-driver scenarios"
+  ]
+}

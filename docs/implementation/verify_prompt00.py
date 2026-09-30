@@ -39,7 +39,11 @@ assert len(progress["prompt_statuses"]) == 35
 last_completed = int(progress["last_completed_prompt"])
 active = int(progress["active_prompt"])
 assert progress["prompt_statuses"][f"{last_completed:02d}"] == "done"
-assert active == last_completed + 1
+assert active > last_completed
+assert all(
+    progress["prompt_statuses"][f"{number:02d}"] == "partial"
+    for number in range(last_completed + 1, active)
+), "an explicitly resumed later prompt may skip only prompts persisted as partial"
 assert progress["prompt_statuses"][f"{active:02d}"] in {"not_started", "in_progress", "partial"}
 assert all(progress["prompt_statuses"][f"{i:02d}"] == "not_started" for i in range(active + 1, 35))
 assert progress["evidence_summary"]["requirements_registered"] == 14

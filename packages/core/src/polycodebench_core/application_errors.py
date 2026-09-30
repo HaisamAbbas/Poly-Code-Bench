@@ -26,6 +26,11 @@ class PersistenceConflict(ServiceError):
     status_code = 409
 
 
+class LeaseLost(ServiceError):
+    code = "LEASE_LOST"
+    status_code = 409
+
+
 class OptimisticVersionConflict(ServiceError):
     code = "VERSION_CONFLICT"
     status_code = 412

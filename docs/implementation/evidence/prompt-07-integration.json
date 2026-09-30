@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-09-30",
+  "prompt": "07",
+  "scope": "WP-07; local development integration only",
+  "environment": {
+    "database": "PostgreSQL 17.6 in the repository local Docker Compose service",
+    "database_name": "pcb_prompt07_test",
+    "object_store": "SeaweedFS 4.48 local S3-compatible service",
+    "sandbox": "Docker Linux engine 29.7.2; pinned Python 3.12 image; development tier",
+    "no_production_claim": true
+  },
+  "commands": [
+    {
+      "command": "$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DATABASE_URL='<isolated local test DB>'; $env:PCB_MIGRATION_DATABASE_URL=$env:PCB_TEST_DATABASE_URL; .\\.venv\\Scripts\\python.exe -m alembic -c packages/persistence/alembic.ini upgrade head",
+      "result": "PASS; applied f17b6b04a237 and 7b8cc92d13ea"
+    },
+    {
+      "command": "$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DATABASE_URL='<isolated local test DB>'; $env:PCB_MIGRATION_DATABASE_URL=$env:PCB_TEST_DATABASE_URL; .\\.venv\\Scripts\\python.exe -m alembic -c packages/persistence/alembic.ini check",
+      "result": "PASS; no schema drift detected"
+    },
+    {
+      "command": "uv run --locked --offline pytest -q -p no:cacheprovider --tb=short tests/test_jobs_postgres.py",
+      "result": "PASS; 7 passed, including two competing PostgreSQL workers, SeaweedFS upload/recovery and live local Docker cancellation"
+    },
+    {
+      "command": "uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short",
+      "result": "PASS; 75 passed in 24.35s with PostgreSQL, SeaweedFS and opt-in local Docker checks enabled"
+    },
+    {
+      "command": "uv sync --locked --offline --all-packages --group dev",
+      "result": "PASS; 43 packages checked"
+    },
+    {
+      "command": "uv build --offline --all-packages",
+      "result": "PASS; source distributions and wheels built for all 10 Python packages"
+    },
+    {
+      "command": "uv run --locked --offline mypy packages/core/src/polycodebench_core packages/persistence/src/polycodebench_persistence packages/orchestration/src/polycodebench_orchestration",
+      "result": "PASS; 34 source files"
+    },
+    {
+      "command": "ruff check and ruff format --check for core, persistence, orchestration, tests/test_jobs_postgres.py and scripts/check_boundaries.py",
+      "result": "PASS; lint clean, 36 files formatted"
+    },
+    {
+      "command": "uv run --locked --offline python scripts/smoke_workspace.py; uv run --locked --offline python scripts/check_boundaries.py; python -m compileall -q packages scripts tests",
+      "result": "PASS; 10 packages imported, startup success/failure checks passed, dependency boundaries passed, source compilation passed"
+    },
+    {
+      "command": "uv run --locked --offline --package polycodebench-orchestration pcb-scheduler --help; uv run --locked --offline --package polycodebench-orchestration pcb-scheduler reap --limit 5",
+      "result": "PASS; operator CLI help and live reaper; reaper returned an empty batch"
+    },
+    {
+      "command": "python docs/implementation/verify_prompt00.py",
+      "result": "PASS after E2E-09 full-scenario status was kept not_run while its tested subcase is documented"
+    }
+  ],
+  "scenarios": {
+    "E2E-07": {
+      "status": "passed",
+      "test": "tests/test_jobs_postgres.py::test_e2e07_competing_workers_fence_stale_delivery_and_idempotent_commit",
+      "assertions": [
+        "two concurrent claim transactions produced one owner for one job",
+        "expired lease was reaped; reclaimed delivery received a strictly higher fence",
+        "stale worker completion raised LEASE_LOST",
+        "same worker/fence/output completion replayed; changed output conflicted",
+        "both execution records and lease-expiry/completion events remained durable"
+      ]
+    },
+    "E2E-08": {
+      "status": "passed",
+      "test": "tests/test_jobs_postgres.py::test_e2e08_reuses_verified_upload_after_precommit_crash_and_commit_ack_loss",
+      "assertions": [
+        "injected crash after independent artifact finalization but before job completion",
+        "second worker reused the canonical artifact identity after lease recovery",
+        "injected lost acknowledgement after commit replayed the same output",
+        "future-dated artifact garbage collection retained the referenced canonical bytes"
+      ]
+    },
+    "E2E-09": {
+      "full_scenario_status": "not_run",
+      "tested_subcase": "passed",
+      "test": "tests/test_jobs_postgres.py::test_e2e09_cancelled_live_docker_tool_guest_is_destroyed",
+      "assertions": [
+        "a real local Docker tool command was in flight when attempt cancellation committed",
+        "no new job was dispatched after revocation",
+        "completed preparation execution and verified checkpoint artifact were retained",
+        "the active job was canceled without model-failure classification",
+        "local guest termination and destruction were confirmed before capacity slot reuse"
+      ],
+      "pending": "No model adapter/call usage exists before Prompt 08; durable incurred-usage preservation and ranked-release exclusion remain with Prompt 08/17. No usage was fabricated."
+    }
+  },
+  "additional_checks": {
+    "dag_gate_and_skip_semantics": "PASS; gate-pass and gate-fail branched correctly, failed gate input did not become infrastructure retry, only an explicitly accepted scheduler skip unblocked its branch, idempotent DAG replay matched and changed replay conflicted",
+    "retry_and_capacity": "PASS; three delivery bound, visible provider failure class, campaign/provider concurrency caps, draining/resume and cleanup confirmation",
+    "database_privileges": "PASS; scheduler may read/insert job events and finalize allowed execution columns; immutable event deletion is denied",
+    "failure_injections_are_retained": true
+  },
+  "review_validation": {
+    "scope": "Independent Constitution review; isolated Prompt 06/07 candidate with concurrent Prompt 08 excluded",
+    "database_name": "pcb_prompt07_review_test",
+    "migration_head": "8ac42e1d09bf",
+    "initial_regressions": "Five confirmed failures before corrections: fairness oversubscription, stalled dead prerequisite, failed unused branch, changed outcome replay, premature provisioning-slot release",
+    "full_suite": {"passed": 124, "skipped": 0, "duration_seconds": 28.60},
+    "scheduler_database_tests": 20,
+    "worker_lifecycle_tests": 30,
+    "operator_cli_tests": 6,
+    "actual_dependencies": ["PostgreSQL 17.6", "SeaweedFS 4.48", "local Docker development guests"],
+    "checks": [
+      "Concurrent provider and campaign reservations enforce the cap after locking and recounting",
+      "Dead prerequisites propagate, unused branches skip explicitly, parallel completions unblock joins",
+      "Full outcome identity checked on replay; authoritative event fields cannot be overwritten",
+      "Busy provisioning survives expiry; stale cleanup cannot release another delivery",
+      "Locked cancellation records every job; parent revocation blocks evaluation dispatch and heartbeat",
+      "Evaluation retry exhaustion records infra_blocked",
+      "Threaded create cancellation, repeated cancellation, database authority failure, child-task drainage and idle registration renewal",
+      "Periodic 30-second reaper and sanitized CLI failure/exit semantics"
+    ],
+    "static_and_build_validation": {
+      "ruff_format_files": 107,
+      "ruff_lint": "passed",
+      "mypy_source_files": 56,
+      "mypy_sandbox_lifecycle_files": 6,
+      "fresh_and_incremental_migrations": "passed",
+      "alembic_drift": "passed",
+      "source_and_wheel_packages": 10,
+      "compilation_operator_boundaries_smoke_schemas_ledgers": "passed"
+    },
+    "pending": ["Hosted CI", "Production VM lifecycle", "Full E2E-09 model usage and ranked-release evidence"]
+  },
+  "external_actions": {
+    "cloud": "none; Prompt 06 remains deferred by owner",
+    "model_calls_or_paid_work": "none",
+    "publication_or_release": "none"
+  }
+}

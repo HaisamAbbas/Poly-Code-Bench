@@ -274,12 +274,16 @@ version = "0.1.0"
 source = { editable = "packages/orchestration" }
 dependencies = [
     { name = "polycodebench-core" },
+    { name = "polycodebench-persistence" },
+    { name = "polycodebench-runner" },
     { name = "polycodebench-services" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "polycodebench-core", editable = "packages/core" },
+    { name = "polycodebench-persistence", editable = "packages/persistence" },
+    { name = "polycodebench-runner", editable = "packages/runner" },
     { name = "polycodebench-services", editable = "packages/services" },
 ]
 

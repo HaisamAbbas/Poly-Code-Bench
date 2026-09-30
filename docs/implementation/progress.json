@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project": "PolyCodeBench",
   "last_completed_prompt": "05",
-  "active_prompt": "06",
-  "active_scope": "WP-06: development and production VM sandbox drivers and isolation",
+  "active_prompt": "07",
+  "active_scope": "WP-07: durable stage DAG, fenced leases, recovery, worker lifecycle and cancellation",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "done",
-    "phase_2": "not_started",
+    "phase_2": "in_progress",
     "phase_3": "not_started",
     "phase_4": "not_started",
     "phase_5": "not_started",
@@ -16,7 +16,7 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_05_passed; phase_1_passed; pilot_policy_owner_approved_pending_calibration",
+  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; E2E-07_08_passed; E2E-09_development_subcase_passed_model_usage_pending; phase_2_in_progress",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
@@ -26,9 +26,11 @@
     "Publication target and signing configuration are absent",
     "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
     "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
-    "Short-lived one-object stage transfer credentials and lease/fence-bound artifact slots await Prompt 07 stage-control contracts",
+    "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
     "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
-    "E2E-04 production/language/evaluator variants remain with Prompts 10-12/17; full E2E-27 public/cohort filters remain with Prompts 16/29"
+    "E2E-04 production/language/evaluator variants remain with Prompts 10-12/17; full E2E-27 public/cohort filters remain with Prompts 16/29",
+    "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
+    "E2E-09 model request and durable usage-retention integration awaits Prompt 08/17; Prompt 07 verified live local Docker tool cancellation and preservation of completed artifact evidence without fabricating model usage"
   ],
   "evidence_summary": {
     "requirements_registered": 14,
@@ -36,9 +38,9 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 56
+    "application_tests_run": 124
   },
-  "exact_next_action": "Prompt 06 - Implement sandbox drivers and isolation.",
+  "exact_next_action": "Prompt 08 — Implement model adapters and budget accounting; then add real persisted model-call/usage preservation to E2E-09 and resume the Prompt 07 acceptance gate. Prompt 06 production E2E-05/06 remains separately deferred until authorized cloud access is available.",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
@@ -46,8 +48,8 @@
     "03": "done",
     "04": "done",
     "05": "done",
-    "06": "not_started",
-    "07": "not_started",
+    "06": "partial",
+    "07": "partial",
     "08": "not_started",
     "09": "not_started",
     "10": "not_started",
@@ -234,5 +236,73 @@
       "scoring_active": false,
       "evidence": "docs/implementation/decisions.md D-05-04"
     }
+  },
+  "prompt_06_cloud_gate": {
+    "status": "deferred_by_owner",
+    "reason": "User reports cloud access is unavailable for now.",
+    "production_e2e": ["E2E-05", "E2E-06"],
+    "resume_when": "Authorized AWS target, supervisor identity, reviewed AMI/image manifest, private network, explicit budget, Terraform and AWS CLI are available.",
+    "no_cloud_actions_taken": true
+  },
+  "prompt_06_completion": {
+    "date": "2026-09-30",
+    "status": "partial",
+    "evidence": "docs/implementation/evidence/prompt-06-local-docker.json",
+    "implementation": "Typed lifecycle contracts, local Docker driver, EC2 VM driver/control protocol, guest bootstrap, Terraform deployment plan, policies, cleanup and attestation implemented.",
+    "local_verification": [
+      "Opt-in live Docker containment: 1 passed in 9.19s; verified idempotent stage, network/metadata denial, no socket, path/symlink handling, PID/memory/disk/time limits, cancellation, orphan GC and destroy.",
+      "Full workspace pytest: 49 passed, 19 skipped; database and opt-in cases skipped only as reported by pytest.",
+      "Sandbox test module: 11 passed, 1 opt-in skip; epoch-zero expiry and sandbox policy drift checks passed.",
+      "Ruff format/lint; both mypy jobs; package-boundary, startup, contract-schema and task-contract checks passed.",
+      "Offline source/wheel builds passed for all 10 Python packages; git diff --check passed."
+    ],
+    "pending": [
+      "Terraform validate/plan unavailable because Terraform CLI is absent.",
+      "Production EC2 E2E-05/06 and destruction/attestation evidence require authorized AWS target, supervisor principal, approved AMI and explicit budget.",
+      "Hosted CI was not dispatched; PostgreSQL integration cases skipped because PCB_TEST_DATABASE_URL is not configured."
+    ],
+    "no_paid_or_remote_product_actions": true
+  },
+  "prompt_07_completion": {
+    "date": "2026-09-30",
+    "status": "partial",
+    "evidence": "docs/implementation/evidence/prompt-07-integration.json",
+    "implementation": "Strict stage DAG and branch semantics, replay-safe transactional creation, PostgreSQL SKIP LOCKED claims, database-timed 120-second leases, 30-second heartbeats with one-second revocation polling, fences/execution records, capacity slots, fairness limits, bounded retries/reaper, append-only events, cancellation, worker lifecycle and operator CLI.",
+    "passed": [
+      "Independent review fixed concurrent fairness, DAG failure/branch handling, replay/event integrity, fenced provisioning cleanup, worker supervision, cancellation races and evaluation failure classification",
+      "Isolated Prompt 06/07 full suite: 124 passed, no skips, with PostgreSQL, SeaweedFS and local Docker enabled; concurrent Prompt 08 excluded",
+      "Broad mypy: 56 source files; separate sandbox/lifecycle check: six files; Ruff 107 files; fresh/incremental migration, drift, ten-package source/wheel builds, compilation, schemas and ledgers passed",
+      "E2E-07: two competing PostgreSQL workers, lease expiry/reaping, higher-fence reclaim, stale completion rejected, same-output replay and changed-output conflict",
+      "E2E-08: worker crash after verified artifact upload, second-worker digest reuse, one committed result, lost-ack replay and referenced-artifact retention under garbage collection",
+      "Stage DAG gate-pass/gate-fail routing, wrong-answer execution distinct from infrastructure failure, idempotent DAG replay and accepted versus unrelated scheduler skip reasons",
+      "Three bounded infrastructure deliveries, failure-class records, campaign/provider concurrency caps, slot drain/resume and scheduler database grants",
+      "E2E-09 development subcase: actual local Docker tool execution cancelled after dispatch; completed checkpoint retained, no next dispatch, guest destruction confirmed before slot reuse, canceled attempt not classified as model failure"
+    ],
+    "pending": [
+      "E2E-09 full model-call usage-retention and ranked-release exclusion variants await durable model gateway/accounting in Prompt 08/17",
+      "Production VM lifecycle evidence remains deferred under prompt_06_cloud_gate; local Docker is not production isolation evidence",
+      "Hosted CI was not dispatched"
+    ],
+    "no_paid_or_remote_product_actions": true
+  },
+  "prompt_07_resume_review": {
+    "date": "2026-09-30",
+    "active_prompt": "07",
+    "baseline_commit": "3c0c681d25caf5763aea5c4000aa31533a7f81d2",
+    "working_tree_at_start": "Prompt 06 implementation/ledger changes and unrelated untracked Constitution/ preserved; no reset or checkout performed",
+    "source_hashes": "Architecture, Technical Spec and prompt pack remain unchanged from source-manifest.json; T §§5,7,8.3,9.3 and A §5 reviewed",
+    "fresh_passes": [
+      "PostgreSQL migrations to 7b8cc92d13ea and Alembic schema drift check",
+      "Prompt 07 E2E-07/08/09 and scheduler integration tests against PostgreSQL 17.6, SeaweedFS 4.48 and real local Docker Linux engine",
+      "Full locked workspace pytest suite: 75 passed in 24.35s; Ruff, mypy, package boundaries, workspace smoke/import and Python package builds",
+      "Operator CLI help and live reaper invocation against the isolated test database",
+      "Prompt 00 ledger/source consistency check and Git diff whitespace check"
+    ],
+    "pending_or_unrun": [
+      "E2E-09 model provider call/usage retention waits for Prompt 08/17; the development fixture fabricated no model usage",
+      "Prompt 06 production EC2 E2E-05/06 remains deferred by the owner; no cloud actions were taken",
+      "Hosted CI was not dispatched"
+    ],
+    "no_paid_or_remote_product_actions": true
   }
 }

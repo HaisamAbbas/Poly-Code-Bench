@@ -1,5 +1,21 @@
 # Decisions and specification discrepancies
 
+## Prompt 07 review corrections
+
+- **D-07-06 — Concurrent state and result authority:** short scope transactions serialize DAG mutations; nonblocking fairness locks and fresh counts enforce concurrent campaign/provider caps. An unused conditional branch receives `branch_not_selected`, while failed/unknown prerequisites cannot supply successful inputs. A completion key includes the complete observed outcome as well as the verified artifact. The new result document is durable evidence; legacy completions without it require explicit reconciliation before replay.
+- **D-07-07 — Provisioning and cleanup fencing:** provisioning reserves capacity before an external resource can exist and maintains its lease through creation. Cleanup confirms the exact worker/job/fence. Any unknown create failure keeps its slot unavailable pending driver-verified recovery. This trades temporary unavailable capacity for preventing premature reuse or an untracked live guest. Local driver checks establish development behavior only.
+- **D-07-08 — Review commit boundary:** the owner confirmed concurrent Prompt 08 work must remain outside the Prompt 06/07 review commit. Validation uses an isolated snapshot, and shared models are staged with only the scheduler additions. Model gateway code, accounting migration/role additions and Constitution files remain outside this commit.
+
+## Prompt 06 security and deployment decision
+
+- **D-06-01 — EC2 guest control channel:** use a private-IP SSH forced command with pinned host keys, a supervisor-only ingress security group, fixed remote command, JSON on stdin, short-lived stage capability, and no port/agent/socket forwarding. The worker verifies the exact configured AWS principal and live instance/network/container attestation before granting production-tier operations. This is a deployment implementation choice within the spec; the Terraform plan and driver are not deployment evidence. No AWS account/region, supervisor principal, reviewed AMI or spend ceiling was authorized, so `terraform validate/plan` and real-VM E2E-05/06 remain blocked.
+
+## Prompt 06 owner deferral
+
+- **D-06-02 ? Production cloud verification deferred:** on 2026-09-30 the owner stated cloud access is unavailable for now and deferred the production EC2 work. No infrastructure was provisioned. Keep PCB-06-1 through PCB-06-4 production verification and full E2E-05/06 blocked; resume only when the access, AMI, network, tooling, and spend inputs listed in `progress.json` are available.
+
+## Prompt 05 decisions and sequencing clarification
+
 ## Prompt 05 decisions and sequencing clarification
 
 - **D-05-05 — Admission evidence authority after review:** the CLI must replay the exact imported fixture snapshot and match the supplied report. Registration stores the full observed report and binds it to the manifest and both bundle digests. Production admission is unavailable until a trusted worker authority exists; a caller-controlled tier string never establishes that authority. Every non-fixture task set remains blocked. Prior reports based only on manifest identity must be regenerated.
@@ -57,3 +73,11 @@ Cloud account/region, OIDC identities, provider/judge endpoint credentials, expl
 
 - **D-02-01 - Seed wire representation:** Technical Spec §3 requires unsigned 64-bit seeds to survive serialization without signed overflow, so `master_seed` is a canonical decimal string throughout the versioned contracts. A numeric `master_seed: 4096` example in Technical Spec §4 is treated as illustrative shorthand; the narrow wire-safe representation in §3 governs. No score or sampling semantics are changed.
 - **D-02-02 - Contract E2E evidence boundary:** E2E-01 passed using the shared cross-runtime contract fixtures and property checks. This is contract-level verification, not an application workflow or benchmark execution result; broader immutable persistence and score replay remain pending under REQ-09.
+
+## Prompt 07 decisions and discrepancies
+
+- **D-07-01 - Stage execution finalization discrepancy:** the initial persistence migration installed a trigger rejecting every update to `stage_execution`, while Technical Spec §7.3 requires inserting the execution during claim and finalizing its result in the same completion/recovery transaction. Migration `f17b6b04a237` replaces that trigger with immutable identity plus exactly-once finalization: identity fields cannot change; `finished_at` and `result` become final once; deletion is rejected. Scheduler SQL grants permit updates only to `finished_at`, `result`, `failure_class`, and `output_manifest_id`. This is the narrow change needed to satisfy both the evidence immutability requirement and the explicit completion transaction.
+- **D-07-02 - Fairness bounds:** use default caps of four active leases per campaign and two per provider, configurable when constructing `PostgresJobRepository`. The source requires bounded fairness but supplies no numeric limits. PostgreSQL selects lower-load campaigns/providers first; these operational pilot defaults do not change task selection or score weights.
+- **D-07-03 - Durable evaluation cancellation:** the initial evaluation state constraint omitted `cancelled`, although Prompt 07 cancellation applies to unfinished evaluation work. Migration `7b8cc92d13ea` adds the explicit terminal state. Release cancellation remains outside this scheduler method because release withdrawal has separate publication governance.
+- **D-07-04 - E2E-09 evidence boundary:** actual local Docker tool-stage cancellation, lease revocation, completed artifact preservation and guest destruction passed. No model request or usage record is fabricated: durable model-call usage preservation and ranked-release exclusion remain pending Prompt 08/17. Local Docker evidence does not clear the owner-deferred production VM gates from Prompt 06.
+- **D-07-05 - Explicit later-prompt resume ledger rule:** `verify_prompt00.py` initially required `active_prompt == last_completed_prompt + 1`, which rejected the execution contract's explicit permission to work a later prompt while an earlier prompt remains partial. It now accepts a later active prompt only when every intervening prompt is explicitly persisted as `partial`; the active prompt and all following prompt owners/statuses are still checked. Prompt 06 remains partial and is not silently completed.

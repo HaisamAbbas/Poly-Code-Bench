@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "driver": "ec2_vm",
+  "isolation_tier": "production",
+  "require_verified_supervisor_principal": true,
+  "require_fresh_disposable_vm": true,
+  "instance_profile": null,
+  "metadata_endpoint": "disabled",
+  "public_ip": false,
+  "guest_egress": "none",
+  "candidate_network": "none",
+  "solve_grading_lanes_distinct": true,
+  "candidate_image_pull": "never",
+  "docker_socket_mount": false,
+  "destroy_before_capacity_reuse": true
+}

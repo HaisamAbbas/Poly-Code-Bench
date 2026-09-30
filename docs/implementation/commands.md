@@ -1,4 +1,4 @@
-# Verified command registry - Prompts 00-05
+# Verified command registry - Prompts 00-07
 
 The registry preserves Prompt 00 inspection history and records commands actually verified in each later prompt. Planned commands are not listed as working.
 
@@ -73,6 +73,38 @@ At the original Prompt 01 run, format/mypy, clean locked install, Python package
 No durable model/job/upload/release identity exists to retry; the persisted state and workspace contain no such action. No fresh provider or external write was initiated.
 
 No Node package install/typecheck/lint/build, complete locked CI run, PostgreSQL connectivity check, container startup, model call, paid work, upload, or release action was performed.
+
+## Prompt 07 checks (2026-09-30)
+
+### Review fixes: final isolated candidate
+
+All commands below ran from `.cache/p07-review-checkout`, with `PYTHONPATH` pointing to that snapshot's ten package source directories and the repository `.venv` tools. The snapshot excludes concurrent Prompt 08 code and reconstructs shared models with only Prompt 06/07 additions.
+
+| Command actually run | Result |
+|---|---|
+| `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --tb=short` with `PCB_TEST_DATABASE_URL=<pcb_prompt07_review_test>`, local SeaweedFS credentials/endpoint and `PCB_TEST_DOCKER=1` | PASS: 124 passed, no skips, 28.60 seconds. Includes 20 actual PostgreSQL scheduler cases, 30 worker lifecycle tests, six operator command tests and actual local Docker cancellation/containment. |
+| `alembic -c packages/persistence/alembic.ini upgrade head`; repeat upgrade; `check` | PASS: fresh local database through `8ac42e1d09bf`; previous Prompt 07 database upgraded from `7b8cc92d13ea`; no schema drift. |
+| `mypy packages/core/src packages/configuration/src packages/persistence/src packages/services/src packages/orchestration/src packages/runner/src scripts` | PASS: 56 source files. |
+| `mypy --follow-untyped-imports --follow-imports=silent packages/runner/src infra/sandbox/guest/pcb-guest-control.py tests/test_sandbox.py tests/test_worker.py` | PASS: six explicitly scoped files. The broad pass above checks the scheduler/persistence modules without suppressing their errors. |
+| `ruff format --check .`; `ruff check .` | PASS: 107 files formatted, lint clean. |
+| `uv build --offline --all-packages --out-dir <local review dist>`; `python -m compileall -q packages scripts`; `python -m polycodebench_orchestration.cli --help` and `reap` with local service configuration | PASS: source and wheel for all ten packages; compilation and live operator command checks. Periodic mode is covered by the retained CLI tests. |
+| Package boundaries, smoke/import checks, startup/contract schema `--check`, pilot contracts and ledger/source verification | PASS: ten imports, 21 generated outputs and 14 REQ/24 WP/43 E2E/35 prompts/142 tickets and source hashes. |
+
+The original Prompt 07 checks below are historical. Final review details are in `reports/prompt-07-review.md` and the `review_validation` object in the integration evidence. Hosted CI, production VM and full usage/release evidence remain unrun.
+
+| Command / check | Result |
+|---|---|
+| `$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DATABASE_URL='<isolated local test DB>'; $env:PCB_MIGRATION_DATABASE_URL=$env:PCB_TEST_DATABASE_URL; .\.venv\Scripts\python.exe -m alembic -c packages/persistence/alembic.ini upgrade head` | PASS: applied durable scheduler revision `f17b6b04a237` and evaluation-cancellation revision `7b8cc92d13ea` to actual local PostgreSQL 17.6. The test database name is `pcb_prompt07_test`; credential-bearing values are not recorded. |
+| `$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DATABASE_URL='<isolated local test DB>'; $env:PCB_MIGRATION_DATABASE_URL=$env:PCB_TEST_DATABASE_URL; .\.venv\Scripts\python.exe -m alembic -c packages/persistence/alembic.ini check` | PASS: no schema drift detected. |
+| `Get-Content packages/persistence/sql/grant_permissions.sql -Raw | docker exec -i polycodebench-local-postgres-1 psql -v ON_ERROR_STOP=1 -U polycodebench -d pcb_prompt07_test` | PASS: applied idempotent scheduler table/column grants to the isolated database; the role-grant integration check confirms scheduler read/insert/finalize privileges and denied event deletion. |
+| `uv run --locked --offline pytest -q -p no:cacheprovider --tb=short tests/test_jobs_postgres.py` | PASS, 7 passed; actual PostgreSQL 17.6, SeaweedFS 4.48 and Docker Linux engine 29.7.2. E2E-07/08 and development E2E-09 subcases passed. Exact setup keeps local database/object-store test variables and local-only credentials out of evidence files. |
+| `uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short` | PASS, 75 passed in 24.35s with the same isolated local DB/object store and opt-in live Docker test enabled; see `docs/implementation/evidence/prompt-07-integration.json`. |
+| `uv run --locked --offline --package polycodebench-orchestration pcb-scheduler --help`; `uv run --locked --offline --package polycodebench-orchestration pcb-scheduler reap --limit 5` | PASS: registered scheduler CLI help and actual PostgreSQL expired-lease reaper invocation; no expired items were reported in the operator invocation. |
+| `uv run --locked --offline mypy packages/core/src/polycodebench_core packages/persistence/src/polycodebench_persistence packages/orchestration/src/polycodebench_orchestration`; `uv run --locked --offline python scripts/check_boundaries.py` | PASS: strict typing and package dependency boundaries. |
+| `.\.venv\Scripts\ruff.exe check packages/core/src/polycodebench_core packages/persistence/src/polycodebench_persistence packages/orchestration/src/polycodebench_orchestration tests/test_jobs_postgres.py scripts/check_boundaries.py docs/implementation/verify_prompt00.py`; `.\.venv\Scripts\ruff.exe format --check packages/core/src/polycodebench_core packages/persistence/src/polycodebench_persistence packages/orchestration/src/polycodebench_orchestration tests/test_jobs_postgres.py scripts/check_boundaries.py docs/implementation/verify_prompt00.py` | PASS: lint clean; 37 files already formatted. |
+| `uv build --offline --all-packages`; `uv sync --locked --offline --all-packages --group dev`; `\.venv\Scripts\python.exe -m compileall -q packages scripts tests`; `git diff --check` | PASS where reported in `docs/implementation/evidence/prompt-07-integration.json`; local locked dependency state only. |
+
+Prompt 07 used only the local development Docker/SeaweedFS/PostgreSQL services. Hosted CI, production EC2, live model calls, paid work, upload, or release actions were not performed.
 
 ## Prompt 03 checks (2026-09-30)
 
@@ -186,3 +218,17 @@ The following initial results are historical. The review-fix verification sectio
 | `.venv/Scripts/python.exe scripts/export_contract_schemas.py` followed by `--check`; startup schema `--check`; `scripts/check_boundaries.py`; `scripts/validate_task_contracts.py`; `scripts/smoke_workspace.py` | PASS: regenerated and checked 21 contract outputs, startup schema consistency, package boundaries, pilot-contract consistency and ten-package smoke checks. |
 | `corepack pnpm --filter @polycodebench/contracts typecheck`; `build`; `test:contracts` | PASS after permitted Corepack cache access: generated TypeScript compiles; shared golden/invalid contract fixtures and 256 property cases pass. Available Node 22.23.2 used locally; pinned Node 24 CI was not run. |
 | Hosted CI; trusted production worker admission; production VM isolation | NOT RUN. Production admission and every non-fixture task set are explicitly blocked pending trusted worker evidence authority. |
+
+## Prompt 06 verification (2026-09-30)
+
+| Command / check actually run | Result |
+|---|---|
+| `$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DOCKER='1'; uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short tests/test_sandbox.py::test_live_docker_containment_and_cleanup` | PASS: 1 live development-tier Docker containment test in 9.19s on Docker Linux engine 29.7.2, pinned Python 3.12 slim digest. Covers stage/read/idempotent replay, network and metadata denial, no Docker socket, symlink snapshot denial, process/memory/swap/disk/time limits, cancellation, TTL orphan collection and verified destruction. Evidence: `docs/implementation/evidence/prompt-06-local-docker.json`. This is not production VM evidence. |
+| `$env:UV_CACHE_DIR='.cache/uv'; uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short` | PASS: full workspace, 49 passed, 19 skipped in 3.24s. PostgreSQL cases skipped because `PCB_TEST_DATABASE_URL` was unset; live Docker cases are opt-in and were run separately. |
+| `uv run --locked --offline --all-packages --group dev ruff format --check .`; same prefix `ruff check .` | PASS: 95 Python files formatted; lint clean. |
+| `uv run --locked --offline --all-packages --group dev mypy --disable-error-code=import-untyped packages/core/src packages/configuration/src scripts`; `uv run --locked --offline --all-packages --group dev mypy --follow-untyped-imports packages/runner/src infra/sandbox/guest/pcb-guest-control.py tests/test_sandbox.py` | PASS: 17 and 5 source files respectively. |
+| `uv run --locked --offline --all-packages python scripts/check_boundaries.py`; `scripts/smoke_workspace.py`; `scripts/export_contract_schemas.py --check`; `scripts/validate_task_contracts.py` | PASS: boundaries, ten-package import/config smoke, 21 generated outputs and pilot contracts. |
+| `uv build --offline --all-packages`; `git diff --check` | PASS: source and wheel built for all ten Python packages; no whitespace errors (Git reported CRLF normalization warnings). |
+| `Get-Command aws,terraform -ErrorAction SilentlyContinue` | Neither CLI is installed. No AWS target/account, supervisor principal, reviewed AMI or cloud spend limit is configured. `terraform validate/plan`, deployment and real EC2 E2E-05/06 are not run; no cloud calls were made. |
+| `uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short tests/test_sandbox.py` | PASS: 11 passed, 1 skipped (opt-in live test). |
+| `bash -n infra/sandbox/aws/guest/bootstrap-control.sh` | BLOCKED: Windows WSL Bash returned `E_ACCESSDENIED`. CI syntax check added; hosted CI not run. |

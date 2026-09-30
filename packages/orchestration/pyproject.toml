@@ -3,10 +3,20 @@ name = "polycodebench-orchestration"
 version = "0.1.0"
 description = "PolyCodeBench durable job orchestration ownership boundary"
 requires-python = ">=3.12,<3.13"
-dependencies = ["polycodebench-core==0.1.0", "polycodebench-services==0.1.0"]
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "polycodebench-persistence==0.1.0",
+  "polycodebench-runner==0.1.0",
+  "polycodebench-services==0.1.0",
+]
+
+[project.scripts]
+pcb-scheduler = "polycodebench_orchestration.cli:main"
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }
+polycodebench-persistence = { workspace = true }
+polycodebench-runner = { workspace = true }
 polycodebench-services = { workspace = true }
 
 [build-system]

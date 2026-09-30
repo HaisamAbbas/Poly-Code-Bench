@@ -24,7 +24,7 @@ ALLOWED = {
     "core": set(),
     "services": {"core"},
     "persistence": {"core"},
-    "orchestration": {"core", "services", "persistence"},
+    "orchestration": {"core", "services", "persistence", "runner"},
     "runner": {"core"},
     "evaluation": {"core", "runner"},
     "scoring": {"core"},

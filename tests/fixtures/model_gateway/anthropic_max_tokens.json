@@ -1,0 +1,35 @@
+{
+  "adapter": "anthropic",
+  "body": {
+    "content": [
+      {
+        "text": "partial",
+        "type": "text"
+      }
+    ],
+    "id": "msg_f2",
+    "model": "fixture-model",
+    "role": "assistant",
+    "stop_reason": "max_tokens",
+    "type": "message",
+    "usage": {
+      "input_tokens": 5,
+      "output_tokens": 64
+    }
+  },
+  "expected": {
+    "cached_input_tokens": null,
+    "complete_usage": true,
+    "finish_reason": "length",
+    "input_tokens": 5,
+    "output_tokens": 64,
+    "provider_request_id": "req_anthropic_fixture_2",
+    "provider_revision": "fixture-model",
+    "reasoning_tokens": null,
+    "tool_calls": []
+  },
+  "headers": {
+    "request-id": "req_anthropic_fixture_2"
+  },
+  "provenance": "FIXTURE: hand-written response following the documented provider schema (see docs/model-gateway.md). Not captured from a live provider."
+}

@@ -1,0 +1,33 @@
+{
+  "adapter": "local",
+  "body": {
+    "choices": [
+      {
+        "finish_reason": "length",
+        "index": 0,
+        "message": {
+          "content": "trunc",
+          "role": "assistant"
+        }
+      }
+    ],
+    "id": "local-1",
+    "model": "local-model",
+    "usage": {
+      "prompt_tokens": 17
+    }
+  },
+  "expected": {
+    "cached_input_tokens": null,
+    "complete_usage": false,
+    "finish_reason": "length",
+    "input_tokens": 17,
+    "output_tokens": null,
+    "provider_request_id": null,
+    "provider_revision": "local-model",
+    "reasoning_tokens": null,
+    "tool_calls": []
+  },
+  "headers": {},
+  "provenance": "FIXTURE: hand-written response following the documented provider schema (see docs/model-gateway.md). Not captured from a live provider."
+}

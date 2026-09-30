@@ -1,0 +1,103 @@
+{
+  "prompt": "08",
+  "date": "2026-09-30",
+  "summary": "Model gateway, endpoint governance, call/usage ledger and hierarchical budget reservations. E2E-10 and E2E-12 passed and E2E-11 passed at the gateway level on actual PostgreSQL with a deterministic FIXTURE transport; one bounded live run of the local adapter against a real Ollama passed; hosted adapters were not exercised live.",
+  "environment": {
+    "postgresql": "17.6 (docker, compose.yaml), dedicated database pcb_prompt08_test, migrated from empty through 9d3a71c05e24",
+    "object_store": "SeaweedFS 4.48 (docker, compose.yaml), buckets pcb-p08-*",
+    "python": "3.12.10",
+    "local_model_server": "Ollama 0.34.4 on 127.0.0.1:11434, model llama3.2:3b",
+    "provider_credentials_present": false
+  },
+  "evidence_levels": {
+    "fixture": "ScriptedTransport replays deterministic HTTP outcomes and faults (timeout after send, connect refusal, 429, 5xx, malformed 2xx, missing or zero usage, hostile echo of a secret). Provider bodies in tests/fixtures/model_gateway/*.json are hand-written from each provider's documented schema.",
+    "integration": "Real PostgreSQL ledger, triggers, row locks, partial unique indexes and advisory locks; real S3-compatible artifact store; real loopback sockets for the pinned transport.",
+    "live": "tests/test_model_gateway_live_smoke.py against a real local Ollama only. Evidence: docs/implementation/evidence/prompt-08-live-smoke-local.json",
+    "not_run": "OpenAI-compatible (hosted), Anthropic and Google adapters against live endpoints; any paid provider call; the two-model live pilot (Prompt 17 / E2E-31)."
+  },
+  "commands": [
+    {
+      "command": "alembic -c packages/persistence/alembic.ini upgrade head; alembic ... check (empty pcb_prompt08_test)",
+      "result": "PASS: 10 revisions applied, no schema drift"
+    },
+    {
+      "command": "uv run --offline --locked --all-packages pytest -q -p no:cacheprovider tests/test_model_gateway_units.py tests/test_model_gateway_fixtures.py",
+      "result": "PASS: 73 + 8"
+    },
+    {
+      "command": "pytest tests/test_model_gateway_postgres.py tests/test_model_gateway_review_regressions.py (PCB_TEST_DATABASE_URL, PCB_OBJECT_STORE_ENDPOINT set)",
+      "result": "PASS: 27 + 18"
+    },
+    {
+      "command": "pytest tests/test_model_gateway_live_smoke.py -rs with PCB_LIVE_LOCAL_URL=http://127.0.0.1:11434/v1 PCB_LIVE_LOCAL_MODEL=llama3.2:3b",
+      "result": "PASS: local adapter; SKIPPED (untested): openai_compatible, anthropic, google"
+    },
+    {
+      "command": "uv run --offline --locked --all-packages pytest -q -p no:cacheprovider -rs (full suite)",
+      "result": "PASS: 247 passed, 7 skipped (Docker lifecycle opt-ins and live cases without configuration)"
+    }
+  ],
+  "scenarios": {
+    "E2E-10": {
+      "status": "passed (fixture transport, real PostgreSQL)",
+      "tests": [
+        "test_e2e10_concurrent_calls_compete_for_the_last_allowance",
+        "test_e2e10_token_and_turn_limits_are_separate_from_money",
+        "test_e2e10_parallel_reservations_across_siblings_never_deadlock_or_oversubscribe"
+      ],
+      "observed": "Nine concurrent calls across two sibling attempts for an allowance of three: exactly three reached the transport, six were refused before dispatch and left no call intent; open reservations equalled three bounds while the calls were in flight; 16 parallel threads reserved exactly five of sixteen with no deadlock; every account re-derived from the immutable ledger without discrepancy."
+    },
+    "E2E-11": {
+      "status": "gateway subcase passed; full scenario not_run until Prompt 09",
+      "tests": [
+        "test_e2e11_restart_after_settlement_consumes_the_same_response",
+        "test_e2e11_restart_after_raw_bytes_persisted_settles_without_a_new_request",
+        "test_e2e11_no_response_shopping_after_failures",
+        "test_e2e11_malformed_success_body_is_persisted_and_ambiguous_not_dropped",
+        "test_first_arriving_response_wins_even_from_an_ambiguous_delivery",
+        "test_gateway_returns_the_recorded_response_when_its_own_delivery_was_superseded"
+      ],
+      "observed": "A restarted gateway consumed the stored response, or settled already-persisted raw bytes, with zero further transport requests and unchanged spend; a recorded definitive failure was replayed without a new sample; reusing a key with different request bytes or a different model config conflicted; when two deliveries answered, only the first to arrive was consumed and both were billed."
+    },
+    "E2E-12": {
+      "status": "passed (fixture transport, real PostgreSQL)",
+      "tests": [
+        "test_e2e12_ambiguous_timeout_retains_exposure_and_retry_reserves_more",
+        "test_e2e12_reconciliation_is_append_only_and_requires_evidence",
+        "test_e2e12_billed_reconciliation_charges_late_and_records_overrun",
+        "test_e2e12_missing_usage_is_unknown_and_retains_exposure_not_zero",
+        "test_e2e12_partial_usage_keeps_unknown_fields_null",
+        "test_retry_classes_not_delivered_releases_rate_limit_backs_off_ambiguous_retains",
+        "test_delivery_cap_bounds_retries_and_keeps_all_exposure",
+        "test_reconcile_cannot_book_the_same_cost_twice",
+        "test_zero_usage_with_output_is_not_settled_as_free"
+      ],
+      "observed": "A timeout after send left the whole bound as uncertain exposure; the retry reserved a second bound (snapshot: 0 spent, 1 bound reserved, 1 bound uncertain); the ambiguous delivery has no usage record and no zero cost; missing or partial usage stayed NULL with exposure retained; reconciliation is append-only, needs cited evidence and cannot book a cost twice."
+    },
+    "E2E-09_model_usage_half": {
+      "status": "passed with fixture transport; ranked-release exclusion and live usage remain Prompt 17",
+      "tests": ["test_e2e09_usage_survives_cancellation_and_cancelled_scope_cannot_spend"]
+    }
+  },
+  "independent_review": {
+    "findings": 12,
+    "reproduced_before_fixing": [
+      "repeated reconcile double-charged",
+      "turn lost after a retried or unbilled delivery",
+      "retry-start versus settlement lock-order deadlock",
+      "caller-supplied scope redirected a charge",
+      "reservation smaller than the wire output cap"
+    ],
+    "fixed_and_pinned_in": [
+      "tests/test_model_gateway_review_regressions.py",
+      "tests/test_model_gateway_units.py"
+    ]
+  },
+  "known_limits": [
+    "Hosted adapters are verified only against documented-shape fixtures; live behavior is unknown.",
+    "Throttling is per process.",
+    "Exactly-once billing cannot be guaranteed; ambiguity is bounded and disclosed.",
+    "Ollama returned no provider request id; the gateway records NULL rather than inventing one.",
+    "Price snapshots, context windows and capability declarations for real model configurations are operator inputs that were not supplied."
+  ]
+}

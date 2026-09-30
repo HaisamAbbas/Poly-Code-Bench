@@ -1,0 +1,51 @@
+{
+  "adapter": "local",
+  "call": {
+    "finish_reason": "stop",
+    "provider_request_id_present": false,
+    "provider_revision": "llama3.2:3b|fp_ollama",
+    "response_characters": 4,
+    "settlement_state": "settled",
+    "usage": {
+      "cached_input_tokens": 15,
+      "input_tokens": 38,
+      "output_tokens": 3,
+      "reasoning_tokens": null,
+      "reported_cost_micro_usd": null
+    }
+  },
+  "conformance": {
+    "adapter": "local",
+    "checks": [
+      {
+        "check": "basic_completion",
+        "detail": "text returned",
+        "passed": true
+      },
+      {
+        "check": "usage_counters",
+        "detail": "counters present",
+        "passed": true
+      },
+      {
+        "check": "native_tool_call",
+        "detail": "tool call returned with parsed arguments",
+        "passed": true
+      }
+    ],
+    "evidence": "live probe of the registered endpoint",
+    "passed": true
+  },
+  "date": "2026-09-30T18:32:23.939596+00:00",
+  "endpoint_host": "127.0.0.1",
+  "label": "LIVE",
+  "ledger_consistent": true,
+  "ledger_money_micro_usd": {
+    "limit": 50000,
+    "reserved_open": 0,
+    "spent_confirmed": 0,
+    "uncertain_committed": 0
+  },
+  "model": "llama3.2:3b",
+  "note": "response text intentionally not recorded"
+}

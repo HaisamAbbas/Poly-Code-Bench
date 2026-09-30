@@ -1,0 +1,73 @@
+{
+  "adapter": "openai_compatible",
+  "body": {
+    "choices": [
+      {
+        "finish_reason": "tool_calls",
+        "index": 0,
+        "message": {
+          "content": null,
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"query\":\"main\"}",
+                "name": "search"
+              },
+              "id": "call_a",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"path\":",
+                "name": "read_file"
+              },
+              "id": "call_b",
+              "type": "function"
+            }
+          ]
+        }
+      }
+    ],
+    "id": "chatcmpl-f1",
+    "model": "fixture-model",
+    "object": "chat.completion",
+    "system_fingerprint": "fp_f1",
+    "usage": {
+      "completion_tokens": 90,
+      "completion_tokens_details": {
+        "reasoning_tokens": 64
+      },
+      "prompt_tokens": 210,
+      "prompt_tokens_details": {
+        "cached_tokens": 128
+      }
+    }
+  },
+  "expected": {
+    "cached_input_tokens": 128,
+    "complete_usage": true,
+    "finish_reason": "tool_calls",
+    "input_tokens": 210,
+    "output_tokens": 90,
+    "provider_request_id": "req-openai-fixture",
+    "provider_revision": "fixture-model|fp_f1",
+    "reasoning_tokens": 64,
+    "tool_calls": [
+      [
+        "call_a",
+        "search",
+        true
+      ],
+      [
+        "call_b",
+        "read_file",
+        false
+      ]
+    ]
+  },
+  "headers": {
+    "x-request-id": "req-openai-fixture"
+  },
+  "provenance": "FIXTURE: hand-written response following the documented provider schema (see docs/model-gateway.md). Not captured from a live provider."
+}

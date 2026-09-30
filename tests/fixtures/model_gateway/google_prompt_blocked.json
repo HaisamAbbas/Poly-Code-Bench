@@ -1,0 +1,26 @@
+{
+  "adapter": "google",
+  "body": {
+    "promptFeedback": {
+      "blockReason": "SAFETY"
+    },
+    "responseId": "resp-f2",
+    "usageMetadata": {
+      "promptTokenCount": 9,
+      "totalTokenCount": 9
+    }
+  },
+  "expected": {
+    "cached_input_tokens": null,
+    "complete_usage": false,
+    "finish_reason": "content_filter",
+    "input_tokens": 9,
+    "output_tokens": null,
+    "provider_request_id": "resp-f2",
+    "provider_revision": null,
+    "reasoning_tokens": null,
+    "tool_calls": []
+  },
+  "headers": {},
+  "provenance": "FIXTURE: hand-written response following the documented provider schema (see docs/model-gateway.md). Not captured from a live provider."
+}

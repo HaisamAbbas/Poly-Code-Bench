@@ -2,8 +2,8 @@
   "schema_version": 1,
   "project": "PolyCodeBench",
   "last_completed_prompt": "05",
-  "active_prompt": "07",
-  "active_scope": "WP-07: durable stage DAG, fenced leases, recovery, worker lifecycle and cancellation",
+  "active_prompt": "08",
+  "active_scope": "WP-08: model adapters, endpoint governance, call/usage ledger and budget reservations (implemented; hosted adapters live-untested)",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "done",
@@ -16,12 +16,11 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; E2E-07_08_passed; E2E-09_development_subcase_passed_model_usage_pending; phase_2_in_progress",
+  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; prompt_08_done_fixture_and_local_live; E2E-07_08_passed; E2E-09_fixture_usage_retention_passed_ranked_exclusion_pending; E2E-10_12_passed_fixture_transport; E2E-11_gateway_subcase_passed; phase_2_in_progress",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
     "Production disposable VM/cloud execution and production-worker task admission are not configured or verified",
-    "Model/judge endpoints, credentials, and explicit spend budgets are not configured or verified",
     "Source/task rights and human calibration evidence remain required before benchmark data admission or scoring",
     "Publication target and signing configuration are absent",
     "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
@@ -30,7 +29,10 @@
     "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
     "E2E-04 production/language/evaluator variants remain with Prompts 10-12/17; full E2E-27 public/cohort filters remain with Prompts 16/29",
     "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
-    "E2E-09 model request and durable usage-retention integration awaits Prompt 08/17; Prompt 07 verified live local Docker tool cancellation and preservation of completed artifact evidence without fabricating model usage"
+    "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
+    "E2E-09 ranked-release exclusion and live model usage remain with Prompt 17; model-usage retention after cancellation passed with fixture transport (Prompt 08)",
+    "E2E-11 agent-controller restart variant awaits Prompt 09",
+    "Production secret-store integration, operator-supplied price snapshots and context/capability declarations for real model configurations are deployment inputs"
   ],
   "evidence_summary": {
     "requirements_registered": 14,
@@ -38,9 +40,9 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 124
+    "application_tests_run": 247
   },
-  "exact_next_action": "Prompt 08 — Implement model adapters and budget accounting; then add real persisted model-call/usage preservation to E2E-09 and resume the Prompt 07 acceptance gate. Prompt 06 production E2E-05/06 remains separately deferred until authorized cloud access is available.",
+  "exact_next_action": "Prompt 09 — Implement single-shot and agent execution, consuming ModelGateway.call, budget accounts from PostgresModelLedger.ensure_account and the job lease guard (PostgresJobRepository.dispatch_allowed). Prompt 06 production E2E-05/06 and the Prompt 07 E2E-09 ranked-release variant remain separately pending; configure hosted provider credentials (PCBSECRET__MODELS__<NAME>) and run `pytest tests/test_model_gateway_live_smoke.py` to live-verify the untested adapters.",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
@@ -50,7 +52,7 @@
     "05": "done",
     "06": "partial",
     "07": "partial",
-    "08": "not_started",
+    "08": "partial",
     "09": "not_started",
     "10": "not_started",
     "11": "not_started",
@@ -303,6 +305,30 @@
       "Prompt 06 production EC2 E2E-05/06 remains deferred by the owner; no cloud actions were taken",
       "Hosted CI was not dispatched"
     ],
+    "no_paid_or_remote_product_actions": true
+  },
+  "latest_done_prompt": "08",
+  "prompt_08": {
+    "date": "2026-09-30",
+    "migration": "9d3a71c05e24",
+    "tests": {
+      "unit_and_local_socket": 73,
+      "provider_shaped_fixtures": 8,
+      "postgres_seaweedfs_fixture_transport": 27,
+      "review_regressions": 18,
+      "live_local_adapter": 1,
+      "live_untested_adapters": [
+        "openai_compatible",
+        "anthropic",
+        "google"
+      ],
+      "full_suite": "247 passed, 7 skipped"
+    },
+    "evidence": [
+      "docs/implementation/evidence/prompt-08-integration.json",
+      "docs/implementation/evidence/prompt-08-live-smoke-local.json"
+    ],
+    "review": "independent adversarial review: 12 findings fixed; see D-08-09",
     "no_paid_or_remote_product_actions": true
   }
 }

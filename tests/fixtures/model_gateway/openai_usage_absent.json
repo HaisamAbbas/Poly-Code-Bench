@@ -1,0 +1,30 @@
+{
+  "adapter": "openai_compatible",
+  "body": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "message": {
+          "content": "done",
+          "role": "assistant"
+        }
+      }
+    ],
+    "id": "chatcmpl-f2",
+    "model": "fixture-model"
+  },
+  "expected": {
+    "cached_input_tokens": null,
+    "complete_usage": false,
+    "finish_reason": "stop",
+    "input_tokens": null,
+    "output_tokens": null,
+    "provider_request_id": null,
+    "provider_revision": "fixture-model",
+    "reasoning_tokens": null,
+    "tool_calls": []
+  },
+  "headers": {},
+  "provenance": "FIXTURE: hand-written response following the documented provider schema (see docs/model-gateway.md). Not captured from a live provider."
+}

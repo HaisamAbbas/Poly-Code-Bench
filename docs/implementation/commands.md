@@ -232,3 +232,24 @@ The following initial results are historical. The review-fix verification sectio
 | `Get-Command aws,terraform -ErrorAction SilentlyContinue` | Neither CLI is installed. No AWS target/account, supervisor principal, reviewed AMI or cloud spend limit is configured. `terraform validate/plan`, deployment and real EC2 E2E-05/06 are not run; no cloud calls were made. |
 | `uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short tests/test_sandbox.py` | PASS: 11 passed, 1 skipped (opt-in live test). |
 | `bash -n infra/sandbox/aws/guest/bootstrap-control.sh` | BLOCKED: Windows WSL Bash returned `E_ACCESSDENIED`. CI syntax check added; hosted CI not run. |
+
+## Prompt 08 checks (2026-09-30)
+
+All database/object-store commands ran against the local PostgreSQL 17.6 and SeaweedFS 4.48 containers from `compose.yaml`; the test database was the dedicated, freshly created `pcb_prompt08_test`. Credential-bearing values are local development values and are not recorded.
+
+| Command / check | Result |
+|---|---|
+| `alembic -c packages/persistence/alembic.ini upgrade head` on an empty `pcb_prompt08_test`, then `alembic ... check` | PASS: ten revisions applied including `9d3a71c05e24`; no schema drift. Re-created from scratch after each migration edit. The migration's `downgrade()` refuses by design. |
+| `psql ... < packages/persistence/sql/provision_roles.sql` then `< packages/persistence/sql/grant_permissions.sql` (with `ON_ERROR_STOP`) | PASS: adds the `pcb_model_gateway` group and its least-privilege grants. |
+| `uv run --offline --locked --all-packages pytest -q -p no:cacheprovider tests/test_model_gateway_units.py tests/test_model_gateway_fixtures.py` | PASS: 73 + 8 tests (policy/SSRF matrix, capability matrix, cost bounds, adapter wire/parse, provider-shaped fixtures, transport against loopback sockets, conformance probes). |
+| `PCB_TEST_DATABASE_URL=<test db> PCB_OBJECT_STORE_ENDPOINT=http://127.0.0.1:8333 AWS_ACCESS_KEY_ID=<local> AWS_SECRET_ACCESS_KEY=<local> uv run --offline --locked --all-packages pytest -q -p no:cacheprovider tests/test_model_gateway_postgres.py tests/test_model_gateway_review_regressions.py` | PASS: 27 + 18 tests (E2E-10/11/12, endpoint governance, secret handling, review regressions) with fixture transport faults. |
+| Same environment plus `PCB_LIVE_LOCAL_URL=http://127.0.0.1:11434/v1 PCB_LIVE_LOCAL_MODEL=llama3.2:3b PCB_LIVE_EVIDENCE_DIR=docs/implementation/evidence`, `pytest tests/test_model_gateway_live_smoke.py -rs` | PASS for the local adapter against a real Ollama 0.34.4 (conformance: completion, usage counters, native tool call; budgeted gateway call settled; ledger consistent). OpenAI-compatible hosted, Anthropic and Google: SKIPPED, reported untested (no credentials configured). Evidence: `docs/implementation/evidence/prompt-08-live-smoke-local.json`. |
+| Full suite: `uv run --offline --locked --all-packages pytest -q -p no:cacheprovider -rs` (same environment, no Docker/live opt-ins) | PASS: 247 passed, 7 skipped (Docker lifecycle opt-ins and live-smoke cases without configuration). |
+| `uv run --offline --locked --all-packages ruff format --check .`; `ruff check .` | PASS. |
+| `uv run --offline --locked --all-packages mypy packages/core/src packages/persistence/src/polycodebench_persistence/{endpoints,model_ledger,model_configs}.py packages/orchestration/src/polycodebench_orchestration/gateway packages/services/src/polycodebench_services/model_endpoints.py` | PASS: 33 source files, strict. |
+| `uv run --offline --locked --all-packages mypy packages/configuration/src scripts` | FAIL (pre-existing, not from this prompt): `scripts/pcb.py` and `scripts/export_contract_schemas.py` import workspace packages that ship no `py.typed`; 11 `import-untyped`/`no-any-return` findings. |
+| `uv run ... python scripts/check_boundaries.py`; `scripts/smoke_workspace.py`; `scripts/export_startup_schema.py --check`; `docs/implementation/verify_prompt00.py` | PASS. |
+| `uv build --all-packages --offline --out-dir <scratch>` | PASS: all ten packages build; the wheel contains `polycodebench_orchestration/gateway/**`. |
+| `pcb-model plan --config <cfg> --protocol <protocol> --tasks 10 --samples 3 --max-request-bytes 4000` | exit 0 with labeled estimate; exit 4 when the configuration has no price snapshot. |
+| `pcb-model register ...` without / with `PCB_ROLES=administrator`; `pcb-model check <id>`; `pcb-model account <id>` | exit 3 (permission) / exit 0 pending registration; static check resolves DNS under the policy, reports the secret provisioned, `contacted_endpoint: false`; account summary shows zero ledger discrepancies. |
+| `Get-Command`/environment-variable name scan for provider credentials (`OPENAI*`, `ANTHROPIC*`, `GOOGLE*`, `GEMINI*`, `PCBSECRET*`) | None present. Secret values were not read. A local Ollama on 127.0.0.1:11434 was used for the live local check. |

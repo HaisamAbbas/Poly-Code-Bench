@@ -68,6 +68,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 - Phase 1 aggregate gate: PASS. The project owner approved the specified v1 pilot weights on 2026-09-30 (D-05-04). Scoring remains inactive pending human/judge calibration; production task admission, later language/evaluation variants, and source/data rights remain explicit prerequisites. No scored task set is authorized.
 - Prompt 06: PARTIAL. Typed sandbox contracts, local Docker enforcement, EC2 driver/guest/bootstrap and Terraform plan implemented; live Docker adversarial subcases passed. The owner deferred production VM/IaC validation because cloud access is unavailable; the required target/principal/approved AMI/budget are not configured. Resume per `progress.json` and `reports/prompt-06.md`.
 - Prompt 07: PARTIAL. Durable PostgreSQL DAG/lease/fence/recovery, worker/sandbox integration, fairness, retry, cancellation and operator control implemented. E2E-07/08 passed on local PostgreSQL/SeaweedFS; E2E-09 local Docker cancellation and completed-evidence preservation passed. Durable model-usage retention waits for Prompt 08/17; see `reports/prompt-07.md`.
+- Prompt 08: PARTIAL. Accountable model gateway (four adapters, endpoint governance, call/usage ledger, hierarchical budget reservations) implemented; E2E-10/12 and gateway-level E2E-11 passed on local PostgreSQL with fixture transport; local adapter verified live against Ollama. Live OpenAI-compatible, Anthropic and Google checks are blocked on provider credentials, prices and a spend budget, so those adapters are live-untested. Resume per `progress.json` and `reports/prompt-08.md`.
 
 ## Prompt register
 
@@ -81,7 +82,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 05 | Prompt 05 | — Build task admission and freeze the methodology contracts | WP-05 | Task packages, admission/freezing, splits and source methodology records | done (foundation; full E2E variants pending) |
 | 06 | Prompt 06 | — Implement sandbox drivers and isolation | WP-06 | Development and production VM sandbox drivers | partial (local/driver implementation complete; production evidence blocked) |
 | 07 | Prompt 07 | — Implement durable jobs and recovery | WP-07 | Job DAG, leases/fences, recovery, cancellation and capacity slots | partial (E2E-09 usage-retention variant pending Prompt 08/17) |
-| 08 | Prompt 08 | — Implement model adapters and budget accounting | WP-08 | Model adapters, endpoint registration, usage and budget gateway | not_started |
+| 08 | Prompt 08 | — Implement model adapters and budget accounting | WP-08 | Model adapters, endpoint registration, usage and budget gateway | partial (hosted OpenAI-compatible/Anthropic/Google adapters live-untested; two-model live pilot remains Prompt 17) |
 | 09 | Prompt 09 | — Implement single-shot and agent execution | WP-09 | Single-shot and standard agent with durable tools/checkpoints | not_started |
 | 10 | Prompt 10 | — Implement Python support | WP-10 | Python plugin, pinned toolchain, task fixtures and profiles | not_started |
 | 11 | Prompt 11 | — Implement Rust support | WP-11 | Rust plugin, pinned toolchain, task fixtures and profiles | not_started |

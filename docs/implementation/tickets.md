@@ -340,40 +340,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `08`.
 - Dependencies: scheduler/persistence/artifacts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/core/src/polycodebench_core/model_contracts.py`, `model_planning.py` and `packages/orchestration/src/polycodebench_orchestration/gateway/adapters/` (OpenAI-compatible, Anthropic, Google, local behind `BaseAdapter`/`ModelAdapter`); capability validation covers tools, structured output, seed (policy and declared range), temperature, reasoning, context window and usage counters; unsupported controls reject unless a named cohort exception is recorded, and recorded drops are stored per call.
+- Verification: `passed` for unit, provider-shaped fixture and local-socket checks plus a live local-adapter check. Not live-verified: OpenAI-compatible hosted, Anthropic and Google adapters (no credentials available); their wire behavior is verified only against documented-shape FIXTURES.
 - Required verification scope: E2E-10–12.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_model_gateway_units.py`, `tests/test_model_gateway_fixtures.py`, `tests/fixtures/model_gateway/*.json` (FIXTURE), `tests/test_model_gateway_review_regressions.py`, live local evidence `docs/implementation/evidence/prompt-08-live-smoke-local.json`; summary `docs/implementation/evidence/prompt-08-integration.json`.
 - Acceptance criteria: — Implement OpenAI-compatible, Anthropic, Google and local endpoint adapters behind ModelAdapter. DoD: capability validation covers tools/schema/seeds/reasoning/context/usage; unsupported controls reject or create explicit cohort exceptions rather than silently disappearing.
 
 ## PCB-08-2 - Prompt 08: — Implement model adapters and budget accounting
 
 - Owner prompt: `08`.
 - Dependencies: scheduler/persistence/artifacts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/core/src/polycodebench_core/endpoint_policy.py`, `packages/persistence/src/polycodebench_persistence/endpoints.py`, `packages/services/src/polycodebench_services/model_endpoints.py`, `gateway/transport.py`, `gateway/secrets.py`, `gateway/endpoint_check.py` and `pcb-model`; pending/approved/rejected/revoked registrations with immutable identity, secret references only, HTTPS-allowlist or explicit internal-CIDR policy, per-connection DNS validation with address pinning, no redirects, conformance required for compatible/local approval.
+- Verification: `passed` on PostgreSQL 17.6 and local loopback sockets: unreviewed, pending, revoked and unprovisioned-secret endpoints are never contacted; private, loopback, link-local/metadata, mapped, 6to4/NAT64 and rebinding answers are refused; local inference needs an internal registration.
 - Required verification scope: E2E-10–12.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_model_gateway_units.py` (policy, SSRF matrix, pinned transport), `tests/test_model_gateway_postgres.py::{test_endpoint_registration_approval_and_immutability,test_compatible_and_local_endpoints_need_passing_conformance,test_unapproved_or_revoked_endpoint_is_never_contacted,test_secret_value_reaches_only_the_wire_and_is_scrubbed_from_storage,test_missing_secret_provisioning_blocks_before_any_persistence}`; `docs/implementation/evidence/prompt-08-integration.json`.
 - Acceptance criteria: — Implement endpoint registration/approval and secret references with network-policy validation. DoD: unreviewed public endpoints are not contacted, SSRF/private-address rules hold, and local inference endpoints require explicit internal registration.
 
 ## PCB-08-3 - Prompt 08: — Implement model adapters and budget accounting
 
 - Owner prompt: `08`.
 - Dependencies: scheduler/persistence/artifacts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/persistence/src/polycodebench_persistence/model_ledger.py`, `gateway/service.py`, `gateway/store.py` and migration `9d3a71c05e24`; unique call intents, per-delivery records, raw and normalized responses stored as verified artifacts before the controller is notified, provider request IDs/revisions preserved, usage and price snapshots recorded, recovery consumes stored responses and never re-samples.
+- Verification: `passed` on PostgreSQL 17.6 and SeaweedFS 4.48 with fixture transport faults, including crash after raw-byte persistence, crash after settlement, definitive failure replay and changed-request conflict; live local adapter call persisted and settled.
 - Required verification scope: E2E-10–12.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_model_gateway_postgres.py::{test_e2e11_*,test_a_turn_is_consumed_once_even_when_a_retry_was_needed,test_late_response_for_an_ambiguous_delivery_is_evidence_not_a_second_result,test_request_and_reservation_rows_are_bound_to_one_intent_per_key}`; `docs/implementation/evidence/prompt-08-integration.json`.
 - Acceptance criteria: — Implement call intents/deliveries, persisted responses and usage/pricing records. DoD: recovery consumes already-stored responses; provider request IDs/revisions and unknown usage are preserved; no response shopping after failures.
 
 ## PCB-08-4 - Prompt 08: — Implement model adapters and budget accounting
 
 - Owner prompt: `08`.
 - Dependencies: scheduler/persistence/artifacts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` in `packages/persistence/src/polycodebench_persistence/model_ledger.py`, `packages/core/src/polycodebench_core/model_planning.py`, `gateway/throttle.py`, `gateway/plan.py` and `pcb-model`; hierarchical campaign/run/attempt reservations are atomic and root-first, turn/input/output limits are separate from money, ambiguous deliveries retain exposure, retries reserve additional cost, missing usage stays NULL, and no enforceable bound blocks a strict money cap.
+- Verification: `passed` on PostgreSQL 17.6: concurrent last-allowance competition (asyncio and 16 parallel threads), token/turn limits, ambiguous timeout with retry, unknown/partial usage, append-only reconciliation including overrun, delivery cap, cancelled-scope refusal, plan/cost output and strict-cap blocking.
 - Required verification scope: E2E-10–12.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_model_gateway_postgres.py::{test_e2e10_*,test_e2e12_*,test_delivery_cap_bounds_retries_and_keeps_all_exposure,test_strict_cap_is_blocked_without_an_enforceable_bound,test_e2e09_usage_survives_cancellation_and_cancelled_scope_cannot_spend}`, `tests/test_model_gateway_units.py::test_cost_bound_*`; `docs/implementation/evidence/prompt-08-integration.json`.
 - Acceptance criteria: — Implement atomic hierarchical cost reservations, token/turn limits, provider throttling and settlement/reconciliation. DoD: ambiguous requests retain exposure, retries reserve additional cost, missing usage is not zero, and unavailable enforceable cost bounds block strict-cap claims.
 
 ## PCB-09-1 - Prompt 09: — Implement single-shot and agent execution

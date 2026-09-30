@@ -98,6 +98,20 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO pcb_administrator;
 GRANT INSERT, UPDATE, DELETE ON task, task_set, campaign, endpoint_registration, model_submission, subject_role TO pcb_administrator;
 GRANT INSERT ON audit_event TO pcb_administrator;
 
+-- Model gateway: it reads approved endpoints/configs and writes only call accounting. It has
+-- no access to secrets (only references), tasks, hidden bundles or scoring tables.
+GRANT USAGE ON SCHEMA public TO pcb_model_gateway;
+GRANT SELECT ON endpoint_registration, model_revision, config_document, attempt, run, campaign, evaluation, artifact, artifact_quota TO pcb_model_gateway;
+GRANT SELECT, INSERT ON call_intent, call_delivery, usage_record, budget_reservation, accounting_entry TO pcb_model_gateway;
+GRANT UPDATE (state) ON call_intent TO pcb_model_gateway;
+GRANT UPDATE (status, responded_at, provider_request_id, failure_code, raw_response_artifact_id, normalized_response_artifact_id) ON call_delivery TO pcb_model_gateway;
+GRANT UPDATE (state) ON budget_reservation TO pcb_model_gateway;
+GRANT SELECT ON budget_account, budget_resource TO pcb_model_gateway;
+GRANT UPDATE (spent_confirmed, reserved_open, uncertain_committed, row_version) ON budget_account, budget_resource TO pcb_model_gateway;
+GRANT INSERT ON audit_event TO pcb_model_gateway;
+GRANT SELECT, INSERT ON budget_account, budget_resource TO pcb_operator, pcb_administrator;
+GRANT SELECT ON call_intent, call_delivery, usage_record, budget_reservation, accounting_entry TO pcb_operator, pcb_reviewer;
+
 -- Future objects created by the migration identity remain private by default.
 ALTER DEFAULT PRIVILEGES FOR ROLE pcb_migrator IN SCHEMA public
     REVOKE ALL ON TABLES FROM PUBLIC;

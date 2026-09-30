@@ -13,6 +13,7 @@ from threading import Barrier
 from uuid import UUID, uuid4
 
 import pytest
+from migration_support import require_migrated_through
 from polycodebench_core.application_errors import LeaseLost, PersistenceConflict
 from polycodebench_core.jobs import (
     CapacitySlotSpec,
@@ -60,9 +61,7 @@ def database() -> Database:
         pytest.fail("PCB_TEST_DATABASE_URL must use a dedicated database containing 'test'")
     instance = Database(url)
     with instance.engine.connect() as connection:
-        version = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-        if version != "8ac42e1d09bf":
-            pytest.fail("Prompt 07 migration has not been applied to the test database")
+        require_migrated_through(connection, "8ac42e1d09bf")
     yield instance
     instance.dispose()
 

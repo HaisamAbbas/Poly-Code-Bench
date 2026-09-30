@@ -312,10 +312,20 @@ endpoint_registration = Table(
     Column("approval_status", String(24), nullable=False),
     Column("capabilities_digest", String(71), nullable=False),
     Column("registered_by", String(255), nullable=False),
+    Column("network_policy", JSONB, nullable=False),
+    Column("declared_capabilities", JSONB, nullable=False),
+    Column("conformance_report", JSONB, nullable=True),
+    Column("approved_by", String(255), nullable=True),
+    Column("approved_at", DateTime(timezone=True), nullable=True),
+    Column("decision_reason", Text, nullable=True),
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
     created_at(),
     CheckConstraint(
         "approval_status IN ('pending','approved','rejected','revoked')", name="approval_status"
+    ),
+    CheckConstraint(
+        "approval_status <> 'approved' OR (approved_by IS NOT NULL AND approved_at IS NOT NULL)",
+        name="approved_has_approver",
     ),
     CheckConstraint(
         "capabilities_digest ~ '^sha256:[0-9a-f]{64}$'", name="capabilities_digest_format"
@@ -344,6 +354,7 @@ budget_account = Table(
     pk(),
     Column("scope_kind", String(32), nullable=False),
     Column("scope_id", String(255), nullable=False),
+    fk("parent_account_id", "budget_account.id", nullable=True),
     Column("hard_limit_micro_usd", BigInteger, nullable=False),
     Column("spent_confirmed", BigInteger, nullable=False, server_default=text("0")),
     Column("reserved_open", BigInteger, nullable=False, server_default=text("0")),
@@ -352,6 +363,28 @@ budget_account = Table(
     created_at(),
     UniqueConstraint("scope_kind", "scope_id"),
     CheckConstraint("hard_limit_micro_usd >= 0", name="hard_limit_nonnegative"),
+    CheckConstraint(
+        "spent_confirmed >= 0 AND reserved_open >= 0 AND uncertain_committed >= 0",
+        name="balance_nonnegative",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    CheckConstraint("scope_kind IN ('campaign','run','attempt','evaluation')", name="scope_kind"),
+)
+
+budget_resource = Table(
+    "budget_resource",
+    metadata,
+    pk(),
+    fk("account_id", "budget_account.id"),
+    Column("resource", String(24), nullable=False),
+    Column("hard_limit", BigInteger, nullable=False),
+    Column("spent_confirmed", BigInteger, nullable=False, server_default=text("0")),
+    Column("reserved_open", BigInteger, nullable=False, server_default=text("0")),
+    Column("uncertain_committed", BigInteger, nullable=False, server_default=text("0")),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    UniqueConstraint("account_id", "resource"),
+    CheckConstraint("resource IN ('turns','input_tokens','output_tokens')", name="resource"),
+    CheckConstraint("hard_limit >= 0", name="hard_limit_nonnegative"),
     CheckConstraint(
         "spent_confirmed >= 0 AND reserved_open >= 0 AND uncertain_committed >= 0",
         name="balance_nonnegative",
@@ -731,9 +764,23 @@ call_delivery = Table(
     Column("status", String(24), nullable=False),
     Column("failure_code", String(64), nullable=True),
     fk("raw_response_artifact_id", "artifact.id", nullable=True),
+    fk("normalized_response_artifact_id", "artifact.id", nullable=True),
     UniqueConstraint("intent_id", "delivery_index"),
     CheckConstraint("delivery_index >= 0", name="delivery_index_nonnegative"),
     CheckConstraint("status IN ('dispatching','responded','failed','ambiguous')", name="status"),
+)
+
+Index(
+    "uq_call_delivery_one_response",
+    call_delivery.c.intent_id,
+    unique=True,
+    postgresql_where=call_delivery.c.status == "responded",
+)
+Index(
+    "uq_call_delivery_one_in_flight",
+    call_delivery.c.intent_id,
+    unique=True,
+    postgresql_where=call_delivery.c.status == "dispatching",
 )
 
 usage_record = Table(
@@ -753,6 +800,9 @@ usage_record = Table(
     UniqueConstraint("delivery_id", "settlement_revision"),
     CheckConstraint("settlement_revision > 0", name="settlement_revision_positive"),
     CheckConstraint(
+        "source IN ('provider_reported','unavailable','reconciliation')", name="source"
+    ),
+    CheckConstraint(
         "COALESCE(input_tokens,0) >= 0 AND COALESCE(output_tokens,0) >= 0 AND "
         "COALESCE(reasoning_tokens,0) >= 0",
         name="tokens_nonnegative",
@@ -765,11 +815,13 @@ budget_reservation = Table(
     pk(),
     fk("account_id", "budget_account.id"),
     fk("call_intent_id", "call_intent.id"),
+    Column("delivery_index", Integer, nullable=False, server_default=text("0")),
     Column("amount_micro_usd", BigInteger, nullable=False),
     Column("state", String(24), nullable=False),
     created_at(),
-    UniqueConstraint("account_id", "call_intent_id"),
+    UniqueConstraint("account_id", "call_intent_id", "delivery_index"),
     CheckConstraint("amount_micro_usd >= 0", name="amount_nonnegative"),
+    CheckConstraint("delivery_index >= 0", name="delivery_index_nonnegative"),
     CheckConstraint("state IN ('open','settled','released','uncertain')", name="state"),
 )
 
@@ -781,12 +833,26 @@ accounting_entry = Table(
     fk("call_intent_id", "call_intent.id", nullable=True),
     fk("delivery_id", "call_delivery.id", nullable=True),
     Column("entry_kind", String(24), nullable=False),
+    Column("resource", String(24), nullable=False, server_default=text("'money'")),
+    Column("from_bucket", String(24), nullable=False, server_default=text("'none'")),
+    Column("to_bucket", String(24), nullable=False, server_default=text("'none'")),
     Column("amount_micro_usd", BigInteger, nullable=False),
     Column("reason", Text, nullable=False),
     created_at(),
     CheckConstraint(
-        "entry_kind IN ('reservation','charge','release','adjustment')", name="entry_kind"
+        "entry_kind IN ('reservation','charge','release','adjustment','retain')",
+        name="entry_kind",
     ),
+    CheckConstraint(
+        "resource IN ('money','turns','input_tokens','output_tokens')", name="resource"
+    ),
+    CheckConstraint(
+        "from_bucket IN ('none','reserved_open','uncertain_committed','spent_confirmed') AND "
+        "to_bucket IN ('none','reserved_open','uncertain_committed','spent_confirmed') AND "
+        "from_bucket <> to_bucket",
+        name="buckets",
+    ),
+    CheckConstraint("amount_micro_usd > 0", name="amount_positive"),
     CheckConstraint("num_nonnulls(call_intent_id,delivery_id) >= 1", name="linked_call"),
 )
 
@@ -1123,6 +1189,7 @@ TABLE_GROUPS: dict[str, tuple[str, ...]] = {
     ),
     "accounting": (
         "budget_account",
+        "budget_resource",
         "budget_reservation",
         "call_intent",
         "call_delivery",

@@ -1,0 +1,69 @@
+{
+  "adapter": "google",
+  "body": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "reasoning summary",
+              "thought": true
+            },
+            {
+              "functionCall": {
+                "args": {
+                  "path": "a.py"
+                },
+                "name": "read_file"
+              }
+            },
+            {
+              "functionCall": {
+                "args": {
+                  "limit": 0.5,
+                  "query": "x"
+                },
+                "name": "search"
+              }
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "modelVersion": "gemini-fixture-001",
+    "responseId": "resp-f1",
+    "usageMetadata": {
+      "cachedContentTokenCount": 100,
+      "candidatesTokenCount": 25,
+      "promptTokenCount": 300,
+      "thoughtsTokenCount": 75,
+      "totalTokenCount": 400
+    }
+  },
+  "expected": {
+    "cached_input_tokens": 100,
+    "complete_usage": true,
+    "finish_reason": "tool_calls",
+    "input_tokens": 300,
+    "output_tokens": 100,
+    "provider_request_id": "resp-f1",
+    "provider_revision": "gemini-fixture-001",
+    "reasoning_tokens": 75,
+    "tool_calls": [
+      [
+        "call_1",
+        "read_file",
+        true
+      ],
+      [
+        "call_2",
+        "search",
+        true
+      ]
+    ]
+  },
+  "headers": {},
+  "provenance": "FIXTURE: hand-written response following the documented provider schema (see docs/model-gateway.md). Not captured from a live provider."
+}

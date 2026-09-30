@@ -1,0 +1,138 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/AdmissionReport.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "alternative_check": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ],
+      "title": "Alternative Check",
+      "type": "string"
+    },
+    "disclosure_check": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ],
+      "title": "Disclosure Check",
+      "type": "string"
+    },
+    "execution_tier": {
+      "enum": [
+        "local_fixture",
+        "development_sandbox",
+        "production_worker"
+      ],
+      "title": "Execution Tier",
+      "type": "string"
+    },
+    "faulty_check": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ],
+      "title": "Faulty Check",
+      "type": "string"
+    },
+    "flakiness_check": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ],
+      "title": "Flakiness Check",
+      "type": "string"
+    },
+    "kind": {
+      "const": "admission_report",
+      "title": "Kind",
+      "type": "string"
+    },
+    "profile_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "reference_check": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ],
+      "title": "Reference Check",
+      "type": "string"
+    },
+    "report_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Report Digest",
+      "type": "string"
+    },
+    "reviewed_at": {
+      "anyOf": [
+        {
+          "maxLength": 35,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reviewed At"
+    },
+    "reviewer_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reviewer Id"
+    },
+    "rights_check": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ],
+      "title": "Rights Check",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "profile_id",
+    "report_digest",
+    "execution_tier",
+    "reference_check",
+    "faulty_check",
+    "alternative_check",
+    "flakiness_check",
+    "rights_check",
+    "disclosure_check",
+    "reviewer_id",
+    "reviewed_at"
+  ],
+  "title": "AdmissionReport",
+  "type": "object"
+}

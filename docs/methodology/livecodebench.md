@@ -2,12 +2,12 @@
 
 ## Primary sources and identity
 
-- [LiveCodeBench project and paper links](https://livecodebench.github.io/) (accessed 2026-09-30).
-- [LiveCodeBench source repository](https://github.com/LiveCodeBench/LiveCodeBench) (accessed 2026-09-30); no commit was vendored or pinned by Prompt 01.
+- [LiveCodeBench project and paper links](https://livecodebench.github.io/) and [paper PDF](https://livecodebench.github.io/pdfs/paper.pdf) (checked 2026-09-30).
+- [LiveCodeBench source repository](https://github.com/LiveCodeBench/LiveCodeBench) (checked 2026-09-30); no commit was vendored or pinned by this workspace.
 
 ## Verified native method
 
-LiveCodeBench uses time-stamped competitive-programming problems to reduce contamination and defines distinct evaluation scenarios, including code generation, self-repair, code execution, and test-output prediction. The official runner reports Pass@1 and Pass@5 for code generation; inputs, allowed feedback, test protocol, and metric for the other scenarios depend on the selected scenario and revision. Scores must retain that scenario identity and date window rather than be collapsed into an invented common metric.
+LiveCodeBench continuously collects time-stamped competitive-programming problems and defines distinct scenarios including code generation, self-repair, code execution, and test-output prediction. Release dates support post-cutoff subsets, but do not prove that a model did not see task material. Preserve the selected release, scenario, input/feedback rules, and its official metric. The project landing page and paper are the current method references; exact metric details must be rechecked against the chosen code/data revision before import rather than inferred across scenarios.
 
 ## PolyCodeBench treatment
 

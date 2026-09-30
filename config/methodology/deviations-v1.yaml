@@ -1,0 +1,28 @@
+schema_version: 1
+kind: methodology_deviation_register
+status: pilot_contract
+families:
+  swebench:
+    label: [native, adapted, inspired]
+    native_metric: fail_to_pass_resolution_with_pass_to_pass_maintenance
+    adaptation_rule: added_quality_dimensions_reported_separately
+    private_assets_available: false
+  livecodebench:
+    label: [native, adapted, inspired]
+    native_metric: scenario_and_revision_specific
+    adaptation_rule: preserve_scenario_dates_feedback_and_native_metric; label_ports_or_custom_tasks
+    private_assets_available: false
+  cursorbench:
+    label: [inspired, independent]
+    native_metric: no_public_complete_score_formula
+    adaptation_rule: independently_curated_tasks_are_not_cursorbench_tasks_or_replications
+    private_assets_available: false
+  deepcodebench:
+    label: [native, adapted, inspired]
+    native_metric: fact_recall
+    adaptation_rule: citation_and_grounding_measures_are_separate_polycodebench_metrics
+    private_assets_available: false
+policy:
+  preserve_source_identity_and_revision: true
+  never_mix_native_and_adapted_scores_without_labels: true
+  source_terms_review_per_task: required

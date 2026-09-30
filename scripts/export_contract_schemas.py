@@ -12,23 +12,35 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "packages/core/src"))
 
 from polycodebench_core.models import (  # noqa: E402
+    AdmissionExecutionReport,
+    AdmissionReport,
     Artifact,
     BudgetProfile,
     BundleFile,
     BundleFileManifest,
     Candidate,
     ContractError,
+    ModelCutoffProvenance,
     Observation,
     PluginManifest,
     ProtocolDefinition,
     RunConfig,
     Scorecard,
     StatusVocabulary,
+    TaskOutputContract,
+    TaskSet,
+    TaskSetMember,
     TaskVersion,
 )
 
 MODELS = (
     TaskVersion,
+    AdmissionReport,
+    AdmissionExecutionReport,
+    TaskSet,
+    TaskSetMember,
+    TaskOutputContract,
+    ModelCutoffProvenance,
     RunConfig,
     Candidate,
     Observation,

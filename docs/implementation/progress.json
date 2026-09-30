@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "project": "PolyCodeBench",
-  "last_completed_prompt": "04",
-  "active_prompt": "05",
-  "active_scope": "WP-05: task admission, split/cluster registry, rights provenance and methodology contracts",
+  "last_completed_prompt": "05",
+  "active_prompt": "06",
+  "active_scope": "WP-06: development and production VM sandbox drivers and isolation",
   "phase_status": {
     "phase_0": "done",
-    "phase_1": "in_progress",
+    "phase_1": "done",
     "phase_2": "not_started",
     "phase_3": "not_started",
     "phase_4": "not_started",
@@ -16,18 +16,19 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_04_passed; phase_1_aggregate_pending",
+  "verification_status": "prompt_05_passed; phase_1_passed; pilot_policy_owner_approved_pending_calibration",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
-    "Production disposable VM/cloud execution is not configured or verified",
+    "Production disposable VM/cloud execution and production-worker task admission are not configured or verified",
     "Model/judge endpoints, credentials, and explicit spend budgets are not configured or verified",
     "Source/task rights and human calibration evidence remain required before benchmark data admission or scoring",
     "Publication target and signing configuration are absent",
     "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
     "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
     "Short-lived one-object stage transfer credentials and lease/fence-bound artifact slots await Prompt 07 stage-control contracts",
-    "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending"
+    "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
+    "E2E-04 production/language/evaluator variants remain with Prompts 10-12/17; full E2E-27 public/cohort filters remain with Prompts 16/29"
   ],
   "evidence_summary": {
     "requirements_registered": 14,
@@ -35,16 +36,16 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 24
+    "application_tests_run": 56
   },
-  "exact_next_action": "Prompt 05 — Build task admission and freeze the methodology contracts.",
+  "exact_next_action": "Prompt 06 - Implement sandbox drivers and isolation.",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
     "02": "done",
     "03": "done",
     "04": "done",
-    "05": "not_started",
+    "05": "done",
     "06": "not_started",
     "07": "not_started",
     "08": "not_started",
@@ -200,5 +201,38 @@
         "Constitution/production_quality_software_engineering_prompt-3.md"
       ]
     }
-  ]
+  ],
+  "prompt_05_completion": {
+    "date": "2026-09-30",
+    "status": "done",
+    "phase_1_foundation_gate": "pass_owner_approved",
+    "fixture_evidence": "docs/implementation/evidence/prompt-05-authored-fixture-admission-v3.json",
+    "fixture_report_digest": "sha256:2c3e44a86daad9c6e37e17c63831e2622f514b9a64cc7484fcc760fb2a4cbe64",
+    "verification": [
+      "Actual local Docker fixture validation: five stable references, intended faulty mismatch, alternative pass",
+      "Full review-fix suite: 56 passed, no skips, with PostgreSQL, SeaweedFS and real Docker timeout regression enabled",
+      "Seven database admission checks and seven fixture runner/CLI checks passed; all seven confirmed review defects resolved",
+      "Admission-evidence migration applied; Alembic drift check passed; 21 generated schema outputs checked",
+      "Pilot contract validation, package boundary, startup/smoke checks, Ruff and mypy on 45 source files passed",
+      "Generated TypeScript typecheck/build and shared contract tests passed locally on Node 22.23.2; pinned Node 24 hosted CI not run",
+      "CLI snapshot replay, bundle artifact ID equality, draft integrity and complete package identity enforced; production admission fails closed until trusted authority exists",
+      "TaskOutputContract added and bound to task digest; generated contract outputs increased to 21; fixture execution repeated against updated package"
+    ],
+    "pending": [
+      "Production VM isolation and production-worker admission",
+      "Language/evaluation task variants in Prompts 10-12/17",
+      "Human calibration/owner scoring approval and external task rights",
+      "Full E2E-04 and E2E-27 remain not_run overall",
+      "Scoring policy remains inactive pending human/judge calibration; no live spend authorization"
+    ],
+    "no_paid_or_remote_product_actions": true,
+    "owner_approval": {
+      "policy_id": "polycodebench-code-pilot-v1",
+      "decision": "approved_as_written",
+      "scope": "freeze_as_pilot_baseline_only",
+      "approved_on": "2026-09-30",
+      "scoring_active": false,
+      "evidence": "docs/implementation/decisions.md D-05-04"
+    }
+  }
 }

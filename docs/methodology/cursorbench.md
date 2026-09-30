@@ -2,11 +2,11 @@
 
 ## Primary source and identity
 
-- [CursorBench: evaluating coding agents on real-world tasks](https://cursor.com/blog/cursorbench) (accessed 2026-09-30). The page describes Cursor's internal benchmark; no private task-set revision or raw task data is available in this workspace.
+- [How we compare model quality in Cursor](https://cursor.com/blog/cursorbench) (checked 2026-09-30). The article describes Cursor's internal benchmark; no private task-set revision or raw task data is available in this workspace.
 
 ## Verified native method
 
-Cursor reports tasks drawn from real engineering sessions and evaluation across correctness, code quality, efficiency, and interaction behavior. The described process uses task requests derived from Cursor Blame and agentic graders for short, potentially ambiguous requests. The public article says the current production version is CursorBench 3.1 (updated May 2026) and discusses correctness alongside median completion tokens; it does not specify a public complete score formula. The article does not provide the private task set and all operational grader assets needed for reproduction.
+Cursor reports an offline suite based on real engineering sessions from its internal evaluation workflow and measures correctness, code quality, efficiency, and interaction behavior. The article describes task requests traced through Cursor Blame and agentic graders for short, potentially ambiguous requests, and an online/offline evaluation loop. Its May 2026 update identifies production version 3.1 and describes correctness alongside median completion tokens; it does not publish a complete score formula. The article does not provide the private task set and all operational grader assets needed for reproduction.
 
 ## PolyCodeBench treatment
 

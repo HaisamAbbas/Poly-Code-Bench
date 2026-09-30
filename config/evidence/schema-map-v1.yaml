@@ -1,0 +1,22 @@
+schema_version: 1
+kind: evidence_schema_map
+status: pilot_contract
+schemas:
+  task_version: schemas/contracts/TaskVersion.v1.schema.json
+  task_set: schemas/contracts/TaskSet.v1.schema.json
+  admission_report: schemas/contracts/AdmissionReport.v1.schema.json
+  candidate: schemas/contracts/Candidate.v1.schema.json
+  observation: schemas/contracts/Observation.v1.schema.json
+  scorecard: schemas/contracts/Scorecard.v1.schema.json
+required_observation_provenance:
+  - check_id
+  - tool_digest
+  - candidate_digest
+  - status
+  - primary_owner
+  - baseline_relation
+  - raw_artifact_ids
+visibility:
+  hidden_evidence_never_in_solve_bundle: true
+  public_projection_is_separately_reviewed: true
+  missing_or_unknown_is_not_pass: true

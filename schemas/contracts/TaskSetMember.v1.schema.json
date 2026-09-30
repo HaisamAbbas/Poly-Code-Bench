@@ -1,0 +1,78 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/TaskSetMember.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cluster_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Cluster Id",
+      "type": "string"
+    },
+    "earliest_public_at": {
+      "anyOf": [
+        {
+          "maxLength": 35,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Earliest Public At"
+    },
+    "exposure_confidence": {
+      "enum": [
+        "verified",
+        "estimated",
+        "unknown"
+      ],
+      "title": "Exposure Confidence",
+      "type": "string"
+    },
+    "kind": {
+      "const": "task_set_member",
+      "title": "Kind",
+      "type": "string"
+    },
+    "sampling_weight_bp": {
+      "exclusiveMinimum": 0,
+      "maximum": 10000,
+      "title": "Sampling Weight Bp",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "stratum_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Stratum Id",
+      "type": "string"
+    },
+    "task_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Task Digest",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "task_digest",
+    "cluster_id",
+    "stratum_id",
+    "sampling_weight_bp",
+    "earliest_public_at",
+    "exposure_confidence"
+  ],
+  "title": "TaskSetMember",
+  "type": "object"
+}

@@ -1,0 +1,79 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/ModelCutoffProvenance.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "confidence": {
+      "enum": [
+        "verified",
+        "provider_declared",
+        "unknown"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "cutoff_at": {
+      "anyOf": [
+        {
+          "maxLength": 35,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Cutoff At"
+    },
+    "kind": {
+      "const": "model_cutoff_provenance",
+      "title": "Kind",
+      "type": "string"
+    },
+    "model_revision_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Model Revision Digest",
+      "type": "string"
+    },
+    "provenance_uri": {
+      "anyOf": [
+        {
+          "maxLength": 2048,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provenance Uri"
+    },
+    "provider_prior_access": {
+      "enum": [
+        "not_known",
+        "possible",
+        "confirmed"
+      ],
+      "title": "Provider Prior Access",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "model_revision_digest",
+    "cutoff_at",
+    "confidence",
+    "provider_prior_access"
+  ],
+  "title": "ModelCutoffProvenance",
+  "type": "object"
+}

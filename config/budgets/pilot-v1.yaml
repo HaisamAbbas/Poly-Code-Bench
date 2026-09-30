@@ -1,0 +1,35 @@
+schema_version: 1
+kind: budget_profiles
+status: proposed_not_authorized
+effective_for_live_calls: false
+profiles:
+  single-shot-small-v1:
+    model_turns: 1
+    tool_calls: 0
+    active_solve_seconds: 180
+    input_tokens: 32000
+    output_tokens: 8000
+    guest_memory_mib: 2048
+    guest_cpu: 2
+    writable_disk_gib: 2
+    process_count: 128
+  agent-small-v1:
+    model_turns: 30
+    tool_calls: 100
+    active_solve_seconds: 600
+    per_command_seconds: 60
+    input_tokens: 250000
+    output_tokens: 30000
+    guest_memory_mib: 2048
+    guest_cpu: 2
+    writable_disk_gib: 2
+    process_count: 128
+money:
+  hard_limit_micro_usd: null
+  policy: every_live_run_requires_explicit_owner_authorized_hard_limit
+  provider_price_snapshot_required: true
+  no_price_or_upper_bound: block_dispatch
+evaluation:
+  warmups: 5
+  paired_iterations: 20
+  per_task_timeout: frozen_with_task

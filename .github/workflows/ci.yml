@@ -34,6 +34,7 @@ jobs:
       PCB_BUCKET_PUBLIC: pcb-p04-public
       AWS_ACCESS_KEY_ID: local-development-only
       AWS_SECRET_ACCESS_KEY: local-development-only
+      PCB_TEST_DOCKER: "1"
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -50,6 +51,7 @@ jobs:
       - run: uv run --locked alembic -c packages/persistence/alembic.ini check
       - run: docker run -d --name pcb-seaweedfs -p 8333:8333 chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d mini -dir=/data
       - run: for attempt in $(seq 1 30); do curl -s http://127.0.0.1:8333/ >/dev/null && exit 0; sleep 2; done; exit 1
+      - run: docker pull docker.io/library/python:3.12-slim@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b
       - run: uv run --locked --all-packages --group dev pytest -p no:cacheprovider
       - run: uv run --locked --all-packages --group dev python scripts/check_boundaries.py
       - run: uv run --locked --all-packages --group dev python scripts/smoke_workspace.py

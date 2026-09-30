@@ -1,0 +1,81 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/contracts/TaskOutputContract.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowed_paths": {
+      "items": {
+        "description": "UTF-8 relative POSIX path; rejects absolute, NUL, dot and parent components.",
+        "format": "pcb-relative-posix-path",
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Allowed Paths",
+      "type": "array"
+    },
+    "findings_limit": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 100000,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Findings Limit"
+    },
+    "kind": {
+      "const": "task_output_contract",
+      "title": "Kind",
+      "type": "string"
+    },
+    "maximum_artifact_bytes": {
+      "exclusiveMinimum": 0,
+      "maximum": 2147483647,
+      "title": "Maximum Artifact Bytes",
+      "type": "integer"
+    },
+    "maximum_file_bytes": {
+      "exclusiveMinimum": 0,
+      "maximum": 2147483647,
+      "title": "Maximum File Bytes",
+      "type": "integer"
+    },
+    "maximum_files": {
+      "exclusiveMinimum": 0,
+      "maximum": 100000,
+      "title": "Maximum Files",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "submission_kind": {
+      "enum": [
+        "files",
+        "patch",
+        "structured_findings",
+        "text",
+        "typed_json"
+      ],
+      "title": "Submission Kind",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "submission_kind",
+    "allowed_paths",
+    "maximum_artifact_bytes",
+    "maximum_file_bytes",
+    "maximum_files",
+    "findings_limit"
+  ],
+  "title": "TaskOutputContract",
+  "type": "object"
+}

@@ -1,0 +1,275 @@
+{
+  "$defs": {
+    "AdmissionChecks": {
+      "additionalProperties": false,
+      "properties": {
+        "alternative": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Alternative",
+          "type": "string"
+        },
+        "disclosure": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Disclosure",
+          "type": "string"
+        },
+        "faulty": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Faulty",
+          "type": "string"
+        },
+        "flakiness": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Flakiness",
+          "type": "string"
+        },
+        "kind": {
+          "const": "admission_checks",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reference": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Reference",
+          "type": "string"
+        },
+        "rights": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Rights",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "reference",
+        "faulty",
+        "alternative",
+        "flakiness",
+        "rights",
+        "disclosure"
+      ],
+      "title": "AdmissionChecks",
+      "type": "object"
+    },
+    "FixtureExecutionEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "exit_codes": {
+          "items": {
+            "anyOf": [
+              {
+                "maximum": 255,
+                "minimum": -255,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Exit Codes",
+          "type": "array"
+        },
+        "kind": {
+          "const": "fixture_execution_evidence",
+          "title": "Kind",
+          "type": "string"
+        },
+        "matched_expected": {
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Matched Expected",
+          "type": "array"
+        },
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "repetitions": {
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "title": "Repetitions",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "stderr_digests": {
+          "items": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Stderr Digests",
+          "type": "array"
+        },
+        "stdout_digests": {
+          "items": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Stdout Digests",
+          "type": "array"
+        },
+        "timed_out": {
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Timed Out",
+          "type": "array"
+        },
+        "variant": {
+          "enum": [
+            "reference",
+            "faulty",
+            "alternative"
+          ],
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "name",
+        "variant",
+        "repetitions",
+        "exit_codes",
+        "matched_expected",
+        "timed_out",
+        "stdout_digests",
+        "stderr_digests"
+      ],
+      "title": "FixtureExecutionEvidence",
+      "type": "object"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/AdmissionExecutionReport.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "$ref": "#/$defs/AdmissionChecks"
+    },
+    "execution_tier": {
+      "enum": [
+        "local_fixture",
+        "development_sandbox",
+        "production_worker"
+      ],
+      "title": "Execution Tier",
+      "type": "string"
+    },
+    "executions": {
+      "items": {
+        "$ref": "#/$defs/FixtureExecutionEvidence"
+      },
+      "minItems": 3,
+      "title": "Executions",
+      "type": "array"
+    },
+    "isolation_profile": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Isolation Profile",
+      "type": "string"
+    },
+    "kind": {
+      "const": "admission_execution_report",
+      "title": "Kind",
+      "type": "string"
+    },
+    "package_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Package Digest",
+      "type": "string"
+    },
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "profile_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "report_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Report Digest",
+      "type": "string"
+    },
+    "runtime_image_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Runtime Image Digest",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "profile_id",
+    "execution_tier",
+    "runtime_image_digest",
+    "isolation_profile",
+    "package_digest",
+    "checks",
+    "executions",
+    "passed",
+    "report_digest"
+  ],
+  "title": "AdmissionExecutionReport",
+  "type": "object"
+}

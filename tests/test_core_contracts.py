@@ -52,6 +52,7 @@ GOLDEN = json.loads((FIXTURES / "canonical-vectors.json").read_text(encoding="ut
 INVALID = json.loads((FIXTURES / "invalid-vectors.json").read_text(encoding="utf-8"))
 DIGEST_A = "sha256:" + "a" * 64
 DIGEST_B = "sha256:" + "b" * 64
+OUTPUT_CONTRACT_DIGEST = "sha256:77c858408b0c620f3dd0445af8d460dbdf78532aff032a6aa1cc7b8ca3a8f833"
 
 
 def run_config(**changes: object) -> RunConfig:
@@ -119,7 +120,17 @@ def task_value() -> dict[str, object]:
             "digest": DIGEST_B,
             "visibility": "hidden",
         },
-        "output_contract_digest": DIGEST_A,
+        "output_contract_digest": OUTPUT_CONTRACT_DIGEST,
+        "output_contract": {
+            "schema_version": 1,
+            "kind": "task_output_contract",
+            "submission_kind": "files",
+            "allowed_paths": ["solution.py"],
+            "maximum_artifact_bytes": 1_000_000,
+            "maximum_file_bytes": 100_000,
+            "maximum_files": 1,
+            "findings_limit": None,
+        },
         "runtime": {
             "schema_version": 1,
             "kind": "task_runtime",
@@ -170,10 +181,15 @@ def task_value() -> dict[str, object]:
         "admission_report": {
             "schema_version": 1,
             "kind": "admission_report",
+            "profile_id": "admission-v1",
+            "report_digest": DIGEST_A,
+            "execution_tier": "production_worker",
             "reference_check": "pass",
             "faulty_check": "pass",
             "alternative_check": "pass",
             "flakiness_check": "pass",
+            "rights_check": "pass",
+            "disclosure_check": "pass",
             "reviewer_id": "reviewer-01",
             "reviewed_at": "2026-09-30T12:05:00Z",
         },

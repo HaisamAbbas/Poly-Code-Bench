@@ -324,6 +324,28 @@ class TaskRuntime(ContractModel):
     resource_class: Slug
 
 
+class TaskOutputContract(ContractModel):
+    kind: Literal["task_output_contract"]
+    submission_kind: Literal["files", "patch", "structured_findings", "text", "typed_json"]
+    allowed_paths: list[RelativePath]
+    maximum_artifact_bytes: Annotated[int, Field(strict=True, gt=0, le=2_147_483_647)]
+    maximum_file_bytes: Annotated[int, Field(strict=True, gt=0, le=2_147_483_647)]
+    maximum_files: Annotated[int, Field(strict=True, gt=0, le=100_000)]
+    findings_limit: Annotated[int, Field(strict=True, gt=0, le=100_000)] | None
+
+    @model_validator(mode="after")
+    def bounded_unique_outputs(self) -> TaskOutputContract:
+        if not self.allowed_paths or len(self.allowed_paths) != len(set(self.allowed_paths)):
+            raise ValueError("output contract needs a unique nonempty allowlist")
+        if self.maximum_file_bytes > self.maximum_artifact_bytes:
+            raise ValueError("per-file output limit cannot exceed the artifact limit")
+        if len(self.allowed_paths) > self.maximum_files:
+            raise ValueError("output allowlist exceeds maximum_files")
+        if self.submission_kind != "structured_findings" and self.findings_limit is not None:
+            raise ValueError("findings_limit applies only to structured findings")
+        return self
+
+
 class TaskAcceptance(ContractModel):
     kind: Literal["task_acceptance"]
     required_test_group_ids: list[Slug]
@@ -379,12 +401,192 @@ class ProtocolConstraints(ContractModel):
 
 class AdmissionReport(ContractModel):
     kind: Literal["admission_report"]
+    profile_id: Slug
+    report_digest: Digest
+    execution_tier: Literal["local_fixture", "development_sandbox", "production_worker"]
     reference_check: Literal["pass", "fail", "not_run"]
     faulty_check: Literal["pass", "fail", "not_run"]
     alternative_check: Literal["pass", "fail", "not_run"]
     flakiness_check: Literal["pass", "fail", "not_run"]
+    rights_check: Literal["pass", "fail", "not_run"]
+    disclosure_check: Literal["pass", "fail", "not_run"]
     reviewer_id: Slug | None
     reviewed_at: UtcTimestamp | None
+
+    @model_validator(mode="after")
+    def report_is_approved(self) -> AdmissionReport:
+        outcomes = (
+            self.reference_check,
+            self.faulty_check,
+            self.alternative_check,
+            self.flakiness_check,
+            self.rights_check,
+            self.disclosure_check,
+        )
+        if any(outcome != "pass" for outcome in outcomes):
+            raise ValueError("a registered admission report must pass every required check")
+        if (self.reviewer_id is None) != (self.reviewed_at is None):
+            raise ValueError("reviewer_id and reviewed_at must be supplied together")
+        return self
+
+
+class AdmissionChecks(ContractModel):
+    kind: Literal["admission_checks"]
+    reference: Literal["pass", "fail", "not_run"]
+    faulty: Literal["pass", "fail", "not_run"]
+    alternative: Literal["pass", "fail", "not_run"]
+    flakiness: Literal["pass", "fail", "not_run"]
+    rights: Literal["pass", "fail", "not_run"]
+    disclosure: Literal["pass", "fail", "not_run"]
+
+
+class FixtureExecutionEvidence(ContractModel):
+    kind: Literal["fixture_execution_evidence"]
+    name: Slug
+    variant: Literal["reference", "faulty", "alternative"]
+    repetitions: Annotated[int, Field(strict=True, gt=0, le=100)]
+    exit_codes: list[Annotated[int | None, Field(strict=True, ge=-255, le=255)]]
+    matched_expected: list[bool]
+    timed_out: list[bool]
+    stdout_digests: list[Digest]
+    stderr_digests: list[Digest]
+
+    @model_validator(mode="after")
+    def evidence_lengths_match(self) -> FixtureExecutionEvidence:
+        lengths = {
+            len(self.exit_codes),
+            len(self.matched_expected),
+            len(self.timed_out),
+            len(self.stdout_digests),
+            len(self.stderr_digests),
+        }
+        if lengths != {self.repetitions}:
+            raise ValueError("fixture evidence arrays must match repetitions")
+        for code, matched, timed_out in zip(
+            self.exit_codes, self.matched_expected, self.timed_out, strict=True
+        ):
+            if timed_out != (code is None) or (matched and (timed_out or code != 0)):
+                raise ValueError("fixture outcome contradicts its exit code or timeout")
+        return self
+
+
+class AdmissionExecutionReport(ContractModel):
+    kind: Literal["admission_execution_report"]
+    profile_id: Slug
+    execution_tier: Literal["local_fixture", "development_sandbox", "production_worker"]
+    runtime_image_digest: Digest
+    isolation_profile: Slug
+    package_digest: Digest
+    checks: AdmissionChecks
+    executions: Annotated[list[FixtureExecutionEvidence], Field(min_length=3)]
+    passed: bool
+    report_digest: Digest
+
+    @model_validator(mode="after")
+    def report_digest_and_outcome_match(self) -> AdmissionExecutionReport:
+        from polycodebench_core.canonical import canonical_digest
+
+        content = self.model_dump(mode="json", exclude={"report_digest"})
+        if canonical_digest(content) != self.report_digest:
+            raise ValueError("admission report digest does not match report contents")
+        names = [execution.name for execution in self.executions]
+        if len(names) != len(set(names)):
+            raise ValueError("fixture execution names must be unique")
+        by_variant = {
+            variant: [item for item in self.executions if item.variant == variant]
+            for variant in ("reference", "faulty", "alternative")
+        }
+        if any(not items for items in by_variant.values()):
+            raise ValueError("admission evidence needs every fixture variant")
+        if any(item.repetitions < 5 for item in by_variant["reference"]):
+            raise ValueError("reference admission needs at least five repetitions")
+        observed = {
+            "reference": all(all(item.matched_expected) for item in by_variant["reference"]),
+            "alternative": all(all(item.matched_expected) for item in by_variant["alternative"]),
+            "faulty": all(
+                all(
+                    code == 0 and not matched and not timed_out
+                    for code, matched, timed_out in zip(
+                        item.exit_codes, item.matched_expected, item.timed_out, strict=True
+                    )
+                )
+                for item in by_variant["faulty"]
+            ),
+            "flakiness": all(
+                len(set(item.stdout_digests)) == 1
+                and len(set(item.exit_codes)) == 1
+                and not any(item.timed_out)
+                for item in by_variant["reference"]
+            ),
+        }
+        for check, success in observed.items():
+            if getattr(self.checks, check) != ("pass" if success else "fail"):
+                raise ValueError("admission checks contradict the observed fixture executions")
+        expected = all(
+            outcome == "pass"
+            for outcome in (
+                self.checks.reference,
+                self.checks.faulty,
+                self.checks.alternative,
+                self.checks.flakiness,
+                self.checks.rights,
+                self.checks.disclosure,
+            )
+        )
+        if self.passed is not expected:
+            raise ValueError("admission report summary disagrees with its check outcomes")
+        return self
+
+
+class TaskSetMember(ContractModel):
+    kind: Literal["task_set_member"]
+    task_digest: Digest
+    cluster_id: Slug
+    stratum_id: Slug
+    sampling_weight_bp: Annotated[int, Field(strict=True, gt=0, le=10_000)]
+    earliest_public_at: UtcTimestamp | None
+    exposure_confidence: Literal["verified", "estimated", "unknown"]
+
+
+class ModelCutoffProvenance(ContractModel):
+    kind: Literal["model_cutoff_provenance"]
+    model_revision_digest: Digest
+    cutoff_at: UtcTimestamp | None
+    provenance_uri: str | None = Field(default=None, min_length=1, max_length=2048)
+    confidence: Literal["verified", "provider_declared", "unknown"]
+    provider_prior_access: Literal["not_known", "possible", "confirmed"]
+
+    @model_validator(mode="after")
+    def cutoff_confidence_is_consistent(self) -> ModelCutoffProvenance:
+        if (self.cutoff_at is None) != (self.confidence == "unknown"):
+            raise ValueError("unknown cutoff must have no date; dated cutoff needs a confidence")
+        return self
+
+
+class TaskSet(ContractModel):
+    kind: Literal["task_set"]
+    task_set_id: Slug
+    version: Annotated[int, Field(strict=True, gt=0, le=SAFE_JSON_INTEGER_MAX)]
+    split: Literal["fixture", "public_development", "public_scored", "private_heldout"]
+    split_seed: Seed64
+    scoring_policy_digest: Digest
+    method_deviation_ids: list[Slug]
+    members: list[TaskSetMember]
+    model_cutoffs: list[ModelCutoffProvenance]
+
+    @model_validator(mode="after")
+    def unique_members_and_cutoffs(self) -> TaskSet:
+        task_digests = [member.task_digest for member in self.members]
+        if not self.members or len(task_digests) != len(set(task_digests)):
+            raise ValueError("task set must contain unique, nonempty task members")
+        if sum(member.sampling_weight_bp for member in self.members) != 10_000:
+            raise ValueError("task-set sampling weights must sum to 10000 basis points")
+        cutoff_digests = [cutoff.model_revision_digest for cutoff in self.model_cutoffs]
+        if len(cutoff_digests) != len(set(cutoff_digests)):
+            raise ValueError("model cutoff provenance must be unique by model revision")
+        if len(self.method_deviation_ids) != len(set(self.method_deviation_ids)):
+            raise ValueError("method deviation IDs must be unique")
+        return self
 
 
 class TaskVersion(ContractModel):
@@ -411,6 +613,7 @@ class TaskVersion(ContractModel):
     visible_bundle: TaskBundleRef
     hidden_bundle: TaskBundleRef
     output_contract_digest: Digest
+    output_contract: TaskOutputContract
     runtime: TaskRuntime
     acceptance: TaskAcceptance
     quality_plan: TaskQualityPlan
@@ -432,6 +635,12 @@ class TaskVersion(ContractModel):
             raise ValueError("visible bundle cannot be hidden")
         if self.hidden_bundle.visibility != Visibility.HIDDEN:
             raise ValueError("hidden bundle must have hidden visibility")
+        from polycodebench_core.canonical import canonical_document_digest
+
+        if canonical_document_digest(self.output_contract) != self.output_contract_digest:
+            raise ValueError("output contract digest does not match the frozen output contract")
+        if not set(self.acceptance.required_outputs) <= set(self.output_contract.allowed_paths):
+            raise ValueError("required outputs must be included in the output contract allowlist")
         return self
 
 

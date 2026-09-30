@@ -1,0 +1,246 @@
+{
+  "$defs": {
+    "ModelCutoffProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "enum": [
+            "verified",
+            "provider_declared",
+            "unknown"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        },
+        "cutoff_at": {
+          "anyOf": [
+            {
+              "maxLength": 35,
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cutoff At"
+        },
+        "kind": {
+          "const": "model_cutoff_provenance",
+          "title": "Kind",
+          "type": "string"
+        },
+        "model_revision_digest": {
+          "maxLength": 71,
+          "minLength": 71,
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Model Revision Digest",
+          "type": "string"
+        },
+        "provenance_uri": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provenance Uri"
+        },
+        "provider_prior_access": {
+          "enum": [
+            "not_known",
+            "possible",
+            "confirmed"
+          ],
+          "title": "Provider Prior Access",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "model_revision_digest",
+        "cutoff_at",
+        "confidence",
+        "provider_prior_access"
+      ],
+      "title": "ModelCutoffProvenance",
+      "type": "object"
+    },
+    "TaskSetMember": {
+      "additionalProperties": false,
+      "properties": {
+        "cluster_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+          "title": "Cluster Id",
+          "type": "string"
+        },
+        "earliest_public_at": {
+          "anyOf": [
+            {
+              "maxLength": 35,
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Earliest Public At"
+        },
+        "exposure_confidence": {
+          "enum": [
+            "verified",
+            "estimated",
+            "unknown"
+          ],
+          "title": "Exposure Confidence",
+          "type": "string"
+        },
+        "kind": {
+          "const": "task_set_member",
+          "title": "Kind",
+          "type": "string"
+        },
+        "sampling_weight_bp": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Sampling Weight Bp",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "stratum_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+          "title": "Stratum Id",
+          "type": "string"
+        },
+        "task_digest": {
+          "maxLength": 71,
+          "minLength": 71,
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Task Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "task_digest",
+        "cluster_id",
+        "stratum_id",
+        "sampling_weight_bp",
+        "earliest_public_at",
+        "exposure_confidence"
+      ],
+      "title": "TaskSetMember",
+      "type": "object"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/contracts/TaskSet.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "task_set",
+      "title": "Kind",
+      "type": "string"
+    },
+    "members": {
+      "items": {
+        "$ref": "#/$defs/TaskSetMember"
+      },
+      "title": "Members",
+      "type": "array"
+    },
+    "method_deviation_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+        "type": "string"
+      },
+      "title": "Method Deviation Ids",
+      "type": "array"
+    },
+    "model_cutoffs": {
+      "items": {
+        "$ref": "#/$defs/ModelCutoffProvenance"
+      },
+      "title": "Model Cutoffs",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "scoring_policy_digest": {
+      "maxLength": 71,
+      "minLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Scoring Policy Digest",
+      "type": "string"
+    },
+    "split": {
+      "enum": [
+        "fixture",
+        "public_development",
+        "public_scored",
+        "private_heldout"
+      ],
+      "title": "Split",
+      "type": "string"
+    },
+    "split_seed": {
+      "maxLength": 20,
+      "pattern": "^(?:0|[1-9][0-9]*)$",
+      "title": "Split Seed",
+      "type": "string"
+    },
+    "task_set_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+      "title": "Task Set Id",
+      "type": "string"
+    },
+    "version": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "task_set_id",
+    "version",
+    "split",
+    "split_seed",
+    "scoring_policy_digest",
+    "method_deviation_ids",
+    "members",
+    "model_cutoffs"
+  ],
+  "title": "TaskSet",
+  "type": "object"
+}

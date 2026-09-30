@@ -1,6 +1,6 @@
-# Verified command registry - Prompts 00-01
+# Verified command registry - Prompts 00-05
 
-These are inspection commands actually executed during Prompt 00. They are not application commands. No application tests were run or added.
+The registry preserves Prompt 00 inspection history and records commands actually verified in each later prompt. Planned commands are not listed as working.
 
 | Command / check | Result |
 |---|---|
@@ -159,3 +159,30 @@ Earlier records in this file document the initial registry/engine blockers; the 
 | `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --tb=short` with local PostgreSQL 17.6 and SeaweedFS 4.48 test environment | PASS: 24 tests, including six artifact integration tests for concurrent finalization, exact approval, publication conflict and expiry retention. |
 | `.venv/Scripts/ruff.exe check` and `format --check` on changed Python files; `.venv/Scripts/mypy.exe` on source packages and scripts | PASS: lint and formatting clean; 36 source files type checked. |
 | `.venv/Scripts/alembic.exe -c packages/persistence/alembic.ini check` | PASS: no schema drift. |
+
+## Prompt 05 verified commands and results (2026-09-30)
+
+The following initial results are historical. The review-fix verification section below records the corrected implementation.
+
+| Command / check actually run | Result |
+|---|---|
+| `uv --cache-dir .cache/uv run --locked --offline --all-packages python scripts/pcb.py task validate taskpacks/admission-smoke --admission-profile admission-v1 --report docs/implementation/evidence/prompt-05-authored-fixture-admission-v2.json` | PASS with approved local Docker access. Five identical reference passes, intended faulty output mismatch, alternative pass; report records the digest-bound output contract, `local_fixture`, immutable image digest and isolation profile. |
+| `uv --cache-dir .cache/uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider tests/test_task_packages.py tests/test_core_contracts.py` | PASS: 18 tests covering import, privacy, path, cutoff, split and contract behavior. |
+| `$env:PCB_TEST_DATABASE_URL=<local disposable PostgreSQL 17.6 test database>; uv --cache-dir .cache/uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider tests/test_task_admission_postgres.py` | PASS: 1 PostgreSQL registration/task-set freeze/scored-split-denial integration test. Test setup seeds verified artifact registry records; Prompt 04 separately covers object bytes. |
+| `$env:PCB_MIGRATION_DATABASE_URL=<same disposable PostgreSQL database>; uv --cache-dir .cache/uv run --locked --offline --all-packages --group dev alembic -c packages/persistence/alembic.ini check` | PASS: no new upgrade operations detected. |
+| `uv --cache-dir .cache/uv run --locked --offline --all-packages python scripts/export_contract_schemas.py --check` | PASS: all 21 generated contract schema/OpenAPI/shared TypeScript files. |
+| `uv --cache-dir .cache/uv run --locked --offline --all-packages python scripts/validate_task_contracts.py`; `uv --cache-dir .cache/uv run --locked --offline --all-packages python scripts/check_boundaries.py` | PASS: pilot-contract consistency and package dependency boundaries. |
+| `uv --cache-dir .cache/uv run --locked --offline --all-packages --group dev ruff check packages/core/src/polycodebench_core/__init__.py packages/core/src/polycodebench_core/models.py packages/core/src/polycodebench_core/tasksets.py packages/persistence/src/polycodebench_persistence/tasks.py packages/services/src/polycodebench_services/task_packages.py packages/services/src/polycodebench_services/task_fixture_runner.py packages/services/src/polycodebench_services/tasks.py scripts/pcb.py scripts/export_contract_schemas.py scripts/validate_task_contracts.py tests/test_task_packages.py tests/test_task_admission_postgres.py tests/test_core_contracts.py`; the same paths with `ruff format --check` | PASS: Prompt 05 files lint-clean and formatted. |
+| `$env:MYPYPATH='packages/core/src'; uv --cache-dir .cache/uv run --locked --offline --all-packages --group dev mypy packages/core/src packages/persistence/src packages/services/src scripts` | PASS: 42 source files type-checked. A broader all-tests mypy attempt is not a passing command; it reports existing typing issues in pre-existing test files and is noted in `reports/prompt-05.md`. |
+
+## Prompt 05 review-fix verification (2026-09-30)
+
+| Command / check actually run | Result |
+|---|---|
+| `.venv/Scripts/alembic.exe -c packages/persistence/alembic.ini upgrade head` and `check` with `PCB_MIGRATION_DATABASE_URL` set to the dedicated local `pcb_prompt04_test7` database | PASS: applied `e8c51d90ab73` to preserve complete task admission evidence; no schema drift. |
+| `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --tb=short` with `PCB_TEST_DATABASE_URL`, local SeaweedFS endpoint/development credentials and `PCB_TEST_DOCKER=1` | PASS: final run 56 passed, no skips. Includes all seven database admission regressions and all seven runner/CLI checks, including an actual infinite-loop Docker timeout with no container left running. Earlier sandboxed runner tests were denied temporary-directory access; the approved elevated full runs passed (53 before the three CLI cases; 56 afterward). |
+| `.venv/Scripts/python.exe scripts/pcb.py task validate taskpacks/admission-smoke --admission-profile admission-v1 --report docs/implementation/evidence/prompt-05-authored-fixture-admission-v3.json` | PASS with permitted local Docker access: five stable reference runs, intended faulty mismatch and alternative pass. Complete snapshot is bound to the report; digest `sha256:2c3e44a86daad9c6e37e17c63831e2622f514b9a64cc7484fcc760fb2a4cbe64`. |
+| `.venv/Scripts/ruff.exe format --check .`; `.venv/Scripts/ruff.exe check .`; `MYPYPATH=packages/core/src .venv/Scripts/mypy.exe packages/core/src packages/configuration/src packages/persistence/src packages/services/src scripts` | PASS: 89 Python files formatted; lint clean; 45 source files type-checked. |
+| `.venv/Scripts/python.exe scripts/export_contract_schemas.py` followed by `--check`; startup schema `--check`; `scripts/check_boundaries.py`; `scripts/validate_task_contracts.py`; `scripts/smoke_workspace.py` | PASS: regenerated and checked 21 contract outputs, startup schema consistency, package boundaries, pilot-contract consistency and ten-package smoke checks. |
+| `corepack pnpm --filter @polycodebench/contracts typecheck`; `build`; `test:contracts` | PASS after permitted Corepack cache access: generated TypeScript compiles; shared golden/invalid contract fixtures and 256 property cases pass. Available Node 22.23.2 used locally; pinned Node 24 CI was not run. |
+| Hosted CI; trusted production worker admission; production VM isolation | NOT RUN. Production admission and every non-fixture task set are explicitly blocked pending trusted worker evidence authority. |

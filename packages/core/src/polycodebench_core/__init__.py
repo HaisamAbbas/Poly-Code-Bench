@@ -14,18 +14,23 @@ from polycodebench_core.identity import (
     validate_relative_path,
 )
 from polycodebench_core.models import (
+    AdmissionExecutionReport,
     Artifact,
     BudgetProfile,
     BundleFile,
     BundleFileManifest,
     Candidate,
     ContractGraph,
+    ModelCutoffProvenance,
     Observation,
     PluginManifest,
     ProtocolDefinition,
     RunConfig,
     Scorecard,
     StatusVocabulary,
+    TaskOutputContract,
+    TaskSet,
+    TaskSetMember,
     TaskVersion,
 )
 from polycodebench_core.plugins import (
@@ -41,6 +46,7 @@ from polycodebench_core.validation import parse_document, validate_document
 
 __all__ = [
     "Artifact",
+    "AdmissionExecutionReport",
     "AnalyzerPlugin",
     "BudgetProfile",
     "BundleFile",
@@ -60,6 +66,10 @@ __all__ = [
     "ScoringPolicy",
     "SuiteAdapter",
     "StatusVocabulary",
+    "TaskOutputContract",
+    "ModelCutoffProvenance",
+    "TaskSet",
+    "TaskSetMember",
     "TaskVersion",
     "canonical_document_bytes",
     "canonical_envelope_bytes",

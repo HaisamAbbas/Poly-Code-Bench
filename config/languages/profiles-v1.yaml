@@ -1,0 +1,45 @@
+schema_version: 1
+kind: language_profiles
+profile_version: diagnostic-language-profiles-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+profiles:
+  python:
+    diagnostic_percent: {readability_idioms: 25, type_hints: 15, stdlib_use: 15, error_handling: 15, lint_style: 10, performance_awareness: 20}
+    idiomatic_percent: {iteration_laziness: 30, stdlib_api_choice: 30, data_protocol_modeling: 25, context_resource_abstraction: 15}
+    tools: [pytest, hypothesis, ruff, mypy, bandit, selected_semgrep]
+  javascript:
+    diagnostic_percent: {async_correctness: 31.25, modern_immutability: 18.75, security: 25, async_error_handling: 12.5, lint: 12.5}
+    idiomatic_percent: {async_composition: 35, data_module_api: 30, language_constructs: 20, restrained_mutation: 15}
+    tools: [node, task_selected_vitest_or_jest, eslint, pinned_dependency_audit]
+    typescript_type_penalty: not_applicable
+  typescript:
+    diagnostic_percent: {async_correctness: 25, type_safety: 20, modern_immutability: 15, security: 20, async_error_handling: 10, lint: 10}
+    idiomatic_percent: {type_domain_modeling: 30, async_composition: 25, data_module_api: 25, language_constructs: 20}
+    tools: [node, typescript_compiler, task_selected_vitest_or_jest, eslint, pinned_dependency_audit]
+  c:
+    diagnostic_percent: {memory_safety: 30, undefined_behavior: 25, performance_cache: 15, const_ownership: 10, portability: 10, error_checks: 10}
+    idiomatic_percent: {ownership_api_contracts: 35, const_type_portability: 35, data_function_interfaces: 30}
+    tools: [clang, clang_tidy, cppcheck, address_sanitizer, undefined_behavior_sanitizer]
+  cpp:
+    diagnostic_percent: {raii_ownership: 25, moves_copies: 15, stl_use: 15, exception_safety: 10, modern_features: 15, abstraction_performance: 10, undefined_behavior_memory_safety: 10}
+    idiomatic_percent: {ownership_raii_design: 35, stl_container_choice: 25, value_move_api_semantics: 20, modern_constructs: 20}
+    tools: [clang, clang_tidy, cppcheck, address_sanitizer, undefined_behavior_sanitizer]
+  rust:
+    diagnostic_percent: {ownership_borrowing: 25, unsafe_soundness: 20, result_option: 20, iterators_traits: 15, concurrency: 10, clippy: 10}
+    idiomatic_percent: {ownership_borrowing_api: 35, iterator_trait_composition: 30, result_option_modeling: 25, concurrency_abstraction: 10}
+    tools: [rustc, cargo_test, selected_clippy, cargo_audit, miri_where_compatible]
+  go:
+    diagnostic_percent: {error_handling: 25, goroutines_channels: 25, cancellation_context: 15, simple_interfaces: 15, standard_library: 10, formatting_vet_staticcheck: 10}
+    idiomatic_percent: {simple_interfaces_api: 35, standard_library_composition: 30, error_api: 20, context_concurrency: 15}
+    tools: [go_test, go_race, go_vet, staticcheck, gosec, gofmt]
+  java:
+    diagnostic_percent: {design_boundaries: 20, resource_handling: 15, concurrency: 20, modern_apis: 15, null_safety: 15, security: 15}
+    idiomatic_percent: {class_api_boundaries: 35, library_abstractions: 25, value_nullability: 20, resource_concurrency: 20}
+    tools: [pinned_jdk, junit, spotbugs, pmd, checkstyle, dependency_analysis]
+applicability:
+  decide_during_task_authoring: true
+  freeze_before_model_run: true
+  opportunity_counts_required: true
+  no_opportunity_means: not_applicable
+  javascript_and_typescript_are_distinct: true

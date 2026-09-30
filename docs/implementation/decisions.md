@@ -1,5 +1,16 @@
 # Decisions and specification discrepancies
 
+## Prompt 05 decisions and sequencing clarification
+
+- **D-05-05 — Admission evidence authority after review:** the CLI must replay the exact imported fixture snapshot and match the supplied report. Registration stores the full observed report and binds it to the manifest and both bundle digests. Production admission is unavailable until a trusted worker authority exists; a caller-controlled tier string never establishes that authority. Every non-fixture task set remains blocked. Prior reports based only on manifest identity must be regenerated.
+
+- **D-05-01 — Local admission as the WP-06 prerequisite slice:** Prompt 05 explicitly permits the smallest compliant local sandbox invocation for trusted authored admission fixtures. `DockerFixtureRunner` is that narrow slice and records `local_fixture`; it does not establish disposable-VM isolation or production task admission. Prompt 06 extends the runner/interface to the required development/production VM lifecycle. Task acceptance and scored-task criteria are unchanged.
+- **D-05-02 — Fixture runner image and boundary:** authored admission uses the locally verified immutable `python:3.12-slim` linux/amd64 digest recorded in the admission report. Container settings disable network, use read-only root and nonroot execution, cap CPU/memory/PIDs/time, and mount only the candidate. This is development evidence, not a production isolation approval.
+- **D-05-03 — Pilot contract status and methodology rights:** versioned profiles remain pilot contracts; human/judge calibration is required before scored use, and no live budget is authorized. Native methods and adaptations are separately described for all four source families. Private CursorBench assets are unavailable, and benchmark/task redistribution rights remain unresolved until the corresponding source-specific review.
+- **D-05-04 — Owner approval of pilot scoring baseline (2026-09-30):** the project owner approved `polycodebench-code-pilot-v1` as written: correctness 30%, security 20%, efficiency 15%, code quality 15%, idiomatic 10%, robustness 10%. This freezes the baseline policy only. `effective_for_scoring` remains false until human/judge calibration and all task/source/runtime gates pass; this approval authorizes no live model calls or spending.
+
+## Prompt 00 baseline
+
 ## Prompt 00 baseline
 
 - **No architecture or scoring decision added.** Follow the Architecture v1, Technical Implementation Spec v1, and prompt pack v1 in their stated precedence. No existing implementation was found to reconcile or refactor.

@@ -1,0 +1,107 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: prompt05-fixture-double
+  version: 1
+  track: B
+  family: codegen
+  primary_language: python
+  secondary_languages: []
+  cluster_id: prompt05-fixture-double-cluster
+  difficulty: introductory
+  stratum_id: authored-fixtures
+  output_contract_digest: sha256:77c858408b0c620f3dd0445af8d460dbdf78532aff032a6aa1cc7b8ca3a8f833
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths: [solution.py]
+  maximum_artifact_bytes: 1000000
+  maximum_file_bytes: 100000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_fixture
+  immutable_revision: polycodebench-authored-fixtures-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: "2026-09-30T00:00:00Z"
+  curated_at: "2026-09-30T00:00:00Z"
+  date_confidence: verified
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-authored-fixtures-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 05 authored smoke fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b
+  language_plugin_id: python
+  language_plugin_version: local-fixture-v1
+  build_recipe_digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+  test_recipe_digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+  resource_class: local-fixture-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids: [fixture-output-v1]
+  hard_condition_ids: [exact-output-v1]
+  required_outputs: [solution.py]
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions: [correctness, security, efficiency, code_quality, idiomatic, robustness]
+  evidence_owners: {}
+  required_analyzers: []
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: output-exact-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 10
+visible_files:
+  - visible/task.md
+  - visible/fixtures/input.txt
+  - visible/repo/README.md
+hidden_files:
+  - hidden/oracle.expected
+  - admission/reference.py
+  - admission/faulty.py
+  - admission/alternative.py
+fixtures:
+  - name: authored-reference
+    variant: reference
+    solution_path: admission/reference.py
+    input_path: visible/fixtures/input.txt
+    expected_output_path: hidden/oracle.expected
+  - name: authored-known-fault
+    variant: faulty
+    solution_path: admission/faulty.py
+    input_path: visible/fixtures/input.txt
+    expected_output_path: hidden/oracle.expected
+  - name: authored-alternative
+    variant: alternative
+    solution_path: admission/alternative.py
+    input_path: visible/fixtures/input.txt
+    expected_output_path: hidden/oracle.expected

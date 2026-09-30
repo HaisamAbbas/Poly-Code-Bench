@@ -1,0 +1,32 @@
+schema_version: 1
+kind: admission_profile
+profile_id: admission-v1
+status: pilot_contract
+required_checks:
+  - strict_schema
+  - safe_paths_and_snapshot
+  - visible_hidden_separation
+  - rights_and_provenance
+  - reference_acceptance
+  - known_fault_rejection
+  - alternative_solution_acceptance
+  - five_reference_repetitions
+  - output_contract
+  - required_analyzer_compatibility
+  - quality_opportunity_coverage
+  - disclosure_scan
+freeze_policy:
+  task_version_requires_all_checks_passed: true
+  curator_permission_required: true
+  report_digest_required: true
+  changed_scored_field_requires_new_version: true
+  fixture_execution_tier_allowed_only_in_split: fixture
+  public_scored_requires_execution_tier: production_worker
+  private_heldout_requires_execution_tier: production_worker
+development_fixture_slice:
+  execution_tier: local_fixture
+  permitted_families: [codegen]
+  runtime: python-3.12-slim-amd64
+  full_task_quality_admission: false
+  production_task_admission: false
+  extension_owner: Prompt 06 sandbox; Prompts 10-12 language/evaluation; Prompt 17 pilot

@@ -2,12 +2,12 @@
 
 ## Primary sources and identity
 
-- [Qodo's DeepCodeBench methodology article](https://www.qodo.ai/blog/deepcodebench-real-world-codebase-understanding-by-qa-benchmarking/) (accessed 2026-09-30).
-- [DeepCodeBench dataset card](https://huggingface.co/datasets/Qodo/deep_code_bench) (accessed 2026-09-30); referenced snapshot commit `61c6c6738c275032172f8405f65f1e7f14d443c4` is reported by the dataset source. No dataset files were downloaded.
+- [Qodo's DeepCodeBench methodology article](https://www.qodo.ai/blog/deepcodebench-real-world-codebase-understanding-by-qa-benchmarking/) (checked 2026-09-30).
+- [DeepCodeBench dataset card](https://huggingface.co/datasets/Qodo/deep_code_bench) (checked 2026-09-30); referenced dataset snapshot commit `61c6c6738c275032172f8405f65f1e7f14d443c4` is reported by the source. No dataset files were downloaded.
 
 ## Verified native method
 
-The published benchmark describes 1,144 repository question-and-answer items constructed from pull-request context across eight code repositories. Answers are evaluated for the presence of discrete ground-truth facts, using an LLM judge; fact recall is the native focus. Confirm the dataset card and paper/repository revision before any run because source assets and evaluation instructions can change.
+The published benchmark describes 1,144 repository question-and-answer items built from pull-request context across eight code repositories. Its article describes extracting discrete facts from ground-truth answers and using an LLM call to check their presence in predictions; fact recall is the native focus. Confirm the dataset card, selected dataset revision, and evaluation instructions before any run because source assets and terms may change.
 
 ## PolyCodeBench treatment
 

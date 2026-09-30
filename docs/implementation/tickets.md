@@ -218,40 +218,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `05`.
 - Dependencies: Prompt 04 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/services/src/polycodebench_services/task_packages.py`, `task_fixture_runner.py`; `packages/persistence/src/polycodebench_persistence/tasks.py`; `packages/services/src/polycodebench_services/tasks.py`; `scripts/pcb.py`; authored package `taskpacks/admission-smoke/`). Visible and hidden archives are independently allowlisted; task versions bind verified artifact IDs/digests and are frozen on registration.
+- Verification: `passed` for importer/path/privacy and actual authored-fixture execution; PostgreSQL registration/freeze passed. Production task images and language workers remain later scope.
 - Required verification scope: E2E-04, E2E-27.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_task_packages.py`; `tests/test_task_admission_postgres.py` (seven PostgreSQL 17.6 checks); `tests/test_task_fixture_runner.py` (seven runner/CLI checks); `docs/implementation/evidence/prompt-05-authored-fixture-admission-v3.json` (actual Docker execution bound to the complete snapshot; report digest `sha256:2c3e44a86daad9c6e37e17c63831e2622f514b9a64cc7484fcc760fb2a4cbe64`). Final full suite: 56 passed with PostgreSQL, SeaweedFS and Docker enabled. Reference visibility, undeclared files, artifact-ID contradictions and stale snapshot evidence regressions passed.
 - Acceptance criteria: — Implement task-package import and separate visible/hidden bundle construction, safe repository snapshot handling, rights/provenance metadata, output contracts and immutable task-version registration. DoD: hidden data/references cannot appear in model-visible exports or visible image build contexts.
 
 ## PCB-05-2 - Prompt 05: — Build task admission and freeze the methodology contracts
 
 - Owner prompt: `05`.
 - Dependencies: Prompt 04 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/core/src/polycodebench_core/tasksets.py`; TaskSet/ModelCutoffProvenance contracts; PostgreSQL cluster/split registry and task-set freeze in `packages/persistence/src/polycodebench_persistence/tasks.py`). Exposure dates are sourced from immutable task data; curation timestamps do not substitute for first-public dates.
+- Verification: `passed` for local date/cutoff and cluster leakage subcases plus PostgreSQL fixture task-set freeze. Altered draft split, document and manifest artifact are rejected before membership writes; freeze rehashes the document and verifies row identity and manifest integrity.
 - Required verification scope: E2E-04, E2E-27.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_task_packages.py`; `tests/test_task_admission_postgres.py`; schema outputs `schemas/contracts/{TaskSet,TaskSetMember,ModelCutoffProvenance}.v1.schema.json`. Public filters/common-cohort integration remains E2E-27 pending under Prompts 16/29.
 - Acceptance criteria: — Implement task-set freeze, cluster/split validation, earliest-exposure dates, model-cutoff provenance and family/stratum membership. DoD: related variants cannot leak across designated splits; curation date cannot turn an old problem into a post-cutoff problem.
 
 ## PCB-05-3 - Prompt 05: — Build task admission and freeze the methodology contracts
 
 - Owner prompt: `05`.
 - Dependencies: Prompt 04 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`scripts/pcb.py` import/validate/freeze/taskset CLI and shared service/repository interface; local Docker slice uses immutable Python image, no network, readonly root, nonroot, CPU/memory/PID/time limits, and no hidden mount). REST routes and production VM driver remain later scope.
+- Verification: `passed` for CLI schema validation and actual reference/faulty/alternative runs; fixture evidence records `local_fixture`. CLI freeze replays the imported bytes and rejects forged reports. All non-fixture sets remain blocked until trusted production admission exists; a caller-supplied `production_worker` label is rejected. Docker timeout cleanup passed with no container left running.
 - Required verification scope: E2E-04, E2E-27.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-05-authored-fixture-admission-v3.json`; `tests/test_task_admission_postgres.py`; `tests/test_task_fixture_runner.py`; E2E-04 authored-fixture subcase passed, full E2E remains pending Prompts 10–12/17. No production task admission is claimed.
 - Acceptance criteria: — Implement admission orchestration/interfaces and the validation/freezing CLI/API. If needed, add the smallest compliant local sandbox invocation for trusted authored admission fixtures, recording it as a prerequisite slice of WP-06 for Prompt 06 to extend. Actually execute reference/faulty/alternative fixture checks; do not simulate their outcomes. DoD: unvalidated tasks cannot enter a scored task set, execution tier is recorded, and production task admission remains subject to production-worker validation.
 
 ## PCB-05-4 - Prompt 05: — Build task admission and freeze the methodology contracts
 
 - Owner prompt: `05`.
 - Dependencies: Prompt 04 ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (versioned pilot contracts in `config/scoring/`, `config/languages/`, `config/methodology/`, `config/budgets/`, `config/evidence/`, `config/task-admission/`; methodology/source-terms records in `docs/methodology/`). Project owner approved the specified v1 weights as the frozen pilot baseline on 2026-09-30; scoring remains inactive pending human/judge calibration and other release gates. All four methodology families are registered.
+- Verification: `passed` via `scripts/validate_task_contracts.py`, methodology/source review and generated-schema check. Rights and private dataset restrictions remain recorded as unresolved inputs.
 - Required verification scope: E2E-04, E2E-27.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `scripts/validate_task_contracts.py`; `docs/methodology/source-terms-register.md`; four methodology records; 21 generated schema/OpenAPI/shared TypeScript files checked with `scripts/export_contract_schemas.py --check`.
 - Acceptance criteria: — Finalize versioned pilot contracts for scoring weights, applicability/owners, language profiles, method deviations, budgets and evidence schemas from the sources. DoD: proposed calibration parameters remain labeled pilot parameters; substantive uncertainty/rights restrictions are recorded; no omitted benchmark family.
 
 ## PCB-06-1 - Prompt 06: — Implement sandbox drivers and isolation

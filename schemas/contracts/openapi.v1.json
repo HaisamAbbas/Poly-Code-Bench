@@ -1,6 +1,176 @@
 {
   "components": {
     "schemas": {
+      "AdmissionChecks": {
+        "additionalProperties": false,
+        "properties": {
+          "alternative": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Alternative",
+            "type": "string"
+          },
+          "disclosure": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Disclosure",
+            "type": "string"
+          },
+          "faulty": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Faulty",
+            "type": "string"
+          },
+          "flakiness": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Flakiness",
+            "type": "string"
+          },
+          "kind": {
+            "const": "admission_checks",
+            "title": "Kind",
+            "type": "string"
+          },
+          "reference": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Reference",
+            "type": "string"
+          },
+          "rights": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Rights",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "reference",
+          "faulty",
+          "alternative",
+          "flakiness",
+          "rights",
+          "disclosure"
+        ],
+        "title": "AdmissionChecks",
+        "type": "object"
+      },
+      "AdmissionExecutionReport": {
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "$ref": "#/components/schemas/AdmissionChecks"
+          },
+          "execution_tier": {
+            "enum": [
+              "local_fixture",
+              "development_sandbox",
+              "production_worker"
+            ],
+            "title": "Execution Tier",
+            "type": "string"
+          },
+          "executions": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureExecutionEvidence"
+            },
+            "minItems": 3,
+            "title": "Executions",
+            "type": "array"
+          },
+          "isolation_profile": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Isolation Profile",
+            "type": "string"
+          },
+          "kind": {
+            "const": "admission_execution_report",
+            "title": "Kind",
+            "type": "string"
+          },
+          "package_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Package Digest",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "profile_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Profile Id",
+            "type": "string"
+          },
+          "report_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Report Digest",
+            "type": "string"
+          },
+          "runtime_image_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Runtime Image Digest",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "profile_id",
+          "execution_tier",
+          "runtime_image_digest",
+          "isolation_profile",
+          "package_digest",
+          "checks",
+          "executions",
+          "passed",
+          "report_digest"
+        ],
+        "title": "AdmissionExecutionReport",
+        "type": "object"
+      },
       "AdmissionReport": {
         "additionalProperties": false,
         "properties": {
@@ -11,6 +181,24 @@
               "not_run"
             ],
             "title": "Alternative Check",
+            "type": "string"
+          },
+          "disclosure_check": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Disclosure Check",
+            "type": "string"
+          },
+          "execution_tier": {
+            "enum": [
+              "local_fixture",
+              "development_sandbox",
+              "production_worker"
+            ],
+            "title": "Execution Tier",
             "type": "string"
           },
           "faulty_check": {
@@ -36,6 +224,13 @@
             "title": "Kind",
             "type": "string"
           },
+          "profile_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Profile Id",
+            "type": "string"
+          },
           "reference_check": {
             "enum": [
               "pass",
@@ -43,6 +238,13 @@
               "not_run"
             ],
             "title": "Reference Check",
+            "type": "string"
+          },
+          "report_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Report Digest",
             "type": "string"
           },
           "reviewed_at": {
@@ -72,6 +274,15 @@
             ],
             "title": "Reviewer Id"
           },
+          "rights_check": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ],
+            "title": "Rights Check",
+            "type": "string"
+          },
           "schema_version": {
             "const": 1,
             "title": "Schema Version",
@@ -81,10 +292,15 @@
         "required": [
           "schema_version",
           "kind",
+          "profile_id",
+          "report_digest",
+          "execution_tier",
           "reference_check",
           "faulty_check",
           "alternative_check",
           "flakiness_check",
+          "rights_check",
+          "disclosure_check",
           "reviewer_id",
           "reviewed_at"
         ],
@@ -525,6 +741,107 @@
         "title": "FailureClass",
         "type": "string"
       },
+      "FixtureExecutionEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "exit_codes": {
+            "items": {
+              "anyOf": [
+                {
+                  "maximum": 255,
+                  "minimum": -255,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Exit Codes",
+            "type": "array"
+          },
+          "kind": {
+            "const": "fixture_execution_evidence",
+            "title": "Kind",
+            "type": "string"
+          },
+          "matched_expected": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Matched Expected",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "repetitions": {
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "title": "Repetitions",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "stderr_digests": {
+            "items": {
+              "maxLength": 71,
+              "minLength": 71,
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "title": "Stderr Digests",
+            "type": "array"
+          },
+          "stdout_digests": {
+            "items": {
+              "maxLength": 71,
+              "minLength": 71,
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "title": "Stdout Digests",
+            "type": "array"
+          },
+          "timed_out": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Timed Out",
+            "type": "array"
+          },
+          "variant": {
+            "enum": [
+              "reference",
+              "faulty",
+              "alternative"
+            ],
+            "title": "Variant",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "name",
+          "variant",
+          "repetitions",
+          "exit_codes",
+          "matched_expected",
+          "timed_out",
+          "stdout_digests",
+          "stderr_digests"
+        ],
+        "title": "FixtureExecutionEvidence",
+        "type": "object"
+      },
       "Gate": {
         "enum": [
           "pass",
@@ -560,6 +877,83 @@
         ],
         "title": "MeasurementStatus",
         "type": "string"
+      },
+      "ModelCutoffProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "enum": [
+              "verified",
+              "provider_declared",
+              "unknown"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "cutoff_at": {
+            "anyOf": [
+              {
+                "maxLength": 35,
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff At"
+          },
+          "kind": {
+            "const": "model_cutoff_provenance",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_revision_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Model Revision Digest",
+            "type": "string"
+          },
+          "provenance_uri": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Provenance Uri"
+          },
+          "provider_prior_access": {
+            "enum": [
+              "not_known",
+              "possible",
+              "confirmed"
+            ],
+            "title": "Provider Prior Access",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "model_revision_digest",
+          "cutoff_at",
+          "confidence",
+          "provider_prior_access"
+        ],
+        "title": "ModelCutoffProvenance",
+        "type": "object"
       },
       "Observation": {
         "additionalProperties": false,
@@ -1784,6 +2178,85 @@
         "title": "TaskOracle",
         "type": "object"
       },
+      "TaskOutputContract": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_paths": {
+            "items": {
+              "description": "UTF-8 relative POSIX path; rejects absolute, NUL, dot and parent components.",
+              "format": "pcb-relative-posix-path",
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Allowed Paths",
+            "type": "array"
+          },
+          "findings_limit": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 100000,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findings Limit"
+          },
+          "kind": {
+            "const": "task_output_contract",
+            "title": "Kind",
+            "type": "string"
+          },
+          "maximum_artifact_bytes": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "title": "Maximum Artifact Bytes",
+            "type": "integer"
+          },
+          "maximum_file_bytes": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "title": "Maximum File Bytes",
+            "type": "integer"
+          },
+          "maximum_files": {
+            "exclusiveMinimum": 0,
+            "maximum": 100000,
+            "title": "Maximum Files",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "submission_kind": {
+            "enum": [
+              "files",
+              "patch",
+              "structured_findings",
+              "text",
+              "typed_json"
+            ],
+            "title": "Submission Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "submission_kind",
+          "allowed_paths",
+          "maximum_artifact_bytes",
+          "maximum_file_bytes",
+          "maximum_files",
+          "findings_limit"
+        ],
+        "title": "TaskOutputContract",
+        "type": "object"
+      },
       "TaskQualityPlan": {
         "additionalProperties": false,
         "properties": {
@@ -1936,6 +2409,171 @@
         "title": "TaskRuntime",
         "type": "object"
       },
+      "TaskSet": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "task_set",
+            "title": "Kind",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/TaskSetMember"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "method_deviation_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+              "type": "string"
+            },
+            "title": "Method Deviation Ids",
+            "type": "array"
+          },
+          "model_cutoffs": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCutoffProvenance"
+            },
+            "title": "Model Cutoffs",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scoring_policy_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Scoring Policy Digest",
+            "type": "string"
+          },
+          "split": {
+            "enum": [
+              "fixture",
+              "public_development",
+              "public_scored",
+              "private_heldout"
+            ],
+            "title": "Split",
+            "type": "string"
+          },
+          "split_seed": {
+            "maxLength": 20,
+            "pattern": "^(?:0|[1-9][0-9]*)$",
+            "title": "Split Seed",
+            "type": "string"
+          },
+          "task_set_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Task Set Id",
+            "type": "string"
+          },
+          "version": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "task_set_id",
+          "version",
+          "split",
+          "split_seed",
+          "scoring_policy_digest",
+          "method_deviation_ids",
+          "members",
+          "model_cutoffs"
+        ],
+        "title": "TaskSet",
+        "type": "object"
+      },
+      "TaskSetMember": {
+        "additionalProperties": false,
+        "properties": {
+          "cluster_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Cluster Id",
+            "type": "string"
+          },
+          "earliest_public_at": {
+            "anyOf": [
+              {
+                "maxLength": 35,
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Public At"
+          },
+          "exposure_confidence": {
+            "enum": [
+              "verified",
+              "estimated",
+              "unknown"
+            ],
+            "title": "Exposure Confidence",
+            "type": "string"
+          },
+          "kind": {
+            "const": "task_set_member",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sampling_weight_bp": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000,
+            "title": "Sampling Weight Bp",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "stratum_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+            "title": "Stratum Id",
+            "type": "string"
+          },
+          "task_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Task Digest",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "task_digest",
+          "cluster_id",
+          "stratum_id",
+          "sampling_weight_bp",
+          "earliest_public_at",
+          "exposure_confidence"
+        ],
+        "title": "TaskSetMember",
+        "type": "object"
+      },
       "TaskSource": {
         "additionalProperties": false,
         "properties": {
@@ -2071,6 +2709,9 @@
           "oracle": {
             "$ref": "#/components/schemas/TaskOracle"
           },
+          "output_contract": {
+            "$ref": "#/components/schemas/TaskOutputContract"
+          },
           "output_contract_digest": {
             "maxLength": 71,
             "minLength": 71,
@@ -2160,6 +2801,7 @@
           "visible_bundle",
           "hidden_bundle",
           "output_contract_digest",
+          "output_contract",
           "runtime",
           "acceptance",
           "quality_plan",

@@ -1,0 +1,41 @@
+MIRI_EXIT=101
+test tests::reads_in_bounds ... ok
+test tests::reads_out_of_bounds ... error: Undefined Behavior: in-bounds pointer arithmetic failed: attempting to offset pointer by 36 bytes, but got alloc49756 which is only 12 bytes from the end of the allocation
+  --> src/lib.rs:9:15
+   |
+ 9 |     unsafe { *p.offset(offset) }
+   |               ^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+   |
+   = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+   = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+help: alloc49756 was allocated here:
+  --> src/lib.rs:30:13
+   |
+30 |         let values = [1i32, 2, 3];
+   |             ^^^^^^
+   = note: this is on thread `tests::reads_ou`
+   = note: stack backtrace:
+           0: raw_read
+               at src/lib.rs:9:15: 9:31
+           1: tests::reads_out_of_bounds
+               at src/lib.rs:32:20: 32:48
+           2: tests::reads_out_of_bounds::{closure#0}
+               at src/lib.rs:29:29: 29:29
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/usr/local/rustup/toolchains/nightly-2026-09-30-x86_64-unknown-linux-gnu/bin/cargo-miri runner /w/target/miri/x86_64-unknown-linux-gnu/debug/build/miri_probe/c71eba0d2a09d840/out/miri_probe-c71eba0d2a09d840` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
+   Doc-tests miri_probe
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: 1 target failed:
+    `--lib`

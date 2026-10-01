@@ -1,0 +1,54 @@
+# Clippy lint selection for the PolyCodeBench Rust profile (Prompt 11).
+#
+# Only lints that describe *required behaviour or a genuine defect* are enabled. Style preferences
+# that a valid alternative implementation may reasonably violate stay off, and anything the context
+# scanner or the judge owns is not double-counted here (see config/languages/rust-profile-v1.yaml
+# for the ownership mapping).
+#
+# `unwrap_used` / `expect_used` / `clone_on_copy` are deliberately NOT enabled here: a bare token
+# proves nothing, and the Rust context scanner decides them from actual surrounding evidence. The
+# candidate clippy finding and the scanner finding share one canonical issue family, so neither can
+# produce a second penalty for the same defect.
+correctness = [
+    "clippy::unit_cmp",
+    "clippy::eq_op",
+    "clippy::op_ref",
+    "clippy::never_loop",
+    "clippy::while_immutable_condition",
+    "clippy::mut_range_bound",
+    "clippy::suspicious_map",
+    "clippy::suspicious_map_or_else",
+    "clippy::out_of_bounds_indexing",
+    "clippy::get_first",
+    "clippy::iter_count",
+    "clippy::approx_constant",
+    "clippy::chars_next_cmp",
+    "clippy::unnecessary_cast",
+    "clippy::needless_return",
+    "clippy::redundant_clone",
+    "clippy::manual_div_ceil",
+    "clippy::manual_is_multiple_of",
+    "clippy::manual_range_contains",
+    "clippy::useless_vec",
+    "clippy::len_zero",
+    "clippy::comparison_chain",
+]
+suspicious = [
+    "clippy::integer_division",
+    "clippy::question_mark",
+    "clippy::mem_forget",
+    "clippy::undocumented_unsafe_blocks",
+    "clippy::print_stdout",
+    "clippy::dbg_macro",
+]
+style = [
+    "clippy::needless_borrow",
+    "clippy::redundant_field_names",
+    "clippy::manual_strip",
+    "clippy::collapsible_if",
+]
+pedantic = []
+nursery = []
+cargo = [
+    "multiple_crate_versions",
+]

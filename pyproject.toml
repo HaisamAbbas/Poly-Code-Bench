@@ -9,7 +9,7 @@ dependencies = []
 package = false
 
 [tool.uv.workspace]
-members = ["packages/*"]
+members = ["packages/*", "plugins/languages/*"]
 
 [dependency-groups]
 dev = [
@@ -22,6 +22,13 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# Authored task fixtures contain deliberate defects (bare except, mutable defaults, ...) and are
+# analysed by the product's own pipeline, not by the repository's lint gate.
+extend-exclude = [
+  "plugins/languages/python/fixtures",
+  "tests/fixtures",
+  "plugins/languages/python/src/polycodebench_lang_python/guest",
+]
 exclude = [
   "PolyCodeBench-Architecture-v1.md",
   "PolyCodeBench-Technical-Implementation-Spec-v1.md",
@@ -50,4 +57,11 @@ mypy_path = "packages/configuration/src"
 [[tool.mypy.overrides]]
 # Plain stdlib source shipped into sandbox images and run on POSIX only; covered by tests.
 module = "polycodebench_runner.guest_helper"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# Guest scripts are copied verbatim into the pinned runtime/evaluator images and execute inside
+# the POSIX sandbox against the image's own interpreter. They are plain stdlib by design (no
+# workspace imports, so the images stay self-contained) and are exercised by the image tests.
+module = "polycodebench_lang_python.guest.*"
 ignore_errors = true

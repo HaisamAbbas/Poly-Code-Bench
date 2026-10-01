@@ -97,6 +97,25 @@ The original Prompt 07 checks below are historical. Final review details are in 
 | `$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DATABASE_URL='<isolated local test DB>'; $env:PCB_MIGRATION_DATABASE_URL=$env:PCB_TEST_DATABASE_URL; .\.venv\Scripts\python.exe -m alembic -c packages/persistence/alembic.ini upgrade head` | PASS: applied durable scheduler revision `f17b6b04a237` and evaluation-cancellation revision `7b8cc92d13ea` to actual local PostgreSQL 17.6. The test database name is `pcb_prompt07_test`; credential-bearing values are not recorded. |
 | `$env:UV_CACHE_DIR='.cache/uv'; $env:PCB_TEST_DATABASE_URL='<isolated local test DB>'; $env:PCB_MIGRATION_DATABASE_URL=$env:PCB_TEST_DATABASE_URL; .\.venv\Scripts\python.exe -m alembic -c packages/persistence/alembic.ini check` | PASS: no schema drift detected. |
 | `Get-Content packages/persistence/sql/grant_permissions.sql -Raw | docker exec -i polycodebench-local-postgres-1 psql -v ON_ERROR_STOP=1 -U polycodebench -d pcb_prompt07_test` | PASS: applied idempotent scheduler table/column grants to the isolated database; the role-grant integration check confirms scheduler read/insert/finalize privileges and denied event deletion. |
+## Prompt 10 checks actually run (2026-10-01)
+
+All Python image and admission evidence is `development_sandbox` tier (local Docker), not a production worker.
+
+| Command / check | Result |
+|---|---|
+| `python scripts/build_python_images.py` | PASS: both images rebuilt with `docker build --network none`; the script verified the installed set against each lock and failed on drift. Runtime `sha256:beb3dd62e10b…`, evaluator `sha256:dd801029a063…`; identities and the plugin allowlist rewritten. A rebuild changes digests, so all manifests were resealed afterwards. |
+| `python scripts/python_task_tool.py seal-all` | PASS: all 12 pilot manifests resealed against the new image digests. |
+| `python scripts/python_admit_all.py` | PASS: 12/12 packages, 21–24 checks each, every variant executed in the pinned images. Reports in `.protected/reports/`. |
+| `python scripts/python_pilot_inventory.py --protected .protected/taskpacks/python-pilot --reports .protected/reports --output taskpacks/python-pilot/inventory.yaml` | PASS: 12 packages, 12 executable-admission-passed, clusters 12/12. |
+| `python scripts/python_conformance.py --report docs/implementation/evidence/prompt-10-conformance.json` | PASS: 14/14 cases across all 7 categories. |
+| `python -m pytest tests -q -p no:cacheprovider` | PASS: 346 passed, 136 skipped (Docker/PostgreSQL gated). |
+| `$env:PCB_TEST_DOCKER=1; python -m pytest tests/test_python_conformance_docker.py tests/test_python_guest.py -q` | PASS: 2 Docker conformance/admission tests passed in 594s; guest POSIX tests remain covered in-image. |
+| `python -m mypy --disable-error-code=import-untyped packages/plugins-api/src packages/evaluation/src plugins/languages/python/src` | PASS: 26 source files, strict, no issues. Guest scripts are covered by a documented `ignore_errors` override (D-10-09). |
+| `python -m ruff format --check .`; `python -m ruff check .` | PASS: 201 files formatted; lint clean. |
+| `python scripts/check_boundaries.py` | PASS. |
+| `python docs/implementation/verify_prompt00.py` | PASS: 14 REQ, 24 WP, 43 E2E, Prompts 00–34, 142 PCB tickets, owners/evidence, progress and source hashes. |
+| Network access during image build and during scored runs | NOT USED by design: the build runs with `--network none` from a hash-verified local wheelhouse and every plan declares `network: none`. |
+| Production execution tier; registry publication; live model/judge endpoints | NOT RUN: owner-deferred Prompt 06 cloud gate and Prompt 14/17 judge/pilot work. No cloud, registry or paid-provider action was taken. |
 | `uv run --locked --offline pytest -q -p no:cacheprovider --tb=short tests/test_jobs_postgres.py` | PASS, 7 passed; actual PostgreSQL 17.6, SeaweedFS 4.48 and Docker Linux engine 29.7.2. E2E-07/08 and development E2E-09 subcases passed. Exact setup keeps local database/object-store test variables and local-only credentials out of evidence files. |
 | `uv run --locked --offline --all-packages --group dev pytest -q -p no:cacheprovider --tb=short` | PASS, 75 passed in 24.35s with the same isolated local DB/object store and opt-in live Docker test enabled; see `docs/implementation/evidence/prompt-07-integration.json`. |
 | `uv run --locked --offline --package polycodebench-orchestration pcb-scheduler --help`; `uv run --locked --offline --package polycodebench-orchestration pcb-scheduler reap --limit 5` | PASS: registered scheduler CLI help and actual PostgreSQL expired-lease reaper invocation; no expired items were reported in the operator invocation. |

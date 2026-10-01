@@ -1,0 +1,28 @@
+{
+  "base_image": {
+    "digest": "sha256:540c902e99c384163b688bbd8b5b8520e94e7731b27f7bd0eaa56ae1960627ab",
+    "reference": "rust@sha256:540c902e99c384163b688bbd8b5b8520e94e7731b27f7bd0eaa56ae1960627ab"
+  },
+  "digest": "sha256:1c867f700d87fab5353cb1b8c9c59c1ebd43e8fc1449efc8f43b2ba130caabba",
+  "dockerfile_digest": "sha256:1d605885dfe38d7094ba80cb634530bc64bf3fe8e3af867547046ac28117ef90",
+  "kind": "rust_components_image",
+  "miri_components": [
+    "miri",
+    "rust-src"
+  ],
+  "miri_toolchain": "nightly-2026-09-30",
+  "note": "Prebuilt component image; the only step that uses a network. build_rust_images.py copies /usr/local/rustup out of it with --network none.",
+  "schema_version": 1,
+  "stable_components": [
+    "clippy",
+    "rustfmt"
+  ],
+  "tag": "pcb-rust-components:v1",
+  "tools": {
+    "cargo": "cargo 1.83.0 (5ffbef321 2024-10-29)",
+    "clippy": "clippy 0.1.83 (90b35a6 2024-11-26)",
+    "miri": "miri 0.1.0 (5c543b0b8c 2026-09-29)",
+    "rustc": "rustc 1.83.0 (90b35a623 2024-11-26)",
+    "rustfmt": "rustfmt 1.8.0-stable (90b35a6239 2024-11-26)"
+  }
+}

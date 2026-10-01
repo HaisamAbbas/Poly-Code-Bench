@@ -1,0 +1,146 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: conformance-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: python
+  secondary_languages: []
+  cluster_id: conformance-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:d152a411f5fff3c961967272f840cc0bef5279066ddeb33e03033a3c5edd680e
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - solution.py
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-python-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-01T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-python-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 10 authored conformance fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+  language_plugin_id: python
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:f3b87d4410263b7c814bb0afcf05f009ded356f56244f548a190e6886c1bd150
+  test_recipe_digest: sha256:5dd04aa6afbc91724ed7480808ef52812de02a2685881ec24207e4208b51041b
+  resource_class: local-development-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids:
+  - behaviour
+  - properties
+  hard_condition_ids:
+  - ordering-contract
+  required_outputs:
+  - solution.py
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - efficiency
+  - code_quality
+  - idiomatic
+  - robustness
+  evidence_owners: {}
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  performance_policy_id: top-words-workload-v1
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: top-words-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 60
+visible_files:
+- visible/repo/solution.py
+- visible/task.md
+- visible/tests/test_public.py
+hidden_files:
+- admission/alternative-sorted/solution.py
+- admission/exposure-rights.json
+- admission/faulty-ties/solution.py
+- admission/quality-defective/solution.py
+- admission/timeout-case/solution.py
+- admission/timeout-hard/solution.py
+- hidden/oracle.json
+- hidden/perf/workload.py
+- hidden/quality-plan.yaml
+- hidden/reference/solution.py
+- hidden/tests/test_acceptance.py
+- hidden/tests/test_properties.py
+- hidden/tests/test_robustness.py
+fixtures:
+- name: reference
+  variant: reference
+  solution_path: hidden/reference/solution.py
+  expectation: {}
+- name: faulty-ties
+  variant: faulty
+  solution_path: admission/faulty-ties/solution.py
+  expectation:
+    failing_cases:
+    - tests/test_acceptance.py::test_ties_break_alphabetically
+- name: alternative-sorted
+  variant: alternative
+  solution_path: admission/alternative-sorted/solution.py
+  expectation: {}
+- name: quality-defective
+  variant: quality_defective
+  solution_path: admission/quality-defective/solution.py
+  expectation:
+    expected_issue_families:
+    - mutable-default
+    - bare-except
+    - manual-counter
+- name: timeout-case
+  variant: timeout
+  solution_path: admission/timeout-case/solution.py
+  expectation:
+    expected_failure: candidate_timeout
+- name: timeout-hard
+  variant: timeout
+  solution_path: admission/timeout-hard/solution.py
+  expectation:
+    expected_failure: candidate_timeout

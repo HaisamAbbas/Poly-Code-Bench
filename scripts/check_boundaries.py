@@ -19,6 +19,7 @@ OWNERS = {
     "polycodebench_publication": "publication",
     "polycodebench_configuration": "configuration",
     "polycodebench_plugins_api": "plugins_api",
+    "polycodebench_lang_python": "lang_python",
 }
 ALLOWED = {
     "core": set(),
@@ -26,11 +27,12 @@ ALLOWED = {
     "persistence": {"core"},
     "orchestration": {"core", "services", "persistence", "runner"},
     "runner": {"core"},
-    "evaluation": {"core", "runner"},
+    "evaluation": {"core", "runner", "plugins_api"},
     "scoring": {"core"},
     "publication": {"core", "scoring"},
     "configuration": set(),
     "plugins_api": {"core"},
+    "lang_python": {"core", "plugins_api"},
 }
 FORBIDDEN_IMPORTS = {
     "core": ("fastapi", "typer", "sqlalchemy", "alembic", "openai", "anthropic", "boto3"),
@@ -40,17 +42,19 @@ FORBIDDEN_IMPORTS = {
 
 def main() -> int:
     violations: list[str] = []
+    members = [(path, path.name.replace("-", "_")) for path in (ROOT / "packages").glob("*")] + [
+        (path, "lang_" + path.name) for path in (ROOT / "plugins" / "languages").glob("*")
+    ]
     distributions = {
-        metadata["project"]["name"].replace("-", "_"): path.name.replace("-", "_")
-        for path in (ROOT / "packages").glob("*")
+        metadata["project"]["name"].replace("-", "_"): owner
+        for path, owner in members
         if (path / "pyproject.toml").exists()
         for metadata in [tomllib.loads((path / "pyproject.toml").read_text(encoding="utf-8"))]
     }
-    for path in (ROOT / "packages").glob("*"):
+    for path, declaring_package_owner in members:
         metadata_path = path / "pyproject.toml"
         if not metadata_path.exists():
             continue
-        declaring_package_owner = path.name.replace("-", "_")
         metadata = tomllib.loads(metadata_path.read_text(encoding="utf-8"))
         dependencies = metadata.get("project", {}).get("dependencies", [])
         for dependency in dependencies:
@@ -61,7 +65,8 @@ def main() -> int:
                     f"{metadata_path.relative_to(ROOT)} declares prohibited "
                     f"dependency {distribution}"
                 )
-    for path in (ROOT / "packages").rglob("*.py"):
+    sources = [*(ROOT / "packages").rglob("*.py"), *(ROOT / "plugins").rglob("*.py")]
+    for path in sources:
         module_owner = next(
             (key for prefix, key in OWNERS.items() if path.parts[-2].startswith(prefix)), None
         )

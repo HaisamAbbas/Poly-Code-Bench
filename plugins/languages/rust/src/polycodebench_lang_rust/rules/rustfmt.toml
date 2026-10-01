@@ -1,0 +1,4 @@
+# Rustfmt settings used for the `rustfmt --check` plan (Prompt 11).
+edition = "2021"
+max_width = 100
+newline_style = "Unix"

@@ -1,0 +1,105 @@
+{
+ "schema_version": 1,
+ "kind": "analysis_plan",
+ "plan_id": "python.analysis.bandit",
+ "image": "pcb-python-evaluator@sha256:51ed960867ac7fb6a17845ae6ab9312328a48d0e8b062eed66eb909398f085d4",
+ "image_digest": "sha256:51ed960867ac7fb6a17845ae6ab9312328a48d0e8b062eed66eb909398f085d4",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_capture.py",
+  "--stdout",
+  "out/bandit.json",
+  "--stderr",
+  "out/bandit.err",
+  "--",
+  "bandit",
+  "-q",
+  "-f",
+  "json",
+  "-c",
+  "/opt/pcb/rules/bandit.yaml",
+  "work/solution.py"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "PYTHONDONTWRITEBYTECODE": "1",
+  "PYTHONUNBUFFERED": "1"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/solution.py",
+   "role": "candidate",
+   "digest": null
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/bandit.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/bandit.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 1000,
+  "memory_bytes": 536870912,
+  "pids_limit": 128,
+  "disk_bytes": 134217728,
+  "timeout_seconds": 60,
+  "max_output_bytes": 1048576,
+  "network": "none"
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   1
+  ],
+  "error": [
+   2,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "bandit",
+  "version": "1.9.2",
+  "image_digest": "sha256:51ed960867ac7fb6a17845ae6ab9312328a48d0e8b062eed66eb909398f085d4",
+  "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+  "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-python-parsers-1"
+ },
+ "scope": [
+  "solution.py"
+ ],
+ "parser_id": "python-bandit",
+ "analyzer_id": "bandit",
+ "candidate_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+ "required": true,
+ "output_schema": "bandit-json-v1",
+ "evidence_ownership": {
+  "canonical-security-issue": "security"
+ },
+ "baseline_reusable": true
+}

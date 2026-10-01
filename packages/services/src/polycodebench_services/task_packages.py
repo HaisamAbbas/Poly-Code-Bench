@@ -99,12 +99,32 @@ class TaskIdentity(StrictModel):
     methodology_label: Literal["native", "adapted", "inspired", "independent"]
 
 
+class FixtureExpectation(StrictModel):
+    """What a suite-mode fixture must demonstrate (declared before it is ever executed)."""
+
+    failing_cases: tuple[str, ...] = ()
+    expected_issue_families: tuple[str, ...] = ()
+    expected_failure: Literal["wrong_behavior", "candidate_timeout"] | None = None
+
+
 class FixtureCase(StrictModel):
+    """One authored solution variant.
+
+    Stdio mode (Prompt 05) pairs a program with an input and exact expected output. Suite mode
+    (language plugins, Prompt 10) leaves both paths unset: the solution is judged by the hidden
+    test inventory and analyzers, and ``expectation`` states the intended outcome.
+    """
+
     name: str = Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,63}$")
-    variant: Literal["reference", "faulty", "alternative"]
+    variant: Literal["reference", "faulty", "alternative", "quality_defective", "timeout"]
     solution_path: str
-    input_path: str
-    expected_output_path: str
+    input_path: str | None = None
+    expected_output_path: str | None = None
+    expectation: FixtureExpectation | None = None
+
+    @property
+    def suite_mode(self) -> bool:
+        return self.input_path is None and self.expected_output_path is None
 
 
 class TaskPackageManifest(StrictModel):
@@ -152,17 +172,32 @@ class TaskPackageManifest(StrictModel):
             path
             for fixture in self.fixtures
             for path in (fixture.solution_path, fixture.input_path, fixture.expected_output_path)
+            if path is not None
         }
         if not fixture_paths <= set(self.hidden_files) | set(self.visible_files):
             raise ValueError("fixture references a file not declared in the package")
         for fixture in self.fixtures:
             if fixture.solution_path not in self.hidden_files:
                 raise ValueError("fixture solutions must remain in the hidden bundle")
-            if fixture.expected_output_path not in self.hidden_files:
+            if (fixture.input_path is None) != (fixture.expected_output_path is None):
+                raise ValueError("stdio fixtures need both an input and an expected output")
+            if fixture.suite_mode and fixture.expectation is None:
+                raise ValueError("suite fixtures must declare their expected outcome")
+            if not fixture.suite_mode and fixture.variant in {"quality_defective", "timeout"}:
+                raise ValueError("quality_defective and timeout variants are suite-mode only")
+            if (
+                fixture.expected_output_path is not None
+                and fixture.expected_output_path not in self.hidden_files
+            ):
                 raise ValueError("fixture expected outputs must remain in the hidden bundle")
-        variants = [case.variant for case in self.fixtures]
-        if set(variants) != {"reference", "faulty", "alternative"}:
+        variants = {case.variant for case in self.fixtures}
+        if not {"reference", "faulty", "alternative"} <= variants:
             raise ValueError("fixtures must include reference, faulty, and alternative variants")
+        if len({case.suite_mode for case in self.fixtures}) != 1:
+            raise ValueError("a package uses either stdio or suite fixtures, not both")
+        names = [case.name for case in self.fixtures]
+        if len(names) != len(set(names)):
+            raise ValueError("fixture names must be unique")
         if self.rights.redistribution_status not in {"cleared", "authored_fixture"}:
             raise ValueError("source rights are not cleared for admission")
         if self.task.methodology_label == "native" and self.rights.source_url is None:

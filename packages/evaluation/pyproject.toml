@@ -3,10 +3,15 @@ name = "polycodebench-evaluation"
 version = "0.1.0"
 description = "PolyCodeBench evidence collection and evaluator ownership boundary"
 requires-python = ">=3.12,<3.13"
-dependencies = ["polycodebench-core==0.1.0", "polycodebench-runner==0.1.0"]
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "polycodebench-plugins-api==0.1.0",
+  "polycodebench-runner==0.1.0",
+]
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }
+polycodebench-plugins-api = { workspace = true }
 polycodebench-runner = { workspace = true }
 
 [build-system]

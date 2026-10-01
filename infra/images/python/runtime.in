@@ -1,0 +1,3 @@
+# Direct dependencies of the PolyCodeBench Python runtime image (solve and test guests).
+pytest==9.0.2
+hypothesis==6.150.2

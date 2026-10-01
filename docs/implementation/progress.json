@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "project": "PolyCodeBench",
-  "last_completed_prompt": "05",
-  "active_prompt": "09",
-  "active_scope": "WP-09: single-shot and standard-agent solve sessions, bounded tools, checkpoints, extraction and candidate freeze (implemented; fixture model, development sandbox)",
+  "last_completed_prompt": "10",
+  "active_prompt": "11",
+  "active_scope": "WP-10 complete: Python language plugin on the shared extension interfaces, pinned offline runtime/evaluator images, build/test/symbol/analyzer/performance plans, diagnostic and orthogonal idiom profiles, and 12 independently authored pilot clusters with executable admission (development sandbox).",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "done",
@@ -16,7 +16,7 @@
     "phase_8": "not_started"
   },
   "implementation_status": "in_progress",
-  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; prompt_08_partial_hosted_adapters_untested; prompt_09_done_fixture_model_dev_sandbox; E2E-07_08_passed; E2E-10_12_passed_fixture_transport; E2E-11_gateway_and_controller_restart_subcases_passed; E2E-13_14_passed_fixture_model; phase_2_in_progress",
+  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; prompt_08_partial_hosted_adapters_untested; prompt_09_done_fixture_model_dev_sandbox; E2E-07_08_passed; E2E-10_12_passed_fixture_transport; E2E-11_gateway_and_controller_restart_subcases_passed; E2E-13_14_passed_fixture_model; prompt_10_done_development_sandbox_quality_admission_pending; E2E-04_python_subcase_passed_12_of_12_clusters; E2E-15_python_conformance_14_of_14_passed; E2E-16_python_analyzer_semantics_passed; phase_2_in_progress",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
@@ -41,9 +41,9 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 390
+    "application_tests_run": 346
   },
-  "exact_next_action": "Prompt 10 — Implement Python support (language plugin, toolchain image, build/test/analyzers) using the solve candidates frozen by Prompt 09. Before native-binary languages, decide the sandbox execution policy for noexec workspaces (D-09-05). Prompt 06 production E2E-05/06, Prompt 07 E2E-09 ranked-release exclusion, Prompt 08 hosted-adapter live checks and the Prompt 17 live pilot remain separately pending.",
+  "exact_next_action": "Prompt 11 - Implement Rust support (WP-11: Rust plugin through the same language contracts, pinned toolchain, Miri/clippy semantics, pilot fixtures).",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
@@ -55,7 +55,7 @@
     "07": "partial",
     "08": "partial",
     "09": "done",
-    "10": "not_started",
+    "10": "done",
     "11": "not_started",
     "12": "not_started",
     "13": "not_started",
@@ -243,7 +243,10 @@
   "prompt_06_cloud_gate": {
     "status": "deferred_by_owner",
     "reason": "User reports cloud access is unavailable for now.",
-    "production_e2e": ["E2E-05", "E2E-06"],
+    "production_e2e": [
+      "E2E-05",
+      "E2E-06"
+    ],
     "resume_when": "Authorized AWS target, supervisor identity, reviewed AMI/image manifest, private network, explicit budget, Terraform and AWS CLI are available.",
     "no_cloud_actions_taken": true
   },
@@ -308,7 +311,7 @@
     ],
     "no_paid_or_remote_product_actions": true
   },
-  "latest_done_prompt": "09",
+  "latest_done_prompt": "10",
   "prompt_08": {
     "date": "2026-09-30",
     "migration": "9d3a71c05e24",
@@ -346,6 +349,28 @@
     "evidence": [
       "docs/implementation/evidence/prompt-09-integration.json"
     ],
+    "no_paid_or_remote_product_actions": true
+  },
+  "prompt_10": {
+    "date": "2026-10-01",
+    "images": {
+      "runtime": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "evaluator": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99"
+    },
+    "tests": {
+      "full_suite": "346 passed, 136 skipped",
+      "mypy_strict_new_modules": "26 files, no issues",
+      "python_conformance_cases": "14/14",
+      "executable_admission": "12/12 clusters"
+    },
+    "fixes_applied": [
+      "manual-counter detector missed the len() counting-loop idiom (D-10-03)",
+      "string-concat-in-loop detector missed str()/concat RHS (D-10-03)",
+      "tool cache directories sealed into archive-path-guard hidden bundle (D-10-04)",
+      "ledger-stream defective variant lacked its declared index-loop family (D-10-05)",
+      "rate-limiter defective variant declared a mutable default it never mutated (D-10-05)"
+    ],
+    "quality_admission": "pending: Prompts 12-15, production execution tier, curator approval and freeze, owner rights confirmation",
     "no_paid_or_remote_product_actions": true
   }
 }

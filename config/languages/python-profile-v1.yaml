@@ -1,0 +1,84 @@
+schema_version: 1
+kind: python_profile
+profile_version: python-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.python
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity
+# means not_applicable, never a perfect score. Syntax counts earn no bonus and one canonical
+# issue is counted once however many tools report it (profile diagnostics may reuse evidence;
+# the composite has exactly one owner per issue).
+applicability_rules:
+  - {rule_id: always, description: Applies to every Python task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: typing-expected, description: Counts only when the task contract expects type hints, opportunity_detector: task-declared, requires_task_opportunity: type_hints}
+  - {rule_id: streaming-expected, description: Counts only when the task declares a streaming opportunity, opportunity_detector: task-declared, requires_task_opportunity: performance_awareness}
+ownership:
+  canonical-security-issue: security
+  measured-runtime-regression: efficiency
+  resource-cleanup-failure: robustness
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- context scanner (AST, evaluated in context) -------------------------------------------
+  - {check_id: python.context.mutable-default-shared, items: [readability_idioms], owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: mutable-default}
+  - {check_id: python.context.mutable-default-benign, items: [readability_idioms], owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: mutable-default}
+  - {check_id: python.ruff.b006, items: [readability_idioms], owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: mutable-default}
+  - {check_id: python.context.missing-annotation, items: [type_hints], owner: null, applicability: typing-expected, equivalence_family: missing-annotation}
+  - {check_id: python.mypy.no-untyped-def, items: [type_hints], owner: null, applicability: typing-expected, equivalence_family: missing-annotation}
+  - {check_prefix: python.mypy., items: [type_hints], owner: null, applicability: typing-expected}
+  - {check_id: python.context.aggregate-over-list-comprehension, items: [readability_idioms, performance_awareness], idiom_item: iteration_laziness, owner: null, applicability: item-opportunity}
+  - {check_id: python.context.range-len-index-loop, items: [readability_idioms], idiom_item: iteration_laziness, owner: null, applicability: item-opportunity}
+  - {check_id: python.context.readlines-loads-everything, items: [performance_awareness], idiom_item: iteration_laziness, owner: null, applicability: streaming-expected}
+  - {check_id: python.context.manual-counter, items: [stdlib_use], idiom_item: stdlib_api_choice, owner: null, applicability: item-opportunity}
+  - {check_id: python.context.string-concat-in-loop, items: [performance_awareness, stdlib_use], idiom_item: stdlib_api_choice, owner: null, applicability: item-opportunity}
+  - {check_id: python.context.sequence-concat-in-loop, items: [performance_awareness], owner: null, applicability: item-opportunity}
+  - {check_id: python.context.membership-in-list-inside-loop, items: [performance_awareness], owner: null, applicability: item-opportunity}
+  - {check_id: python.context.bare-except, items: [error_handling], owner: null, applicability: item-opportunity, equivalence_family: bare-except}
+  - {check_id: python.ruff.e722, items: [error_handling], owner: null, applicability: item-opportunity, equivalence_family: bare-except}
+  - {check_id: python.context.swallowed-broad-exception, items: [error_handling], owner: null, applicability: item-opportunity}
+  - {check_id: python.context.generic-exception-raised, items: [error_handling], owner: null, applicability: item-opportunity}
+  - {check_id: python.context.assert-validation, items: [error_handling], owner: null, applicability: item-opportunity}
+  - {check_id: python.context.open-without-context-manager, items: [error_handling], owner: robustness, applicability: item-opportunity, equivalence_family: open-without-context-manager}
+  - {check_id: python.ruff.sim115, items: [error_handling], owner: robustness, applicability: item-opportunity, equivalence_family: open-without-context-manager}
+  - {check_id: python.context.lock-acquire-without-release-guard, items: [error_handling], owner: robustness, applicability: item-opportunity}
+  # --- Ruff by rule family ----------------------------------------------------------------------
+  - {check_prefix: python.ruff.ble, items: [error_handling], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.try, items: [error_handling], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.perf, items: [performance_awareness], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.sim, items: [readability_idioms], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.c4, items: [readability_idioms], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.pie, items: [readability_idioms], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.ret, items: [readability_idioms], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.up, items: [readability_idioms], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff.ruf, items: [readability_idioms], owner: null, applicability: item-opportunity}
+  - {check_prefix: python.ruff., items: [lint_style], owner: null, applicability: always}
+  # --- security evidence (single composite owner; no diagnostic item) ---------------------------
+  - {check_id: python.bandit.b602, owner: security, applicability: always, equivalence_family: subprocess-shell}
+  - {check_id: python.bandit.b604, owner: security, applicability: always, equivalence_family: subprocess-shell}
+  - {check_id: python.bandit.b605, owner: security, applicability: always, equivalence_family: subprocess-shell}
+  - {check_id: python.semgrep.subprocess-shell-true, owner: security, applicability: always, equivalence_family: subprocess-shell}
+  - {check_id: python.bandit.b307, owner: security, applicability: always, equivalence_family: dynamic-code-exec}
+  - {check_id: python.bandit.b102, owner: security, applicability: always, equivalence_family: dynamic-code-exec}
+  - {check_id: python.semgrep.eval-or-exec, owner: security, applicability: always, equivalence_family: dynamic-code-exec}
+  - {check_id: python.bandit.b301, owner: security, applicability: always, equivalence_family: unsafe-deserialization}
+  - {check_id: python.bandit.b302, owner: security, applicability: always, equivalence_family: unsafe-deserialization}
+  - {check_id: python.bandit.b506, owner: security, applicability: always, equivalence_family: unsafe-deserialization}
+  - {check_id: python.semgrep.unsafe-deserialization, owner: security, applicability: always, equivalence_family: unsafe-deserialization}
+  - {check_id: python.bandit.b105, owner: security, applicability: always, equivalence_family: hardcoded-credential}
+  - {check_id: python.bandit.b106, owner: security, applicability: always, equivalence_family: hardcoded-credential}
+  - {check_id: python.bandit.b107, owner: security, applicability: always, equivalence_family: hardcoded-credential}
+  - {check_id: python.semgrep.hardcoded-credential, owner: security, applicability: always, equivalence_family: hardcoded-credential}
+  - {check_id: python.bandit.b202, owner: security, applicability: always, equivalence_family: tarfile-extract}
+  - {check_id: python.semgrep.tarfile-extractall, owner: security, applicability: always, equivalence_family: tarfile-extract}
+  - {check_id: python.bandit.b108, owner: security, applicability: always, equivalence_family: insecure-temp-file}
+  - {check_id: python.bandit.b306, owner: security, applicability: always, equivalence_family: insecure-temp-file}
+  - {check_id: python.semgrep.insecure-temp-file, owner: security, applicability: always, equivalence_family: insecure-temp-file}
+  - {check_id: python.bandit.b303, owner: security, applicability: always, equivalence_family: weak-hash}
+  - {check_id: python.bandit.b324, owner: security, applicability: always, equivalence_family: weak-hash}
+  - {check_id: python.semgrep.weak-hash, owner: security, applicability: always, equivalence_family: weak-hash}
+  - {check_id: python.semgrep.path-traversal-join, owner: security, applicability: always, equivalence_family: path-traversal}
+  - {check_prefix: python.bandit., owner: security, applicability: always}
+  - {check_prefix: python.semgrep., owner: security, applicability: always}
+  - {check_prefix: python.dependency., owner: security, applicability: always}

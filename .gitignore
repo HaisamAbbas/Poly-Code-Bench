@@ -13,3 +13,7 @@ pytest-cache-files-*/
 .env
 .env.*
 !.env.example
+
+# Offline wheelhouses and protected task assets are local, never committed (Prompt 10)
+.wheelhouse/
+.protected/

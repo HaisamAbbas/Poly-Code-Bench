@@ -7,6 +7,7 @@ members = [
     "polycodebench-configuration",
     "polycodebench-core",
     "polycodebench-evaluation",
+    "polycodebench-lang-python",
     "polycodebench-orchestration",
     "polycodebench-persistence",
     "polycodebench-plugins-api",
@@ -259,13 +260,32 @@ version = "0.1.0"
 source = { editable = "packages/evaluation" }
 dependencies = [
     { name = "polycodebench-core" },
+    { name = "polycodebench-plugins-api" },
     { name = "polycodebench-runner" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "polycodebench-core", editable = "packages/core" },
+    { name = "polycodebench-plugins-api", editable = "packages/plugins-api" },
     { name = "polycodebench-runner", editable = "packages/runner" },
+]
+
+[[package]]
+name = "polycodebench-lang-python"
+version = "0.1.0"
+source = { editable = "plugins/languages/python" }
+dependencies = [
+    { name = "polycodebench-core" },
+    { name = "polycodebench-plugins-api" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "polycodebench-core", editable = "packages/core" },
+    { name = "polycodebench-plugins-api", editable = "packages/plugins-api" },
+    { name = "pyyaml", specifier = "==6.0.3" },
 ]
 
 [[package]]
@@ -314,10 +334,14 @@ version = "0.1.0"
 source = { editable = "packages/plugins-api" }
 dependencies = [
     { name = "polycodebench-core" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "polycodebench-core", editable = "packages/core" }]
+requires-dist = [
+    { name = "polycodebench-core", editable = "packages/core" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+]
 
 [[package]]
 name = "polycodebench-publication"

@@ -1,0 +1,804 @@
+schema_version: 1
+kind: python_pilot_inventory
+note: 'Pilot inventory of authored Python clusters. Hidden bundles, references, variants and tests live
+  in protected storage (git-ignored); only identities and digests are here. No task is fully admitted
+  or frozen: quality admission awaits Prompts 12-15 and the curator/owner approvals listed in pending_gates.'
+target_independent_clusters: 12
+authored_clusters: 12
+executable_admission_passed: 12
+fully_admitted: 0
+frozen: 0
+dimension_coverage:
+  code_quality: 12
+  correctness: 12
+  efficiency: 5
+  idiomatic: 8
+  robustness: 9
+  security: 4
+typing_required_tasks: 4
+pending_gates:
+- generic-evaluator-stage-integration (Prompt 12)
+- performance-baseline-canary-and-paired-measurement (Prompt 13)
+- judge-anchors-and-human-calibration (Prompt 14)
+- deterministic-scoring-replay-and-golden-calculations (Prompt 15)
+- production-worker-execution-tier (Prompt 06 owner-deferred)
+- curator-approval-and-task-freeze
+- owner-rights-confirmation
+- hidden-lane-object-store-registration-at-freeze
+tasks:
+- slug: archive-path-guard
+  task_id: pilot-archive-path-guard
+  version: 1
+  cluster_id: pilot-archive-path-guard-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - security
+  - code_quality
+  - robustness
+  typing_expectation: required
+  opportunity_tags:
+  - security_surface
+  opportunities:
+    readability_idioms: 1
+    type_hints: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - mypy
+  - context
+  hidden_case_counts:
+    edge: 13
+    example: 3
+    property: 2
+    robustness: 3
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:df4c666334a0bb9c06a897bb11eb66549f2721a0f9547b4f42ad1ba1c20eda23
+  manifest_digest: sha256:251099ec0f7c5cf387047321ccaf16c257e072095ca22a78c30063e1cecebde4
+  visible_bundle_digest: sha256:4e48968f951501f0731d58d2344dd80368c342fb5ec0395117695c7c092b33b0
+  hidden_bundle_digest: sha256:0da7ec42a04681cd4671f38efa1a96fa16ae52fdf59981f696751cc30055c22e
+  protected_location: .protected/taskpacks/python-pilot/archive-path-guard
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not performed against external corpora or search engines. The author only
+      checked from memory that the exact rules are not a known benchmark problem; that is not evidence
+      of absence. The reference was checked with mypy --strict only as part of admission.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:640e9b1988eb0405f74c12fd5789399ecb308d6956e57acb75b22ccb8a42726e
+    report_package_digest: sha256:df4c666334a0bb9c06a897bb11eb66549f2721a0f9547b4f42ad1ba1c20eda23
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: build-scheduler
+  task_id: pilot-build-scheduler
+  version: 1
+  cluster_id: pilot-build-scheduler-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - efficiency
+  - code_quality
+  - idiomatic
+  typing_expectation: none
+  opportunity_tags: []
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    performance_awareness: 1
+    stdlib_api_choice: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 9
+    example: 6
+    property: 3
+  variant_counts:
+    alternative: 1
+    faulty: 2
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales:
+  - 2000
+  - 20000
+  - 80000
+  package_digest: sha256:69bdcea83c9e6e477567d33f6913aaada4c9e17197540f53619e147678327fdd
+  manifest_digest: sha256:6e378c7b7bb6a73f2ad1b6dffe78551f19b63ce5871a012f36d1a0ef02c0701b
+  visible_bundle_digest: sha256:d20726e94a72715db21ff79ee92c67b14f89e8b86d66c0fdebbddc0b657c7da3
+  hidden_bundle_digest: sha256:e46d12edd9864f7b600a9b06f7429f8df900ba16d46794fd57c009e85d9f8d02
+  protected_location: .protected/taskpacks/python-pilot/build-scheduler
+  exposure:
+    first_public_at: null
+    public_exposure_review: No search against external corpora, benchmark lists or public code was performed;
+      originality rests on the author's knowledge only. Generic topological scheduling is a well-known
+      topic, the specific rules are invented.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:457f60a93f3b7ed4174d230d8ce55fdb407f79e1126d199f84ee2f6a19755bf8
+    report_package_digest: sha256:69bdcea83c9e6e477567d33f6913aaada4c9e17197540f53619e147678327fdd
+    execution_tier: development_sandbox
+    checks_passed: 21
+    checks_total: 21
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: event-window-stats
+  task_id: pilot-event-window-stats
+  version: 1
+  cluster_id: pilot-event-window-stats-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: pilot-python
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - efficiency
+  - code_quality
+  - idiomatic
+  - robustness
+  typing_expectation: none
+  opportunity_tags:
+  - streaming
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 2
+    error_handling: 1
+    lint_style: 1
+    performance_awareness: 2
+    iteration_laziness: 2
+    stdlib_api_choice: 2
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 6
+    example: 10
+    property: 2
+    robustness: 3
+  variant_counts:
+    alternative: 2
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales:
+  - 2000
+  - 10000
+  - 40000
+  package_digest: sha256:1611723a1c650ff6e1ebe86958d1f0a61735dae803bc1bf7ec3216e9f15ed198
+  manifest_digest: sha256:05e49f6a3d1ab4e244e62854dbf2589b3724bd34d8ca8d2aa542da0b4e50e82a
+  visible_bundle_digest: sha256:c95c6c1bfb9a9b036401675d3f2cc732692df7caf9a200025cdd216c4c23925a
+  hidden_bundle_digest: sha256:f57c00eb5345de5d409e7e422d5bf39313d0321f02b5221f369ff34b6fefc9cf
+  protected_location: .protected/taskpacks/python-pilot/event-window-stats
+  exposure:
+    first_public_at: null
+    public_exposure_review: No search against external corpora, benchmarks or the web was performed. The
+      author only compared the task against the fixture layout in the repository and relied on having
+      invented the rules; sliding-window streaming problems are common in general, so overlap with existing
+      exercises is possible but unchecked.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:d1ed8af4542b6de71c26244f85d78bfdcf03436264f5c02e4130bab14ad9c16b
+    report_package_digest: sha256:1611723a1c650ff6e1ebe86958d1f0a61735dae803bc1bf7ec3216e9f15ed198
+    execution_tier: development_sandbox
+    checks_passed: 24
+    checks_total: 24
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: expr-evaluator
+  task_id: pilot-python-expr-evaluator
+  version: 1
+  cluster_id: pilot-python-expr-evaluator-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - security
+  - code_quality
+  - idiomatic
+  - robustness
+  typing_expectation: required
+  opportunity_tags:
+  - security_surface
+  opportunities:
+    readability_idioms: 1
+    type_hints: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    performance_awareness: 1
+    data_protocol_modeling: 1
+    stdlib_api_choice: 1
+  required_analyzers:
+  - ruff
+  - mypy
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 9
+    example: 19
+    property: 7
+    robustness: 8
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:6e3994bbcc054956ed1051d93b03bbc50f5314449fdb87d1a4dbd9cfc19e27eb
+  manifest_digest: sha256:dd769ddd1d8b64177565d2a3a6e9c7ea40bf7279006ac527beddc3fe59ce5f38
+  visible_bundle_digest: sha256:bc23cca6a4397dd5993c0c65c2e463543ffbf9c568f25e3231da3036c2d784e6
+  hidden_bundle_digest: sha256:a570ee0a8a2d9b098760fa7564dda7d15084b4972c78bbcb98c8b002c4dcdddd
+  protected_location: .protected/taskpacks/python-pilot/expr-evaluator
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not performed against any external corpus or search index. The only check
+      made was the author's own judgement that the rules are bespoke; similarity to generic calculator-parsing
+      exercises in the wild is possible and was not measured.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:c5431182014ecf5bb68833555d9b0186c97147a535ed45b9f97c0004f53cda96
+    report_package_digest: sha256:6e3994bbcc054956ed1051d93b03bbc50f5314449fdb87d1a4dbd9cfc19e27eb
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: interval-calendar
+  task_id: pilot-interval-calendar
+  version: 1
+  cluster_id: pilot-interval-calendar-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - efficiency
+  - code_quality
+  - idiomatic
+  typing_expectation: none
+  opportunity_tags: []
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    performance_awareness: 1
+    iteration_laziness: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 9
+    example: 4
+    property: 2
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales:
+  - 2000
+  - 20000
+  - 60000
+  package_digest: sha256:3a40c69e26a245e42c4b7a3fbfd26ad7c58bcfa2bd4390a0fd1e134e8cb2f3f0
+  manifest_digest: sha256:492770e3aa33274ea42b1867276c9dfca14f66ac9fc111de5bea1be67db4a1a6
+  visible_bundle_digest: sha256:aa6f175c6e8e7a92e3494c81ca5396ad635f278490fd2c8ef5322b6e9acb9c8d
+  hidden_bundle_digest: sha256:c9c40862a2c1727f53a43e47cf7ac2f7cecef59163365256f23813d212f74db5
+  protected_location: .protected/taskpacks/python-pilot/interval-calendar
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not performed against external corpora or search engines. The author only
+      checked from memory that the exact rules are not a known benchmark problem; that is not evidence
+      of absence.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:013c31958d1cff5d3410390ca840df98fc767d1b476f0cbafff024090e29920a
+    report_package_digest: sha256:3a40c69e26a245e42c4b7a3fbfd26ad7c58bcfa2bd4390a0fd1e134e8cb2f3f0
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: ledger-stream
+  task_id: pilot-ledger-stream
+  version: 1
+  cluster_id: pilot-ledger-stream-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - efficiency
+  - code_quality
+  - idiomatic
+  - robustness
+  typing_expectation: none
+  opportunity_tags:
+  - streaming
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    performance_awareness: 1
+    iteration_laziness: 1
+    stdlib_api_choice: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 12
+    example: 4
+    property: 3
+    robustness: 2
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales:
+  - 2000
+  - 20000
+  - 60000
+  package_digest: sha256:92c91d1db549254706794569299c13327ac6292d1fb5ab3ad9921633338b5a94
+  manifest_digest: sha256:c6421d3641dbf57465ab98b708e4c9d119be2b09c557d44b4890e62cc4b42f33
+  visible_bundle_digest: sha256:c93f5113f51f52f20b1e3f8f27bba09f320fd65f144273caf61df95a36d13103
+  hidden_bundle_digest: sha256:e7f52049aa0857bc248b84c97a4e9c75cafbacc9a91390b530ba16cd742a2190
+  protected_location: .protected/taskpacks/python-pilot/ledger-stream
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not performed against external corpora or search engines. The author only
+      checked from memory that the exact format is not a known benchmark problem; that is not evidence
+      of absence.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:e1be8872b483a4831b300454134b2e90e1518c57d50cdf32c6a9ebab5b31c55a
+    report_package_digest: sha256:92c91d1db549254706794569299c13327ac6292d1fb5ab3ad9921633338b5a94
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: query-filter-sql
+  task_id: pilot-query-filter-sql
+  version: 1
+  cluster_id: pilot-query-filter-sql-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: pilot-python
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - security
+  - code_quality
+  - robustness
+  typing_expectation: none
+  opportunity_tags:
+  - security_surface
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 3
+    lint_style: 1
+    data_protocol_modeling: 1
+    stdlib_api_choice: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 10
+    example: 16
+    property: 2
+    robustness: 3
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:a10263e1c2f37ced0adfe6f33421845aa11eae30f44c055a59a86654fe345290
+  manifest_digest: sha256:4fde2a038fa62231b32444eb4d3761632bc0b2141e6f5d8822e34c2a725f9f22
+  visible_bundle_digest: sha256:5772dc112d28360b07584f42abc7fb324d9cd6fd1cc658a5033561490c39a637
+  hidden_bundle_digest: sha256:689c3685b1b78580b0c1f8a06db151b7589c16279197c5d91cf334dc35564987
+  protected_location: .protected/taskpacks/python-pilot/query-filter-sql
+  exposure:
+    first_public_at: null
+    public_exposure_review: No search against external corpora, benchmarks or the web was performed. The
+      author only compared the task against the fixture layout in the repository and relied on having
+      invented the rules; resemblance to existing query-builder libraries is possible but unchecked.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:267988f4e5c6d0363bcc55a0eb1ac8f944078e9240be2855c8b36ab2e22655e7
+    report_package_digest: sha256:a10263e1c2f37ced0adfe6f33421845aa11eae30f44c055a59a86654fe345290
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: rate-limiter
+  task_id: pilot-python-rate-limiter
+  version: 1
+  cluster_id: pilot-python-rate-limiter-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - efficiency
+  - code_quality
+  - robustness
+  typing_expectation: required
+  opportunity_tags:
+  - streaming
+  opportunities:
+    readability_idioms: 1
+    type_hints: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    performance_awareness: 1
+  required_analyzers:
+  - ruff
+  - mypy
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 15
+    example: 23
+    property: 3
+    robustness: 4
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales:
+  - 3000
+  - 20000
+  - 60000
+  package_digest: sha256:4bb22d5c0ff0a53941c0ce59769ae4ae1fc8680e8ff0a0ddc25839a012b1d32a
+  manifest_digest: sha256:e4e334fb9c59572ae4e43c324d70fe54daba8b44c9d79bfd391ee98a9cf83968
+  visible_bundle_digest: sha256:1d8841be30e6efca8be528843b84fc745f548f87aca22a58f55f66f5b7591c13
+  hidden_bundle_digest: sha256:879cc2b3f60c8a8b49637a1844b077508775057b0edd3a02f6cba924d09e2572
+  protected_location: .protected/taskpacks/python-pilot/rate-limiter
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not performed against any external corpus or search index. The only check
+      made was the author's own judgement that the concrete rules (global high-water clock, eviction semantics,
+      API) are bespoke; similarity to public rate-limiter exercises was not measured.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:ad458d6f01b79326f59e6791e48ac006141c6321e63712be376933c047f4fb4e
+    report_package_digest: sha256:4bb22d5c0ff0a53941c0ce59769ae4ae1fc8680e8ff0a0ddc25839a012b1d32a
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: retry-policy
+  task_id: pilot-retry-policy
+  version: 1
+  cluster_id: pilot-retry-policy-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: pilot-python
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  typing_expectation: required
+  opportunity_tags: []
+  opportunities:
+    readability_idioms: 1
+    type_hints: 2
+    stdlib_use: 1
+    error_handling: 3
+    lint_style: 1
+    context_resource_abstraction: 2
+    data_protocol_modeling: 2
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  - mypy
+  hidden_case_counts:
+    edge: 8
+    example: 26
+    property: 2
+    robustness: 7
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:1c7b172d8047012cff420e54093e7bdcbaa531e971d2d91ce4a97b453d364f11
+  manifest_digest: sha256:9e823041e50e0d3f91a7e6cc3ab0baa5a4e2a2929407d67e53cd8da4c0b0995c
+  visible_bundle_digest: sha256:6b53f9f8bb08afb42e0197b520743375ea070635d541e35324aba834180be82b
+  hidden_bundle_digest: sha256:12c532ee6def433e90e5bded52418ff0061d666ca2a49cc23456a53630094437
+  protected_location: .protected/taskpacks/python-pilot/retry-policy
+  exposure:
+    first_public_at: null
+    public_exposure_review: No search against external corpora, benchmarks or the web was performed. The
+      author only compared the task against the fixture layout in the repository and relied on having
+      invented the rules; retry-with-backoff helpers are a common pattern in general, so resemblance to
+      existing libraries (for example their delay formulas) is possible but unchecked.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:5997647d359854acaf19f8014736830288a26d0873701d4fba5b6f4d70c7b750
+    report_package_digest: sha256:1c7b172d8047012cff420e54093e7bdcbaa531e971d2d91ce4a97b453d364f11
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: safe-template
+  task_id: pilot-safe-template
+  version: 1
+  cluster_id: pilot-safe-template-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - security
+  - code_quality
+  - robustness
+  typing_expectation: none
+  opportunity_tags:
+  - security_surface
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    stdlib_api_choice: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 15
+    example: 14
+    property: 3
+    robustness: 10
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:c05438910228d4906f5e75b235b57c16f4c5fb7022f16630a57ba7f70f05a6ca
+  manifest_digest: sha256:252a102b0a9211b26fdb3fe0d2180ccdc07c0d97f01633bf0a20239c70df0a57
+  visible_bundle_digest: sha256:51c3b3ef1fa7a410c84bbb6349cd97a4e62d35b05239341f0ce6c1af875418e1
+  hidden_bundle_digest: sha256:66d4f633eb91b99a8365bf906a3eec885ca066abe1aae3770aa95e5c664f4890
+  protected_location: .protected/taskpacks/python-pilot/safe-template
+  exposure:
+    first_public_at: null
+    public_exposure_review: No search against external corpora, benchmark lists or public code was performed;
+      originality rests on the author's knowledge only. Template engines are a common topic in general,
+      the specific rules are invented.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:b7a4de7e5c362068f58f4a89179a80475e794a6ce96d0a519e28afd66194da0b
+    report_package_digest: sha256:c05438910228d4906f5e75b235b57c16f4c5fb7022f16630a57ba7f70f05a6ca
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: ttl-cache
+  task_id: pilot-ttl-cache
+  version: 1
+  cluster_id: pilot-ttl-cache-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  typing_expectation: none
+  opportunity_tags: []
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    stdlib_api_choice: 1
+    data_protocol_modeling: 1
+    context_resource_abstraction: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 2
+    example: 17
+    property: 2
+    robustness: 9
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:63a7c1d8cc1754f5a58b90a96e7da72c2ac3b6f41fa7746cd968be9dd2410d11
+  manifest_digest: sha256:7379d8929a398fb3a54818a4ca75e60983c35136e35cc173e9a11386cc99f05f
+  visible_bundle_digest: sha256:285c332a1f768785a3220cfeb4d4735c99ac39fde7d64689b90f88e0ddcb0e2f
+  hidden_bundle_digest: sha256:7a18902ef2ff8e4dcc58e7c7026226bf9353541bf6a0e57265a057161bb314ea
+  protected_location: .protected/taskpacks/python-pilot/ttl-cache
+  exposure:
+    first_public_at: null
+    public_exposure_review: No search against external corpora, benchmark lists or public code was performed;
+      originality rests on the author's knowledge only. TTL/LRU caches are a common topic in general,
+      the specific rules are invented.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:917d9aae361f874f7b181498f82ea630647d35b3be2561170d731635441ea4d8
+    report_package_digest: sha256:63a7c1d8cc1754f5a58b90a96e7da72c2ac3b6f41fa7746cd968be9dd2410d11
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- slug: version-ranges
+  task_id: pilot-python-version-ranges
+  version: 1
+  cluster_id: pilot-python-version-ranges-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: python-pilot
+  methodology_label: independent
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  typing_expectation: none
+  opportunity_tags: []
+  opportunities:
+    readability_idioms: 1
+    stdlib_use: 1
+    error_handling: 1
+    lint_style: 1
+    data_protocol_modeling: 1
+    stdlib_api_choice: 1
+  required_analyzers:
+  - ruff
+  - bandit
+  - context
+  hidden_case_counts:
+    edge: 3
+    example: 23
+    property: 5
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  performance_workload_scales: []
+  package_digest: sha256:f3ba5e6339fce5ad350d318e2d1a3eafcb2c5e3f177b6dfb8b6378c014222730
+  manifest_digest: sha256:68be9c88ade6eae7cb1aeef44198f739e032f73a1e56dea3682e793fc462acb8
+  visible_bundle_digest: sha256:c230a72ebf0fa49b7d55da08a93580dddaad2a34a95975f26e89f78571431360
+  hidden_bundle_digest: sha256:a43cec9656355602e1a5dacc5ead1115700f5a3806606d41b2b53ecd0c80f24b
+  protected_location: .protected/taskpacks/python-pilot/version-ranges
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not performed against any external corpus or search index. The only check
+      made was the author's own judgement that the concrete rules differ from the common semver/npm/PEP
+      440/RubyGems rules; the resemblance of the general idea to those systems was not measured.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:2a7999b9bcfb32f81a1fcfae21d9e77023fcb2292fe1d068ada2101517c0d24d
+    report_package_digest: sha256:f3ba5e6339fce5ad350d318e2d1a3eafcb2c5e3f177b6dfb8b6378c014222730
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+    - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+inventory_digest: sha256:908d801b0829a5cb41631f9ad666f1a99c9c99cfcb50bdb66e8924facbd1a275

@@ -1,0 +1,50 @@
+{
+  "kind": "python_task_oracle",
+  "schema_version": 1,
+  "oracle_version": "top-words-oracle-v1",
+  "case_timeout_seconds": 8,
+  "suite_timeout_seconds": 25,
+  "hypothesis_examples": 60,
+  "groups": [
+    {
+      "group_id": "behaviour",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["tests/test_acceptance.py"],
+      "cases": [
+        {"case_id": "tests/test_acceptance.py::test_ties_break_alphabetically", "required": true, "case_kind": "example"},
+        {"case_id": "tests/test_acceptance.py::test_case_and_separators", "required": true, "case_kind": "example"},
+        {"case_id": "tests/test_acceptance.py::test_k_larger_than_distinct", "required": true, "case_kind": "edge"},
+        {"case_id": "tests/test_acceptance.py::test_empty_input", "required": true, "case_kind": "edge"},
+        {"case_id": "tests/test_acceptance.py::test_zero_and_negative_k", "required": true, "case_kind": "edge"},
+        {"case_id": "tests/test_acceptance.py::test_accepts_one_shot_iterator", "required": true, "case_kind": "example"},
+        {"case_id": "tests/test_acceptance.py::test_non_ascii_letters_are_separators", "required": true, "case_kind": "edge"}
+      ]
+    },
+    {
+      "group_id": "properties",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["tests/test_properties.py"],
+      "cases": [
+        {"case_id": "tests/test_properties.py::test_matches_independent_model", "required": true, "case_kind": "property"},
+        {"case_id": "tests/test_properties.py::test_result_shape", "required": true, "case_kind": "property"}
+      ]
+    },
+    {
+      "group_id": "streaming-memory",
+      "required": false,
+      "classification": "quality_only",
+      "files": ["tests/test_robustness.py"],
+      "cases": [
+        {"case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised", "required": true, "case_kind": "robustness"}
+      ]
+    }
+  ],
+  "hard_conditions": [
+    {"condition_id": "ordering-contract", "group_id": "behaviour"}
+  ],
+  "robustness_scenarios": [
+    {"scenario_id": "stream-not-materialised", "group_id": "streaming-memory", "weight_bp": 10000, "repetitions": 3, "hard_acceptance": false}
+  ]
+}

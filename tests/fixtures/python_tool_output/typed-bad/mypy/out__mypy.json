@@ -1,0 +1,2 @@
+{"file": "work/solution.py", "line": 2, "column": 11, "message": "Incompatible return value type (got \"int\", expected \"str\")", "hint": null, "code": "return-value", "severity": "error"}
+{"file": "work/solution.py", "line": 5, "column": 0, "message": "Function is missing a type annotation", "hint": null, "code": "no-untyped-def", "severity": "error"}

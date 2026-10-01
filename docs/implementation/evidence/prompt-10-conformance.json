@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "kind": "conformance_report",
+  "plugin_id": "python",
+  "plugin_version": "0.1.0",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+    "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99"
+  ],
+  "cases": [
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "valid_solution",
+      "name": "reference-and-alternative-pass",
+      "passed": true,
+      "expected": "both valid solutions pass every required group",
+      "observed": "reference=pass alternative=pass"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "incorrect_solution",
+      "name": "wrong-tie-break-fails-its-case",
+      "passed": true,
+      "expected": "gate fail naming tests/test_acceptance.py::test_ties_break_alphabetically",
+      "observed": "gate=fail failed=('tests/test_acceptance.py::test_ties_break_alphabetically', 'tests/test_properties.py::test_matches_independent_model')"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "incorrect_solution",
+      "name": "syntax-error-is-a-candidate-failure",
+      "passed": true,
+      "expected": "build failure, gate fail (not incomplete)",
+      "observed": "gate=fail ('build:work/solution.py: SyntaxError line 1',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "defects-seen-despite-passing-tests",
+      "passed": true,
+      "expected": "functional gate passes; analyzers and profile record the defects",
+      "observed": "gate=pass families=['bare-except', 'manual-counter', 'mutable-default', 'sim105', 'swallowed-broad-exception', 'try003'] violations={'readability_idioms': 2, 'type_hints': 0, 'stdlib_use': 2, 'error_handling': 3, 'lint_style': 0, 'performance_awareness': 0}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "findings-exit-is-parsed-as-findings",
+      "passed": true,
+      "expected": "exit 1 with a valid report yields findings, not a failed scan",
+      "observed": "{'ruff': (1, 3), 'bandit': (1, 2)}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "bandit-crash-exit-1",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=1 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "ruff-bad-config",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=2 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "semgrep-missing-tool",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=127 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "context-hang-timeout",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=None timed_out=True status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "dependent-profile-items-are-missing-not-perfect",
+      "passed": true,
+      "expected": "items fed by the failed scan are missing; no aggregate score is invented",
+      "observed": "{'error_handling': 'missing', 'lint_style': 'measured'}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "missing_dependency",
+      "name": "candidate-import-error-is-a-candidate-failure",
+      "passed": true,
+      "expected": "unavailable third-party module fails the candidate at import (no online install)",
+      "observed": "gate=fail reasons=('candidate_collection_error',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "missing_dependency",
+      "name": "absent-advisory-snapshot-is-never-clean",
+      "passed": true,
+      "expected": "dependency check without its pinned advisory snapshot is a missing scan",
+      "observed": "exit=2 status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "timeout",
+      "name": "case-and-suite-timeouts-are-candidate-failures",
+      "passed": true,
+      "expected": "per-case alarm and hard supervisor deadline both end as candidate failures",
+      "observed": "soft=('candidate_timeout:tests/test_acceptance.py::test_empty_input', 'fail:tests/test_acceptance.py::test_case_and_separators:case_timeout') hard=('candidate_timeout:tests/test_acceptance.py::test_ties_break_alphabetically',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "profile_applicability",
+      "name": "type-expectation-is-contextual",
+      "passed": true,
+      "expected": "type findings count only when the task contract expects types; otherwise N/A",
+      "observed": "required: 2 violations; none: not_applicable"
+    }
+  ],
+  "passed": true,
+  "report_digest": "sha256:ab2abace4e68334d5f4744ea3fb71a08ed88b958309d3bdf279dc823fa0acecf"
+}

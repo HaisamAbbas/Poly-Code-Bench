@@ -1,0 +1,50 @@
+{
+  "base_image": {
+    "digest": "sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+    "reference": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b"
+  },
+  "build": {
+    "network": "none",
+    "note": "Local development build; a rebuild yields a new image digest. Registry publication and production-worker pinning belong to the deployment prompts.",
+    "offline_install": true,
+    "wheelhouse_wheels": 79
+  },
+  "guest_digest": "sha256:4162764848630890d5228c43f3eca953d7d8e600bf990c775b6ecc7d980d79e6",
+  "images": {
+    "evaluator": {
+      "digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+      "guest_and_rules_digest": "sha256:d8fcd47c14304709bb9a234cb4f136eec4e66e0e0007973210ccb225eea7b57b",
+      "installed_package_count": 80,
+      "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+      "lock_file": "infra/images/python/evaluator.lock",
+      "python": "Python 3.12.14",
+      "reference": "pcb-python-evaluator@sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+      "tag": "pcb-python-evaluator:v1",
+      "tools": {
+        "bandit": "1.9.2",
+        "hypothesis": "6.150.2",
+        "mypy": "1.19.1",
+        "pytest": "9.0.2",
+        "ruff": "0.16.8",
+        "semgrep": "1.150.0"
+      }
+    },
+    "runtime": {
+      "digest": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "guest_and_rules_digest": "sha256:d8fcd47c14304709bb9a234cb4f136eec4e66e0e0007973210ccb225eea7b57b",
+      "installed_package_count": 8,
+      "lock_digest": "sha256:cc10c52a3a2751b2240fcb8eb234aaf05f63493a49375de68fe9ac5580664a30",
+      "lock_file": "infra/images/python/runtime.lock",
+      "python": "Python 3.12.14",
+      "reference": "pcb-python-runtime@sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "tag": "pcb-python-runtime:v1",
+      "tools": {
+        "hypothesis": "6.150.2",
+        "pytest": "9.0.2"
+      }
+    }
+  },
+  "kind": "python_images",
+  "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+  "schema_version": 1
+}

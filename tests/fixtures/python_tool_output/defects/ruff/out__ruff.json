@@ -1,0 +1,86 @@
+[
+  {
+    "cell": null,
+    "code": "B006",
+    "end_location": {
+      "column": 22,
+      "row": 9
+    },
+    "filename": "/workspace/work/solution.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "None",
+          "end_location": {
+            "column": 22,
+            "row": 9
+          },
+          "location": {
+            "column": 20,
+            "row": 9
+          }
+        },
+        {
+          "content": "    if cache is None:\n        cache = []\n",
+          "end_location": {
+            "column": 1,
+            "row": 10
+          },
+          "location": {
+            "column": 1,
+            "row": 10
+          }
+        }
+      ],
+      "message": "Replace with `None`; initialize within function"
+    },
+    "location": {
+      "column": 20,
+      "row": 9
+    },
+    "message": "Do not use mutable data structures for argument defaults",
+    "name": "mutable-argument-default",
+    "noqa_row": 9,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/mutable-argument-default"
+  },
+  {
+    "cell": null,
+    "code": "E722",
+    "end_location": {
+      "column": 11,
+      "row": 13
+    },
+    "filename": "/workspace/work/solution.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 13
+    },
+    "message": "Do not use bare `except`",
+    "name": "bare-except",
+    "noqa_row": 13,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/bare-except"
+  },
+  {
+    "cell": null,
+    "code": "SIM115",
+    "end_location": {
+      "column": 18,
+      "row": 28
+    },
+    "filename": "/workspace/work/solution.py",
+    "fix": null,
+    "location": {
+      "column": 14,
+      "row": 28
+    },
+    "message": "Use a context manager for opening files",
+    "name": "open-file-with-context-handler",
+    "noqa_row": 28,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/open-file-with-context-handler"
+  }
+]

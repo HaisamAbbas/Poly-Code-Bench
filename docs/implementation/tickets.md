@@ -420,40 +420,42 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `10`.
 - Dependencies: task/sandbox contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`. `infra/images/python/{Dockerfile,runtime.in,runtime.lock,evaluator.in,evaluator.lock}`, `scripts/build_python_images.py`, `plugins/languages/python/src/polycodebench_lang_python/identities.py`, `config/images/python-v1.json`, `config/plugins/allowlist-v1.yaml`.
+- Verification: `passed` (development/local Docker tier).
 - Required verification scope: E2E-04, E2E-15, relevant E2E-16.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docker build --network none` for both images; the build script compares the installed set to the lock and treats drift as a hard failure. Runtime `sha256:beb3dd62e10b…`, evaluator `sha256:dd801029a063…`, base `python@sha256:44ff437bba87…` (Python 3.12.14); pytest 9.0.2, Hypothesis 6.150.2, Ruff 0.16.8, mypy 1.19.1, Bandit 1.9.2, Semgrep 1.150.0; runtime lock 8 packages, evaluator lock 80. Every package comes from the hash-verified local wheelhouse via `pip --no-index --require-hashes`; plans declare `network: none` and contain no installer, and the guest cannot reach an index. `config/images/python-v1.json` records base/image/guest/rule/lock digests, and every `ToolIdentity` is derived from it. The E2E-16 `missing_dependency` case proves an unavailable third-party module fails the candidate at import with no online install.
+- Pending (not this ticket): registry publication and production-worker pinning are deployment inputs; production isolation is the owner-deferred Prompt 06 gate.
 - Acceptance criteria: — Build pinned offline Python runtime/evaluator images and dependency recipes. DoD: compiler/runtime/tool/lock/rule identities are recorded and scored runs perform no online installation.
 
 ## PCB-10-2 - Prompt 10: — Implement Python support
 
 - Owner prompt: `10`.
 - Dependencies: task/sandbox contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`. `plugins/languages/python/src/polycodebench_lang_python/{plans,parsers,testparse,symbols,observations,profile}.py`, guest tools `pcb_syntax_check.py` / `pcb_pytest_report.py` / `pcb_context_scan.py` / `pcb_perf_driver.py` / `pcb_capture.py` / `pcb_dependency_check.py`, rule bundle `rules/{ruff.toml,pytest.ini,mypy.ini,mypy-strict.ini,bandit.yaml,semgrep-rules.yml}`, `packages/plugins-api/src/polycodebench_plugins_api/testreport.py`, `packages/evaluation/src/polycodebench_evaluation/plan_runner.py`.
+- Verification: `passed`.
 - Required verification scope: E2E-04, E2E-15, relevant E2E-16.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-10-conformance.json` (14/14 cases, `passed: true`), `tests/test_python_parsers.py`, `tests/test_python_guest.py`, `tests/test_plan_runner.py`, `tests/test_python_conformance_docker.py`. Findings exits parse as findings (ruff exit 1 → 3 findings, bandit exit 1 → 2 findings). A required scan that crashes, is killed, is absent (exit 127), has a bad config (exit 2) or times out yields one `python.<tool>.scan` observation with status `missing` and zero findings; profile items fed by that scan become `missing` and no aggregate is invented. Hidden tests arrive only as `overlay` inputs; missing, skipped or xfailed required cases are never passes.
 - Acceptance criteria: — Implement Python build/test/symbol/analyzer/performance plans using pytest, Hypothesis, Ruff, mypy, Bandit and the approved applicable checks. DoD: nonzero finding exits are parsed correctly; missing or crashing required checks cannot look clean.
 
 ## PCB-10-3 - Prompt 10: — Implement Python support
 
 - Owner prompt: `10`.
 - Dependencies: task/sandbox contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`. `config/languages/python-profile-v1.yaml`, `plugins/languages/python/src/polycodebench_lang_python/{profile.py,observations.py}`, AST context scanner `guest/pcb_context_scan.py`.
+- Verification: `passed`.
 - Required verification scope: E2E-04, E2E-15, relevant E2E-16.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_python_guest.py`, `tests/test_python_parsers.py`, and the `profile_applicability` / `anti_pattern` conformance cases. A mutable default is a violation only when it is mutated or escapes; a defensive rebind or read-only use is recorded `benign_in_context` and never penalised, and Ruff's B006 plus the scanner merge into one canonical issue with the scanner deciding. Missing annotations count only when the task contract expects types (`required: 2 violations; none: not_applicable`). Scores derive from the task's frozen opportunity count, never from constructs found in the candidate, so there is no syntax-count bonus; violations are unique canonical issue keys capped at that count, so one issue reported by several tools is merged before counting. D-10-03 records the two idiom detectors widened after the authored fixtures proved them too narrow; all 12 pilot references were re-scanned and remain clean.
 - Acceptance criteria: — Implement the specified diagnostic and orthogonal idiom profiles with applicability/ownership mappings and concrete anti-pattern fixtures. DoD: mutable defaults or type expectations are evaluated in context; no syntax-count bonus or duplicate penalty.
 
 ## PCB-10-4 - Prompt 10: — Implement Python support
 
 - Owner prompt: `10`.
 - Dependencies: task/sandbox contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (executable admission). `packages/evaluation/src/polycodebench_evaluation/suite_admission.py`, `packages/plugins-api/src/polycodebench_plugins_api/admission.py`, `scripts/{python_task_tool.py,python_admit_all.py,python_pilot_inventory.py,record_python_tool_fixtures.py}`, public fixture `plugins/languages/python/fixtures/top-words/`, 12 authored pilot clusters under `.protected/taskpacks/python-pilot/`, committed inventory `taskpacks/python-pilot/inventory.yaml`.
+- Verification: `passed` for executable admission on all 12 clusters; **quality admission remains `pending`** (gates listed below).
 - Required verification scope: E2E-04, E2E-15, relevant E2E-16.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `.protected/reports/*.json` — 12/12 packages pass, 21–24 checks each, every variant executed in the pinned images. Each reference passes its full declared inventory across 5 identical repetitions; every declared faulty variant fails exactly its declared cases; the alternative-valid variant passes; the quality-defective variant passes the functional gate while analyzers report its intended families; timeout variants are stopped and recorded as candidate failures (not harness errors); required analyzers complete on the reference; the performance workload smoke run executes. Exposure/rights records exist for all 12 clusters, and the committed inventory carries identities and digests only — hidden bundles, references, variants and tests remain in git-ignored `.protected/`.
+- Pending (deliberately not claimed): generic evaluator stage integration (Prompt 12), performance baseline/canary and paired measurement (13), judge anchors and human calibration (14), deterministic scoring replay (15), production execution tier (Prompt 06, owner-deferred), curator approval and task freeze, owner rights confirmation, hidden-lane object-store registration at freeze. Every report records `quality_admission: pending` and the inventory records `fully_admitted: 0`, `frozen: 0`; no pilot task is frozen.
 - Acceptance criteria: — Create independently authored Python admission fixtures and a pilot task inventory covering valid, wrong, alternative-valid, quality-defective and timeout cases. DoD: real reference/faulty/alternative executions validate the task oracles; admission artifacts and exposure/rights records exist.
 
 ## PCB-11-1 - Prompt 11: — Implement Rust support

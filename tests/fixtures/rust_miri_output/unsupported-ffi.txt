@@ -1,0 +1,28 @@
+Preparing a sysroot for Miri (target: x86_64-unknown-linux-gnu)... done
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/miri_probe/c71eba0d2a09d840/out/miri_probe-c71eba0d2a09d840)
+error: unsupported operation: can't call foreign function `libc_getpid` on OS `linux`
+  --> src/lib.rs:14:14
+   |
+14 |     unsafe { libc_getpid() }
+   |              ^^^^^^^^^^^^^ unsupported operation occurred here
+   |
+   = help: this means the program tried to do something Miri does not support; it does not indicate a bug in the program
+   = note: this is on thread `tests::calls_fo`
+   = note: stack backtrace:
+           0: foreign
+               at src/lib.rs:14:14: 14:27
+           1: tests::calls_foreign
+               at src/lib.rs:37:17: 37:26
+           2: tests::calls_foreign::{closure#0}
+               at src/lib.rs:36:23: 36:23
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/usr/local/rustup/toolchains/nightly-2026-09-30-x86_64-unknown-linux-gnu/bin/cargo-miri runner /w/target/miri/x86_64-unknown-linux-gnu/debug/build/miri_probe/c71eba0d2a09d840/out/miri_probe-c71eba0d2a09d840` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.

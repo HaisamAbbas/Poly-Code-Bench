@@ -175,6 +175,8 @@ def validate_authored_fixtures(
         snapshot_files = {name: visible.read(name) for name in visible.namelist()}
         snapshot_files.update({name: hidden.read(name) for name in hidden.namelist()})
     for fixture in manifest.fixtures:
+        if fixture.input_path is None or fixture.expected_output_path is None:
+            raise ValueError("suite fixtures require the language-plugin admission runner")
         solution = snapshot_files[fixture.solution_path]
         input_data = snapshot_files[fixture.input_path]
         expected = snapshot_files[fixture.expected_output_path]

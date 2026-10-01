@@ -1,0 +1,84 @@
+rules:
+  - id: pcb.python.subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: subprocess call with shell=True; build an argument vector instead
+    pattern-either:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: high}
+
+  - id: pcb.python.eval-or-exec
+    languages: [python]
+    severity: ERROR
+    message: eval/exec executes arbitrary code
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: high}
+
+  - id: pcb.python.unsafe-deserialization
+    languages: [python]
+    severity: ERROR
+    message: unsafe deserialization of untrusted data
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+      - pattern: marshal.loads(...)
+      - pattern: yaml.load($X)
+      - pattern: yaml.load($X, Loader=yaml.Loader)
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: high}
+
+  - id: pcb.python.hardcoded-credential
+    languages: [python]
+    severity: ERROR
+    message: hard-coded credential-like literal
+    patterns:
+      - pattern-either:
+          - pattern: $NAME = "..."
+          - pattern: $NAME = '...'
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passwd|secret|api_?key|token|private_?key).*
+      - pattern-not: $NAME = ""
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: medium}
+
+  - id: pcb.python.path-traversal-join
+    languages: [python]
+    severity: WARNING
+    message: path built from external input without containment check
+    patterns:
+      - pattern: os.path.join($BASE, $USER)
+      - pattern-not-inside: |
+          ...
+          os.path.commonpath(...)
+          ...
+      - pattern-not-inside: |
+          ...
+          $P.resolve().is_relative_to(...)
+          ...
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: medium}
+
+  - id: pcb.python.tarfile-extractall
+    languages: [python]
+    severity: ERROR
+    message: tarfile extraction without member validation
+    pattern-either:
+      - pattern: $T.extractall(...)
+      - pattern: $T.extract(...)
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: high}
+
+  - id: pcb.python.insecure-temp-file
+    languages: [python]
+    severity: WARNING
+    message: tempfile.mktemp is race-prone
+    pattern: tempfile.mktemp(...)
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: medium}
+
+  - id: pcb.python.weak-hash
+    languages: [python]
+    severity: WARNING
+    message: MD5/SHA1 are not collision resistant
+    pattern-either:
+      - pattern: hashlib.md5(...)
+      - pattern: hashlib.sha1(...)
+    metadata: {pcb_family: canonical-security-issue, pcb_severity: low}

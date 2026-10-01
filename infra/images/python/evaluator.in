@@ -1,0 +1,7 @@
+# Direct dependencies of the PolyCodeBench Python evaluator image (Prompt 10).
+pytest==9.0.2
+hypothesis==6.150.2
+ruff==0.16.8
+mypy==1.19.1
+bandit==1.9.2
+semgrep==1.150.0

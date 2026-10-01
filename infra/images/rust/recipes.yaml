@@ -1,0 +1,24 @@
+# PolyCodeBench Rust recipes (Prompt 11).
+#
+# `rustup` installs the toolchain components listed below. Each recipe names exactly what it adds
+# so the recorded identity can state, per image, which compiler, analyzers and instrumentation are
+# present. The stable channel is pinned to 1.83.0; Miri is nightly-only and is installed as a
+# separate, explicitly-versioned toolchain in the evaluator recipe (see Dockerfile MIRI step).
+#
+# runtime     : rustc + cargo. Build/test/symbol plans and the performance iteration plan.
+# evaluator   : runtime + clippy + rustfmt + nightly Miri. Analyzer plans.
+# performance : runtime + release-profile measurement settings. Performance iteration plan.
+#
+# Format: <component>:<channel>  — `stable` maps to the pinned 1.83.0 toolchain.
+runtime:
+  - rustc:stable
+  - cargo:stable
+evaluator:
+  - rustc:stable
+  - cargo:stable
+  - clippy:stable
+  - rustfmt:stable
+  - miri:nightly
+performance:
+  - rustc:stable
+  - cargo:stable

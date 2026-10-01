@@ -1,0 +1,23 @@
+# B101 (assert) and B110/B112 (try/except pass/continue) are owned by the context scanner
+# (diagnostic error-handling item), so they are skipped here to avoid double evidence.
+# B401-B415 only note that a sensitive module is *imported*; the call-site checks (B301, B602, ...)
+# report the actual hazard, so import-only notes would penalise legitimate, safe use.
+skips:
+  - B101
+  - B110
+  - B112
+  - B401
+  - B402
+  - B403
+  - B404
+  - B405
+  - B406
+  - B407
+  - B408
+  - B409
+  - B410
+  - B411
+  - B412
+  - B413
+  - B414
+  - B415

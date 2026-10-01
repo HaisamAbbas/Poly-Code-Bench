@@ -1,0 +1,24 @@
+schema_version: 1
+kind: python_task_quality_plan
+typing_expectation: none
+opportunity_tags: [streaming]
+opportunities:
+  readability_idioms: 1
+  stdlib_use: 1
+  error_handling: 1
+  lint_style: 1
+  performance_awareness: 1
+  iteration_laziness: 1
+  stdlib_api_choice: 1
+required_analyzers: [ruff, bandit, context]
+dependency_inventory: []
+performance:
+  workload_file: perf/workload.py
+  warmup_iterations: 5
+  measured_iterations: 20
+  hard_timeout_seconds: 30
+  workloads:
+    - {workload_id: small, scale: 2000, weight_bp: 3000, input_seed: 11}
+    - {workload_id: medium, scale: 20000, weight_bp: 4000, input_seed: 12}
+    - {workload_id: large, scale: 60000, weight_bp: 3000, input_seed: 13}
+judge_items: [naming_readability, decomposition]

@@ -326,3 +326,16 @@ Database and object-store commands ran against the local PostgreSQL 17.6 and Sea
 | `ruff format --check .`; `ruff check .`; `check_boundaries.py`; `verify_prompt00.py` | PASS. |
 | PostgreSQL-gated suites, cloud, registry and paid-provider actions | NOT RUN: out of scope; none was taken. |
 
+## Prompt 12 completion (PCB-12-1 to PCB-12-4)
+
+| Command | Result |
+|---|---|
+| `pytest tests/test_evaluator.py` | PASS: 4 offline normalization tests (cross-tool dedup, baseline relations, ambiguous mapping, family parsing). |
+| `PCB_TEST_DOCKER=1 pytest tests/test_evaluator_docker.py tests/test_evaluator.py` | PASS: 8 tests, 118s. Real Docker: Python reference evaluation (gate pass, scenario credit 10000, property evidence, profile complete), Rust reference evaluation, E2E-17 disallowed-path and fake-success submissions, E2E-18 dedup/baseline-debt manifest. |
+| `python scripts/python_conformance.py --report docs/implementation/evidence/prompt-12-python-conformance.json` | PASS: 14/14 cases, digest `sha256:ab2abace4e68334d5f4744ea3fb71a08ed88b958309d3bdf279dc823fa0acecf`. |
+| `PYTHONPATH=plugins/languages/rust/src python scripts/rust_conformance.py --report docs/implementation/evidence/prompt-12-rust-conformance.json` | PASS: 16/16 cases across all 7 categories, including the Miri hang/unsupported variants. |
+| `pytest tests -q -p no:cacheprovider` | PASS: 445 passed, 143 skipped (skips are the PostgreSQL/Docker opt-ins this host did not enable). |
+| `ruff format --check packages/evaluation/src tests/test_evaluator.py tests/test_evaluator_docker.py`; `ruff check` same paths | PASS. |
+| `mypy --disable-error-code=import-untyped packages/plugins-api/src packages/evaluation/src plugins/languages/python/src plugins/languages/rust/src` | No new errors in the Prompt 12 modules; remaining notes are the repo's pre-existing `import-untyped`/`unused-ignore` items in other files. |
+| `python scripts/check_boundaries.py`; `python docs/implementation/verify_prompt00.py` | PASS (ledger counts unchanged: 14 REQ, 24 WP, 43 E2E, 35 prompts, 142 tickets). |
+| Production worker tier, sealed hidden lane, curator/owner rights, paid providers | NOT RUN: out of scope for this prompt; none was taken. |

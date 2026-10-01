@@ -521,40 +521,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `12`.
 - Dependencies: solve/Python/Rust/scheduler ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-16–18; close relevant E2E-04 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (PCB-12-1 integrated; see evidence).
+- Verification: `passed` (offline unit tests, live local-Docker evaluator runs, plugin conformance; development tier).
+- Required verification scope: E2E-17, E2E-04 (evaluator-worker variant, Python and Rust).
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/evaluator.py` (candidate digest/task-binding and allowed-path validation, a fresh grading guest per plan through `PlanRunner`, overlay/config pools a candidate cannot join, inventory reconciliation from the frozen oracle), `evidence.py` (`EvaluationEvidence`), `tests/test_evaluator.py`, `tests/test_evaluator_docker.py::test_e2e_17_candidate_edits_tests_or_prints_fake_success`. Evidence: `docs/implementation/evidence/prompt-12-e2e-17-disallowed.json` (gate fail, `disallowed_paths`, no analyzer run), `prompt-12-e2e-17-fake-success.json` (candidate printed an 'ALL TESTS PASSED' banner; gate fail with failing inventory cases and `quality_work_gated_off`), `prompt-12-eval-python.json`, `prompt-12-eval-rust.json`. Development sandbox (local Docker) only.
 - Acceptance criteria: — Implement fresh grading environments, base/candidate validation, immutable acceptance overlays and expected test inventories. DoD: candidate edits or printed fake successes cannot replace authoritative acceptance; missing mandatory tests never count as passes.
 
 ## PCB-12-2 - Prompt 12: — Implement independent grading and normalized evidence
 
 - Owner prompt: `12`.
 - Dependencies: solve/Python/Rust/scheduler ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-16–18; close relevant E2E-04 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (PCB-12-2 integrated; see evidence).
+- Verification: `passed` (offline unit tests, live local-Docker evaluator runs, plugin conformance; development tier).
+- Required verification scope: E2E-16 (Python and Rust), E2E-18.
+- Evidence: `evaluator.py::_analysis_side`/`_analyzer_evidence` supervise every analyzer plan and record `ToolRecord` (name, version, image/lock/rule-bundle/advisory digests, parser version, scope), the plan status from the exit contract, raw output digests and the scan observation; an unmeasured required analyzer adds `required_scan_not_measured` plus a review item; `native_metrics` stays separate from the gate. Evidence: `prompt-12-python-conformance.json` (14/14), `prompt-12-rust-conformance.json` (16/16, Miri unsupported distinct from clean), `prompt-12-e2e-18.json`, `prompt-12-eval-python.json`, `prompt-12-eval-rust.json`.
 - Acceptance criteria: — Implement analyzer execution/parsing contracts and normalized observations with raw report references, tool/rule/advisory versions and explicit failure semantics. DoD: empty reports, crashes and unsupported checks cannot become perfect scores.
 
 ## PCB-12-3 - Prompt 12: — Implement independent grading and normalized evidence
 
 - Owner prompt: `12`.
 - Dependencies: solve/Python/Rust/scheduler ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-16–18; close relevant E2E-04 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (PCB-12-3 integrated; see evidence).
+- Verification: `passed` (offline unit tests, live local-Docker evaluator runs, plugin conformance; development tier).
+- Required verification scope: E2E-18.
+- Evidence: `evaluator.py::_relations` (introduced / worsened / unchanged_in_scope / unchanged_out_of_scope / resolved / unknown against the baseline observations, D-12-03, D-12-04) and `_issue_entries` (one composite owner from the reviewed rule mapping, `counted_once`, every reporting tool named). Evidence: `prompt-12-e2e-18.json` shows four security issues each appearing once with both bandit and semgrep and one `security` owner, all `unchanged_out_of_scope`; `tests/test_evaluator.py` covers introduced/worsened/resolved/ambiguous mapping offline.
 - Acceptance criteria: — Implement baseline-to-candidate relations, semantic issue identity and reviewed cross-tool deduplication. DoD: one underlying issue has one composite owner; unchanged unrelated debt is visible without unjustified blame; ambiguous mappings remain reviewable.
 
 ## PCB-12-4 - Prompt 12: — Implement independent grading and normalized evidence
 
 - Owner prompt: `12`.
 - Dependencies: solve/Python/Rust/scheduler ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-16–18; close relevant E2E-04 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (PCB-12-4 integrated; see evidence).
+- Verification: `passed` (offline unit tests, live local-Docker evaluator runs, plugin conformance; development tier).
+- Required verification scope: E2E-04 (evaluator-worker variant), E2E-16, E2E-18.
+- Evidence: Weighted `ScenarioEvidence` read from the task oracle (full credit or zero; `robustness_score_bp=None` if any repetition is incomplete; hard-acceptance scenarios fail the correctness gate), `PropertyEvidence` lifted from the harness record (D-12-07), applicability through the plugins' `ProfileResult`. `tests/test_evaluator_docker.py` runs the Python and Rust `top-words` fixtures end to end (gate pass, scenario credit 10000, property evidence present, profile complete) plus the E2E-17/18 cases. Evidence: `prompt-12-eval-python.json`, `prompt-12-eval-rust.json`, `prompt-12-e2e-18.json`. The 24 protected pilot clusters were not re-admitted here (Prompt 10/11 evidence stands).
 - Acceptance criteria: — Implement weighted robustness scenarios, seeded property/fuzz evidence and applicability plans, then complete Python/Rust functional/quality fixture integration. DoD: task-hard requirements gate correctness while optional quality scenarios remain separately weighted; actual fixture results validate those distinctions.
 
 ## PCB-13-1 - Prompt 13: — Implement performance measurement

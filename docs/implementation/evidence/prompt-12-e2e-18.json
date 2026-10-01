@@ -1,0 +1,1159 @@
+{
+  "schema_version": 1,
+  "kind": "evaluation_evidence",
+  "evaluation_id": "5fa8db70-0826-4e96-aabf-479fdbae03c7",
+  "task_id": "conformance-top-words",
+  "task_version": 1,
+  "task_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+  "plugin_id": "python",
+  "execution_tier": "development_sandbox",
+  "candidate_digest": "sha256:25ee8a8b6c800f2b4d81dc1c80eac5f0015261172154f4fc00c2fe40b8dce5f6",
+  "baseline_digest": "sha256:25ee8a8b6c800f2b4d81dc1c80eac5f0015261172154f4fc00c2fe40b8dce5f6",
+  "overlay_digest": "sha256:bca469d416727b465902a77c4b83f10d8752581934fd2d663a4150852a4377c9",
+  "config_digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "inventory_digest": "sha256:fbb7c7a3c7715fd2a2d302ba2a3cd2d83d37b20de3361d461192e8f3365bdaac",
+  "allowed_paths_ok": true,
+  "disallowed_paths": [],
+  "build_verdict": "pass",
+  "build_detail": "all files compile",
+  "gate": "pass",
+  "gate_reasons": [],
+  "failed_cases": [],
+  "group_verdicts": [
+    {
+      "schema_version": 1,
+      "kind": "group_verdict_evidence",
+      "group_id": "behaviour",
+      "required": true,
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "group_verdict_evidence",
+      "group_id": "properties",
+      "required": true,
+      "verdict": "pass",
+      "reasons": []
+    }
+  ],
+  "scenarios": [
+    {
+      "schema_version": 1,
+      "kind": "scenario_evidence",
+      "scenario_id": "stream-not-materialised",
+      "group_id": "streaming-memory",
+      "weight_bp": 10000,
+      "repetitions": 3,
+      "passed_repetitions": 3,
+      "hard_acceptance": false,
+      "status": "passed",
+      "credit_bp": 10000,
+      "gate_effect": "quality_weight_only",
+      "repetition_verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ]
+    }
+  ],
+  "robustness_score_bp": 10000,
+  "cases": [
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_accepts_one_shot_iterator",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:3064fafdebdf5faf73d1a5dac872295513ed96cefb2aea353ad4fdd5042f60f3",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_case_and_separators",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:37e79fd5930a5acbc816ba0fc491f7917b2124c43c795ab82bae17da5770e005",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_empty_input",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:9c0866222d330083814ac3231690b29edd2f65fb9058da5661be3ae10664e6a8",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_k_larger_than_distinct",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:a0cf5a06f6fce2439a6c0aae94ee1f7db5ebdc5053e32e6a21ce52e633b11912",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_non_ascii_letters_are_separators",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:a9e552f6a04e2587bc8682168660965f623b6587a2400595f345279e72b41537",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_ties_break_alphabetically",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 1,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:e5824428081497b92af104d72f7acea1967d647e1f8ddf76875cb9bb51536f17",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "tests/test_acceptance.py::test_zero_and_negative_k",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:4bfd0874a9d2b2db19f2bf325f4e858345d97080843f7ba6fa1074c9b57d6b73",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "properties",
+      "case_id": "tests/test_properties.py::test_matches_independent_model",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 347,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:4b4f3cf2d67b379f2e8aa8307780cde6592cc30d188fc5359b6934d1e0804ecd",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "properties",
+      "case_id": "tests/test_properties.py::test_result_shape",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 110,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:d5eee79c08ad3e1d63a353f6f0a1088e2d307a103471728e22893525c70ce81e",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "streaming-memory",
+      "case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 3127,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:4c7d9f8710d272d04800d96e523b74ab00123d2056eb46935d16454bb119a1c5",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "streaming-memory",
+      "case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised",
+      "required": true,
+      "repetition": 1,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 2050,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:4c7d9f8710d272d04800d96e523b74ab00123d2056eb46935d16454bb119a1c5",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "streaming-memory",
+      "case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised",
+      "required": true,
+      "repetition": 2,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 2370,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:4c7d9f8710d272d04800d96e523b74ab00123d2056eb46935d16454bb119a1c5",
+      "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b"
+    }
+  ],
+  "property_evidence": {
+    "schema_version": 1,
+    "kind": "property_evidence",
+    "engine": "hypothesis",
+    "engine_version": "6.150.2",
+    "deterministic_policy": "hypothesis-derandomized",
+    "examples_pinned": 60,
+    "case_timeout_seconds": 8,
+    "suite_timeout_seconds": 25,
+    "seeds": [],
+    "cases": 2
+  },
+  "analyzers": [
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "ruff",
+        "side": "candidate",
+        "name": "ruff",
+        "version": "0.16.8",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.ruff",
+        "parser_id": "python-ruff",
+        "required": true,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 312,
+      "findings": 4,
+      "scan_status": "measured",
+      "scan_findings": 3,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:ruff:candidate",
+          "path": "out/ruff.err",
+          "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:ruff:candidate",
+          "path": "out/ruff.json",
+          "digest": "sha256:9290b1153427148d72b72a2043457724459a70f5ff923956bff7fb5b1fdbb61d",
+          "size_bytes": 1953,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "bandit",
+        "side": "candidate",
+        "name": "bandit",
+        "version": "1.9.2",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.bandit",
+        "parser_id": "python-bandit",
+        "required": true,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 844,
+      "findings": 5,
+      "scan_status": "measured",
+      "scan_findings": 4,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:bandit:candidate",
+          "path": "out/bandit.err",
+          "digest": "sha256:1295433139b148045589b327188ff45fa765715c846ef4f4801343064e323e27",
+          "size_bytes": 126,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:bandit:candidate",
+          "path": "out/bandit.json",
+          "digest": "sha256:6b59829300d0a0f055fe67920aaed0010258ddf9ee1052af78773fb18e36f199",
+          "size_bytes": 3544,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "semgrep",
+        "side": "candidate",
+        "name": "semgrep",
+        "version": "1.150.0",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.semgrep",
+        "parser_id": "python-semgrep",
+        "required": false,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 3250,
+      "findings": 5,
+      "scan_status": "measured",
+      "scan_findings": 4,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:semgrep:candidate",
+          "path": "out/semgrep.err",
+          "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:semgrep:candidate",
+          "path": "out/semgrep.json",
+          "digest": "sha256:5556b8a6b352a9bf1703cff9c5b963d845466ffe812b91edd80e36b5811ea0ac",
+          "size_bytes": 3087,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "context",
+        "side": "candidate",
+        "name": "context-scan",
+        "version": "guest-416276484863",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.context",
+        "parser_id": "python-context",
+        "required": true,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 280,
+      "findings": 4,
+      "scan_status": "measured",
+      "scan_findings": 3,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:context:candidate",
+          "path": "out/context.json",
+          "digest": "sha256:41a7af30fd7e967800b3e8c20d418fbd548be9613e924035937fc8b8d2ed8914",
+          "size_bytes": 962,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "ruff",
+        "side": "baseline",
+        "name": "ruff",
+        "version": "0.16.8",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.ruff",
+        "parser_id": "python-ruff",
+        "required": true,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 280,
+      "findings": 4,
+      "scan_status": "measured",
+      "scan_findings": 3,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:ruff:baseline",
+          "path": "out/ruff.err",
+          "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:ruff:baseline",
+          "path": "out/ruff.json",
+          "digest": "sha256:9290b1153427148d72b72a2043457724459a70f5ff923956bff7fb5b1fdbb61d",
+          "size_bytes": 1953,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "bandit",
+        "side": "baseline",
+        "name": "bandit",
+        "version": "1.9.2",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.bandit",
+        "parser_id": "python-bandit",
+        "required": true,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 937,
+      "findings": 5,
+      "scan_status": "measured",
+      "scan_findings": 4,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:bandit:baseline",
+          "path": "out/bandit.err",
+          "digest": "sha256:513e31091d9f75c41ec5d45a9cec43a450d43cda3d1ccc5d6c80e697bf2e6276",
+          "size_bytes": 126,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:bandit:baseline",
+          "path": "out/bandit.json",
+          "digest": "sha256:17fceb55b7be585c14f0f69166bc8d5ff1f30a584815be8f1ca2b33105d3ef00",
+          "size_bytes": 3544,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "semgrep",
+        "side": "baseline",
+        "name": "semgrep",
+        "version": "1.150.0",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.semgrep",
+        "parser_id": "python-semgrep",
+        "required": false,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 3578,
+      "findings": 5,
+      "scan_status": "measured",
+      "scan_findings": 4,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:semgrep:baseline",
+          "path": "out/semgrep.err",
+          "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:semgrep:baseline",
+          "path": "out/semgrep.json",
+          "digest": "sha256:deaae079fc55a97dee6257e2baa8e0407012bbfe40a1b7f70f0b99a3cbab9cee",
+          "size_bytes": 3083,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "context",
+        "side": "baseline",
+        "name": "context-scan",
+        "version": "guest-416276484863",
+        "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+        "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
+        "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-python-parsers-1",
+        "plan_id": "python.analysis.context",
+        "parser_id": "python-context",
+        "required": true,
+        "scope": [
+          "solution.py"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=1 timed_out=False",
+      "duration_ms": 359,
+      "findings": 4,
+      "scan_status": "measured",
+      "scan_findings": 3,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:context:baseline",
+          "path": "out/context.json",
+          "digest": "sha256:41a7af30fd7e967800b3e8c20d418fbd548be9613e924035937fc8b8d2ed8914",
+          "size_bytes": 962,
+          "format": "json"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.bare-except.a374f8a26f93",
+      "relation": "unchanged_out_of_scope",
+      "owner": null,
+      "severity": "medium",
+      "confidence": "high",
+      "path": "solution.py",
+      "start_line": 25,
+      "end_line": 26,
+      "tools": [
+        "python.context.bare-except",
+        "python.ruff.e722"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "item-opportunity",
+      "explanation": "bare except hides every error [run] (also reported by python.ruff.e722)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.hardcoded-credential.f24bf4444746",
+      "relation": "unchanged_out_of_scope",
+      "owner": "security",
+      "severity": "medium",
+      "confidence": "medium",
+      "path": "solution.py",
+      "start_line": 20,
+      "end_line": 20,
+      "tools": [
+        "python.bandit.b105",
+        "python.semgrep.hardcoded-credential"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "always",
+      "explanation": "hard-coded credential-like literal (also reported by python.bandit.b105)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.mutable-default.9105aaf0ea35",
+      "relation": "unchanged_out_of_scope",
+      "owner": null,
+      "severity": "medium",
+      "confidence": "high",
+      "path": "solution.py",
+      "start_line": 21,
+      "end_line": 21,
+      "tools": [
+        "python.context.mutable-default-shared",
+        "python.ruff.b006"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "item-opportunity",
+      "explanation": "mutable default 'cache' is mutated or escapes, so state is shared across calls [run] (also reported by python.ruff.b006)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.subprocess-shell.f872b788443a",
+      "relation": "unchanged_out_of_scope",
+      "owner": "security",
+      "severity": "high",
+      "confidence": "high",
+      "path": "solution.py",
+      "start_line": 24,
+      "end_line": 24,
+      "tools": [
+        "python.bandit.b602",
+        "python.semgrep.subprocess-shell-true"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "always",
+      "explanation": "B602: subprocess call with shell=True identified, security issue. (also reported by python.semgrep.subprocess-shell-true)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.swallowed-broad-exception.221796b7f656",
+      "relation": "unchanged_out_of_scope",
+      "owner": null,
+      "severity": "medium",
+      "confidence": "high",
+      "path": "solution.py",
+      "start_line": 25,
+      "end_line": 26,
+      "tools": [
+        "python.context.swallowed-broad-exception"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "item-opportunity",
+      "explanation": "broad exception swallowed without handling [run]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.try003.a5b428901c1b",
+      "relation": "unchanged_out_of_scope",
+      "owner": null,
+      "severity": null,
+      "confidence": "high",
+      "path": "solution.py",
+      "start_line": 14,
+      "end_line": 14,
+      "tools": [
+        "python.ruff.try003"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "item-opportunity",
+      "explanation": "TRY003: Avoid specifying long messages outside the exception class"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.unsafe-deserialization.2bf418827c32",
+      "relation": "unchanged_out_of_scope",
+      "owner": "security",
+      "severity": "high",
+      "confidence": "medium",
+      "path": "solution.py",
+      "start_line": 28,
+      "end_line": 28,
+      "tools": [
+        "python.bandit.b301",
+        "python.semgrep.unsafe-deserialization"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "always",
+      "explanation": "unsafe deserialization of untrusted data (also reported by python.bandit.b301)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "issue_evidence",
+      "issue_key": "py.weak-hash.18383a738bb4",
+      "relation": "unchanged_out_of_scope",
+      "owner": "security",
+      "severity": "high",
+      "confidence": "high",
+      "path": "solution.py",
+      "start_line": 30,
+      "end_line": 30,
+      "tools": [
+        "python.bandit.b324",
+        "python.semgrep.weak-hash"
+      ],
+      "counted_once": true,
+      "ambiguous": false,
+      "applicability_rule": "always",
+      "explanation": "B324: Use of weak MD5 hash for security. Consider usedforsecurity=False (also reported by python.semgrep.weak-hash)"
+    }
+  ],
+  "resolutions": [],
+  "reviews": [],
+  "profile_items": [
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "readability_idioms",
+      "group": "diagnostic",
+      "weight_bp": 2500,
+      "opportunities": 1,
+      "unique_violations": 1,
+      "status": "measured",
+      "score_bp": 0,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "type_hints",
+      "group": "diagnostic",
+      "weight_bp": 1500,
+      "opportunities": 0,
+      "unique_violations": 0,
+      "status": "not_applicable",
+      "score_bp": null,
+      "reasons": [
+        "no frozen task opportunity"
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "stdlib_use",
+      "group": "diagnostic",
+      "weight_bp": 1500,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "error_handling",
+      "group": "diagnostic",
+      "weight_bp": 1500,
+      "opportunities": 1,
+      "unique_violations": 3,
+      "status": "measured",
+      "score_bp": 0,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "lint_style",
+      "group": "diagnostic",
+      "weight_bp": 1000,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "performance_awareness",
+      "group": "diagnostic",
+      "weight_bp": 2000,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "iteration_laziness",
+      "group": "idiom",
+      "weight_bp": 3000,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "stdlib_api_choice",
+      "group": "idiom",
+      "weight_bp": 3000,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "data_protocol_modeling",
+      "group": "idiom",
+      "weight_bp": 2500,
+      "opportunities": 0,
+      "unique_violations": 0,
+      "status": "not_applicable",
+      "score_bp": null,
+      "reasons": [
+        "no frozen task opportunity"
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "context_resource_abstraction",
+      "group": "idiom",
+      "weight_bp": 1500,
+      "opportunities": 0,
+      "unique_violations": 0,
+      "status": "not_applicable",
+      "score_bp": null,
+      "reasons": [
+        "no frozen task opportunity"
+      ]
+    }
+  ],
+  "diagnostic_score_bp": 5294,
+  "idiom_score_bp": 10000,
+  "profile_complete": true,
+  "native_metrics": {
+    "ruff": {
+      "side": "candidate",
+      "status": "completed_with_findings",
+      "findings": 4,
+      "scan_status": "measured",
+      "complete": "yes"
+    },
+    "bandit": {
+      "side": "candidate",
+      "status": "completed_with_findings",
+      "findings": 5,
+      "scan_status": "measured",
+      "complete": "yes"
+    },
+    "semgrep": {
+      "side": "candidate",
+      "status": "completed_with_findings",
+      "findings": 5,
+      "scan_status": "measured",
+      "complete": "yes"
+    },
+    "context-scan": {
+      "side": "candidate",
+      "status": "completed_with_findings",
+      "findings": 4,
+      "scan_status": "measured",
+      "complete": "yes"
+    }
+  },
+  "incomplete": [],
+  "raw_artifacts": [
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "build",
+      "path": "out/build.json",
+      "digest": "sha256:28f8e52922de2bb92f78d9e21a6cfedee08ead0e9cbef498e062d6cee6927baf",
+      "size_bytes": 115,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:behaviour:r0",
+      "path": "out/behaviour.jsonl",
+      "digest": "sha256:b547bc051fdd1775e513b20a2a9f9a8ebfce8abd5c4b685c324dd63ed1d0ce34",
+      "size_bytes": 4368,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:properties:r0",
+      "path": "out/properties.jsonl",
+      "digest": "sha256:a56fbf3d6e710535640081a6df3f656c40f23acfc90c264549dd82041c83c3fa",
+      "size_bytes": 1524,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:streaming-memory:r0",
+      "path": "out/streaming-memory.jsonl",
+      "digest": "sha256:cd114a213a1a166634a011e7c97efc2ee2f31cafef9d090d6d9e6b31047a30f2",
+      "size_bytes": 961,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:streaming-memory:r1",
+      "path": "out/streaming-memory.jsonl",
+      "digest": "sha256:4e8cb2908cd208dc0482805fe8542a4bd47f201ea9216077652f83f017836840",
+      "size_bytes": 962,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:streaming-memory:r2",
+      "path": "out/streaming-memory.jsonl",
+      "digest": "sha256:b64ca9aecc9b8b6fa64fed1f39e07abc144f2c056971fa661e510352c676e28f",
+      "size_bytes": 962,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/ruff.json",
+      "digest": "sha256:9290b1153427148d72b72a2043457724459a70f5ff923956bff7fb5b1fdbb61d",
+      "size_bytes": 1953,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/ruff.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/bandit.json",
+      "digest": "sha256:6b59829300d0a0f055fe67920aaed0010258ddf9ee1052af78773fb18e36f199",
+      "size_bytes": 3544,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/bandit.err",
+      "digest": "sha256:1295433139b148045589b327188ff45fa765715c846ef4f4801343064e323e27",
+      "size_bytes": 126,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/semgrep.json",
+      "digest": "sha256:5556b8a6b352a9bf1703cff9c5b963d845466ffe812b91edd80e36b5811ea0ac",
+      "size_bytes": 3087,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/semgrep.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/context.json",
+      "digest": "sha256:41a7af30fd7e967800b3e8c20d418fbd548be9613e924035937fc8b8d2ed8914",
+      "size_bytes": 962,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/ruff.json",
+      "digest": "sha256:9290b1153427148d72b72a2043457724459a70f5ff923956bff7fb5b1fdbb61d",
+      "size_bytes": 1953,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/ruff.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/bandit.json",
+      "digest": "sha256:17fceb55b7be585c14f0f69166bc8d5ff1f30a584815be8f1ca2b33105d3ef00",
+      "size_bytes": 3544,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/bandit.err",
+      "digest": "sha256:513e31091d9f75c41ec5d45a9cec43a450d43cda3d1ccc5d6c80e697bf2e6276",
+      "size_bytes": 126,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/semgrep.json",
+      "digest": "sha256:deaae079fc55a97dee6257e2baa8e0407012bbfe40a1b7f70f0b99a3cbab9cee",
+      "size_bytes": 3083,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/semgrep.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/context.json",
+      "digest": "sha256:41a7af30fd7e967800b3e8c20d418fbd548be9613e924035937fc8b8d2ed8914",
+      "size_bytes": 962,
+      "format": "json"
+    }
+  ],
+  "execution_note": "candidate digest verified; candidate bytes never mint overlays/config/inventory; fresh guest per plan; exit semantics supervised; tool self-report is read-only",
+  "report_digest": "sha256:0d2074741371f9f41a9d6ef1ed0f17062ac3077546a9a7967b2394c1baf0f8c6"
+}

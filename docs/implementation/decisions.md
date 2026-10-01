@@ -115,6 +115,75 @@ Cloud account/region, OIDC identities, provider/judge endpoint credentials, expl
 - **D-10-04 - Tool caches are not task content.** `python_task_tool.py` refuses to seal or admit a package containing `.mypy_cache`, `.ruff_cache`, `.pytest_cache`, `.hypothesis`, `__pycache__` or `.cache`. A cached analysis directory under `hidden/reference/` becomes part of the candidate file set through `variant_files`, which both breaks the `solution.py`-only output contract and would leak the reference's analysis state. This was a real authoring failure (`archive-path-guard`, `output-contract-reference`); the guard exists so the slip cannot return silently.
 - **D-10-06 - A scan that cannot prove itself is `missing`, never clean.** A required analyzer that crashes, is killed, is absent (exit 127), has an invalid config (exit 2), times out, exits with findings but emits no report, or exits without findings while reporting them, produces one `python.<tool>.scan` observation with status `missing` and zero findings. Profile items fed by that scan become `missing` and the weighted aggregate is withheld. Bandit is the sharp case: it exits 1 both for a finding and for an uncaught crash, so the exit code alone can never be read as a clean result.
 - **D-10-07 - Executable admission is not quality admission.** A green suite-admission report means the variants really ran and the oracles really discriminate. It explicitly does not mean performance baselines, judge anchors, scoring replay, production isolation, curator approval or rights confirmation exist. Every report carries `quality_admission: pending` and the committed inventory carries `fully_admitted: 0` and `frozen: 0`.
+## Prompt 12 — Independent grading and normalized evidence
+
+- **D-12-01 — The evaluator is a graph, not an admission variant.** `SuiteAdmission` (Prompt 10/11)
+  proves *tasks* are admissible; it deliberately runs each authored variant and answers "does this
+  oracle discriminate?". Prompt 12 needs the opposite direction: a frozen submission in, one
+  normalized evidence manifest out, for both languages, without task-authoring knowledge.
+  `packages/evaluation/src/polycodebench_evaluation/evaluator.py` therefore takes
+  `(FrozenTask, Candidate, candidate_files, overlay, config, allowed_paths, baseline_files)` and
+  reuses the same `PlanRunner` and `ExecutableLanguagePlugin` surface as admission. It never calls
+  admission code: the acceptance semantics needed by a grader (candidate validation, gate gating of
+  quality work, cross-tool dedup, baseline relations) differ from admission's, and folding them into
+  one module would have made both harder to verify.
+- **D-12-02 — Candidate bytes can never mint control material.** Overlays, `config` inputs and the
+  expected inventory reach plans only through `materialize_inputs`' role pools, which the supervisor
+  fills from trusted storage; the candidate is not a member of those pools. A submission that
+  contains files outside the output contract's `allowed_paths` (for example a replacement copy of
+  `tests/test_acceptance.py`) is rejected *before any execution* with `disallowed_paths`, so it
+  cannot even reach the test stage. The alternative — silently ignoring extra paths — was rejected
+  because a malicious submission should be visible in the evidence, not invisible in it.
+- **D-12-03 — "In scope" is decided by file content, not by file list.** Technical Spec 12.4 allows
+  unchanged debt to be penalised when it is "explicitly in the task's required repair scope". A
+  single-module task lists only the candidate file in `allowed_paths`, so a path test marks every
+  carried-over issue as in scope. The evaluator instead marks an unchanged issue
+  `unchanged_in_scope` when the candidate's bytes for that file differ from the baseline's (the
+  candidate edited the file and could have fixed it) and `unchanged_out_of_scope` when they are
+  byte-identical (carried over verbatim). This is the narrowest reading that keeps "unrelated debt
+  visible without unjustified blame" (E2E-18) honest; tasks that need finer repair-scope rules can
+  express them through their quality plan without changing the evaluator.
+- **D-12-04 — Ambiguity is a first-class result, never a silent choice.** If the candidate reports a
+  canonical key the baseline does not, but the *same family* existed at the *same path*, the
+  relation is `unknown` and the issue is written to `reviews` as `ambiguous_baseline_mapping`. It is
+  neither counted as newly introduced (unjustified blame) nor silently dropped (invisible debt).
+  Same-family keys that vanished from the candidate are listed in `resolutions` as `resolved`, or as
+  `unknown`+ambiguous when the family moved. Prompt 15 decides whether an `unknown` relation may
+  carry a deduction; adjudication remains a review-time decision.
+- **D-12-05 — Native tool metrics and the PolyCodeBench gate are separate fields.** `native_metrics`
+  keeps each tool's own status/finding count (ruff `completed_with_findings` + 4 findings is the
+  tool's truth), while `gate`/`group_verdicts` carry the stricter PolyCodeBench verdict. A findings
+  exit is a *complete* scan for this purpose: only `tool_error`, `timed_out`, `output_missing` or a
+  non-measured scan observation make an analyzer incomplete, and every required analyzer that is
+  incomplete adds `required_scan_not_measured` to `incomplete` plus a review item. It is therefore
+  impossible for an empty report, crash or unsupported check to read as a clean scan.
+- **D-12-06 — Robustness scenarios get full credit or nothing.** No scenario declares partial
+  credit, so `ScenarioEvidence` only allows `credit_bp = weight_bp` when every declared repetition of
+  the scenario's group passes, or `0`. If any repetition is incomplete, the whole scenario is
+  `incomplete` and `robustness_score_bp` is `None` — not a partial number computed after the fact.
+  `hard_acceptance` scenarios fail the correctness gate outright; quality-only scenarios only reduce
+  the weighted robustness value. Weights are read from the task oracle (which enforces that they sum
+  to 10000 basis points), never from observed outcomes.
+- **D-12-07 — Property/fuzz identity is what the harness actually ran.** The pytest guest plugin
+  registers a derandomized Hypothesis profile and reports its version, example count and shrinking
+  policy in the report's session record; the evaluator lifts those facts verbatim into
+  `PropertyEvidence` instead of assuming them from the oracle. Rust tasks record
+  `cargo-test-source-seeded`, because the property cases there are deterministic PRNG cases whose
+  generator lives in the test source, not an external fuzz engine. Nothing here asserts fuzz
+  coverage, corpus digest or time budgets; those remain N/A for these adapters.
+- **D-12-08 — A duplicate report is kept as evidence but counted once.** `plugin.normalize()` decides
+  the canonical entry (context verdict wins, otherwise highest severity), and the evaluator's
+  `IssueEvidence.tools` lists *every* check id that reported the key. This was found by real
+  execution: an earlier version grouped the already-normalized observations, which silently dropped
+  the second tool's name and made a genuinely deduplicated issue look like a single-tool finding.
+  The manifest therefore keeps the pre-normalization member list for provenance and the normalized
+  observation for severity/owner.
+- **D-12-09 — Evidence artifacts are digest-addressed, and rejected submissions are still evidence.**
+  `raw_artifacts` records stage, path, digest and size for every plan output actually collected
+  (build reports, test-report JSONL, analyzer JSON). A submission rejected in step 1 or at build time
+  still produces a manifest, with `gate: fail`, the rejection reason in `gate_reasons` and the
+  collected raw artifacts attached — a rejection is a result, not an absence of one.
+
 ## Prompt 11 — Rust (PCB-11-1: toolchains and evaluator identity)
 
 - **D-11-01 - The Rust wheelhouse is a components *image*, not a directory of files.** `rustup` unpacks a component and then deletes its payload, so unlike Python wheels there is nothing file-level to vendor or hash-verify per package. The faithful analogue of the Python wheelhouse download is therefore an image that already contains every pinned component. `scripts/fetch_rust_components.py` builds it once and is the only step in the Rust pipeline that uses a network; `build_rust_images.py` then builds all three recipes with `--network none`.

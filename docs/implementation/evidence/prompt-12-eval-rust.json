@@ -1,0 +1,986 @@
+{
+  "schema_version": 1,
+  "kind": "evaluation_evidence",
+  "evaluation_id": "9ac7b72e-fd4f-423a-b304-7a484366be00",
+  "task_id": "conformance-rust-top-words",
+  "task_version": 1,
+  "task_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "plugin_id": "rust",
+  "execution_tier": "development_sandbox",
+  "candidate_digest": "sha256:ed34e29e008e34f900dbd51aa41f36eca06624bafe61af2679e1b5eaa47cc516",
+  "baseline_digest": "sha256:0458ef66cda9d6aa6752c90522a308b74c911750f8f12e17781fbc017019308f",
+  "overlay_digest": "sha256:6cc18b8acc3efea12df8aa5b327127f4b0d6c88a52d121b5019e3f92a0ee155c",
+  "config_digest": "sha256:9ccae58099d8a932d0e2bb711a0d32b922eb5ba5276824676a0b3518462ce5b0",
+  "inventory_digest": "sha256:64e0173c3e830b14c6c08ba478c6ac72e029e52fdf57115043a5b523223c5596",
+  "allowed_paths_ok": true,
+  "disallowed_paths": [],
+  "build_verdict": "pass",
+  "build_detail": "the crate compiles",
+  "gate": "pass",
+  "gate_reasons": [],
+  "failed_cases": [],
+  "group_verdicts": [
+    {
+      "schema_version": 1,
+      "kind": "group_verdict_evidence",
+      "group_id": "behaviour",
+      "required": true,
+      "verdict": "pass",
+      "reasons": []
+    }
+  ],
+  "scenarios": [
+    {
+      "schema_version": 1,
+      "kind": "scenario_evidence",
+      "scenario_id": "large-input",
+      "group_id": "stress",
+      "weight_bp": 10000,
+      "repetitions": 3,
+      "passed_repetitions": 3,
+      "hard_acceptance": false,
+      "status": "passed",
+      "credit_bp": 10000,
+      "gate_effect": "quality_weight_only",
+      "repetition_verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ]
+    }
+  ],
+  "robustness_score_bp": 10000,
+  "cases": [
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::case_and_separators",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:a9940163f725bba87f437f7e8c0aecd74a2e38720a5e854ad8a35ad5090fc435",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::empty_input",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:777d20c2a200bbb98361b44e5562b2353618c55d966e251d42cfa67f117b0688",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::k_larger_than_distinct",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:9bb62875250eb6fd68803c825c39627ac5998e4f6305dfcde947a87de7377156",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::non_ascii_letters_are_separators",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:dfe3f02c7f48564113e8b7afca6b73c6238c15f857d3ab6200cb815a8759c27c",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::ordering::counts_never_increase_down_the_list",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:a3336b7833737bf8c0aba899292caee5b3ea0c780635e6bacfdfa8caa61f1d5a",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::ties_break_alphabetically",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:b72747160fb7cd0a59592ce16de4e781a12c992e9c8c81af3bde1dc6da5b93d3",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::uppercase_runs_are_ordinary_words",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:e53a38777f653191e3e47e9796dbf8a987779250d0a2240a80b2f6b1d6ed086e",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "behaviour",
+      "case_id": "behaviour::zero_k",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:36fecba54f841bb698f43e07a501f8776af2c8194bc187f13deaddf3e8be9c5a",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "stress",
+      "case_id": "stress::large_input_finishes_with_correct_counts",
+      "required": true,
+      "repetition": 0,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:e76d440350c2b400d4e9e9f507fa9e2fe70cfe8eae8ef7a62514eb88d61318c2",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "stress",
+      "case_id": "stress::large_input_finishes_with_correct_counts",
+      "required": true,
+      "repetition": 1,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:e76d440350c2b400d4e9e9f507fa9e2fe70cfe8eae8ef7a62514eb88d61318c2",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    },
+    {
+      "schema_version": 1,
+      "kind": "case_evidence",
+      "group_id": "stress",
+      "case_id": "stress::large_input_finishes_with_correct_counts",
+      "required": true,
+      "repetition": 2,
+      "outcome": "pass",
+      "reason": "",
+      "duration_ms": 0,
+      "input_seed": null,
+      "expected_outcome_digest": "sha256:e76d440350c2b400d4e9e9f507fa9e2fe70cfe8eae8ef7a62514eb88d61318c2",
+      "stdout_digest": null,
+      "stderr_digest": null,
+      "execution_identity": "cargo-1.83.0@sha256:a3f88da16577"
+    }
+  ],
+  "property_evidence": {
+    "schema_version": 1,
+    "kind": "property_evidence",
+    "engine": "cargo-test",
+    "engine_version": null,
+    "deterministic_policy": "cargo-test-source-seeded",
+    "examples_pinned": null,
+    "case_timeout_seconds": 10,
+    "suite_timeout_seconds": 60,
+    "seeds": [],
+    "cases": 0
+  },
+  "analyzers": [
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "clippy",
+        "side": "candidate",
+        "name": "clippy",
+        "version": "0.1.83",
+        "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+        "lock_digest": "sha256:16e861923ad295095b47beeae7b4e0ecb6be548db804e64838b90eaed4d01ac7",
+        "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-rust-parsers-1",
+        "plan_id": "rust.analysis.clippy",
+        "parser_id": "rust-clippy",
+        "required": true,
+        "scope": [
+          "src/lib.rs"
+        ]
+      },
+      "status": "completed",
+      "detail": "exit=0 timed_out=False",
+      "duration_ms": 562,
+      "findings": 1,
+      "scan_status": "measured",
+      "scan_findings": 0,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:clippy:candidate",
+          "path": "out/clippy.err",
+          "digest": "sha256:35677bf1f2bc1e05cb2fbcdbb23fdae765aab7fea5e99c249b7e87bd3cbdf48b",
+          "size_bytes": 120,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:clippy:candidate",
+          "path": "out/clippy.out",
+          "digest": "sha256:b70ec89be12c7e9d97786cda6ffbd6c9b225ec4d271c6e4350546211bbb4c664",
+          "size_bytes": 3780,
+          "format": "jsonl"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:clippy:candidate",
+          "path": "out/clippy.run.json",
+          "digest": "sha256:5853944436df54cb3cf581deae376b038fa8c4fc57aafeeada72d9dc9aa746df",
+          "size_bytes": 146,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "context",
+        "side": "candidate",
+        "name": "context-scan",
+        "version": "1.83.0",
+        "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+        "lock_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+        "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-rust-parsers-1",
+        "plan_id": "rust.analysis.context",
+        "parser_id": "rust-context",
+        "required": true,
+        "scope": [
+          "src/lib.rs"
+        ]
+      },
+      "status": "completed",
+      "detail": "exit=0 timed_out=False",
+      "duration_ms": 264,
+      "findings": 1,
+      "scan_status": "measured",
+      "scan_findings": 0,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:context:candidate",
+          "path": "out/context.json",
+          "digest": "sha256:5dbeafa3277550165ccb48e4ef059984c8b4ebfdd5c5fbc9b679d044032bcc6d",
+          "size_bytes": 175,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "miri",
+        "side": "candidate",
+        "name": "miri",
+        "version": "0.1.0@nightly-2026-09-30",
+        "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+        "lock_digest": "sha256:16e861923ad295095b47beeae7b4e0ecb6be548db804e64838b90eaed4d01ac7",
+        "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-rust-parsers-1",
+        "plan_id": "rust.analysis.miri",
+        "parser_id": "rust-miri",
+        "required": false,
+        "scope": [
+          "src/lib.rs"
+        ]
+      },
+      "status": "completed",
+      "detail": "exit=0 timed_out=False",
+      "duration_ms": 2609,
+      "findings": 1,
+      "scan_status": "measured",
+      "scan_findings": 0,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:miri:candidate",
+          "path": "out/miri.err",
+          "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:miri:candidate",
+          "path": "out/miri.out",
+          "digest": "sha256:ac3665ee804a85b8c2b905c69142a68f662f2b3e5d7f2c48b4a51822fa67597b",
+          "size_bytes": 672,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:miri:candidate",
+          "path": "out/miri.run.json",
+          "digest": "sha256:36bbfdbe1767d4bc87fa47933deb229d4f8ec09ada7c25fb6b3d94343c6f2b32",
+          "size_bytes": 155,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "clippy",
+        "side": "baseline",
+        "name": "clippy",
+        "version": "0.1.83",
+        "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+        "lock_digest": "sha256:16e861923ad295095b47beeae7b4e0ecb6be548db804e64838b90eaed4d01ac7",
+        "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-rust-parsers-1",
+        "plan_id": "rust.analysis.clippy",
+        "parser_id": "rust-clippy",
+        "required": true,
+        "scope": [
+          "src/lib.rs"
+        ]
+      },
+      "status": "completed",
+      "detail": "exit=0 timed_out=False",
+      "duration_ms": 530,
+      "findings": 1,
+      "scan_status": "measured",
+      "scan_findings": 0,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:clippy:baseline",
+          "path": "out/clippy.err",
+          "digest": "sha256:68b915e6868666af9a2f316ad6f124f32c85fb5f563e134bfe0be876a01a2a1e",
+          "size_bytes": 120,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:clippy:baseline",
+          "path": "out/clippy.out",
+          "digest": "sha256:b70ec89be12c7e9d97786cda6ffbd6c9b225ec4d271c6e4350546211bbb4c664",
+          "size_bytes": 3780,
+          "format": "jsonl"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:clippy:baseline",
+          "path": "out/clippy.run.json",
+          "digest": "sha256:e94e1f5cade9052a4b8395d17580a1c19e297c8de03c3696e98da83ce3922b37",
+          "size_bytes": 146,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "context",
+        "side": "baseline",
+        "name": "context-scan",
+        "version": "1.83.0",
+        "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+        "lock_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+        "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-rust-parsers-1",
+        "plan_id": "rust.analysis.context",
+        "parser_id": "rust-context",
+        "required": true,
+        "scope": [
+          "src/lib.rs"
+        ]
+      },
+      "status": "completed",
+      "detail": "exit=0 timed_out=False",
+      "duration_ms": 327,
+      "findings": 1,
+      "scan_status": "measured",
+      "scan_findings": 0,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:context:baseline",
+          "path": "out/context.json",
+          "digest": "sha256:5dbeafa3277550165ccb48e4ef059984c8b4ebfdd5c5fbc9b679d044032bcc6d",
+          "size_bytes": 175,
+          "format": "json"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "analyzer_evidence",
+      "tool": {
+        "schema_version": 1,
+        "kind": "tool_record",
+        "analyzer_id": "miri",
+        "side": "baseline",
+        "name": "miri",
+        "version": "0.1.0@nightly-2026-09-30",
+        "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+        "lock_digest": "sha256:16e861923ad295095b47beeae7b4e0ecb6be548db804e64838b90eaed4d01ac7",
+        "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+        "advisory_snapshot_digest": null,
+        "parser_version": "pcb-rust-parsers-1",
+        "plan_id": "rust.analysis.miri",
+        "parser_id": "rust-miri",
+        "required": false,
+        "scope": [
+          "src/lib.rs"
+        ]
+      },
+      "status": "completed_with_findings",
+      "detail": "exit=101 timed_out=False",
+      "duration_ms": 2469,
+      "findings": 1,
+      "scan_status": "measured",
+      "scan_findings": 0,
+      "complete": true,
+      "raw": [
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:miri:baseline",
+          "path": "out/miri.err",
+          "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:miri:baseline",
+          "path": "out/miri.out",
+          "digest": "sha256:5f1f4fa33939dabb4c6b7736d14d9233cb1ac3660d3bd1c57bea75a5cc9e6f4c",
+          "size_bytes": 2457,
+          "format": "text"
+        },
+        {
+          "schema_version": 1,
+          "kind": "raw_artifact_ref",
+          "stage": "analysis:miri:baseline",
+          "path": "out/miri.run.json",
+          "digest": "sha256:fc86882a75d506385609c136b0f54d443b1a2c75a31c8fa97d06cf48dddbfc82",
+          "size_bytes": 157,
+          "format": "json"
+        }
+      ]
+    }
+  ],
+  "issues": [],
+  "resolutions": [],
+  "reviews": [],
+  "profile_items": [
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "ownership_borrowing",
+      "group": "diagnostic",
+      "weight_bp": 2500,
+      "opportunities": 2,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "unsafe_soundness",
+      "group": "diagnostic",
+      "weight_bp": 2000,
+      "opportunities": 0,
+      "unique_violations": 0,
+      "status": "not_applicable",
+      "score_bp": null,
+      "reasons": [
+        "no frozen task opportunity"
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "result_option",
+      "group": "diagnostic",
+      "weight_bp": 2000,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "iterators_traits",
+      "group": "diagnostic",
+      "weight_bp": 1500,
+      "opportunities": 2,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "concurrency",
+      "group": "diagnostic",
+      "weight_bp": 1000,
+      "opportunities": 0,
+      "unique_violations": 0,
+      "status": "not_applicable",
+      "score_bp": null,
+      "reasons": [
+        "no frozen task opportunity"
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "clippy",
+      "group": "diagnostic",
+      "weight_bp": 1000,
+      "opportunities": 3,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "ownership_borrowing_api",
+      "group": "idiom",
+      "weight_bp": 3500,
+      "opportunities": 2,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "iterator_trait_composition",
+      "group": "idiom",
+      "weight_bp": 3000,
+      "opportunities": 2,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "result_option_modeling",
+      "group": "idiom",
+      "weight_bp": 2500,
+      "opportunities": 1,
+      "unique_violations": 0,
+      "status": "measured",
+      "score_bp": 10000,
+      "reasons": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "profile_item_evidence",
+      "item_id": "concurrency_abstraction",
+      "group": "idiom",
+      "weight_bp": 1000,
+      "opportunities": 0,
+      "unique_violations": 0,
+      "status": "not_applicable",
+      "score_bp": null,
+      "reasons": [
+        "no frozen task opportunity"
+      ]
+    }
+  ],
+  "diagnostic_score_bp": 10000,
+  "idiom_score_bp": 10000,
+  "profile_complete": true,
+  "native_metrics": {
+    "clippy": {
+      "side": "candidate",
+      "status": "completed",
+      "findings": 1,
+      "scan_status": "measured",
+      "complete": "yes"
+    },
+    "context-scan": {
+      "side": "candidate",
+      "status": "completed",
+      "findings": 1,
+      "scan_status": "measured",
+      "complete": "yes"
+    },
+    "miri": {
+      "side": "candidate",
+      "status": "completed",
+      "findings": 1,
+      "scan_status": "measured",
+      "complete": "yes"
+    }
+  },
+  "incomplete": [],
+  "raw_artifacts": [
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "build",
+      "path": "out/build.out",
+      "digest": "sha256:17107771ce84a42c17e585bcea4129ec1cc8876db9e945a5be5fa76a22e1bf30",
+      "size_bytes": 613,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "build",
+      "path": "out/build.err",
+      "digest": "sha256:aa5e97d59bd91f1a6ce36a60f08cb18d4d00370cdf3ba0eb4ec4b7b9966c772e",
+      "size_bytes": 120,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "build",
+      "path": "out/build.run.json",
+      "digest": "sha256:2c0050ce3b8e7c3d734efd7b353d6b58175517c9aaa7b613df2290cab4f490f8",
+      "size_bytes": 145,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:behaviour:r0",
+      "path": "out/behaviour.out",
+      "digest": "sha256:307371cbcd94532980a30034cd3ca1264285b4c7f7c9ceffab66a5dc9e146432",
+      "size_bytes": 610,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:behaviour:r0",
+      "path": "out/behaviour.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:behaviour:r0",
+      "path": "out/behaviour.run.json",
+      "digest": "sha256:04b2ceafa01f4020aa2c3121af920ecad7daac444c13839cd41b7c7bed442726",
+      "size_bytes": 144,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r0",
+      "path": "out/stress.out",
+      "digest": "sha256:d6b14db91044587d261a0ee3f1507d7b0789fe94cc8cfe385e9b143cb300f2f1",
+      "size_bytes": 359,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r0",
+      "path": "out/stress.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r0",
+      "path": "out/stress.run.json",
+      "digest": "sha256:1c30628498a93d159e702bde8f265fa71a303676ef1235d768309f41e11d293b",
+      "size_bytes": 144,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r1",
+      "path": "out/stress.out",
+      "digest": "sha256:278bbee3b66be71481cb5a49190147a5a68c48b39f48e3c606d628a579ea553a",
+      "size_bytes": 359,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r1",
+      "path": "out/stress.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r1",
+      "path": "out/stress.run.json",
+      "digest": "sha256:1c30628498a93d159e702bde8f265fa71a303676ef1235d768309f41e11d293b",
+      "size_bytes": 144,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r2",
+      "path": "out/stress.out",
+      "digest": "sha256:3c00de63be82bc0af2268612b4979fbfa806b1552c10e6c16a38a8546bc03dde",
+      "size_bytes": 359,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r2",
+      "path": "out/stress.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "test:stress:r2",
+      "path": "out/stress.run.json",
+      "digest": "sha256:32ab61a415b2508ec111a46b7d946cfc93965239c47d8afa18d0590630280661",
+      "size_bytes": 144,
+      "format": "jsonl"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/clippy.out",
+      "digest": "sha256:b70ec89be12c7e9d97786cda6ffbd6c9b225ec4d271c6e4350546211bbb4c664",
+      "size_bytes": 3780,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/clippy.err",
+      "digest": "sha256:35677bf1f2bc1e05cb2fbcdbb23fdae765aab7fea5e99c249b7e87bd3cbdf48b",
+      "size_bytes": 120,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/clippy.run.json",
+      "digest": "sha256:5853944436df54cb3cf581deae376b038fa8c4fc57aafeeada72d9dc9aa746df",
+      "size_bytes": 146,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/context.json",
+      "digest": "sha256:5dbeafa3277550165ccb48e4ef059984c8b4ebfdd5c5fbc9b679d044032bcc6d",
+      "size_bytes": 175,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/miri.out",
+      "digest": "sha256:ac3665ee804a85b8c2b905c69142a68f662f2b3e5d7f2c48b4a51822fa67597b",
+      "size_bytes": 672,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/miri.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:candidate",
+      "path": "out/miri.run.json",
+      "digest": "sha256:36bbfdbe1767d4bc87fa47933deb229d4f8ec09ada7c25fb6b3d94343c6f2b32",
+      "size_bytes": 155,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/clippy.out",
+      "digest": "sha256:b70ec89be12c7e9d97786cda6ffbd6c9b225ec4d271c6e4350546211bbb4c664",
+      "size_bytes": 3780,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/clippy.err",
+      "digest": "sha256:68b915e6868666af9a2f316ad6f124f32c85fb5f563e134bfe0be876a01a2a1e",
+      "size_bytes": 120,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/clippy.run.json",
+      "digest": "sha256:e94e1f5cade9052a4b8395d17580a1c19e297c8de03c3696e98da83ce3922b37",
+      "size_bytes": 146,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/context.json",
+      "digest": "sha256:5dbeafa3277550165ccb48e4ef059984c8b4ebfdd5c5fbc9b679d044032bcc6d",
+      "size_bytes": 175,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/miri.out",
+      "digest": "sha256:5f1f4fa33939dabb4c6b7736d14d9233cb1ac3660d3bd1c57bea75a5cc9e6f4c",
+      "size_bytes": 2457,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/miri.err",
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "analysis:baseline",
+      "path": "out/miri.run.json",
+      "digest": "sha256:fc86882a75d506385609c136b0f54d443b1a2c75a31c8fa97d06cf48dddbfc82",
+      "size_bytes": 157,
+      "format": "json"
+    }
+  ],
+  "execution_note": "candidate digest verified; candidate bytes never mint overlays/config/inventory; fresh guest per plan; exit semantics supervised; tool self-report is read-only",
+  "report_digest": "sha256:63def701b62f620f6e908385beb7ca4ac47484b6a72669ba094e74de8f9c8841"
+}

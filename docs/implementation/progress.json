@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "project": "PolyCodeBench",
-  "last_completed_prompt": "11",
-  "active_prompt": "12",
-  "active_scope": "WP-11 complete: Rust language plugin on the shared extension interfaces (pinned offline runtime/evaluator/performance images with a guest interpreter and baked Miri sysroot, build/test/symbol/clippy/context/Miri/dependency plans, libtest evidence, diagnostic and idiom profiles with context-based evidence ownership), language-neutral suite admission, and 12 protected Rust pilot clusters executable-admission passed in the development sandbox; quality admission pending Prompts 12-15.",
+  "last_completed_prompt": "12",
+  "active_prompt": "13",
+  "active_scope": "WP-12 complete: independent grading connects a frozen submission to real, container-executed evidence. `polycodebench_evaluation.evaluator` verifies candidate identity and allowed changes, runs every build/test/analyzer plan in a fresh grading guest with trusted overlays and config, reconciles the declared inventory, weights robustness scenarios, relates and deduplicates issues against the baseline, and freezes one normalized `EvaluationEvidence` manifest with digest-addressed raw artifacts. Native tool metrics stay separate from the stricter PolyCodeBench gate.",
   "phase_status": {
     "phase_0": "done",
     "phase_1": "done",
@@ -15,8 +15,8 @@
     "phase_7": "not_started",
     "phase_8": "not_started"
   },
-  "implementation_status": "in_progress",
-  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; prompt_08_partial_hosted_adapters_untested; prompt_09_done_fixture_model_dev_sandbox; E2E-07_08_passed; E2E-10_12_passed_fixture_transport; E2E-11_gateway_and_controller_restart_subcases_passed; E2E-13_14_passed_fixture_model; prompt_10_done_development_sandbox_quality_admission_pending; E2E-04_python_subcase_passed_12_of_12_clusters; E2E-15_python_conformance_14_of_14_passed; E2E-16_python_analyzer_semantics_passed; phase_2_in_progress",
+  "implementation_status": "prompt_12_done_development_sandbox; prompt_11_done; phase_2_in_progress",
+  "verification_status": "prompt_06_partial_cloud_deferred; prompt_07_partial; prompt_08_partial_hosted_adapters_untested; prompt_09_done_fixture_model_dev_sandbox; E2E-07_08_passed; E2E-10_12_passed_fixture_transport; E2E-11_gateway_and_controller_restart_subcases_passed; E2E-13_14_passed_fixture_model; prompt_10_done_development_sandbox; E2E-04_python_and_rust_subcases_passed_plus_prompt_12_evaluator_worker_variant; E2E-15_python_and_rust_passed; E2E-16_python_and_rust_passed_incl_miri; E2E-17_and_E2E-18_passed_development_sandbox; phase_2_in_progress",
   "source_manifest": "docs/implementation/source-manifest.json",
   "blockers_or_open_inputs": [
     "Pasted markdown(5).md absent; locate for complete original-source provenance",
@@ -27,13 +27,14 @@
     "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
     "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
     "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
-    "E2E-04 production/language/evaluator variants remain with Prompts 10-12/17; full E2E-27 public/cohort filters remain with Prompts 16/29",
+    "E2E-04 production execution and E2E-27 public/cohort filter variants remain with Prompts 16-17; the generic evaluator-worker variant passed in Prompt 12 at development tier only",
     "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
     "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
-    "E2E-09 ranked-release exclusion and live model usage remain with Prompt 17; model-usage retention after cancellation passed with fixture transport (Prompt 08)",
     "Production secret-store integration, operator-supplied price snapshots and context/capability declarations for real model configurations are deployment inputs",
     "Live model behaviour under the solve protocols (provider tool-call conventions, real token usage, the two-model pilot) is unverified; fixture-model evidence only until Prompt 17",
-    "Rust dependency audit has no real advisory snapshot (building one needs a network fetch of the RustSec database, an owner action); the audit fails closed"
+    "Rust dependency audit has no real advisory snapshot (building one needs a network fetch of the RustSec database, an owner action); the audit fails closed",
+    "Prompt 12 grading evidence is development-sandbox only: no production worker, no sealed hidden lane, no curator/owner rights confirmation, and the quality-plan profiles remain effective_for_scoring: false until calibration",
+    "Robustness scenarios currently run each scenario's test group with all-or-nothing credit; per-scenario partial credit, fuzz corpus/iteration budgets and judge residual items stay with Prompts 13-15"
   ],
   "evidence_summary": {
     "requirements_registered": 14,
@@ -41,9 +42,18 @@
     "e2e_scenarios_registered": 43,
     "prompts_registered": 35,
     "pcb_tickets_registered": 142,
-    "application_tests_run": 346
+    "application_tests_run": 453,
+    "prompt_12_evidence": [
+      "docs/implementation/evidence/prompt-12-eval-python.json",
+      "docs/implementation/evidence/prompt-12-eval-rust.json",
+      "docs/implementation/evidence/prompt-12-e2e-17-disallowed.json",
+      "docs/implementation/evidence/prompt-12-e2e-17-fake-success.json",
+      "docs/implementation/evidence/prompt-12-e2e-18.json",
+      "docs/implementation/evidence/prompt-12-python-conformance.json",
+      "docs/implementation/evidence/prompt-12-rust-conformance.json"
+    ]
   },
-  "exact_next_action": "Prompt 12 - Implement independent grading and normalized evidence (WP-12: generic evaluator stage over the language plugins, analyzer evidence and robustness pipeline).",
+  "exact_next_action": "Prompt 13 - Implement performance measurement (WP-13: PerformancePlan validation, exclusive worker reservation, frozen canary, paired randomized iterations, whole-process memory, weighted geometric efficiency score).",
   "prompt_statuses": {
     "00": "done",
     "01": "done",
@@ -57,7 +67,7 @@
     "09": "done",
     "10": "done",
     "11": "done",
-    "12": "not_started",
+    "12": "done",
     "13": "not_started",
     "14": "not_started",
     "15": "not_started",
@@ -205,6 +215,24 @@
       "unrelated_untracked_preserved": [
         "Constitution/production_quality_software_engineering_prompt-3.md"
       ]
+    },
+    {
+      "date": "2026-10-02",
+      "active_prompt": "12",
+      "baseline_commit": "3c8ea4f",
+      "working_tree_at_start": "clean apart from Prompt 12 work; unrelated untracked files preserved",
+      "source_hashes": "Architecture, Technical Spec and prompt pack unchanged from source-manifest.json",
+      "fresh_passes": [
+        "tests/test_evaluator.py offline normalization tests",
+        "PCB_TEST_DOCKER=1 tests/test_evaluator_docker.py (4 real-sandbox evaluations)",
+        "scripts/python_conformance.py 14/14 and scripts/rust_conformance.py 16/16 in the pinned images",
+        "full pytest suite, ruff check/format, mypy on the touched packages"
+      ],
+      "pending_or_unrun": [
+        "production worker tier, hidden-lane sealing and registry publication",
+        "performance, judge, scoring and release prompts"
+      ],
+      "no_paid_or_remote_product_actions": true
     }
   ],
   "prompt_05_completion": {
@@ -311,7 +339,7 @@
     ],
     "no_paid_or_remote_product_actions": true
   },
-  "latest_done_prompt": "10",
+  "latest_done_prompt": "12",
   "prompt_08": {
     "date": "2026-09-30",
     "migration": "9d3a71c05e24",
@@ -396,6 +424,41 @@
       "case discovery and symbol sanitiser treated // inside string literals as comments (PCB-11-4)"
     ],
     "quality_admission": "pending: Prompts 12-15, production execution tier, curator approval and freeze, owner rights confirmation",
+    "no_paid_or_remote_product_actions": true
+  },
+  "prompt_12_completion": {
+    "date": "2026-10-02",
+    "status": "done",
+    "implementation": "Independent grading graph (`packages/evaluation/src/polycodebench_evaluation/evaluator.py`), normalized evidence contract (`evidence.py`), planned-input staging through the existing `PlanRunner` in a dedicated grading lane, offline normalization tests (`tests/test_evaluator.py`) and real-sandbox acceptance tests (`tests/test_evaluator_docker.py`).",
+    "tickets": {
+      "PCB-12-1": "passed",
+      "PCB-12-2": "passed",
+      "PCB-12-3": "passed",
+      "PCB-12-4": "passed"
+    },
+    "tests": {
+      "offline_units": "4 passed (tests/test_evaluator.py)",
+      "live_docker_evaluator": "4 passed in 118s (tests/test_evaluator_docker.py)",
+      "full_suite_after_changes": "445 passed, 143 skipped",
+      "python_conformance": "14/14 passed, digest sha256:ab2abace...",
+      "rust_conformance": "16/16 passed across all 7 categories"
+    },
+    "evidence": [
+      "docs/implementation/evidence/prompt-12-eval-python.json",
+      "docs/implementation/evidence/prompt-12-eval-rust.json",
+      "docs/implementation/evidence/prompt-12-e2e-17-disallowed.json",
+      "docs/implementation/evidence/prompt-12-e2e-17-fake-success.json",
+      "docs/implementation/evidence/prompt-12-e2e-18.json",
+      "docs/implementation/evidence/prompt-12-python-conformance.json",
+      "docs/implementation/evidence/prompt-12-rust-conformance.json"
+    ],
+    "defect_found_and_fixed": "D-12-08: the first implementation grouped already-normalized observations, so a duplicate report lost the second tool's identity and looked like a single-tool finding; grouping now keeps every reporting tool while the normalized entry stays the primary.",
+    "pending": [
+      "Production-worker execution tier (Prompt 06 owner-deferred)",
+      "Performance measurement (Prompt 13), judge anchors and calibration (Prompt 14), pure scoring and replay (Prompt 15)",
+      "Frozen task-set quality admission, curator approval and owner rights confirmation",
+      "E2E-17/18 variants for the remaining languages and Track A/B families (Prompts 18-28)"
+    ],
     "no_paid_or_remote_product_actions": true
   }
 }

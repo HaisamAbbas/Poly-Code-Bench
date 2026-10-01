@@ -95,9 +95,26 @@ def _within(path: str, allowed: list[str]) -> bool:
     return any(path == a or path.startswith(a.rstrip("/") + "/") for a in allowed)
 
 
-def variant_files(package_files: Mapping[str, bytes], solution_path: str) -> dict[str, bytes]:
-    """Candidate files of one variant: everything beside its declared solution path."""
+def variant_files(
+    package_files: Mapping[str, bytes],
+    solution_path: str,
+    allowed: list[str] | None = None,
+) -> dict[str, bytes]:
+    """Candidate files of one variant: the files beside its declared solution path.
+
+    When the output contract's ``allowed`` paths are given and the solution path ends with one of
+    them (``hidden/reference/src/lib.rs`` ends with ``src/lib.rs``), the variant root is what
+    precedes it, so a crate keeps its ``src/`` layout. Otherwise the root is the solution file's
+    own directory (single-module languages).
+    """
     base = solution_path.rsplit("/", 1)[0] if "/" in solution_path else ""
+    for path in sorted(allowed or (), key=len, reverse=True):
+        if solution_path == path:
+            base = ""
+            break
+        if solution_path.endswith("/" + path):
+            base = solution_path[: -len(path) - 1]
+            break
     prefix = base + "/" if base else ""
     return {
         path[len(prefix) :]: data for path, data in package_files.items() if path.startswith(prefix)
@@ -130,6 +147,10 @@ class SuiteAdmission:
         self._tier = execution_tier
         self._images = image_digests
         self._gate = asyncio.Semaphore(MAX_PARALLEL)
+        # Language-specific layout comes from the plugin; the defaults are the Python layout.
+        self._prefix: str = getattr(plugin, "overlay_prefix", "")
+        self._suffixes: tuple[str, ...] = tuple(getattr(plugin, "candidate_suffixes", (".py",)))
+        self._trusted: Any = getattr(plugin, "trusted_inputs", None)
 
     # ----------------------------------------------------------------- evaluation
 
@@ -141,13 +162,15 @@ class SuiteAdmission:
         overlay: Mapping[str, bytes],
         label: str,
         repetitions: int,
+        config: Mapping[str, bytes] | None = None,
     ) -> CandidateEvaluation:
+        pool = dict(config or {})
         candidate = _candidate(view.task_id, candidate_files)
         build = self._plugin.build_plan(view, candidate)
         async with self._gate:
             build_run = await self._runner.run(
                 build,
-                materialize_inputs(build, {"candidate": candidate_files}),
+                materialize_inputs(build, {"candidate": candidate_files, "config": pool}),
                 stage_id=f"adm-build-{label}"[:100],
             )
         verdict, detail = self._plugin.parse_build(build, build_run.reader())
@@ -164,7 +187,8 @@ class SuiteAdmission:
 
         async def one(group_plan: TestGroupPlan, repetition: int) -> None:
             files = materialize_inputs(
-                group_plan.plan, {"candidate": candidate_files, "overlay": overlay}
+                group_plan.plan,
+                {"candidate": candidate_files, "overlay": overlay, "config": pool},
             )
             async with self._gate:
                 run = await self._runner.run(
@@ -238,20 +262,25 @@ class SuiteAdmission:
         view: FrozenTask,
         candidate_files: Mapping[str, bytes],
         label: str,
+        overlay: Mapping[str, bytes] | None = None,
+        config: Mapping[str, bytes] | None = None,
     ) -> tuple[list[Observation], tuple[str, ...]]:
-        paths = tuple(sorted(p for p in candidate_files if p.endswith(".py")))
+        paths = tuple(sorted(p for p in candidate_files if p.endswith(self._suffixes)))
         context = AnalysisContext(
             task=view, candidate_digest=digest_files(candidate_files), candidate_paths=paths
         )
         observations: list[Observation] = []
         scans: list[str] = []
-        config: dict[str, bytes] = {}
-        if view.dependency_inventory:
-            config["config/dependencies.json"] = json.dumps(
+        pool: dict[str, bytes] = dict(config or {})
+        if view.dependency_inventory and "config/dependencies.json" not in pool:
+            pool["config/dependencies.json"] = json.dumps(
                 {name: "0" for name in view.dependency_inventory}
             ).encode()
         for plan in self._plugin.analysis_plans(context):
-            files = materialize_inputs(plan, {"candidate": candidate_files, "config": config})
+            files = materialize_inputs(
+                plan,
+                {"candidate": candidate_files, "config": pool, "overlay": dict(overlay or {})},
+            )
             async with self._gate:
                 run = await self._runner.run(
                     plan, files, stage_id=f"adm-{plan.analyzer_id}-{label}"[:100]
@@ -271,6 +300,7 @@ class SuiteAdmission:
         view: FrozenTask,
         candidate_files: Mapping[str, bytes],
         overlay: Mapping[str, bytes],
+        config: Mapping[str, bytes] | None = None,
     ) -> tuple[bool, str]:
         """Run the smallest workload once on the reference: proves the workload is runnable and
         its verifier accepts the reference. (Paired timing is the Prompt 13 stage.)"""
@@ -283,7 +313,10 @@ class SuiteAdmission:
             for part in plan.iteration_plan.argv
         )
         iteration = plan.iteration_plan.model_copy(update={"argv": argv})
-        files = materialize_inputs(iteration, {"candidate": candidate_files, "overlay": overlay})
+        files = materialize_inputs(
+            iteration,
+            {"candidate": candidate_files, "overlay": overlay, "config": dict(config or {})},
+        )
         async with self._gate:
             run = await self._runner.run(iteration, files, stage_id="adm-perf-smoke")
         if run.record.exit_code != 0 or "out/perf.json" not in run.outputs:
@@ -316,17 +349,18 @@ class SuiteAdmission:
         validation = self._plugin.validate_task(draft)
         view = self._plugin.freeze_view(draft, package_digest, int(task["version"]))
         overlay = {
-            path.removeprefix("hidden/"): data
+            self._prefix + path.removeprefix("hidden/"): data
             for path, data in files.items()
             if path.startswith(("hidden/tests/", "hidden/perf/"))
         }
+        config: dict[str, bytes] = dict(self._trusted(files, view)) if self._trusted else {}
         allowed = list(manifest["output_contract"]["allowed_paths"])
         fixtures = list(manifest["fixtures"])
 
         async def run_fixture(
             fixture: Mapping[str, Any],
         ) -> tuple[Mapping[str, Any], dict[str, bytes], CandidateEvaluation]:
-            candidate_files = variant_files(files, fixture["solution_path"])
+            candidate_files = variant_files(files, fixture["solution_path"], allowed)
             reps = REFERENCE_REPETITIONS if fixture["variant"] == "reference" else 1
             result = await self.evaluate(
                 view=view,
@@ -334,19 +368,24 @@ class SuiteAdmission:
                 overlay=overlay,
                 label=fixture["name"],
                 repetitions=reps,
+                config=config,
             )
             return fixture, candidate_files, result
 
         outcomes = await asyncio.gather(*(run_fixture(f) for f in fixtures))
         reference_files = next((cf for f, cf, _ in outcomes if f["variant"] == "reference"), {})
         smoke = await self.workload_smoke(
-            view=view, candidate_files=reference_files, overlay=overlay
+            view=view, candidate_files=reference_files, overlay=overlay, config=config
         )
         analyses: dict[str, tuple[list[Observation], tuple[str, ...]]] = {}
         for fixture, candidate_files, _ in outcomes:
             if fixture["variant"] in {"reference", "quality_defective"}:
                 analyses[fixture["name"]] = await self.analyze(
-                    view=view, candidate_files=candidate_files, label=fixture["name"]
+                    view=view,
+                    candidate_files=candidate_files,
+                    label=fixture["name"],
+                    overlay=overlay,
+                    config=config,
                 )
         return self._report(
             task, package_digest, validation, outcomes, analyses, allowed, view, precheck, smoke
@@ -453,7 +492,7 @@ class SuiteAdmission:
             defect_ok,
             "quality-defective variants pass the functional gate yet show their intended defect",
         )
-        required_scans = {f"python.{a}.scan" for a in view.required_analyzers}
+        required_scans = {f"{self._plugin.language_id}.{a}.scan" for a in view.required_analyzers}
         reference_scans = {
             entry.split("=")[0]: entry.split("=")[1]
             for f, _ in reference

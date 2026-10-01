@@ -216,3 +216,24 @@ def test_structural_validation_failures_block_admission() -> None:
 def test_every_variant_kind_is_required(variant: str) -> None:
     outcomes = [o for o in good_outcomes() if o[0]["variant"] != variant]
     assert not report(outcomes).executable_admission_passed
+
+
+def test_variant_files_keep_a_crate_layout_when_the_output_contract_names_the_path() -> None:
+    package = {
+        "hidden/reference/src/lib.rs": b"reference",
+        "hidden/reference/notes.txt": b"n",
+        "admission/faulty/src/lib.rs": b"faulty",
+        "hidden/oracle.json": b"{}",
+    }
+    allowed = ["src/lib.rs"]
+    reference = variant_files(package, "hidden/reference/src/lib.rs", allowed)
+    assert reference == {"src/lib.rs": b"reference", "notes.txt": b"n"}
+    assert variant_files(package, "admission/faulty/src/lib.rs", allowed) == {
+        "src/lib.rs": b"faulty"
+    }
+    # Without the output contract the old single-module behaviour is unchanged.
+    assert variant_files(package, "admission/faulty/src/lib.rs") == {"lib.rs": b"faulty"}
+    flat = {"hidden/reference/solution.py": b"x", "hidden/oracle.json": b"{}"}
+    assert variant_files(flat, "hidden/reference/solution.py", ["solution.py"]) == {
+        "solution.py": b"x"
+    }

@@ -309,3 +309,20 @@ Database and object-store commands ran against the local PostgreSQL 17.6 and Sea
 | `uv build --all-packages --offline --out-dir <scratch>` | PASS: all workspace packages built. |
 | `pcb-solve protocols` | Lists both installed protocols with digests, tools, budgets and ceilings. |
 | `pcb-solve inspect <attempt-id>` | Exercised through `inspect_attempt` on the E2E-13 and E2E-14 attempts (tests assert its output); the CLI wrapper only adds environment wiring and was not run against a live stack. |
+
+## Prompt 11 completion (PCB-11-2 and PCB-11-4)
+
+| Command | Result |
+|---|---|
+| `python scripts/build_rust_images.py` (twice) | PASS. Rebuilt with the guest interpreter and a baked Miri sysroot; `require_distinct()` passes. Digests are in `config/images/rust-v1.json`. |
+| `python scripts/record_rust_tool_fixtures.py` | PASS. 10 scenarios recorded from real sandbox runs into `tests/fixtures/rust_tool_output/`. |
+| `pytest tests/test_rust_plugin.py tests/test_rust_parsers.py tests/test_rust_guest.py tests/test_rust_profile.py tests/test_rust_locks.py tests/test_rust_pilot_inventory.py` | PASS, 93 tests. |
+| `PCB_TEST_DOCKER=1 pytest tests/test_rust_docker.py tests/test_plan_runner.py tests/test_sandbox.py` | PASS, 22 tests (real Docker, development tier). |
+| `pytest tests/test_suite_admission.py tests/test_plan_runner.py tests/test_python_plugin.py tests/test_python_parsers.py tests/test_python_guest.py tests/test_task_packages_suite.py tests/test_sandbox.py` | PASS: 185 passed, 7 skipped (the Python side after the shared-contract and admission-engine changes). |
+| `python scripts/rust_task_tool.py seal-all --check` | PASS, 12/12 sealed. |
+| `python scripts/rust_admit_all.py` | PASS, 12/12 packages: executable admission passed, `quality_admission: pending`. |
+| `python scripts/rust_pilot_inventory.py --protected .protected/taskpacks/rust-pilot --reports .protected/reports --output taskpacks/rust-pilot/inventory.yaml` | PASS: 12 packages, 12 executable-admission-passed. |
+| `python scripts/rust_conformance.py --report docs/implementation/evidence/prompt-11-conformance.json` | PASS, 16/16 cases across the 7 categories (real Docker, development tier). |
+| `ruff format --check .`; `ruff check .`; `check_boundaries.py`; `verify_prompt00.py` | PASS. |
+| PostgreSQL-gated suites, cloud, registry and paid-provider actions | NOT RUN: out of scope; none was taken. |
+

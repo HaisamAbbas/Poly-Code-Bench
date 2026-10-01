@@ -85,7 +85,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 08 | Prompt 08 | — Implement model adapters and budget accounting | WP-08 | Model adapters, endpoint registration, usage and budget gateway | partial (hosted OpenAI-compatible/Anthropic/Google adapters live-untested; two-model live pilot remains Prompt 17) |
 | 09 | Prompt 09 | — Implement single-shot and agent execution | WP-09 | Single-shot and standard agent with durable tools/checkpoints | done (fixture model and development sandbox; live model evidence Prompt 17) |
 | 10 | Prompt 10 | — Implement Python support | WP-10 | Python plugin, pinned toolchain, task fixtures and profiles | done (development sandbox: 12/12 clusters executable-admission passed; quality admission pending Prompts 12–15) |
-| 11 | Prompt 11 | — Implement Rust support | WP-11 | Rust plugin, pinned toolchain, task fixtures and profiles | not_started |
+| 11 | Prompt 11 | — Implement Rust support | WP-11 | Rust plugin, pinned toolchain, task fixtures and profiles | done (development sandbox: 12/12 clusters executable-admission passed; quality admission pending Prompts 12–15) |
 | 12 | Prompt 12 | — Implement independent grading and normalized evidence | WP-12 | Independent grading, analyzer evidence and robustness pipeline | not_started |
 | 13 | Prompt 13 | — Implement performance measurement | WP-13 | Paired runtime/memory measurements and stability policy | not_started |
 | 14 | Prompt 14 | — Implement judging, review and calibration | WP-14 | Three-vote judge pipeline, reviewer flow and calibration evidence | not_started |

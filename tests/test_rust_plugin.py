@@ -342,3 +342,25 @@ def test_the_plugin_publishes_its_profile_and_rejects_unknown_versions() -> None
     assert plugin.profile("rust-profile-v1").language_id == "rust"
     with pytest.raises(ValueError):
         plugin.profile("rust-profile-v0")
+
+
+def test_comment_markers_inside_literals_do_not_desync_case_discovery() -> None:
+    """Found by the pilot authors: `"//host"` and `'"'` once truncated lines / opened strings."""
+    source = b"""
+    #[test] fn unc_prefix() { assert!(reject("//host/share")); let _q = '"'; }
+    #[test] fn after_literals() { let _s = "///"; }
+    mod nested {
+        #[test] fn deep() { let _t = r#"// not a comment "# ; }
+    }
+    """
+    assert discover_cases("tests/lit.rs", source) == [
+        "lit::unc_prefix",
+        "lit::after_literals",
+        "lit::nested::deep",
+    ]
+    index = plugin.symbols(
+        DictArtifactReader(
+            {"src/lib.rs": b'pub fn a() -> &\'static str { "//x" }\npub fn b() {}\n'}
+        )
+    )
+    assert {s.qualified_name for s in index.symbols} >= {"crate::a", "crate::b"}

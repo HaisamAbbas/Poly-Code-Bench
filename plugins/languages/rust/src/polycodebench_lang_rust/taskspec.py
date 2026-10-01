@@ -45,6 +45,7 @@ from polycodebench_plugins_api.testreport import InventoryGroup, inventory_from_
 from pydantic import Field, ValidationError, model_validator
 
 from polycodebench_lang_rust.locks import LockError, lock_digest
+from polycodebench_lang_rust.symbols import sanitize
 
 # Item names are the profile's (config/languages/profiles-v1.yaml#profiles.rust).
 DIAGNOSTIC_ITEMS = (
@@ -278,8 +279,6 @@ def quality_from_mapping(document: Mapping[str, object]) -> RustQualityPlan:
 
 # ------------------------------------------------------------------------ test discovery
 
-_COMMENT = re.compile(r"//[^\n]*|/\*.*?\*/", re.DOTALL)
-_STRING = re.compile(r'"(?:\\.|[^"\\])*"|b"(?:\\.|[^"\\])*"', re.DOTALL)
 _TOKEN = re.compile(
     r"#\[(?P<attr>[^\]]*)\]|\bmod\s+(?P<mod>[A-Za-z_]\w*)\s*\{|\bfn\s+(?P<fn>[A-Za-z_]\w*)"
     r"|(?P<open>\{)|(?P<close>\})"
@@ -293,8 +292,7 @@ def discover_cases(path: str, source: bytes) -> list[str]:
     test binary. Items under ``#[cfg(test)] mod`` count; a ``#[test]`` that is also ``#[ignore]``
     is still discovered (it must be declared, as skipped, in the oracle).
     """
-    text = source.decode("utf-8", errors="replace")
-    text = _STRING.sub('""', _COMMENT.sub("", text))
+    text = sanitize(source.decode("utf-8", errors="replace"))
     stem = path.replace("\\", "/").rsplit("/", 1)[-1].removesuffix(".rs")
     found: list[str] = []
     modules: list[tuple[str, int]] = []

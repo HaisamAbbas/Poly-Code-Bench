@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from typing import Literal
 
 from polycodebench_core.models import Candidate, Observation, ScoreDimension
@@ -40,6 +41,7 @@ from polycodebench_lang_rust.taskspec import (
     oracle_from_mapping,
     parse_oracle,
     parse_quality_plan,
+    quality_from_mapping,
     validate_rust_task,
 )
 from polycodebench_lang_rust.testparse import parse_group_report
@@ -91,6 +93,10 @@ class RustAnalyzer:
 class RustLanguagePlugin:
     api_version = API_VERSION
     language_id = "rust"
+    # Layout hints for suite admission: plans put the crate under ``work/`` and take candidate
+    # sources, hidden tests and trusted scaffolding as separate, role-checked inputs.
+    overlay_prefix = "work/"
+    candidate_suffixes = (".rs",)
 
     def __init__(self, identities: ImageIdentities | None = None) -> None:
         self._identities = identities or load_identities()
@@ -174,6 +180,11 @@ class RustLanguagePlugin:
                 }
             )
         )
+
+    def trusted_inputs(self, files: Mapping[str, bytes], view: FrozenTask) -> dict[str, bytes]:
+        """The crate scaffold (``config`` role) keyed by the plan input path that names it."""
+        crate = quality_from_mapping(view.quality).crate_files
+        return {f"work/{path}": files[f"visible/repo/{path}"] for path in crate}
 
     def inventory(self, task: FrozenTask) -> tuple[InventoryGroup, ...]:
         return oracle_from_mapping(task.inventory).inventory()

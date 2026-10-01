@@ -14,10 +14,16 @@ from dataclasses import dataclass, field
 
 from polycodebench_plugins_api import ArtifactReader, Symbol, SymbolIndex
 
-_RAW_STRING = re.compile(r'r(?P<hashes>#*)".*?"(?P=hashes)', re.DOTALL)
-_STRING = re.compile(r'b?"(?:\\.|[^"\\])*"', re.DOTALL)
-_CHAR = re.compile(r"b?'(?:\\.[^']*|[^'\\])'")
-_COMMENT = re.compile(r"//[^\n]*|/\*.*?\*/", re.DOTALL)
+# One alternation, scanned left to right, so whichever construct starts first wins: a `//` inside a
+# string literal is string content, and a `"` inside a char literal does not open a string.
+_LITERAL = re.compile(
+    r"//[^\n]*"
+    r"|/\*.*?\*/"
+    r'|b?r(?P<hashes>#*)".*?"(?P=hashes)'
+    r'|b?"(?:\\.|[^"\\])*"'
+    r"|b?'(?:\\.[^']*|[^'\\])'",
+    re.DOTALL,
+)
 _TOKEN = re.compile(
     r"(?P<impl>\bimpl\b(?P<ihead>[^{;]*))"
     r"|(?P<item>(?P<vis>\bpub(?:\s*\([^)]*\))?\s+)?"
@@ -44,9 +50,7 @@ def _blank(match: re.Match[str]) -> str:
 
 def sanitize(text: str) -> str:
     """Blank out comments, strings and char literals, keeping every newline (line numbers)."""
-    for pattern in (_COMMENT, _RAW_STRING, _STRING, _CHAR):
-        text = pattern.sub(_blank, text)
-    return text
+    return _LITERAL.sub(_blank, text)
 
 
 @dataclass

@@ -65,3 +65,9 @@ ignore_errors = true
 # workspace imports, so the images stay self-contained) and are exercised by the image tests.
 module = "polycodebench_lang_python.guest.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+# The Rust guest scripts (context scanner, Miri classifier, libtest parser) have the same
+# constraint: plain stdlib, copied verbatim into the pinned Rust images, POSIX-only at runtime.
+module = "polycodebench_lang_rust.guest.*"
+ignore_errors = true

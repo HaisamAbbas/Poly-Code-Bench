@@ -28,6 +28,7 @@ OUTPUT = ROOT / "config" / "images" / "rust-components.json"
 BASE_DIGEST = "sha256:540c902e99c384163b688bbd8b5b8520e94e7731b27f7bd0eaa56ae1960627ab"
 BASE_IMAGE = f"rust@{BASE_DIGEST}"
 COMPONENTS_TAG = "pcb-rust-components:v1"
+COMPONENTS_BASE_TAG = "pcb-rust-components-base:v1"
 STABLE_COMPONENTS = ("clippy", "rustfmt")
 MIRI_TOOLCHAIN = "nightly-2026-09-30"
 MIRI_COMPONENTS = ("miri", "rust-src")
@@ -56,7 +57,13 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def component_versions(digest: str) -> dict[str, str]:
+def component_versions(tag: str, digest: str) -> dict[str, str]:
+    """Versions reported by a components image itself.
+
+    `rustup` installs proxy shims for every tool into `~/.cargo/bin` whether or not the
+    component exists, so a version is only reported when the command actually runs.
+    """
+
     def ask(*argv: str) -> str:
         result = run(
             [
@@ -71,6 +78,8 @@ def component_versions(digest: str) -> dict[str, str]:
             ],
             check=False,
         )
+        if result.returncode != 0:
+            return "absent"
         text = (result.stdout + result.stderr).strip()
         return text.splitlines()[-1] if text else "unknown"
 
@@ -164,6 +173,50 @@ def build_components(dockerfile: Path) -> None:
         raise SystemExit("components image build failed (this is the one step that needs network)")
 
 
+BASE_DOCKERFILE = """# Prebuilt *base* Rust component image (Prompt 11): the pinned toolchain as
+# it ships, plus the vendored offline crates. Deliberately no clippy, no rustfmt and no
+# nightly, so the runtime and performance recipes cannot run an analyzer.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+COPY sysroot-vendor /opt/pcb/vendor
+"""
+
+
+def build_base_components(context: Path, vendor: Path) -> str:
+    """Build the analyzer-free components image and return its digest."""
+    base_context = context / "base"
+    if base_context.exists():
+        shutil.rmtree(base_context)
+    (base_context / "sysroot-vendor").mkdir(parents=True)
+    for path in vendor.rglob("*"):
+        if path.is_file():
+            target = base_context / "sysroot-vendor" / path.relative_to(vendor)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+    (base_context / "Dockerfile").write_text(BASE_DOCKERFILE, encoding="utf-8", newline="\n")
+    result = run(
+        [
+            "docker",
+            "build",
+            "--network",
+            "none",
+            "--pull=false",
+            "--build-arg",
+            f"BASE_IMAGE={BASE_IMAGE}",
+            "-t",
+            COMPONENTS_BASE_TAG,
+            str(base_context),
+        ],
+        check=False,
+    )
+    if result.returncode != 0:
+        sys.stderr.write(result.stdout + result.stderr)
+        raise SystemExit("base components image build failed")
+    return run(
+        ["docker", "image", "inspect", COMPONENTS_BASE_TAG, "--format", "{{.Id}}"]
+    ).stdout.strip()
+
+
 def main() -> int:
     CONTEXTS.mkdir(parents=True, exist_ok=True)
     dockerfile = CONTEXTS / "Dockerfile"
@@ -181,22 +234,34 @@ def main() -> int:
     digest = run(
         ["docker", "image", "inspect", COMPONENTS_TAG, "--format", "{{.Id}}"]
     ).stdout.strip()
-    versions = component_versions(digest)
+    base_digest = build_base_components(CONTEXTS, CONTEXTS / "sysroot-vendor")
+    versions = component_versions(COMPONENTS_TAG, digest)
+    base_versions = component_versions(COMPONENTS_BASE_TAG, base_digest)
     document = {
         "schema_version": 1,
-        "kind": "rust_components_image",
+        "kind": "rust_components_images",
         "note": (
-            "Prebuilt component image; the only step that uses a network. build_rust_images.py "
-            "copies /usr/local/rustup out of it with --network none."
+            "Prebuilt component images; the only step that uses a network. build_rust_images.py "
+            "builds the three recipes from these with --network none. The base image carries no "
+            "analyzers, which is what keeps the runtime and performance recipes genuinely "
+            "distinct from the evaluator recipe."
         ),
         "base_image": {"reference": BASE_IMAGE, "digest": BASE_DIGEST},
-        "tag": COMPONENTS_TAG,
-        "digest": digest,
-        "stable_components": list(STABLE_COMPONENTS),
-        "miri_toolchain": MIRI_TOOLCHAIN,
-        "miri_components": list(MIRI_COMPONENTS),
-        "tools": versions,
-        "dockerfile_digest": sha256_file(dockerfile),
+        "evaluator": {
+            "tag": COMPONENTS_TAG,
+            "digest": digest,
+            "stable_components": list(STABLE_COMPONENTS),
+            "miri_toolchain": MIRI_TOOLCHAIN,
+            "miri_components": list(MIRI_COMPONENTS),
+            "tools": versions,
+            "dockerfile_digest": sha256_file(dockerfile),
+        },
+        "base": {
+            "tag": COMPONENTS_BASE_TAG,
+            "digest": base_digest,
+            "tools": base_versions,
+            "dockerfile_digest": sha256_file(CONTEXTS / "base" / "Dockerfile"),
+        },
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -20,6 +20,7 @@ OWNERS = {
     "polycodebench_configuration": "configuration",
     "polycodebench_plugins_api": "plugins_api",
     "polycodebench_lang_python": "lang_python",
+    "polycodebench_lang_rust": "lang_rust",
 }
 ALLOWED = {
     "core": set(),
@@ -32,7 +33,11 @@ ALLOWED = {
     "publication": {"core", "scoring"},
     "configuration": set(),
     "plugins_api": {"core"},
+    # A language plugin is an adapter over the shared extension interfaces. It may depend on the
+    # core contracts and the plugins API, and must never depend on a higher layer such as
+    # services, evaluation or persistence.
     "lang_python": {"core", "plugins_api"},
+    "lang_rust": {"core", "plugins_api"},
 }
 FORBIDDEN_IMPORTS = {
     "core": ("fastapi", "typer", "sqlalchemy", "alembic", "openai", "anthropic", "boto3"),

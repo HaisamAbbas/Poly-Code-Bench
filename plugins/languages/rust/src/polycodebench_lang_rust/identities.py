@@ -36,7 +36,10 @@ class ImageRecord(_Strict):
     digest: Digest
     rustc: str
     cargo: str
+    # Probed for every tool in every recipe; a tool this image does not ship is recorded as
+    # ``absent`` rather than omitted, so the record states the recipe difference explicitly.
     tools: dict[str, str]
+    expected_tools: tuple[str, ...] = ()
     components: tuple[str, ...]
     guest_and_rules_digest: Digest
     recipe_digest: Digest

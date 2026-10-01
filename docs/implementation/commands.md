@@ -110,6 +110,24 @@ All Python image and admission evidence is `development_sandbox` tier (local Doc
 | `python scripts/python_conformance.py --report docs/implementation/evidence/prompt-10-conformance.json` | PASS: 14/14 cases across all 7 categories. |
 | `python -m pytest tests -q -p no:cacheprovider` | PASS: 346 passed, 136 skipped (Docker/PostgreSQL gated). |
 | `$env:PCB_TEST_DOCKER=1; python -m pytest tests/test_python_conformance_docker.py tests/test_python_guest.py -q` | PASS: 2 Docker conformance/admission tests passed in 594s; guest POSIX tests remain covered in-image. |
+## PCB-11-1 checks actually run (2026-10-01)
+
+Rust evidence is `development_sandbox` tier (local Docker). Two steps touch the network; every
+other command runs offline.
+
+| Command / check | Result |
+|---|---|
+| `python scripts/fetch_rust_components.py` | PASS. The one online step: builds the analyzer components image (clippy, rustfmt, pinned nightly Miri + rust-src) and the analyzer-free base image, and vendors the 1262 crate files Miri's sysroot resolves. |
+| `python scripts/build_rust_images.py` | PASS. Builds the three recipes with `--network none`. `require_distinct()` verified the analyzers run only in the evaluator image, are absent from the other two, and the three digests differ. It rejected a first attempt at the runtime recipe that was not actually distinct. |
+| `docker run --network none pcb-rust-<recipe> bash probe.sh` | PASS. Confirmed by execution (not `command -v`, which finds rustup shims in every image): runtime = rustc/cargo only; performance = rustc/cargo plus a baked `[profile.release]`; evaluator = plus clippy, rustfmt and Miri. |
+| `pytest tests/test_rust_locks.py` | PASS, 8 tests: real cargo locks parse; the digest tracks the resolution and ignores formatting; a real dependency change moves the identity; an unpinned lock is rejected; malformed locks are rejected; the lock digest reaches `ToolIdentity.lock_digest`; the recorded identity describes three distinct recipes. |
+| `pytest tests -q -p no:cacheprovider` (excluding Docker/PostgreSQL-gated modules) | PASS: 323 passed, 66 skipped, 0 failed. |
+| `mypy --disable-error-code=import-untyped plugins/languages/rust/src scripts/build_rust_images.py scripts/fetch_rust_components.py` | PASS: 9 source files, strict, no issues. Rust guest scripts are covered by a documented `ignore_errors` override, as for Python (D-11-07). |
+| `python -m ruff format --check .`; `python -m ruff check .` | PASS. |
+| `python scripts/check_boundaries.py` | PASS. `lang_rust` was added to the allowed dependency map with the same permissions as `lang_python`; without it the checker raised `KeyError`. |
+| `python docs/implementation/verify_prompt00.py` | PASS: 14 REQ, 24 WP, 43 E2E, Prompts 00–34, 142 PCB tickets, owners/evidence, progress, source hashes. |
+| Online installation during a scored run | NOT USED by design: images are built `--network none` from the prebuilt components image, cargo source replacement points at the vendored crates, and plans declare `network: none`. |
+| Docker/PostgreSQL-gated suites and live providers | NOT RUN: unchanged from earlier prompts and out of scope for this ticket. No cloud, registry or paid-provider action was taken. |
 | `python -m mypy --disable-error-code=import-untyped packages/plugins-api/src packages/evaluation/src plugins/languages/python/src` | PASS: 26 source files, strict, no issues. Guest scripts are covered by a documented `ignore_errors` override (D-10-09). |
 | `python -m ruff format --check .`; `python -m ruff check .` | PASS: 201 files formatted; lint clean. |
 | `python scripts/check_boundaries.py` | PASS. |

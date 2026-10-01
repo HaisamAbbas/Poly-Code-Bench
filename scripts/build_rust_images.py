@@ -38,13 +38,24 @@ RECIPES = ("runtime", "evaluator", "performance")
 # nightly for it, and that version is part of the recorded evaluator identity. This image is the
 # Rust analogue of the Python wheelhouse and is built once by scripts/fetch_rust_components.py --
 # the only step in the whole Rust pipeline that uses a network.
-COMPONENTS_IMAGE = "pcb-rust-components:v1"
+COMPONENTS_BASE_IMAGE = "pcb-rust-components-base:v1"
+COMPONENTS_EVALUATOR_IMAGE = "pcb-rust-components:v1"
+# Recipe -> the components image it is built from. This is what makes the recipes genuinely
+# distinct: runtime/performance come from the analyzer-free base, evaluator from the analyzer image.
+COMPONENTS_FOR_RECIPE = {
+    "runtime": COMPONENTS_BASE_IMAGE,
+    "performance": COMPONENTS_BASE_IMAGE,
+    "evaluator": COMPONENTS_EVALUATOR_IMAGE,
+}
 MIRI_TOOLCHAIN = "nightly-2026-09-30"
-TOOLS = {
+# Tools a recipe is *expected* to provide. Every recipe is probed for all of them so the
+# recorded identity states plainly which tools are absent rather than silently omitting them.
+EXPECTED_TOOLS = {
     "runtime": ("rustc", "cargo"),
     "evaluator": ("rustc", "cargo", "clippy", "rustfmt", "miri"),
     "performance": ("rustc", "cargo"),
 }
+ALL_TOOLS = ("rustc", "cargo", "clippy", "rustfmt", "miri")
 IGNORED_DIRS = frozenset({"__pycache__", ".git", "target"})
 
 
@@ -95,7 +106,11 @@ def build_context(recipe: str) -> Path:
 
 
 def tool_version(recipe: str, image_digest: str, tool: str) -> str:
-    """Ask the built image for a tool's version, so the record comes from the real artifact."""
+    """Ask the built image for a tool's version, so the record comes from the real artifact.
+
+    ``rustup`` installs proxy shims for every tool whether or not the component is present, so a
+    tool that is not installed is reported as ``absent`` rather than as a shim version.
+    """
     argv = {
         "rustc": ["rustc", "--version"],
         "cargo": ["cargo", "--version"],
@@ -116,9 +131,38 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
         ],
         check=False,
     )
+    if result.returncode != 0:
+        return "absent"
     text = (result.stdout + result.stderr).strip()
     match = re.search(r"\d+\.\d+\.\d+[\w.+-]*", text)
     return match.group(0) if match else "unknown"
+
+
+def require_distinct(records: dict[str, dict[str, object]]) -> None:
+    """Fail the build unless the three recipes are materially different.
+
+    The DoD asks for distinct regular/instrumented/performance recipes. Distinct *digests* are not
+    enough on their own: an earlier build produced three differently-tagged images with identical
+    contents. A recipe is only real if the analyzers actually run in the evaluator image and are
+    actually absent from the others, and the three digests differ.
+    """
+    problems: list[str] = []
+    evaluator_tools = records["evaluator"]["tools"]
+    assert isinstance(evaluator_tools, dict)
+    for tool in ("clippy", "rustfmt", "miri"):
+        if evaluator_tools.get(tool) == "absent":
+            problems.append(f"evaluator image cannot run {tool}")
+    for recipe in ("runtime", "performance"):
+        tools = records[recipe]["tools"]
+        assert isinstance(tools, dict)
+        for tool in ("clippy", "rustfmt", "miri"):
+            if tools.get(tool) != "absent":
+                problems.append(f"{recipe} image unexpectedly provides {tool}")
+    digests = {recipe: str(record["digest"]) for recipe, record in records.items()}
+    if len(set(digests.values())) != len(digests):
+        problems.append(f"recipes share an image digest: {digests}")
+    if problems:
+        raise SystemExit("recipes are not distinct: " + "; ".join(problems))
 
 
 def build(recipe: str) -> dict[str, object]:
@@ -138,7 +182,7 @@ def build(recipe: str) -> dict[str, object]:
             "--build-arg",
             f"BASE_IMAGE={BASE_IMAGE}",
             "--build-arg",
-            f"COMPONENTS_IMAGE={COMPONENTS_IMAGE}",
+            f"COMPONENTS_IMAGE={COMPONENTS_FOR_RECIPE[recipe]}",
             "--build-arg",
             f"RECIPE={recipe}",
             "-t",
@@ -151,7 +195,9 @@ def build(recipe: str) -> dict[str, object]:
         sys.stderr.write(result.stdout + result.stderr)
         raise SystemExit(f"rust image build failed for recipe {recipe}")
     digest = run(["docker", "image", "inspect", tag, "--format", "{{.Id}}"]).stdout.strip()
-    tools = {name: tool_version(recipe, digest, name) for name in TOOLS[recipe]}
+    # Probe every tool for every recipe: a tool the recipe does not ship is recorded as
+    # "absent" so the identity file states the difference instead of omitting it.
+    tools = {name: tool_version(recipe, digest, name) for name in ALL_TOOLS}
     return {
         "recipe": recipe,
         "tag": tag,
@@ -160,6 +206,7 @@ def build(recipe: str) -> dict[str, object]:
         "rustc": tools["rustc"],
         "cargo": tools["cargo"],
         "tools": tools,
+        "expected_tools": list(EXPECTED_TOOLS[recipe]),
         "components": recipe_components()[recipe],
         "guest_and_rules_digest": tree_digest(context / "pcb", ("guest", "rules")),
         "recipe_digest": sha256_file(IMAGES / "recipes.yaml"),
@@ -205,6 +252,7 @@ def main() -> int:
         print(f"wrote {ALLOWLIST.relative_to(ROOT)}")
         return 0
     images = {recipe: build(recipe) for recipe in RECIPES}
+    require_distinct(images)
     document = {
         "schema_version": 1,
         "kind": "rust_images",

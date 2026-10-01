@@ -1,0 +1,8 @@
+# This file is part of the PolyCodeBench Rust plugin test fixtures.
+# A real cargo-generated lock for a crate with no dependencies: the common shape
+# of a self-contained task crate.
+version = 4
+
+[[package]]
+name = "lock_fixture"
+version = "0.1.0"

@@ -1,45 +1,56 @@
-# PolyCodeBench Rust images (Prompt 11).
+# PolyCodeBench Rust images (Prompt 11, PCB-11-1).
 #
-# Three distinct recipes share one pinned toolchain:
-#   runtime     - rustc/cargo only; build and test plans run here (also the solve-guest image).
-#   evaluator   - runtime + clippy, rustfmt and Miri (nightly); analyzer plans run here.
-#   performance - runtime + release-profile measurement settings. Performance iteration plan.
+# Three recipes are built from two *components* images, and the recipe distinction is real:
 #
-# The Rust analogue of the Python wheelhouse is a prebuilt *components* image: `rustup` deletes a
-# component's payload once it is unpacked, so there is nothing file-level to vendor. That image is
-# built once, with network, by scripts/fetch_rust_components.py, and it is the ONLY online step.
-# This Dockerfile is then built with `--network none` and copies the finished toolchain home out of
-# it, so neither the build nor any scored run performs an online installation or fetch.
-ARG BASE_IMAGE
+#   runtime     - components-base: rustc + cargo only. Build/test plans and the solve guest.
+#                 No clippy, no rustfmt, no nightly, no Miri: a candidate cannot inspect the
+#                 analyzers that will judge it from inside the image it runs in.
+#   evaluator   - components-evaluator: runtime plus clippy, rustfmt and the pinned Miri nightly.
+#                 Analyzer plans run here.
+#   performance - components-base plus a baked release profile, so measurement codegen is fixed
+#                 by the image rather than left to whatever the task's manifest happens to say.
+#
+# `rustup` deletes a component's payload once it is unpacked, so there is nothing file-level to
+# vendor; the Rust analogue of the Python wheelhouse is therefore a prebuilt components image.
+# `scripts/fetch_rust_components.py` builds them and is the ONLY step that uses a network. This
+# Dockerfile is then built with `--network none`, so neither the build nor any scored run performs
+# an online installation or fetch.
 ARG COMPONENTS_IMAGE
-FROM ${COMPONENTS_IMAGE} AS toolchain
-FROM ${BASE_IMAGE}
+FROM ${COMPONENTS_IMAGE}
 ARG RECIPE
 ENV CARGO_NET_OFFLINE=true \
     CARGO_TERM_COLOR=never \
-    PATH=/opt/pcb/bin:${PATH} \
+    CARGO_HOME=/opt/pcb/cargo \
     PCB_RECIPE=${RECIPE}
-# The completed rustup home: stable toolchain + clippy/rustfmt + the pinned Miri nightly.
-COPY --from=toolchain /usr/local/rustup /usr/local/rustup
-# Miri's sysroot build resolves real crates from crates.io; the vendored copies ship in the
-# components image, so an offline scored run never reaches the network. Without this the sysroot
-# build fails loudly (never silently clean) and a Miri-required task is reported unsupported.
-ENV CARGO_HOME=/opt/pcb/cargo
+# Offline crates (Miri's sysroot dependencies) plus cargo source replacement. A task crate that
+# resolved a crate this image does not carry fails loudly offline rather than silently reaching
+# for crates.io during a scored run.
 RUN set -eu; \
     mkdir -p /opt/pcb/cargo; \
-    printf '%s\n' \
-        '[source.crates-io]' \
-        'replace-with = "vendored-sources"' \
-        '' \
-        '[source.vendored-sources]' \
-        'directory = "/opt/pcb/vendor"' > /opt/pcb/cargo/config.toml; \
-    if [ "${RECIPE}" = "performance" ]; then \
-        mkdir -p /etc/pcb; \
-        printf 'CARGO_PROFILE_RELEASE_LTO=false\nCARGO_PROFILE_RELEASE_CODEGEN_UNITS=1\n' \
-            > /etc/pcb/performance.env; \
-    fi; \
+    { \
+        printf '%s\n' \
+            '[source.crates-io]' \
+            'replace-with = "vendored-sources"' \
+            '' \
+            '[source.vendored-sources]' \
+            'directory = "/opt/pcb/vendor"'; \
+        if [ "${RECIPE}" = "performance" ]; then \
+            printf '%s\n' '' \
+                '# Measurement profile, fixed by the image so timings are comparable across' \
+                '# candidates and reruns. Debug assertions and overflow checks are off because' \
+                '# they are development aids whose cost would dominate a timed iteration.' \
+                '[profile.release]' \
+                'opt-level = 3' \
+                'debug = false' \
+                'debug-assertions = false' \
+                'overflow-checks = false' \
+                'lto = false' \
+                'codegen-units = 1' \
+                'panic = "abort"'; \
+        fi; \
+    } > /opt/pcb/cargo/config.toml; \
+    if [ "${RECIPE}" = "evaluator" ]; then rustc --version; cargo clippy --version; fi; \
     rustc --version; cargo --version
-COPY --from=toolchain /opt/pcb/vendor /opt/pcb/vendor
 COPY pcb /opt/pcb
 LABEL org.polycodebench.image="rust" \
       org.polycodebench.recipe="${RECIPE}"

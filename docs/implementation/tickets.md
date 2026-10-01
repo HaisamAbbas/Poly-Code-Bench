@@ -462,10 +462,14 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `11`.
 - Dependencies: task/sandbox contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented`. `infra/images/rust/{Dockerfile,recipes.yaml}`, `scripts/fetch_rust_components.py`, `scripts/build_rust_images.py`, `plugins/languages/rust/src/polycodebench_lang_rust/{identities.py,locks.py}`, `config/images/rust-v1.json`, `config/images/rust-components.json`, allowlist entry in `config/plugins/allowlist-v1.yaml`.
+- Verification: `passed` (development/local Docker tier).
 - Required verification scope: E2E-04, E2E-15, E2E-16.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_rust_locks.py` (8 tests), the recorded identity file, and the images themselves. Base `rust@sha256:540c902e99c3…` (rustc/cargo 1.83.0). Three genuinely distinct recipes built with `--network none`: **runtime** `sha256:3ed8de65c130…` (rustc+cargo only), **evaluator** `sha256:b32f71363ddd…` (+ clippy 0.1.83, rustfmt 1.8.0, Miri 0.1.0 on pinned nightly-2026-09-30), **performance** `sha256:18290037bf91…` (baked release profile: opt-level 3, codegen-units 1, debug-assertions/overflow-checks off, panic=abort). Each recipe is probed for all five tools and records `absent` for tools it does not ship, so the record states the difference rather than omitting it.
+- Distinctness is enforced, not asserted: `require_distinct()` fails the build unless the analyzers actually run in the evaluator image, are actually absent from the other two, and the three digests differ. The gate caught a real defect — an earlier build produced three differently-tagged images with identical contents.
+- Offline crates: `rustup` deletes a component payload once unpacked, so there is nothing file-level to vendor and the wheelhouse analogue is a prebuilt components image (the only step that uses a network). Miri's sysroot additionally resolves real crates from crates.io, so 1262 crate files are vendored and `CARGO_HOME` source replacement is baked in, making a scored run fully offline.
+- `Cargo.lock` identity (DoD): `locks.py` parses the lock, canonicalises the *resolution* (name/version/checksum, sorted) and rejects a lock that does not actually pin it — a registry package without cargo's checksum raises `LockError` rather than yielding an identity that could drift between runs. The digest flows into `ToolIdentity.lock_digest`, so image digest + toolchain + lock together determine the identity.
+- Pending (not this ticket): the plugin entry point `polycodebench_lang_rust.plugin:RustLanguagePlugin` is a forward reference until PCB-11-2; plans, parsers, profile and fixtures are PCB-11-2/3/4.
 - Acceptance criteria: — Build frozen Rust/Cargo toolchains, offline crates and distinct regular/instrumented/performance recipes. DoD: toolchain/Cargo.lock and image digests determine evaluator identity.
 
 ## PCB-11-2 - Prompt 11: — Implement Rust support

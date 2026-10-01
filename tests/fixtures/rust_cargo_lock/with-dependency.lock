@@ -1,0 +1,15 @@
+# This file is part of the PolyCodeBench Rust plugin test fixtures.
+# It is a real cargo-generated lock (cargo 1.83.0, lockfile version 4) with one
+# path dependency and one registry dependency, used to prove that the Cargo.lock
+# digest reflects the resolution rather than the formatting.
+version = 4
+
+[[package]]
+name = "lock_fixture"
+version = "0.1.0"
+
+[[package]]
+name = "cfg-if"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8d1f5c9e0b3a2f7d6c1e8b4a9f0c3d2e1b5a7f4c6d8e9a0b1c2d3e4f5a6b7"

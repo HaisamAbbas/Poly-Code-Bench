@@ -1,8 +1,8 @@
 # Rust language plugin (Prompt 11)
 
-Scope: **PCB-11-1 only** — pinned toolchains, offline crates, and distinct
-regular/instrumented/performance recipes. The plugin entry point, plans, parsers, profile and
-admission fixtures are PCB-11-2/3/4 and are not here yet.
+Scope: **PCB-11-1** (pinned toolchains, offline crates, distinct recipes) and **PCB-11-3** (the
+diagnostic/idiom profile). The plugin entry point, plans, parsers and admission fixtures are
+PCB-11-2/4 and are not here yet.
 
 | Piece | Location |
 |---|---|
@@ -13,7 +13,8 @@ admission fixtures are PCB-11-2/3/4 and are not here yet.
 | `Cargo.lock` identity | `plugins/languages/rust/src/polycodebench_lang_rust/locks.py` |
 | Image/tool identity | `plugins/languages/rust/src/polycodebench_lang_rust/identities.py` |
 | Guest tooling (Miri classifier, context scanner, libtest parser) | `plugins/languages/rust/src/polycodebench_lang_rust/guest/` |
-| Tests | `tests/test_rust_locks.py`, `tests/test_rust_guest.py` |
+| Profile (rule mappings, applicability, ownership) | `config/languages/rust-profile-v1.yaml`, `plugins/languages/rust/src/polycodebench_lang_rust/profile.py` |
+| Tests | `tests/test_rust_locks.py`, `tests/test_rust_guest.py`, `tests/test_rust_profile.py` |
 
 ## Images (PCB-11-1)
 

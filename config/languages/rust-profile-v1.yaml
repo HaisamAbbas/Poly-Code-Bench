@@ -1,0 +1,70 @@
+schema_version: 1
+kind: rust_profile
+profile_version: rust-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.rust
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity
+# means not_applicable, never a perfect score. Syntax counts earn no bonus, and one canonical
+# issue is counted once however many tools report it.
+#
+# Rust-specific rule: `.clone()`, `.unwrap()`, `.expect()` and `unsafe` are *tokens*, not findings.
+# A mapping whose context_evaluator is `context-required` (a lint that fires on the bare token) is
+# counted only when the context scanner independently confirms a violation at the same site;
+# otherwise it is demoted to needs_review. The scanner, not the token, decides.
+applicability_rules:
+  - {rule_id: always, description: Applies to every Rust task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: ownership-expected, description: Counts only when the task contract has an ownership or borrowing opportunity, opportunity_detector: task-declared, requires_task_opportunity: ownership_borrowing}
+  - {rule_id: ownership-api-expected, description: Counts only when the task contract has an ownership API design opportunity, opportunity_detector: task-declared, requires_task_opportunity: ownership_borrowing_api}
+  - {rule_id: unsafe-expected, description: Counts only when required behaviour needs unsafe or FFI, opportunity_detector: task-declared, requires_task_opportunity: unsafe_soundness}
+  - {rule_id: result-option-expected, description: Counts only when the task has a fallible or optional-value contract, opportunity_detector: task-declared, requires_task_opportunity: result_option}
+  - {rule_id: iterator-expected, description: Counts only when the task has an iteration or trait-composition opportunity, opportunity_detector: task-declared, requires_task_opportunity: iterators_traits}
+  - {rule_id: concurrency-expected, description: Counts only when the task requires shared-state concurrency, opportunity_detector: task-declared, requires_task_opportunity: concurrency}
+ownership:
+  canonical-security-issue: security
+  candidate-undefined-behaviour: robustness
+  measured-runtime-regression: efficiency
+  resource-cleanup-failure: robustness
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- ownership and borrowing -------------------------------------------------------------------
+  - {check_id: rust.context.clone-redundant, items: [ownership_borrowing], idiom_item: ownership_borrowing_api, owner: null, applicability: ownership-expected, context_evaluator: context-scan, equivalence_family: clone-redundant}
+  - {check_id: rust.clippy.redundant-clone, items: [ownership_borrowing], idiom_item: ownership_borrowing_api, owner: null, applicability: ownership-expected, equivalence_family: clone-redundant}
+  - {check_id: rust.clippy.needless-borrow, items: [ownership_borrowing], idiom_item: ownership_borrowing_api, owner: null, applicability: ownership-expected, equivalence_family: needless-borrow}
+  # A bare `.clone()` / `.to_owned()` is never a finding by itself; these fire on the token.
+  - {check_id: rust.clippy.clone-on-copy, items: [ownership_borrowing], owner: null, applicability: ownership-expected, context_evaluator: context-required, equivalence_family: clone-redundant}
+  - {check_id: rust.clippy.implicit-clone, items: [ownership_borrowing], owner: null, applicability: ownership-expected, context_evaluator: context-required, equivalence_family: clone-redundant}
+  - {check_id: rust.context.clone-contextual, items: [ownership_borrowing], idiom_item: ownership_borrowing_api, owner: null, applicability: ownership-expected, context_evaluator: context-scan, equivalence_family: clone-redundant}
+  # --- unsafe and soundness ------------------------------------------------------------------------
+  # Candidate UB reported by Miri is a measured fact; it needs no task opportunity to be real, but
+  # only a task with an unsafe opportunity scores the item.
+  - {check_id: rust.miri.candidate-ub, items: [unsafe_soundness], owner: robustness, applicability: unsafe-expected, equivalence_family: undefined-behaviour}
+  - {check_id: rust.context.unsafe-unjustified, items: [unsafe_soundness], owner: null, applicability: unsafe-expected, context_evaluator: context-scan, equivalence_family: unsafe-justification}
+  - {check_id: rust.context.unsafe-documented, items: [unsafe_soundness], owner: null, applicability: unsafe-expected, context_evaluator: context-scan, equivalence_family: unsafe-justification}
+  - {check_id: rust.clippy.undocumented-unsafe-blocks, items: [unsafe_soundness], owner: null, applicability: unsafe-expected, context_evaluator: context-required, equivalence_family: unsafe-justification}
+  - {check_id: rust.clippy.unsafe-code, items: [unsafe_soundness], owner: null, applicability: unsafe-expected, context_evaluator: context-required, equivalence_family: unsafe-justification}
+  # --- Result / Option handling -----------------------------------------------------------------
+  - {check_id: rust.context.unwrap-unguarded, items: [result_option], idiom_item: result_option_modeling, owner: null, applicability: result-option-expected, context_evaluator: context-scan, equivalence_family: unwrap-unguarded}
+  - {check_id: rust.context.unwrap-guarded, items: [result_option], idiom_item: result_option_modeling, owner: null, applicability: result-option-expected, context_evaluator: context-scan, equivalence_family: unwrap-unguarded}
+  - {check_id: rust.clippy.unwrap-used, items: [result_option], idiom_item: result_option_modeling, owner: null, applicability: result-option-expected, context_evaluator: context-required, equivalence_family: unwrap-unguarded}
+  - {check_id: rust.clippy.expect-used, items: [result_option], idiom_item: result_option_modeling, owner: null, applicability: result-option-expected, context_evaluator: context-required, equivalence_family: unwrap-unguarded}
+  - {check_id: rust.clippy.question-mark, items: [result_option], idiom_item: result_option_modeling, owner: null, applicability: result-option-expected, equivalence_family: question-mark}
+  - {check_id: rust.clippy.manual-map, items: [result_option], idiom_item: result_option_modeling, owner: null, applicability: result-option-expected}
+  # --- iterators and trait composition ------------------------------------------------------------
+  - {check_id: rust.context.manual-index-range, items: [iterators_traits], idiom_item: iterator_trait_composition, owner: null, applicability: iterator-expected, equivalence_family: index-loop}
+  - {check_id: rust.clippy.needless-range-loop, items: [iterators_traits], idiom_item: iterator_trait_composition, owner: null, applicability: iterator-expected, equivalence_family: index-loop}
+  - {check_id: rust.context.manual-iteration-clone, items: [iterators_traits], idiom_item: iterator_trait_composition, owner: null, applicability: iterator-expected, equivalence_family: iteration-clone}
+  - {check_id: rust.context.string-format-loop, items: [iterators_traits], idiom_item: iterator_trait_composition, owner: efficiency, applicability: iterator-expected}
+  - {check_id: rust.clippy.manual-flatten, items: [iterators_traits], idiom_item: iterator_trait_composition, owner: null, applicability: iterator-expected}
+  - {check_id: rust.clippy.explicit-counter-loop, items: [iterators_traits], idiom_item: iterator_trait_composition, owner: null, applicability: iterator-expected}
+  # --- concurrency ----------------------------------------------------------------------------------
+  - {check_id: rust.clippy.await-holding-lock, items: [concurrency], idiom_item: concurrency_abstraction, owner: robustness, applicability: concurrency-expected}
+  - {check_id: rust.clippy.mutex-atomic, items: [concurrency], idiom_item: concurrency_abstraction, owner: null, applicability: concurrency-expected}
+  - {check_id: rust.clippy.arc-with-non-send-sync, items: [concurrency], idiom_item: concurrency_abstraction, owner: robustness, applicability: concurrency-expected}
+  # --- selected clippy hygiene (everything not claimed above) ------------------------------------
+  - {check_prefix: rust.clippy., items: [clippy], owner: null, applicability: item-opportunity}
+  # --- security evidence (single composite owner; no diagnostic item) -----------------------------
+  - {check_prefix: rust.dependency., owner: security, applicability: always}

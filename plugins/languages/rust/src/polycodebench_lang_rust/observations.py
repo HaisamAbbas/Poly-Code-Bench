@@ -25,10 +25,11 @@ from polycodebench_plugins_api import AnalysisPlan
 
 Severity = Literal["critical", "high", "medium", "low"]
 
-_NON_SLUG = re.compile(r"[^a-z0-9]+")
-# Families whose key must include the column: one line can carry two distinct sites, and merging
-# them would silently hide one of them.
-COLUMN_KEYED_FAMILIES = frozenset({"clone-redundant", "mutable-default"})
+_NON_SLUG = re.compile(r"[^a-z0-9._-]+")
+# No Rust family is keyed by column. The context scanner reports whole lines (column 1), so a
+# column in the key would stop a clippy finding and a scanner finding for one site from merging.
+# The price is that two defects of one family on one line count once - the conservative direction.
+COLUMN_KEYED_FAMILIES: frozenset[str] = frozenset()
 
 
 def slug(value: str) -> str:

@@ -1,0 +1,14 @@
+{
+ "schema_version": 1,
+ "kind": "execution_record",
+ "plan_id": "rust.test.stress",
+ "exit_code": 0,
+ "timed_out": false,
+ "duration_ms": 4562,
+ "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_tail": "",
+ "stderr_tail": "",
+ "isolation_tier": "development",
+ "sandbox_id": "4a6f3238-66a2-4b80-8d10-0c01a0e85139"
+}

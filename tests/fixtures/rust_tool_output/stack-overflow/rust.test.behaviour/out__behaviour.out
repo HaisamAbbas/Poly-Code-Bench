@@ -1,0 +1,28 @@
+   Compiling top_words v0.1.0 (/workspace/work)
+warning: function cannot return without recursing
+ --> src/lib.rs:4:1
+  |
+4 | fn recurse(n: u64) -> u64 {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7 |     recurse(n + 1) + pad[0] as u64
+  |     -------------- recursive call site
+  |
+  = help: a `loop` may express intention better if this is on purpose
+  = note: `#[warn(unconditional_recursion)]` on by default
+
+warning: `top_words` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.64s
+     Running tests/behaviour.rs (target/debug/deps/behaviour-3f63251f5a1e5b80)
+
+running 8 tests
+test case_and_separators ... ok
+test empty_input ... 
+thread 'empty_input' has overflowed its stack
+fatal runtime error: stack overflow
+error: test failed, to rerun pass `--test behaviour`
+
+Caused by:
+  process didn't exit successfully: `/workspace/target/debug/deps/behaviour-3f63251f5a1e5b80 --test-threads=1` (signal: 6, SIGABRT: process abort signal)
+error: 1 target failed:
+    `--test behaviour`

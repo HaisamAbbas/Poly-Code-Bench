@@ -1,0 +1,14 @@
+{
+ "schema_version": 1,
+ "kind": "execution_record",
+ "plan_id": "rust.build",
+ "exit_code": 0,
+ "timed_out": false,
+ "duration_ms": 2344,
+ "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_tail": "",
+ "stderr_tail": "",
+ "isolation_tier": "development",
+ "sandbox_id": "43b37eb1-bcae-4827-b2f6-7c062ac13da4"
+}

@@ -1,0 +1,1 @@
+{"complete":true,"files":[{"error":null,"parsed":true,"path":"work/src/lib.rs"}],"findings":[],"opportunities":["iteration"],"scanner_version":"1","schema":"pcb-rust-scan-v1"}

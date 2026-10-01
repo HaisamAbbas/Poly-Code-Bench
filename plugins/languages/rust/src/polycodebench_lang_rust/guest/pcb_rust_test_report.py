@@ -23,11 +23,22 @@ import sys
 RECORD_VERSION = 1
 TAIL_BYTES = 4000
 
-# `test tests::foo ... ok` / `... FAILED` / `... ignored` / `... ok (12ms)`
-_CASE = re.compile(r"^test\s+(?P<name>\S+)\s+\.\.\.\s+(?P<status>.+?)\s*$", re.MULTILINE)
+# `test tests::foo ... ok` / `... FAILED` / `... ignored` / `... ok (12ms)`. Horizontal whitespace
+# only: with a single test thread libtest prints `test name ... ` *before* the test runs, so a hung
+# test leaves a line with no outcome, and a pattern that could cross a newline would swallow the
+# next line as that test's result.
+_CASE = re.compile(r"^test[ 	]+(?P<name>\S+)[ 	]+\.\.\.[ 	]+(?P<status>\S.*?)[ 	]*$")
+_STARTED = re.compile(r"^test[ 	]+(?P<name>\S+)[ 	]+\.\.\.[ 	]*$")
 _SUMMARY = re.compile(r"^test result:\s+(?P<verdict>ok|FAILED)\.\s+(?P<detail>.*)$", re.MULTILINE)
 _RUNNING = re.compile(r"^running\s+(?P<count>\d+)\s+tests?$", re.MULTILINE)
-_FILTERED = re.compile(r"^test result:\s+ok\.\s+(?P<detail>.*filtered out.*)$", re.MULTILINE)
+# `Running unittests src/lib.rs (target/...)`, `Running tests/hidden_core.rs (target/...)`.
+_UNIT = re.compile(r"^\s*Running\s+(?:unittests\s+)?(?P<path>\S+)\s+\(")
+_DOC = re.compile(r"^\s*Doc-tests\s+(?P<crate>\S+)")
+
+
+def _stem(path):
+    base = path.replace("\\", "/").rsplit("/", 1)[-1]
+    return base[:-3] if base.endswith(".rs") else base
 
 
 class _Writer:
@@ -66,28 +77,55 @@ def _outcome(status: str):
     return "error"
 
 
-def build_records(stdout: str, stderr: str, exit_code: int, timed_out: bool):
-    """Turn one run's captured output into candidate case records plus a session control record."""
+def build_records(stdout: str, stderr: str, exit_code, timed_out: bool):
+    """Turn one run's captured output into candidate case records plus a session control record.
+
+    Case ids are qualified by the test binary that printed them (``hidden_core::nested::deep``;
+    ``lib::tests::adds`` for unit tests), because two binaries may both contain ``tests::adds``.
+    A ``test x ... `` line with no outcome is reported as ``case_start`` with no matching ``case``:
+    that is how the supervisor learns which case was in flight when a run was killed.
+    """
     combined = stdout + ("\n" + stderr if stderr else "")
     declared = None
     match = _RUNNING.search(combined)
     if match:
         declared = int(match.group("count"))
     seen = []
-    for match in _CASE.finditer(combined):
-        name = match.group("name")
-        if name in seen:
-            continue  # a retried/duplicated line is not a second case
-        seen.append(name)
-        status = _outcome(match.group("status"))
-        yield {
-            "kind": "case",
-            "name": name,
-            "outcome": status,
-            "ignored": status == "skipped",
-            "xfail": False,
-            "duration_ms": _duration(match.group("status")),
-        }
+    started = []
+    unit = None
+    for line in stdout.splitlines():
+        found = _UNIT.match(line)
+        if found:
+            unit = _stem(found.group("path"))
+            continue
+        found = _DOC.match(line)
+        if found:
+            unit = "doc"
+            continue
+        found = _CASE.match(line)
+        if found:
+            name = found.group("name")
+            qualified = "%s::%s" % (unit, name) if unit else name
+            if qualified in seen:
+                continue  # a retried/duplicated line is not a second case
+            seen.append(qualified)
+            status = _outcome(found.group("status"))
+            yield {
+                "kind": "case",
+                "name": qualified,
+                "outcome": status,
+                "ignored": status == "skipped",
+                "xfail": False,
+                "duration_ms": _duration(found.group("status")),
+            }
+            continue
+        found = _STARTED.match(line)
+        if found:
+            name = found.group("name")
+            started.append("%s::%s" % (unit, name) if unit else name)
+    for name in started:
+        if name not in seen:
+            yield {"kind": "case_start", "name": name}
     summary = None
     for match in _SUMMARY.finditer(combined):
         summary = match

@@ -1,8 +1,8 @@
 # Rust language plugin (Prompt 11)
 
-Scope: **PCB-11-1** (pinned toolchains, offline crates, distinct recipes) and **PCB-11-3** (the
-diagnostic/idiom profile). The plugin entry point, plans, parsers and admission fixtures are
-PCB-11-2/4 and are not here yet.
+Scope: **PCB-11-1** (pinned toolchains, offline crates, distinct recipes), **PCB-11-2** (plans,
+parsers, symbol index, `RustLanguagePlugin`) and **PCB-11-3** (the diagnostic/idiom profile).
+Admission fixtures and the 12-cluster pilot inventory are PCB-11-4 and are not here yet.
 
 | Piece | Location |
 |---|---|
@@ -14,18 +14,24 @@ PCB-11-2/4 and are not here yet.
 | Image/tool identity | `plugins/languages/rust/src/polycodebench_lang_rust/identities.py` |
 | Guest tooling (Miri classifier, context scanner, libtest parser) | `plugins/languages/rust/src/polycodebench_lang_rust/guest/` |
 | Profile (rule mappings, applicability, ownership) | `config/languages/rust-profile-v1.yaml`, `plugins/languages/rust/src/polycodebench_lang_rust/profile.py` |
-| Tests | `tests/test_rust_locks.py`, `tests/test_rust_guest.py`, `tests/test_rust_profile.py` |
+| Plugin, plans, parsers, libtest evidence, symbols | `plugin.py`, `plans.py`, `parsers.py`, `testparse.py`, `symbols.py`, `taskspec.py` |
+| Fixture task and recordings | `fixtures/top-words/`, `tests/fixtures/rust_tool_output/` (`scripts/record_rust_tool_fixtures.py`) |
+| Tests | `tests/test_rust_locks.py`, `tests/test_rust_guest.py`, `tests/test_rust_profile.py`, `tests/test_rust_plugin.py`, `tests/test_rust_parsers.py`, `tests/test_rust_docker.py` (opt-in live) |
 
-## Images (PCB-11-1)
+## Images (PCB-11-1; rebuilt in PCB-11-2)
+
+PCB-11-2 rebuilt all three images: each now carries the pinned Python interpreter (the sandbox
+provider drives every guest with it; D-11-10) and the evaluator image carries a baked Miri
+sysroot (D-11-12). Digests below are the current ones.
 
 Three genuinely distinct recipes, built with `--network none` from a pinned base
 `rust@sha256:540c902e99c3…` (rustc/cargo 1.83.0):
 
 | Recipe | Digest | Contents | Used by |
 |---|---|---|---|
-| runtime | `sha256:3ed8de65c130…` | rustc + cargo only | build, test, symbol plans; the solve guest |
-| evaluator | `sha256:b32f71363ddd…` | + clippy 0.1.83, rustfmt 1.8.0, Miri 0.1.0 (nightly-2026-09-30) | analyzer plans |
-| performance | `sha256:18290037bf91…` | rustc + cargo, baked `[profile.release]` | performance iteration plan |
+| runtime | `sha256:a3f88da16577…` | rustc + cargo only | build, test, symbol plans; the solve guest |
+| evaluator | `sha256:5aa0fac65e0b…` | + clippy 0.1.83, rustfmt 1.8.0, Miri 0.1.0 (nightly-2026-09-30) | analyzer plans |
+| performance | `sha256:de4293082733…` | rustc + cargo, baked `[profile.release]` | performance iteration plan |
 
 **The distinction is enforced, not asserted.** `require_distinct()` fails the build unless the
 analyzers actually *run* in the evaluator image, are actually absent from the other two, and the

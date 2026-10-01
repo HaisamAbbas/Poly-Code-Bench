@@ -1,0 +1,136 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: conformance-rust-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: rust
+  secondary_languages: []
+  cluster_id: conformance-rust-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:665df6239a1b38fc441350d403fe1836a48a86b69cb482c34132e88795661c89
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - src/lib.rs
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-rust-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-01T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-rust-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 11 authored conformance fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+  language_plugin_id: rust
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:38ff22aae0bf397d46c20f69c638a13911d92c749c2ea6ea5ed119c835230d72
+  test_recipe_digest: sha256:fcfecc7f0a0af2fbafa6a7300d9a49a02c442272adbd731bc9d797dcbbf0d5bd
+  resource_class: local-development-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids:
+  - behaviour
+  hard_condition_ids:
+  - ordering-contract
+  required_outputs:
+  - src/lib.rs
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  evidence_owners: {}
+  required_analyzers:
+  - clippy
+  - context
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: rust-top-words-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 60
+visible_files:
+- visible/repo/Cargo.lock
+- visible/repo/Cargo.toml
+- visible/repo/src/lib.rs
+- visible/task.md
+hidden_files:
+- admission/alternative-btree/src/lib.rs
+- admission/exposure-rights.json
+- admission/faulty-ties/src/lib.rs
+- admission/quality-defective/src/lib.rs
+- admission/timeout-case/src/lib.rs
+- hidden/oracle.json
+- hidden/quality-plan.yaml
+- hidden/reference/src/lib.rs
+- hidden/tests/behaviour.rs
+- hidden/tests/stress.rs
+fixtures:
+- name: reference
+  variant: reference
+  solution_path: hidden/reference/src/lib.rs
+  expectation: {}
+- name: faulty-ties
+  variant: faulty
+  solution_path: admission/faulty-ties/src/lib.rs
+  expectation:
+    failing_cases:
+    - behaviour::ties_break_alphabetically
+- name: alternative-btree
+  variant: alternative
+  solution_path: admission/alternative-btree/src/lib.rs
+  expectation: {}
+- name: quality-defective
+  variant: quality_defective
+  solution_path: admission/quality-defective/src/lib.rs
+  expectation:
+    expected_issue_families:
+    - clone-redundant
+    - index-loop
+    - unwrap-unguarded
+- name: timeout-case
+  variant: timeout
+  solution_path: admission/timeout-case/src/lib.rs
+  expectation:
+    expected_failure: candidate_timeout

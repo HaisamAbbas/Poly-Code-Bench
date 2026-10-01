@@ -1,0 +1,16 @@
+schema_version: 1
+kind: rust_task_quality_plan
+miri: optional
+miri_groups: [behaviour]
+opportunity_tags: [iteration]
+opportunities:
+  ownership_borrowing: 2
+  ownership_borrowing_api: 2
+  iterators_traits: 2
+  iterator_trait_composition: 2
+  result_option: 1
+  result_option_modeling: 1
+  clippy: 3
+required_analyzers: [clippy, context]
+dependency_inventory: []
+judge_items: [naming_readability, decomposition]

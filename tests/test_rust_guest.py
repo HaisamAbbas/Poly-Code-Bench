@@ -251,3 +251,112 @@ def test_a_hung_run_records_the_timeout_rather_than_failing_silently() -> None:
     assert control["observed_cases"] == 0
     # The declared count is still reported so the caller can see what never finished.
     assert control["declared_tests"] == 2
+
+
+# -------------------------------------------------- libtest qualification and in-flight cases
+
+
+CARGO_STREAM = (
+    "   Compiling probe v0.1.0 (/workspace/work)\n"
+    "     Running unittests src/lib.rs (target/debug/deps/probe-1)\n"
+    "\n"
+    "running 1 test\n"
+    "test tests::adds ... ok\n"
+    "\n"
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out\n"
+    "\n"
+    "     Running tests/hidden_core.rs (target/debug/deps/hidden_core-2)\n"
+    "\n"
+    "running 3 tests\n"
+    "test adds ... ok\n"
+    "test nested::deep ... FAILED\n"
+    "test hangs ... "
+)
+
+
+def test_case_ids_are_qualified_by_the_binary_that_printed_them() -> None:
+    records = list(testreport.build_records(CARGO_STREAM, "", None, timed_out=True))
+    cases = {r["name"]: r["outcome"] for r in records if r["kind"] == "case"}
+    assert cases == {
+        "lib::tests::adds": "pass",
+        "hidden_core::adds": "pass",
+        "hidden_core::nested::deep": "fail",
+    }
+    # `tests::adds` in two binaries are two cases, not one duplicate line.
+    assert len({n for n in cases if n.endswith("adds")}) == 2
+
+
+def test_a_test_with_no_outcome_line_is_the_case_in_flight() -> None:
+    records = list(testreport.build_records(CARGO_STREAM, "", None, timed_out=True))
+    started = [r["name"] for r in records if r["kind"] == "case_start"]
+    assert started == ["hidden_core::hangs"]
+    # The next line must not be swallowed as this test's outcome.
+    assert "hidden_core::hangs" not in {r["name"] for r in records if r["kind"] == "case"}
+
+
+def test_lock_audit_fails_closed_without_a_populated_snapshot(tmp_path: Path) -> None:
+    audit = load_guest("pcb_lock_audit")
+    lock = tmp_path / "Cargo.lock"
+    lock.write_text(
+        'version = 4\n\n[[package]]\nname = "app"\nversion = "0.1.0"\n\n'
+        '[[package]]\nname = "dep"\nversion = "1.0.0"\n'
+        'source = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "ab"\n',
+        encoding="utf-8",
+    )
+    empty = tmp_path / "empty.json"
+    empty.write_text('{"source": "placeholder", "advisories": {}}', encoding="utf-8")
+    out = tmp_path / "out.json"
+    argv = ["x", "--lock", str(lock), "--advisories", str(empty), "--output", str(out)]
+    assert audit.main(argv) == 2  # an empty snapshot certifies nothing
+    assert not out.exists()
+    populated = tmp_path / "snap.json"
+    populated.write_text(
+        '{"source": "test-fixture",'
+        ' "advisories": {"dep": [{"id": "TEST-1", "affected": ["1.0.0"]}]}}',
+        encoding="utf-8",
+    )
+    argv = ["x", "--lock", str(lock), "--advisories", str(populated), "--output", str(out)]
+    assert audit.main(argv) == 1
+    document = json.loads(out.read_text(encoding="utf-8"))
+    assert document["checked"] == ["dep@1.0.0"]  # the task crate itself is not a dependency
+    assert [f["advisory"] for f in document["findings"]] == ["TEST-1"]
+    clean = tmp_path / "clean.json"
+    clean.write_text('{"source": "test-fixture", "advisories": {"other": []}}', encoding="utf-8")
+    argv = ["x", "--lock", str(lock), "--advisories", str(clean), "--output", str(out)]
+    assert audit.main(argv) == 0
+
+
+def test_the_runner_captures_output_and_propagates_the_exit_status(tmp_path: Path) -> None:
+    import sys
+
+    runner = load_guest("pcb_rust_run")
+    name = tmp_path / "out" / "case"
+    cleanup = tmp_path / "target"
+    cleanup.mkdir()
+    (cleanup / "artifact").write_text("x", encoding="utf-8")
+    code = runner.main(
+        [
+            "x",
+            "--name",
+            str(name),
+            "--deadline",
+            "30",
+            "--cleanup",
+            str(cleanup),
+            "--merge",
+            "--",
+            sys.executable,
+            "-c",
+            "import sys; print('out'); print('err', file=sys.stderr); sys.exit(7)",
+        ]
+    )
+    assert code == 7
+    text = (tmp_path / "out" / "case.out").read_text(encoding="utf-8")
+    assert "out" in text and "err" in text  # merged, in order
+    run = json.loads((tmp_path / "out" / "case.run.json").read_text(encoding="utf-8"))
+    assert run["exit_code"] == 7 and run["timed_out"] is False
+    assert not cleanup.exists()  # the build directory is removed on every path
+    missing = runner.main(
+        ["x", "--name", str(tmp_path / "m"), "--deadline", "5", "--", "definitely-not-a-tool"]
+    )
+    assert missing == 127  # a missing tool is a harness error, never a findings exit

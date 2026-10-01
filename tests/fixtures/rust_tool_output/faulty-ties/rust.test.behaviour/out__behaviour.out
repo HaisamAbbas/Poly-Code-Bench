@@ -1,0 +1,32 @@
+   Compiling top_words v0.1.0 (/workspace/work)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.41s
+     Running tests/behaviour.rs (target/debug/deps/behaviour-3f63251f5a1e5b80)
+
+running 8 tests
+test case_and_separators ... ok
+test empty_input ... ok
+test k_larger_than_distinct ... ok
+test non_ascii_letters_are_separators ... ok
+test ordering::counts_never_increase_down_the_list ... ok
+test ties_break_alphabetically ... FAILED
+test uppercase_runs_are_ordinary_words ... ok
+test zero_k ... ok
+
+failures:
+
+---- ties_break_alphabetically stdout ----
+thread 'ties_break_alphabetically' panicked at tests/behaviour.rs:9:5:
+assertion `left == right` failed
+  left: [("pear", 2), ("apple", 2), ("fig", 1)]
+ right: [("apple", 2), ("pear", 2), ("fig", 1)]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    ties_break_alphabetically
+
+test result: FAILED. 7 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test behaviour`
+error: 1 target failed:
+    `--test behaviour`

@@ -31,6 +31,9 @@ class SandboxSpec(StrictModel):
     timeout_seconds: int = Field(ge=1, le=86_400)
     ttl_seconds: int = Field(ge=1, le=7 * 24 * 3600)
     network: NetworkPolicy = "none"
+    # Compiled languages must execute the binaries they build in the workspace. Interpreted
+    # guests keep the default, a workspace that cannot execute anything it receives.
+    executable_workspace: bool = False
     isolation_tier: Literal["development"] = "development"
 
     @model_validator(mode="after")

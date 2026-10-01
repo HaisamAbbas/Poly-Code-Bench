@@ -1,0 +1,1 @@
+{"command":["cargo","clippy","--offline"],"duration_ms":627,"exit_code":101,"note":null,"schema":"pcb-rust-run-v1","timed_out":false,"truncated":[]}

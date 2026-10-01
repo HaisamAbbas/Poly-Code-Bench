@@ -835,7 +835,8 @@ class LocalDockerSandboxProvider:
             "--user",
             "65532:65532",
             "--tmpfs",
-            f"/workspace:rw,nosuid,nodev,uid=65532,gid=65532,mode=0700,size={spec.disk_bytes}",
+            f"/workspace:rw,nosuid,nodev,uid=65532,gid=65532,mode=0700,size={spec.disk_bytes}"
+            + (",exec" if spec.executable_workspace else ""),
             "--tmpfs",
             " /tmp:rw,noexec,nosuid,nodev,size=16m".strip(),
             "--workdir",

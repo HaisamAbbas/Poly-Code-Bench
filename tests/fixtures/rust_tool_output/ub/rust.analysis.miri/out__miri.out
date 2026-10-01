@@ -1,0 +1,37 @@
+   Compiling top_words v0.1.0 (/workspace/work)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.68s
+     Running tests/behaviour.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/top_words/917f13aeb365a4a1/out/behaviour-917f13aeb365a4a1)
+
+running 8 tests
+test case_and_separators ... ok
+test empty_input ... error: Undefined Behavior: memory access failed: attempting to access 1 byte, but got alloc49784+0x2 which is at or beyond the end of the allocation of size 2 bytes
+ --> src/lib.rs:8:26
+  |
+8 |         let _ = unsafe { *probe.as_ptr().add(2) };
+  |                          ^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+  |
+  = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+  = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+help: alloc49784 was allocated here:
+ --> src/lib.rs:6:13
+  |
+6 |         let probe = [1u8, 2u8];
+  |             ^^^^^
+  = note: this is on thread `empty_input`
+  = note: stack backtrace:
+          0: top_words::top_words
+              at src/lib.rs:8:26: 8:48
+          1: empty_input
+              at tests/behaviour.rs:24:13: 24:29
+          2: empty_input::{closure#0}
+              at tests/behaviour.rs:23:17: 23:17
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+error: test failed, to rerun pass `--test behaviour`
+
+Caused by:
+  process didn't exit successfully: `/usr/local/rustup/toolchains/nightly-2026-09-30-x86_64-unknown-linux-gnu/bin/cargo-miri runner /workspace/target/miri/x86_64-unknown-linux-gnu/debug/build/top_words/917f13aeb365a4a1/out/behaviour-917f13aeb365a4a1` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.

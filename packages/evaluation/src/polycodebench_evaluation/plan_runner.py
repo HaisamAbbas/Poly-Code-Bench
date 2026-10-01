@@ -89,6 +89,7 @@ class PlanRunner:
             memory_bytes=res.memory_bytes,
             disk_bytes=res.disk_bytes,
             pids_limit=res.pids_limit,
+            executable_workspace=res.executable_workspace,
             timeout_seconds=res.timeout_seconds + DEADLINE_GRACE_SECONDS + 2,
             ttl_seconds=res.timeout_seconds + 120,
         )

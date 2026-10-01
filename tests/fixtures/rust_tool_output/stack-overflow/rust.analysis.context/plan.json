@@ -1,0 +1,106 @@
+{
+ "schema_version": 1,
+ "kind": "analysis_plan",
+ "plan_id": "rust.analysis.context",
+ "image": "pcb-rust-evaluator@sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+ "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_rust_scan.py",
+  "--root",
+  "/workspace",
+  "--output",
+  "out/context.json",
+  "--opportunities",
+  "iteration",
+  "work/src/lib.rs"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "CARGO_TARGET_DIR": "/workspace/target",
+  "CARGO_INCREMENTAL": "0",
+  "RUST_BACKTRACE": "0"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/lib.rs",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/Cargo.lock",
+   "role": "config",
+   "digest": "sha256:b153895ded061033ffd99c599a580cdb44cc03f5dd4798447f5f67e945f6777c"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/Cargo.toml",
+   "role": "config",
+   "digest": "sha256:64fd15c6ac31188e1013ba5406a0a8785cb6f27cf1912e0189b701174e2afc25"
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/context.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 60,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   1
+  ],
+  "error": [
+   2,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "context-scan",
+  "version": "1.83.0",
+  "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+  "lock_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+  "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-rust-parsers-1"
+ },
+ "scope": [
+  "src/lib.rs"
+ ],
+ "parser_id": "rust-context",
+ "analyzer_id": "context",
+ "candidate_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+ "required": true,
+ "output_schema": "pcb-rust-scan-v1",
+ "evidence_ownership": {},
+ "baseline_reusable": true
+}

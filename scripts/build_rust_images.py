@@ -33,6 +33,9 @@ OUTPUT = ROOT / "config" / "images" / "rust-v1.json"
 ALLOWLIST = ROOT / "config" / "plugins" / "allowlist-v1.yaml"
 BASE_DIGEST = "sha256:540c902e99c384163b688bbd8b5b8520e94e7731b27f7bd0eaa56ae1960627ab"
 BASE_IMAGE = f"rust@{BASE_DIGEST}"
+# The sandbox provider drives every guest with `python -I -B -S`, so each Rust image carries the
+# interpreter pinned for the Python recipes (copied with its own libraries; see the Dockerfile).
+PYTHON_IMAGE = "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b"
 RECIPES = ("runtime", "evaluator", "performance")
 # Miri does not exist on the stable channel; the components image carries an explicitly pinned
 # nightly for it, and that version is part of the recorded evaluator identity. This image is the
@@ -184,6 +187,8 @@ def build(recipe: str) -> dict[str, object]:
             "--build-arg",
             f"COMPONENTS_IMAGE={COMPONENTS_FOR_RECIPE[recipe]}",
             "--build-arg",
+            f"PYTHON_IMAGE={PYTHON_IMAGE}",
+            "--build-arg",
             f"RECIPE={recipe}",
             "-t",
             tag,
@@ -263,6 +268,7 @@ def main() -> int:
             "components_installed_at_build_time": True,
             "scored_runs_offline": True,
             "miri_toolchain": MIRI_TOOLCHAIN,
+            "guest_interpreter": PYTHON_IMAGE,
             "note": (
                 "Local development build. The compiler ships in the pinned base image; task "
                 "crates are stdlib-only and each task pins its own Cargo.lock, whose digest is "

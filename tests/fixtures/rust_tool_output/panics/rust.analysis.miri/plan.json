@@ -1,0 +1,144 @@
+{
+ "schema_version": 1,
+ "kind": "analysis_plan",
+ "plan_id": "rust.analysis.miri",
+ "image": "pcb-rust-evaluator@sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+ "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_rust_run.py",
+  "--name",
+  "out/miri",
+  "--deadline",
+  "107",
+  "--cleanup",
+  "/workspace/target",
+  "--merge",
+  "--",
+  "cargo",
+  "+nightly-2026-09-30",
+  "miri",
+  "test",
+  "--offline",
+  "--locked",
+  "--manifest-path",
+  "work/Cargo.toml",
+  "--test",
+  "behaviour"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "CARGO_TARGET_DIR": "/workspace/target",
+  "CARGO_INCREMENTAL": "0",
+  "RUST_BACKTRACE": "0",
+  "MIRI_SYSROOT": "/opt/pcb/cache/miri"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/lib.rs",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/Cargo.lock",
+   "role": "config",
+   "digest": "sha256:b153895ded061033ffd99c599a580cdb44cc03f5dd4798447f5f67e945f6777c"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/Cargo.toml",
+   "role": "config",
+   "digest": "sha256:64fd15c6ac31188e1013ba5406a0a8785cb6f27cf1912e0189b701174e2afc25"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/tests/behaviour.rs",
+   "role": "overlay",
+   "digest": null
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/miri.out",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/miri.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/miri.run.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 110,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   1,
+   101
+  ],
+  "error": [
+   2,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "miri",
+  "version": "0.1.0@nightly-2026-09-30",
+  "image_digest": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+  "lock_digest": "sha256:16e861923ad295095b47beeae7b4e0ecb6be548db804e64838b90eaed4d01ac7",
+  "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-rust-parsers-1"
+ },
+ "scope": [
+  "src/lib.rs"
+ ],
+ "parser_id": "rust-miri",
+ "analyzer_id": "miri",
+ "candidate_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+ "required": false,
+ "output_schema": "miri-text-v1",
+ "evidence_ownership": {
+  "candidate-undefined-behaviour": "robustness"
+ },
+ "baseline_reusable": true
+}

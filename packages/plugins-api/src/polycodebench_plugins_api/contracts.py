@@ -53,6 +53,8 @@ class ResourcePolicy(PluginModel):
     timeout_seconds: int = Field(ge=1, le=3600)
     max_output_bytes: int = Field(ge=1024, le=8 * 1024**2)
     network: Literal["none"] = "none"
+    # True for compiled languages whose plans run the binaries they build in the workspace.
+    executable_workspace: bool = False
 
 
 class ExitSemantics(PluginModel):

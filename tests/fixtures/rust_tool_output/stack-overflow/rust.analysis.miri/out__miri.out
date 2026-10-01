@@ -1,0 +1,23 @@
+   Compiling top_words v0.1.0 (/workspace/work)
+warning: function cannot return without recursing
+ --> src/lib.rs:4:1
+  |
+4 | fn recurse(n: u64) -> u64 {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^ cannot return without recursing
+...
+7 |     recurse(n + 1) + pad[0] as u64
+  |     -------------- recursive call site
+  |
+  = help: a `loop` may express intention better if this is on purpose
+  = note: `#[warn(unconditional_recursion)]` on by default
+
+warning: `top_words` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.72s
+     Running tests/behaviour.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/top_words/917f13aeb365a4a1/out/behaviour-917f13aeb365a4a1)
+
+running 8 tests
+test case_and_separators ... ok
+test empty_input ... error: test failed, to rerun pass `--test behaviour`
+
+Caused by:
+  process didn't exit successfully: `/usr/local/rustup/toolchains/nightly-2026-09-30-x86_64-unknown-linux-gnu/bin/cargo-miri runner /workspace/target/miri/x86_64-unknown-linux-gnu/debug/build/top_words/917f13aeb365a4a1/out/behaviour-917f13aeb365a4a1` (signal: 9, SIGKILL: kill)

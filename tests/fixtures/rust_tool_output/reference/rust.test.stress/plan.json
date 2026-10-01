@@ -1,0 +1,135 @@
+{
+ "schema_version": 1,
+ "kind": "execution_plan",
+ "plan_id": "rust.test.stress",
+ "image": "pcb-rust-runtime@sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69",
+ "image_digest": "sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_rust_run.py",
+  "--name",
+  "out/stress",
+  "--deadline",
+  "57",
+  "--cleanup",
+  "/workspace/target",
+  "--merge",
+  "--",
+  "cargo",
+  "test",
+  "--offline",
+  "--locked",
+  "--manifest-path",
+  "work/Cargo.toml",
+  "--no-fail-fast",
+  "--test",
+  "stress",
+  "--",
+  "--test-threads=1"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "CARGO_TARGET_DIR": "/workspace/target",
+  "CARGO_INCREMENTAL": "0",
+  "RUST_BACKTRACE": "0"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/lib.rs",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/Cargo.lock",
+   "role": "config",
+   "digest": "sha256:b153895ded061033ffd99c599a580cdb44cc03f5dd4798447f5f67e945f6777c"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/Cargo.toml",
+   "role": "config",
+   "digest": "sha256:64fd15c6ac31188e1013ba5406a0a8785cb6f27cf1912e0189b701174e2afc25"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/tests/stress.rs",
+   "role": "overlay",
+   "digest": null
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/stress.out",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/stress.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/stress.run.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 60,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   101
+  ],
+  "error": [
+   2,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "cargo",
+  "version": "1.83.0",
+  "image_digest": "sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69",
+  "lock_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+  "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-rust-parsers-1"
+ },
+ "scope": [
+  "src/lib.rs"
+ ],
+ "parser_id": "rust-libtest"
+}

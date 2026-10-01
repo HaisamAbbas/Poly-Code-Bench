@@ -44,6 +44,9 @@ select = ["E", "F", "I", "UP", "B"]
 "packages/persistence/src/polycodebench_persistence/migrations/versions/*.py" = ["E501"]
 # The guest helper is shipped as source into sandbox images and kept deliberately plain.
 "packages/runner/src/polycodebench_runner/guest_helper.py" = ["UP031"]
+# Rust guest scripts ship as source into the sandbox images and are kept plain; editing them
+# changes the recorded guest digest, so lint style never justifies touching them.
+"plugins/languages/rust/src/polycodebench_lang_rust/guest/*.py" = ["UP031", "E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

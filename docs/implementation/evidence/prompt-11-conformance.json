@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "kind": "conformance_report",
+  "plugin_id": "rust",
+  "plugin_version": "0.1.0",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69",
+    "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25"
+  ],
+  "cases": [
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "valid_solution",
+      "name": "reference-and-alternative-pass",
+      "passed": true,
+      "expected": "both valid solutions pass every required group",
+      "observed": "reference=pass alternative=pass"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "incorrect_solution",
+      "name": "wrong-tie-break-fails-its-case",
+      "passed": true,
+      "expected": "gate fail naming behaviour::ties_break_alphabetically",
+      "observed": "gate=fail failed=('behaviour::ties_break_alphabetically',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "incorrect_solution",
+      "name": "compile-error-is-a-candidate-failure",
+      "passed": true,
+      "expected": "build failure, gate fail (not incomplete)",
+      "observed": "gate=fail ('build:this file contains an unclosed delimiter at src/lib.rs:1',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "defects-seen-despite-passing-tests",
+      "passed": true,
+      "expected": "functional gate passes; analyzers and profile record the defects",
+      "observed": "gate=pass families=['clone-redundant', 'index-loop', 'iteration-clone', 'len-zero', 'needless-return', 'unwrap-unguarded'] violations={'ownership_borrowing': 2, 'unsafe_soundness': 0, 'result_option': 1, 'iterators_traits': 2, 'concurrency': 0, 'clippy': 2}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "clone-unwrap-unsafe-tokens-are-not-penalised",
+      "passed": true,
+      "expected": "guarded unwrap, owned clone, documented unsafe: perfect score, no findings",
+      "observed": "gate=pass score=10000 measured=[]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "clippy-warnings-exit-zero-are-parsed-as-findings",
+      "passed": true,
+      "expected": "clippy exits 0 with warnings; findings come from cargo's JSON, not the exit status",
+      "observed": "exit=0 observations=3"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "clippy-crash-exit-101",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=101 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "clippy-missing-tool",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=127 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "clippy-hang-timeout",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=None timed_out=True status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "miri-hang-timeout",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=None timed_out=True status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "context-scanner-without-output-is-missing",
+      "passed": true,
+      "expected": "exit 0 with no report is a missing scan, not a clean one",
+      "observed": "exit=0 status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "dependent-profile-items-are-missing-not-perfect",
+      "passed": true,
+      "expected": "items fed by the failed scan are missing; no aggregate score is invented",
+      "observed": "{'result_option': 'missing', 'clippy': 'measured'}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "missing_dependency",
+      "name": "unvendored-crate-is-a-candidate-failure",
+      "passed": true,
+      "expected": "a crate that is not vendored fails the candidate's build offline (no online fetch)",
+      "observed": "gate=fail reasons=('build:unresolved import `rand` at src/lib.rs:1',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "missing_dependency",
+      "name": "unpopulated-advisory-snapshot-is-never-clean",
+      "passed": true,
+      "expected": "a dependency audit without a populated pinned snapshot is a missing scan",
+      "observed": "exit=2 status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "timeout",
+      "name": "hung-test-is-a-candidate-timeout-naming-the-case",
+      "passed": true,
+      "expected": "the hard deadline stops the run; the case in flight is recorded; candidate failure",
+      "observed": "gate=fail reasons=('candidate_timeout:behaviour::uppercase_runs_are_ordinary_words',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "profile_applicability",
+      "name": "miri-applicability-is-contextual",
+      "passed": true,
+      "expected": "an unsupported Miri run blocks only tasks that require it; no opportunity means N/A",
+      "observed": "scan=not_applicable required=missing('required scan unsupported: miri',) optional=measured none=not_applicable"
+    }
+  ],
+  "passed": true,
+  "report_digest": "sha256:ab52a18adef1d86af9bb0aef53c612311a428ee8f26e9f8b0eef0fb13190b9f0"
+}

@@ -1,0 +1,976 @@
+schema_version: 1
+kind: rust_pilot_inventory
+note: 'Pilot inventory of authored Rust clusters. Hidden bundles, references, variants and tests live
+  in protected storage (git-ignored); only identities and digests are here. No task is fully admitted
+  or frozen: quality admission awaits Prompts 12-15 and the curator/owner approvals listed in pending_gates.'
+target_independent_clusters: 12
+authored_clusters: 12
+executable_admission_passed: 12
+fully_admitted: 0
+frozen: 0
+dimension_coverage:
+  code_quality: 12
+  correctness: 12
+  idiomatic: 12
+  robustness: 12
+  security: 1
+miri_required_tasks: 1
+miri_optional_tasks: 11
+pending_gates:
+- generic-evaluator-stage-integration (Prompt 12)
+- performance-baseline-canary-and-paired-measurement (Prompt 13)
+- judge-anchors-and-human-calibration (Prompt 14)
+- deterministic-scoring-replay-and-golden-calculations (Prompt 15)
+- production-worker-execution-tier (Prompt 06 owner-deferred)
+- curator-approval-and-task-freeze
+- owner-rights-confirmation
+- hidden-lane-object-store-registration-at-freeze
+tasks:
+- slug: bounded-channel
+  task_id: pilot-bounded-channel
+  version: 1
+  cluster_id: pilot-bounded-channel-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-pilot
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 13
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - concurrency
+  opportunities:
+    ownership_borrowing: 1
+    ownership_borrowing_api: 1
+    result_option: 2
+    result_option_modeling: 2
+    concurrency: 3
+    concurrency_abstraction: 3
+    clippy: 2
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 11
+    example: 7
+    property: 2
+    robustness: 3
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:881b46438ac1990ac76e9ab51a49fa0f6a093b656ef0f09b1202d7798d725b38
+  manifest_digest: sha256:2bdfe4c7c2cb2d209ffe942b4d750594ef44da2116fe78d7e4af6933e68851cd
+  visible_bundle_digest: sha256:bc67895b4a71f27c24260b77918434f6bc951a34fb26fd5139ee194438d022c4
+  hidden_bundle_digest: sha256:cd74fd2de03b6594c3d70300d78b06954df3184d53ea10072b1bcd77282a3184
+  protected_location: .protected/taskpacks/rust-pilot/bounded-channel
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not compared against external corpora or search engines. Bounded blocking
+      queues are a generic textbook exercise; the exact API and close semantics here were composed for
+      this task and no claim of absence from public corpora is made.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:b37b33300af6172a4d3235e481abc7b75d4e6b03a5dfc910fe6fe453ae30f35f
+    report_package_digest: sha256:881b46438ac1990ac76e9ab51a49fa0f6a093b656ef0f09b1202d7798d725b38
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: csv-records
+  task_id: pilot-csv-records
+  version: 1
+  cluster_id: pilot-csv-records-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-pilot
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 12
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - parsing
+  opportunities:
+    ownership_borrowing: 1
+    ownership_borrowing_api: 1
+    iterators_traits: 1
+    iterator_trait_composition: 1
+    result_option: 3
+    result_option_modeling: 3
+    clippy: 2
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 9
+    example: 9
+    property: 1
+    robustness: 2
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:939aeccda0a922773045c4dce5c1faab5750cadd1c6a1ed9ac20ed9ea4c4e5e0
+  manifest_digest: sha256:e56af7ed18103d4687465554c855e06c5bf5d412a8cd695de079952cdc909665
+  visible_bundle_digest: sha256:db2edd75843077911350b182bfaf3b5b7e372b552e12885a2986ca8722328bb9
+  hidden_bundle_digest: sha256:9c0b6985eacb59e33329152ea2eefbd0d34d6137ca41e648f0cca8857193a1da
+  protected_location: .protected/taskpacks/rust-pilot/csv-records
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not compared against external corpora or search engines. The author only checked
+      from memory that the exact rules are not a known benchmark problem; that is not evidence of absence.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:4a8008f6c09b690cb9afcd0ed1d41345f348c3a4eec3eaa14804b03c9d6f2d41
+    report_package_digest: sha256:939aeccda0a922773045c4dce5c1faab5750cadd1c6a1ed9ac20ed9ea4c4e5e0
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: expr-evaluator
+  task_id: pilot-expr-evaluator
+  version: 1
+  cluster_id: pilot-expr-evaluator-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 5
+    hidden_file_count: 13
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    - visible/tests/public.rs
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - parsing
+  - error_modelling
+  opportunities:
+    ownership_borrowing: 1
+    ownership_borrowing_api: 1
+    iterators_traits: 2
+    iterator_trait_composition: 1
+    result_option: 3
+    result_option_modeling: 2
+    clippy: 3
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 9
+    example: 18
+    property: 2
+    robustness: 5
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:ac1e322d943af25e9977757f309fef76193f5554b639e32a7c83db8e533ea3a0
+  manifest_digest: sha256:42fae8b25a1d4e529beda5320db22f0b217d5a9ec34c2f286b41940bcddb3dcf
+  visible_bundle_digest: sha256:f0b1db4524bd814e3dac930d3113a0f47cb84e463bbedef579ff82de2a23c79c
+  hidden_bundle_digest: sha256:a2b96591af79e3ad47219235a0a15ae8a3e87214786a1617086cd0ad345f5ce1
+  protected_location: .protected/taskpacks/rust-pilot/expr-evaluator
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review: written from scratch
+      for this pilot; not compared against external corpora; no public copy known.'
+    provider_transmission_policy: never sent to a model provider before scoring
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:435e642f46db26b578828aa160417c2fb31cf6d09e4320961e68e896b74417dd
+    report_package_digest: sha256:ac1e322d943af25e9977757f309fef76193f5554b639e32a7c83db8e533ea3a0
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: interval-merge
+  task_id: pilot-interval-merge
+  version: 1
+  cluster_id: pilot-interval-merge-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-pilot
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 12
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - iteration
+  opportunities:
+    ownership_borrowing: 2
+    ownership_borrowing_api: 2
+    iterators_traits: 3
+    iterator_trait_composition: 3
+    result_option: 1
+    result_option_modeling: 1
+    clippy: 2
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 13
+    example: 7
+    property: 1
+    robustness: 3
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:3f0ae5dacb7ac7cd7641afb7407e754c271a21413e455203e5a52611e6484fca
+  manifest_digest: sha256:f154087752f0f4cc2398327e6f03edbdce5a605375d977952b3dbea96d0832fb
+  visible_bundle_digest: sha256:c4e9c9a5695181e6ac93c00d344c70c465211dd087ce2e927131d40490c1fcb4
+  hidden_bundle_digest: sha256:92bbfd5aa1b2b9f99758c294fdc49f05df41af92a1e25eae373d7a154065dffa
+  protected_location: .protected/taskpacks/rust-pilot/interval-merge
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not compared against external corpora or search engines. Interval merging
+      is a generic textbook exercise; the exact API and rules here were composed for this task, and no
+      claim of absence from public corpora is made.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:1e31e6321564cd8e73ac9464fff42f24dacde704abbcd4ebc855b817ddfafe3a
+    report_package_digest: sha256:3f0ae5dacb7ac7cd7641afb7407e754c271a21413e455203e5a52611e6484fca
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: lru-cache
+  task_id: pilot-lru-cache
+  version: 1
+  cluster_id: pilot-lru-cache-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 12
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - ownership
+  - borrowed_lookup
+  opportunities:
+    ownership_borrowing: 3
+    ownership_borrowing_api: 2
+    result_option: 1
+    result_option_modeling: 1
+    iterators_traits: 1
+    iterator_trait_composition: 1
+    clippy: 2
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 8
+    example: 7
+    property: 1
+    robustness: 1
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:571e85a1b767bdc7d193345647b788593ee1296e279af8bcae14a42d8041891f
+  manifest_digest: sha256:47a43c3718d7adf590b2b40d65ff70a51b4b6b305e7ae8dd29aaf043afa5e95b
+  visible_bundle_digest: sha256:684882f966fd902219164976e4e0d6a0d056166c84c244d37b4960bf86e06b96
+  hidden_bundle_digest: sha256:3d0c4d48384e3dff720987292c8726b6366ff999c3859d66ce6431cfefe9ef63
+  protected_location: .protected/taskpacks/rust-pilot/lru-cache
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review performed by the authoring
+      agent only: the task was not compared against external corpora and an LRU cache is a generic textbook
+      structure, so contamination risk is unassessed until the owner confirms.'
+    provider_transmission_policy: never sent to a model provider before owner confirmation
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:f19f24c1c52c4df4e10413adae1fa4f07335287f1a500f048945c6c14f4ac364
+    report_package_digest: sha256:571e85a1b767bdc7d193345647b788593ee1296e279af8bcae14a42d8041891f
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: path-sandbox
+  task_id: pilot-path-sandbox
+  version: 1
+  cluster_id: pilot-path-sandbox-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-pilot
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 13
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  - security
+  miri: optional
+  opportunity_tags:
+  - security_surface
+  opportunities:
+    ownership_borrowing: 2
+    ownership_borrowing_api: 2
+    iterators_traits: 1
+    iterator_trait_composition: 1
+    result_option: 3
+    result_option_modeling: 3
+    clippy: 2
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 15
+    example: 7
+    property: 3
+    robustness: 3
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:4e2e1e9db8815b88253295f62f53f4f5485596f78125a04e52b437a9363ac59c
+  manifest_digest: sha256:11a8a1ff619ed63c68dc5399db8b9a2fbb8facd9f6c52581dbd86a8a2cc6b6df
+  visible_bundle_digest: sha256:63427f31e02c4b0ff0ebca3fe1bf975f6902a899955f5f0b89df3959dd59a931
+  hidden_bundle_digest: sha256:8cd3faa74e930f2318f555692bab4a6e99f4363a85adb8fb430bf157bc551ee4
+  protected_location: .protected/taskpacks/rust-pilot/path-sandbox
+  exposure:
+    first_public_at: null
+    public_exposure_review: Not compared against external corpora or search engines. Path traversal is
+      a generic vulnerability class; the exact API, error order and output format here were composed for
+      this task and no claim of absence from public corpora is made.
+    provider_transmission_policy: visible bundle only
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:abd6026f8cc424ffcc5da2c7c3bc762b155c6812a69a8f421c6b634085ff1695
+    report_package_digest: sha256:4e2e1e9db8815b88253295f62f53f4f5485596f78125a04e52b437a9363ac59c
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: pipeline-traits
+  task_id: pilot-pipeline-traits
+  version: 1
+  cluster_id: pilot-pipeline-traits-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 14
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - trait_design
+  - generics
+  opportunities:
+    ownership_borrowing: 2
+    ownership_borrowing_api: 1
+    iterators_traits: 3
+    iterator_trait_composition: 2
+    result_option: 2
+    result_option_modeling: 2
+    clippy: 3
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 7
+    example: 15
+    property: 2
+    robustness: 2
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:c28dfd557adc0296e233b68e473c0f107946e6832754df23c909c5fa3bd8ec53
+  manifest_digest: sha256:eb31ea735507f85ba390e811a9d0d98e8042115e049d164fb0f0ffe24036d917
+  visible_bundle_digest: sha256:9338de30eeb3db198cc4833c5b8d8ed771613aca0e65f487b5fbb0cb6bf3fa8b
+  hidden_bundle_digest: sha256:2dac48811efa73c363664f7afd4720e923e6e5f1738acef5b2b6f30f627663c8
+  protected_location: .protected/taskpacks/rust-pilot/pipeline-traits
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review: written from scratch
+      for this pilot; not compared against external corpora; no public copy known.'
+    provider_transmission_policy: never sent to a model provider before scoring
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:175df6c1393b4c191cd8b7dd44a13d3886d5d6345ed0b0bf55d9b188b2021973
+    report_package_digest: sha256:c28dfd557adc0296e233b68e473c0f107946e6832754df23c909c5fa3bd8ec53
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: ring-buffer-unsafe
+  task_id: pilot-ring-buffer-unsafe
+  version: 1
+  cluster_id: pilot-ring-buffer-unsafe-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 13
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: required
+  opportunity_tags:
+  - unsafe_code
+  - drop_semantics
+  opportunities:
+    unsafe_soundness: 2
+    ownership_borrowing: 2
+    ownership_borrowing_api: 1
+    clippy: 2
+  required_analyzers:
+  - clippy
+  - context
+  - miri
+  hidden_case_counts:
+    edge: 9
+    example: 8
+    property: 1
+    robustness: 1
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:fcb3f889a6a207361266619ab523315bdd06c84a7786de61282247e2e7d8a79e
+  manifest_digest: sha256:102f116401f307d058f074a86779a52d3b5987ff42bd7822678dc75855a45ed9
+  visible_bundle_digest: sha256:fd0191830e5a113d9bbbe569825e8cd3151466d4e1064e696d7045db2385952c
+  hidden_bundle_digest: sha256:bd64ce9180e78b54d6a5ea289b4b699f62f6eeb33318b397c476a1be7da2e826
+  protected_location: .protected/taskpacks/rust-pilot/ring-buffer-unsafe
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review performed by the authoring
+      agent only: the task was not compared against external corpora and a fixed-capacity ring buffer
+      is a generic textbook structure, so contamination risk is unassessed until the owner confirms.'
+    provider_transmission_policy: never sent to a model provider before owner confirmation
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:87cb21eb7d0719c57990a41fdb10057b943d38fcb2f0341492cedfe46ef190d1
+    report_package_digest: sha256:fcb3f889a6a207361266619ab523315bdd06c84a7786de61282247e2e7d8a79e
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: semver-ranges
+  task_id: pilot-semver-ranges
+  version: 1
+  cluster_id: pilot-semver-ranges-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 14
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - parsing
+  - ordering
+  opportunities:
+    ownership_borrowing: 1
+    ownership_borrowing_api: 1
+    iterators_traits: 2
+    iterator_trait_composition: 2
+    result_option: 3
+    result_option_modeling: 2
+    clippy: 3
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 16
+    example: 12
+    property: 3
+    robustness: 4
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:97c3d82fa530feaee93ab70cfa4aeda0e11bc7399ea55bad1cb1e5755f5ddafe
+  manifest_digest: sha256:070c9f018edd5d39518be083fe473bf5b9ad99bbc813e28e3f65581565b12ff6
+  visible_bundle_digest: sha256:2966e381ae9a6b8a8d2476821c03d8108604cce365ce652f3d1b92be81959b64
+  hidden_bundle_digest: sha256:4d301b6b7094401b2b5ef3b9c11ae16dd7bcbcd7baf5f2d93e64ed19cf145405
+  protected_location: .protected/taskpacks/rust-pilot/semver-ranges
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review: written from scratch
+      for this pilot; not compared against external corpora; no public copy known.'
+    provider_transmission_policy: never sent to a model provider before scoring
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:12b2bfc22e549d1a8fbc5f4cdc6bf50e0a9d45a7d35f634a2461df686dd89c21
+    report_package_digest: sha256:97c3d82fa530feaee93ab70cfa4aeda0e11bc7399ea55bad1cb1e5755f5ddafe
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: sliding-window-stats
+  task_id: pilot-sliding-window-stats
+  version: 1
+  cluster_id: pilot-sliding-window-stats-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 14
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - iteration
+  - numeric_stability
+  opportunities:
+    ownership_borrowing: 2
+    ownership_borrowing_api: 1
+    iterators_traits: 3
+    iterator_trait_composition: 3
+    result_option: 3
+    result_option_modeling: 2
+    clippy: 3
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 11
+    example: 10
+    property: 2
+    robustness: 3
+  variant_counts:
+    alternative: 1
+    faulty: 4
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:c0d91b25494876e089c0fd0a4c6cf69c8d79aa2076411837fb68d6230d2cc43b
+  manifest_digest: sha256:0cc603170babe7c97ebd00214b4a70869015e44a6cd38cbb6495c8d607d729c6
+  visible_bundle_digest: sha256:c867d6666dcefb0856a482a458da9b51114116e77de9337323c6619b33533ab0
+  hidden_bundle_digest: sha256:b1410ef4e08f0c22363d52251171b70cbdc1925eec805d849ceeda1cab3e55a6
+  protected_location: .protected/taskpacks/rust-pilot/sliding-window-stats
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review: written from scratch
+      for this pilot; not compared against external corpora; no public copy known.'
+    provider_transmission_policy: never sent to a model provider before scoring
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:72f85ec563f5f87888a4d63487df4be1780d72844ee1d3d40b0a62b3f030ae99
+    report_package_digest: sha256:c0d91b25494876e089c0fd0a4c6cf69c8d79aa2076411837fb68d6230d2cc43b
+    execution_tier: development_sandbox
+    checks_passed: 23
+    checks_total: 23
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: text-wrap
+  task_id: pilot-text-wrap
+  version: 1
+  cluster_id: pilot-text-wrap-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 12
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - lifetimes
+  - iteration
+  opportunities:
+    ownership_borrowing: 3
+    ownership_borrowing_api: 2
+    iterators_traits: 3
+    iterator_trait_composition: 2
+    result_option: 1
+    result_option_modeling: 1
+    clippy: 3
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 15
+    example: 3
+    property: 1
+    robustness: 2
+  variant_counts:
+    alternative: 1
+    faulty: 3
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:8409f428929972279e692ae9aa3e39d3bb86131a7b5c90097ef9499093ee4c21
+  manifest_digest: sha256:1107812483a437cbaf098a1a37cc71f73c7e0a9e707469a9f991c86ad4bd78be
+  visible_bundle_digest: sha256:ac4fafcf297809b27b280006206f2141ccf5e6d158e383323847eb4ec3f87320
+  hidden_bundle_digest: sha256:878407c2398be6e0b66cb126b8d67e24c392ae36e5ec87420ba33e0ebffe7594
+  protected_location: .protected/taskpacks/rust-pilot/text-wrap
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review performed by the authoring
+      agent only: the task was not compared against external corpora and greedy word wrapping is a common
+      textbook exercise, so contamination risk is unassessed until the owner confirms.'
+    provider_transmission_policy: never sent to a model provider before owner confirmation
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:b01040cc8af9a5293d72c1638d9980ac494a0b57577870aed9069b889fbb4a86
+    report_package_digest: sha256:8409f428929972279e692ae9aa3e39d3bb86131a7b5c90097ef9499093ee4c21
+    execution_tier: development_sandbox
+    checks_passed: 22
+    checks_total: 22
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+- slug: token-bucket
+  task_id: pilot-token-bucket
+  version: 1
+  cluster_id: pilot-token-bucket-cluster
+  family: codegen
+  difficulty: intermediate
+  stratum_id: rust-pilot
+  methodology_label: independent
+  source:
+    source_kind: authored_conformance_fixture
+    immutable_revision: polycodebench-rust-pilot-v1
+    rights_record_id: polycodebench-authored-fixtures
+    first_public_at: null
+    date_confidence: estimated
+    redistribution_status: authored_fixture
+    license_expression: CC0-1.0
+  split:
+    visible_file_count: 4
+    hidden_file_count: 14
+    visible_paths:
+    - visible/repo/Cargo.lock
+    - visible/repo/Cargo.toml
+    - visible/repo/src/lib.rs
+    - visible/task.md
+    dataset_split_assignment: unassigned (curator decision at freeze)
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  miri: optional
+  opportunity_tags:
+  - fallible_api
+  - saturating_arithmetic
+  opportunities:
+    result_option: 4
+    result_option_modeling: 3
+    clippy: 3
+  required_analyzers:
+  - clippy
+  - context
+  hidden_case_counts:
+    edge: 12
+    example: 7
+    property: 1
+    robustness: 1
+  variant_counts:
+    alternative: 1
+    faulty: 5
+    quality_defective: 1
+    reference: 1
+    timeout: 1
+  package_digest: sha256:00a9b957cbba962f9068f55a5332469dbfcd48a60eddddfdf4c035b899a19cf5
+  manifest_digest: sha256:0908a990268ec093137098a6d7049c731e511d8e33ea238e05e085111dc0d84b
+  visible_bundle_digest: sha256:a70b1b4a8a9b254c48a90bb37bf5c57702b85f0bc9f1ef66e42ec5009a39ab73
+  hidden_bundle_digest: sha256:f92014c7bfef00856f7822250690a7c9f0abf338f19603c0f4ec07313ce1c582
+  protected_location: .protected/taskpacks/rust-pilot/token-bucket
+  exposure:
+    first_public_at: null
+    public_exposure_review: 'Authorship, originality and public-exposure review performed by the authoring
+      agent only: the task was not compared against external corpora and a token bucket is a generic textbook
+      structure, so contamination risk is unassessed until the owner confirms.'
+    provider_transmission_policy: never sent to a model provider before owner confirmation
+    rights_status: authored_fixture
+    license_expression: CC0-1.0
+    owner_confirmation: pending
+  admission:
+    status: executable_admission_passed
+    report_digest: sha256:b346d60d7adfd97fbc4f3edf76ec106e736ba435cd8466cfdd5f6cfc5a8135c2
+    report_package_digest: sha256:00a9b957cbba962f9068f55a5332469dbfcd48a60eddddfdf4c035b899a19cf5
+    execution_tier: development_sandbox
+    checks_passed: 24
+    checks_total: 24
+    image_digests:
+    - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+    - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+inventory_digest: sha256:51101f65d38b9a697036f2ddf04bf0e03b2d740007ccedb71163ed298f4de696

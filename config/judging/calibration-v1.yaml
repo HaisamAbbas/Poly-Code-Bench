@@ -1,0 +1,11 @@
+schema_version: 1
+kind: calibration_policy
+policy_id: judge-calibration-v1
+version: 1
+# Technical Spec 15.3 pilot gate. These counts and targets are operational, not a validity proof.
+required_packets_per_language: 30
+required_strata: [representative, adversarial_comment, stylistic_alternative]
+promotion_target_bp: 8000
+selection_seed: judge-calibration-v1
+audit_sample_percent: 10
+qualification_pattern: polycodebench_reviewer_v1

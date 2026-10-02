@@ -1,0 +1,172 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/AggregateResult.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applicable_task_count": {
+      "title": "Applicable Task Count",
+      "type": "integer"
+    },
+    "cohort_digest": {
+      "title": "Cohort Digest",
+      "type": "string"
+    },
+    "coverage": {
+      "title": "Coverage",
+      "type": "string"
+    },
+    "entry_id": {
+      "title": "Entry Id",
+      "type": "string"
+    },
+    "failure_count": {
+      "title": "Failure Count",
+      "type": "integer"
+    },
+    "independent_cluster_count": {
+      "title": "Independent Cluster Count",
+      "type": "integer"
+    },
+    "independent_clusters_by_language": {
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Independent Clusters By Language",
+      "type": "array"
+    },
+    "kind": {
+      "const": "aggregate_result",
+      "default": "aggregate_result",
+      "title": "Kind",
+      "type": "string"
+    },
+    "language_values": {
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Language Values",
+      "type": "array"
+    },
+    "metric_id": {
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "observed_sample_count": {
+      "title": "Observed Sample Count",
+      "type": "integer"
+    },
+    "observed_task_count": {
+      "title": "Observed Task Count",
+      "type": "integer"
+    },
+    "passing_denominator": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Passing Denominator"
+    },
+    "planned_sample_count": {
+      "title": "Planned Sample Count",
+      "type": "integer"
+    },
+    "ranking_label": {
+      "enum": [
+        "exploratory",
+        "ranked_eligible"
+      ],
+      "title": "Ranking Label",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial",
+        "unavailable"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "task_count": {
+      "title": "Task Count",
+      "type": "integer"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    }
+  },
+  "required": [
+    "cohort_digest",
+    "metric_id",
+    "entry_id",
+    "value",
+    "language_values",
+    "task_count",
+    "applicable_task_count",
+    "observed_task_count",
+    "planned_sample_count",
+    "observed_sample_count",
+    "failure_count",
+    "passing_denominator",
+    "independent_cluster_count",
+    "independent_clusters_by_language",
+    "coverage",
+    "status",
+    "ranking_label",
+    "reasons"
+  ],
+  "title": "AggregateResult",
+  "type": "object"
+}

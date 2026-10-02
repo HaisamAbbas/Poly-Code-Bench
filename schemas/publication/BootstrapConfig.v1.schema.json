@@ -1,0 +1,45 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/BootstrapConfig.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "confidence_bps": {
+      "default": 9500,
+      "exclusiveMaximum": 10000,
+      "exclusiveMinimum": 0,
+      "title": "Confidence Bps",
+      "type": "integer"
+    },
+    "kind": {
+      "const": "bootstrap_config",
+      "default": "bootstrap_config",
+      "title": "Kind",
+      "type": "string"
+    },
+    "max_redraw_factor": {
+      "default": 20,
+      "exclusiveMinimum": 0,
+      "title": "Max Redraw Factor",
+      "type": "integer"
+    },
+    "replicates": {
+      "default": 2000,
+      "minimum": 2,
+      "title": "Replicates",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "seed": {
+      "default": 16001,
+      "title": "Seed",
+      "type": "integer"
+    }
+  },
+  "title": "BootstrapConfig",
+  "type": "object"
+}

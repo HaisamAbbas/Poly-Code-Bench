@@ -1,0 +1,568 @@
+{
+  "$defs": {
+    "BootstrapConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence_bps": {
+          "default": 9500,
+          "exclusiveMaximum": 10000,
+          "exclusiveMinimum": 0,
+          "title": "Confidence Bps",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "bootstrap_config",
+          "default": "bootstrap_config",
+          "title": "Kind",
+          "type": "string"
+        },
+        "max_redraw_factor": {
+          "default": 20,
+          "exclusiveMinimum": 0,
+          "title": "Max Redraw Factor",
+          "type": "integer"
+        },
+        "replicates": {
+          "default": 2000,
+          "minimum": 2,
+          "title": "Replicates",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "seed": {
+          "default": 16001,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "title": "BootstrapConfig",
+      "type": "object"
+    },
+    "CohortPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability_policy_digest": {
+          "title": "Applicability Policy Digest",
+          "type": "string"
+        },
+        "budget_tier": {
+          "title": "Budget Tier",
+          "type": "string"
+        },
+        "comparison_filter": {
+          "default": "all",
+          "title": "Comparison Filter",
+          "type": "string"
+        },
+        "compatibility_policy_digest": {
+          "title": "Compatibility Policy Digest",
+          "type": "string"
+        },
+        "editorial_index_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Editorial Index Enabled",
+          "type": "boolean"
+        },
+        "evaluator_digest": {
+          "title": "Evaluator Digest",
+          "type": "string"
+        },
+        "hardware_class": {
+          "title": "Hardware Class",
+          "type": "string"
+        },
+        "judge_panel_digest": {
+          "title": "Judge Panel Digest",
+          "type": "string"
+        },
+        "kind": {
+          "const": "cohort_policy",
+          "default": "cohort_policy",
+          "title": "Kind",
+          "type": "string"
+        },
+        "planned_samples": {
+          "default": 3,
+          "exclusiveMinimum": 0,
+          "title": "Planned Samples",
+          "type": "integer"
+        },
+        "protocol_digest": {
+          "title": "Protocol Digest",
+          "type": "string"
+        },
+        "required_languages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Languages",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "scorer_digest": {
+          "title": "Scorer Digest",
+          "type": "string"
+        },
+        "seeds": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Seeds",
+          "type": "array"
+        },
+        "stratum_weights": {
+          "items": {
+            "$ref": "#/$defs/StratumWeight"
+          },
+          "title": "Stratum Weights",
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/CohortTask"
+          },
+          "title": "Tasks",
+          "type": "array"
+        },
+        "tool_context_policy_digest": {
+          "title": "Tool Context Policy Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tasks",
+        "required_languages",
+        "stratum_weights",
+        "protocol_digest",
+        "tool_context_policy_digest",
+        "budget_tier",
+        "scorer_digest",
+        "evaluator_digest",
+        "judge_panel_digest",
+        "hardware_class",
+        "seeds",
+        "applicability_policy_digest",
+        "compatibility_policy_digest"
+      ],
+      "title": "CohortPolicy",
+      "type": "object"
+    },
+    "CohortTask": {
+      "additionalProperties": false,
+      "properties": {
+        "applicable_metrics": {
+          "default": [
+            "total_score",
+            "pass_rate"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Applicable Metrics",
+          "type": "array"
+        },
+        "cluster_id": {
+          "title": "Cluster Id",
+          "type": "string"
+        },
+        "earliest_public_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Earliest Public At"
+        },
+        "kind": {
+          "const": "cohort_task",
+          "default": "cohort_task",
+          "title": "Kind",
+          "type": "string"
+        },
+        "language": {
+          "title": "Language",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "stratum": {
+          "title": "Stratum",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "task_version": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "title": "Task Version",
+          "type": "integer"
+        },
+        "weight": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "task_id",
+        "language",
+        "stratum",
+        "cluster_id"
+      ],
+      "title": "CohortTask",
+      "type": "object"
+    },
+    "MetricDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability_rule": {
+          "default": "predeclared task metric IDs",
+          "title": "Applicability Rule",
+          "type": "string"
+        },
+        "conditional_on_pass": {
+          "default": false,
+          "title": "Conditional On Pass",
+          "type": "boolean"
+        },
+        "direction": {
+          "default": "higher",
+          "enum": [
+            "higher",
+            "lower"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "domain": {
+          "default": [
+            "0",
+            "100"
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Domain",
+          "type": "array"
+        },
+        "formatter": {
+          "default": "decimal-6",
+          "title": "Formatter",
+          "type": "string"
+        },
+        "kind": {
+          "const": "metric_definition",
+          "default": "metric_definition",
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "missingness_policy": {
+          "const": "block",
+          "default": "block",
+          "title": "Missingness Policy",
+          "type": "string"
+        },
+        "sample_aggregation": {
+          "const": "mean",
+          "default": "mean",
+          "title": "Sample Aggregation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "source_score_item_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Score Item Ids",
+          "type": "array"
+        },
+        "task_aggregation": {
+          "default": "weighted_mean",
+          "enum": [
+            "weighted_mean",
+            "micro_f1"
+          ],
+          "title": "Task Aggregation",
+          "type": "string"
+        },
+        "uncertainty_method": {
+          "default": "cluster-hierarchical-percentile-v1",
+          "title": "Uncertainty Method",
+          "type": "string"
+        },
+        "unit": {
+          "default": "score",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric_id",
+        "label"
+      ],
+      "title": "MetricDefinition",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "entry_id": {
+          "title": "Entry Id",
+          "type": "string"
+        },
+        "false_negative": {
+          "default": 0,
+          "minimum": 0,
+          "title": "False Negative",
+          "type": "integer"
+        },
+        "false_positive": {
+          "default": 0,
+          "minimum": 0,
+          "title": "False Positive",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "aggregate_observation",
+          "default": "aggregate_observation",
+          "title": "Kind",
+          "type": "string"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "sample_index": {
+          "minimum": 0,
+          "title": "Sample Index",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "scorecard_digest": {
+          "title": "Scorecard Digest",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "failure",
+            "infrastructure_missing"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "task_version": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "title": "Task Version",
+          "type": "integer"
+        },
+        "true_positive": {
+          "default": 0,
+          "minimum": 0,
+          "title": "True Positive",
+          "type": "integer"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "entry_id",
+        "task_id",
+        "sample_index",
+        "scorecard_digest",
+        "metric_id",
+        "status"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "StratumWeight": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "stratum_weight",
+          "default": "stratum_weight",
+          "title": "Kind",
+          "type": "string"
+        },
+        "language": {
+          "title": "Language",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "stratum": {
+          "title": "Stratum",
+          "type": "string"
+        },
+        "weight_bps": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Weight Bps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "language",
+        "stratum",
+        "weight_bps"
+      ],
+      "title": "StratumWeight",
+      "type": "object"
+    }
+  },
+  "$id": "https://polycodebench.invalid/schemas/publication/ReportRequest.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bootstrap": {
+      "$ref": "#/$defs/BootstrapConfig",
+      "default": {
+        "confidence_bps": 9500,
+        "kind": "bootstrap_config",
+        "max_redraw_factor": 20,
+        "replicates": 2000,
+        "schema_version": 1,
+        "seed": 16001
+      }
+    },
+    "cohort": {
+      "$ref": "#/$defs/CohortPolicy"
+    },
+    "entry_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Entry Ids",
+      "type": "array"
+    },
+    "fixture_kind": {
+      "const": "synthetic_internal",
+      "default": "synthetic_internal",
+      "title": "Fixture Kind",
+      "type": "string"
+    },
+    "kind": {
+      "const": "report_request",
+      "default": "report_request",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metrics": {
+      "items": {
+        "$ref": "#/$defs/MetricDefinition"
+      },
+      "minItems": 1,
+      "title": "Metrics",
+      "type": "array"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "paired_entries": {
+      "default": [],
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Paired Entries",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "cohort",
+    "metrics",
+    "observations",
+    "entry_ids"
+  ],
+  "title": "ReportRequest",
+  "type": "object"
+}

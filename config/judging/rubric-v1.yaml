@@ -1,0 +1,122 @@
+schema_version: 1
+kind: judge_rubric
+rubric_id: judge-rubric-v1
+version: 1
+status: frozen_pilot
+languages: [python, rust]
+source: >-
+  PolyCodeBench-Technical-Implementation-Spec-v1.md 15.1-15.3 and 8.6;
+  PolyCodeBench-Architecture-v1.md 8.6 and 8.8. Every item below is a *residual* item: it is
+  judged only because no reliable executable or static check owns it. Item identifiers and
+  dimensions follow config/scoring/pilot-v1.yaml; that policy remains the authority for weights.
+prompt_template_version: judge-prompt-v1
+items:
+  - item_id: naming_readability
+    dimension: code_quality
+    question: >-
+      Are the identifiers and structure of the changed code readable in this repository's own
+      context, without renaming things the surrounding code already uses differently?
+    residual_reason: >-
+      Linting finds syntax and convention breaches; whether a name communicates intent here is a
+      contextual judgement, and renaming established local vocabulary would be a regression.
+    anchors:
+      - {value: "0.000000", meaning: "Names actively mislead or force re-reading to understand the change."}
+      - {value: "0.500000", meaning: "Understandable overall, with a documented naming or readability weakness."}
+      - {value: "1.000000", meaning: "Names and structure make the change followable without extra context."}
+  - item_id: decomposition
+    dimension: code_quality
+    question: >-
+      Is the responsibility split into units of a size a reviewer can hold in mind, without
+      splitting code that only makes sense as one unit?
+    residual_reason: >-
+      Function length and call-graph metrics cannot tell a coherent unit from an accidental one;
+      the task contract decides which boundaries the code is allowed to expose.
+    anchors:
+      - {value: "0.000000", meaning: "One unit carries several unrelated responsibilities or none is separable."}
+      - {value: "0.500000", meaning: "Mostly separable, with at least one documented boundary weakness."}
+      - {value: "1.000000", meaning: "Responsibilities are separated at natural, task-appropriate boundaries."}
+  - item_id: duplication
+    dimension: code_quality
+    question: >-
+      Does the change repeat logic that already exists in the frozen task scope, beyond what the
+      task constraints or the repository's established pattern requires?
+    residual_reason: >-
+      Copy-paste detectors report textual similarity; whether repeated logic is acceptable
+      duplication depends on task intent and on generated or vendored code that is out of scope.
+    anchors:
+      - {value: "0.000000", meaning: "Copies existing in-scope logic with no task reason and changes behaviour when one copy changes."}
+      - {value: "0.500000", meaning: "Some justified repetition with at least one avoidable copy."}
+      - {value: "1.000000", meaning: "No avoidable duplication, and any repetition is required by the task."}
+  - item_id: unnecessary_complexity
+    dimension: code_quality
+    question: >-
+      Does the solution use abstraction, indirection or state beyond what the declared
+      requirements need, where a simpler form satisfies the same frozen contract?
+    residual_reason: >-
+      Cyclomatic and nesting thresholds identify review evidence, never proof that a construct is
+      wrong; a threshold breach may be the clearest available implementation.
+    anchors:
+      - {value: "0.000000", meaning: "Unnecessary layers or state make the behaviour hard to follow, with a simpler form available."}
+      - {value: "0.500000", meaning: "Some avoidable complexity with a documented simplification."}
+      - {value: "1.000000", meaning: "No complexity beyond the declared requirements, or it is required by them."}
+  - item_id: repository_style_consistency
+    dimension: code_quality
+    question: >-
+      Does the change follow the conventions already present in the frozen repository scope,
+      rather than importing a different style?
+    residual_reason: >-
+      Formatters normalize what they know; whether an unusual construct matches this repository's
+      conventions is a comparison against surrounding code that no tool performs.
+    anchors:
+      - {value: "0.000000", meaning: "Imports a conflicting convention that a reviewer would rewrite."}
+      - {value: "0.500000", meaning: "Mostly consistent with at least one documented inconsistency."}
+      - {value: "1.000000", meaning: "Consistent with the repository conventions shown in the packet."}
+  - item_id: minimal_relevant_scope
+    dimension: code_quality
+    question: >-
+      Is the change limited to what the task requires, with no unrelated edits, and does it avoid
+      reformatting or restating code outside the requested scope?
+    residual_reason: >-
+      The evaluator rejects out-of-scope paths mechanically; judging whether an in-scope edit is
+      relevant, or whether a comment or log line is noise, requires reading the task constraints.
+    anchors:
+      - {value: "0.000000", meaning: "Substantial unrelated changes or noise that obscures the requested work."}
+      - {value: "0.500000", meaning: "Relevant work with a documented unrelated addition."}
+      - {value: "1.000000", meaning: "Every change serves a stated requirement."}
+  - item_id: idiomatic_design
+    dimension: idiomatic
+    question: >-
+      Does the solution use the language's own mechanisms where they earn their place, rather
+      than transcribing another language's approach or using an advanced construct for show?
+    residual_reason: >-
+      Static profile items own the language-specific diagnostics; whether a construct is
+      *earned* in this context (laziness, ownership, error handling) is a judgement, and advanced
+      syntax earns no bonus by existing.
+    anchors:
+      - {value: "0.000000", meaning: "Transcribed idiom or gratuitous complexity with no contextual benefit."}
+      - {value: "0.500000", meaning: "Language-appropriate with at least one awkward or unjustified choice."}
+      - {value: "1.000000", meaning: "Idiomatic for this context, including valid alternative designs."}
+  - item_id: error_handling_clarity
+    dimension: idiomatic
+    question: >-
+      Are failure modes handled in the language's ordinary way, at the level the task requires,
+      without swallowing errors or inventing error paths the task never exposes?
+    residual_reason: >-
+      Linters flag unchecked calls and unwraps; whether an error path is required, and whether a
+      handler is correctly placed, depends on the task's declared failure modes.
+    anchors:
+      - {value: "0.000000", meaning: "Failures are hidden, misclassified, or handled where the task requires none."}
+      - {value: "0.500000", meaning: "Handled acceptably with at least one documented gap or placement weakness."}
+      - {value: "1.000000", meaning: "Failure handling matches the task's declared modes precisely."}
+  - item_id: residual_robustness_reasoning
+    dimension: robustness
+    question: >-
+      For the optional quality scenarios the task left to judgement, does the solution's own
+      reasoning about bad input, partial results and cleanup hold up?
+    residual_reason: >-
+      Weighted executable scenarios own every required behaviour; only the scenarios a task
+      deliberately leaves open need a reader, and they are reported separately from correctness.
+    anchors:
+      - {value: "0.000000", meaning: "Reasoning about the open scenarios is absent or demonstrably wrong."}
+      - {value: "0.500000", meaning: "Partly addressed with at least one documented gap."}
+      - {value: "1.000000", meaning: "Open scenarios are addressed or deliberately out of scope by contract."}

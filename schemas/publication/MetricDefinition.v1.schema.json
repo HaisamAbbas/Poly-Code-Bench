@@ -1,0 +1,114 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/MetricDefinition.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applicability_rule": {
+      "default": "predeclared task metric IDs",
+      "title": "Applicability Rule",
+      "type": "string"
+    },
+    "conditional_on_pass": {
+      "default": false,
+      "title": "Conditional On Pass",
+      "type": "boolean"
+    },
+    "direction": {
+      "default": "higher",
+      "enum": [
+        "higher",
+        "lower"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "domain": {
+      "default": [
+        "0",
+        "100"
+      ],
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Domain",
+      "type": "array"
+    },
+    "formatter": {
+      "default": "decimal-6",
+      "title": "Formatter",
+      "type": "string"
+    },
+    "kind": {
+      "const": "metric_definition",
+      "default": "metric_definition",
+      "title": "Kind",
+      "type": "string"
+    },
+    "label": {
+      "title": "Label",
+      "type": "string"
+    },
+    "metric_id": {
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "missingness_policy": {
+      "const": "block",
+      "default": "block",
+      "title": "Missingness Policy",
+      "type": "string"
+    },
+    "sample_aggregation": {
+      "const": "mean",
+      "default": "mean",
+      "title": "Sample Aggregation",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_score_item_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Score Item Ids",
+      "type": "array"
+    },
+    "task_aggregation": {
+      "default": "weighted_mean",
+      "enum": [
+        "weighted_mean",
+        "micro_f1"
+      ],
+      "title": "Task Aggregation",
+      "type": "string"
+    },
+    "uncertainty_method": {
+      "default": "cluster-hierarchical-percentile-v1",
+      "title": "Uncertainty Method",
+      "type": "string"
+    },
+    "unit": {
+      "default": "score",
+      "title": "Unit",
+      "type": "string"
+    }
+  },
+  "required": [
+    "metric_id",
+    "label"
+  ],
+  "title": "MetricDefinition",
+  "type": "object"
+}

@@ -1,0 +1,136 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/UncertaintyResult.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "accepted_replicates": {
+      "title": "Accepted Replicates",
+      "type": "integer"
+    },
+    "cohort_digest": {
+      "title": "Cohort Digest",
+      "type": "string"
+    },
+    "entry_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Entry Ids",
+      "type": "array"
+    },
+    "estimate": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Estimate"
+    },
+    "kind": {
+      "const": "uncertainty_result",
+      "default": "uncertainty_result",
+      "title": "Kind",
+      "type": "string"
+    },
+    "lower": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Lower"
+    },
+    "method": {
+      "default": "cluster-hierarchical-percentile-v1",
+      "title": "Method",
+      "type": "string"
+    },
+    "metric_id": {
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "percentile_rule": {
+      "default": "linear-index-(n-1)*p-v1",
+      "title": "Percentile Rule",
+      "type": "string"
+    },
+    "redraw_count": {
+      "title": "Redraw Count",
+      "type": "integer"
+    },
+    "replicate_digest": {
+      "title": "Replicate Digest",
+      "type": "string"
+    },
+    "replicates": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Replicates",
+      "type": "array"
+    },
+    "requested_replicates": {
+      "title": "Requested Replicates",
+      "type": "integer"
+    },
+    "rng": {
+      "title": "Rng",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "seed": {
+      "title": "Seed",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "unstable",
+        "insufficient",
+        "unavailable"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "upper": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Upper"
+    }
+  },
+  "required": [
+    "metric_id",
+    "cohort_digest",
+    "entry_ids",
+    "estimate",
+    "lower",
+    "upper",
+    "seed",
+    "requested_replicates",
+    "accepted_replicates",
+    "redraw_count",
+    "rng",
+    "replicate_digest",
+    "status",
+    "replicates"
+  ],
+  "title": "UncertaintyResult",
+  "type": "object"
+}

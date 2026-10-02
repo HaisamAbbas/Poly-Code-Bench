@@ -1,0 +1,39 @@
+schema_version: 1
+kind: judge_panel
+panel_id: judge-panel-v1
+version: 1
+status: frozen_pilot
+# Judge access is not provisioned: there is no approved judge endpoint, credential, price snapshot
+# or judge model configuration in this workspace. Panels stay inactive until an operator
+# registers one; `pcb-judge panel show` reports `provisioned: false` and every run is refused
+# rather than answered by a stand-in.
+effective_for_scoring: false
+calibration_status: pending
+judge_model_config_id: null
+judge_revision: unprovisioned
+provider_kind: unprovisioned
+rubric_id: judge-rubric-v1
+rubric_version: 1
+votes_required: 3
+distinct_seeds: true
+inference:
+  temperature: "0.000000"
+  max_output_tokens: 2000
+  response_schema_name: judge_vote_v1
+  request_timeout_ms: 120000
+repair:
+  # Technical Spec 15.2: at most two replacement deliveries per vote, same input, one fixed
+  # schema-repair instruction that contains no desired score. Invalid deliveries are retained.
+  replacement_deliveries_per_vote: 2
+  instruction_id: schema-repair-v1
+disagreement:
+  # Operational pilot defaults (Technical Spec 15.3). Only a new policy version may change them.
+  anchor_spread_levels: 2
+  conflicting_facts: true
+  unsupported_citations: true
+  untrusted_comment_only: true
+  audit_sample_percent: 10
+  audit_seed: judge-audit-v1
+blinded_fields: [candidate_identity, provider, rank, cost, expected_score]
+tools: []
+excluded_candidate_model_config_ids: []

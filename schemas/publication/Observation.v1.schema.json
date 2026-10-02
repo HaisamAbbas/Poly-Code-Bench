@@ -1,0 +1,95 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/Observation.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "entry_id": {
+      "title": "Entry Id",
+      "type": "string"
+    },
+    "false_negative": {
+      "default": 0,
+      "minimum": 0,
+      "title": "False Negative",
+      "type": "integer"
+    },
+    "false_positive": {
+      "default": 0,
+      "minimum": 0,
+      "title": "False Positive",
+      "type": "integer"
+    },
+    "kind": {
+      "const": "aggregate_observation",
+      "default": "aggregate_observation",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metric_id": {
+      "title": "Metric Id",
+      "type": "string"
+    },
+    "sample_index": {
+      "minimum": 0,
+      "title": "Sample Index",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "scorecard_digest": {
+      "title": "Scorecard Digest",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "failure",
+        "infrastructure_missing"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_version": {
+      "default": 1,
+      "exclusiveMinimum": 0,
+      "title": "Task Version",
+      "type": "integer"
+    },
+    "true_positive": {
+      "default": 0,
+      "minimum": 0,
+      "title": "True Positive",
+      "type": "integer"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "entry_id",
+    "task_id",
+    "sample_index",
+    "scorecard_digest",
+    "metric_id",
+    "status"
+  ],
+  "title": "Observation",
+  "type": "object"
+}

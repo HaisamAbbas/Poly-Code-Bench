@@ -1,0 +1,40 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/StratumWeight.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "stratum_weight",
+      "default": "stratum_weight",
+      "title": "Kind",
+      "type": "string"
+    },
+    "language": {
+      "title": "Language",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "stratum": {
+      "title": "Stratum",
+      "type": "string"
+    },
+    "weight_bps": {
+      "exclusiveMinimum": 0,
+      "maximum": 10000,
+      "title": "Weight Bps",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "language",
+    "stratum",
+    "weight_bps"
+  ],
+  "title": "StratumWeight",
+  "type": "object"
+}

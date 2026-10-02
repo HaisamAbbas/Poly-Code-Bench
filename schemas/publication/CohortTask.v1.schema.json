@@ -1,0 +1,79 @@
+{
+  "$id": "https://polycodebench.invalid/schemas/publication/CohortTask.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applicable_metrics": {
+      "default": [
+        "total_score",
+        "pass_rate"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "title": "Applicable Metrics",
+      "type": "array"
+    },
+    "cluster_id": {
+      "title": "Cluster Id",
+      "type": "string"
+    },
+    "earliest_public_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Earliest Public At"
+    },
+    "kind": {
+      "const": "cohort_task",
+      "default": "cohort_task",
+      "title": "Kind",
+      "type": "string"
+    },
+    "language": {
+      "title": "Language",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "stratum": {
+      "title": "Stratum",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_version": {
+      "default": 1,
+      "exclusiveMinimum": 0,
+      "title": "Task Version",
+      "type": "integer"
+    },
+    "weight": {
+      "default": 1,
+      "exclusiveMinimum": 0,
+      "title": "Weight",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "task_id",
+    "language",
+    "stratum",
+    "cluster_id"
+  ],
+  "title": "CohortTask",
+  "type": "object"
+}

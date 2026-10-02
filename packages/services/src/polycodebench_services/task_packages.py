@@ -100,11 +100,22 @@ class TaskIdentity(StrictModel):
 
 
 class FixtureExpectation(StrictModel):
-    """What a suite-mode fixture must demonstrate (declared before it is ever executed)."""
+    """What a suite-mode fixture must demonstrate (declared before it is ever executed).
+
+    An instrumented language (C, C++, Go) can reject a solution in ways a test inventory cannot
+    express: a sanitizer lane reports the defect at run time, and a crash is a distinct outcome
+    from a timeout or a wrong answer. Those are recorded as *lane* expectations keyed by the
+    analyzer that must observe them, so a fixture whose defect only one lane can see is still
+    declared -- and still checked -- rather than being dropped from the manifest.
+    """
 
     failing_cases: tuple[str, ...] = ()
     expected_issue_families: tuple[str, ...] = ()
-    expected_failure: Literal["wrong_behavior", "candidate_timeout"] | None = None
+    expected_failure: Literal[
+        "wrong_behavior", "candidate_timeout", "candidate_crash", "build_error"
+    ] | None = None
+    # Analyzer id -> finding families that analyzer must report, e.g. ``{asan: (resource-leak,)}``.
+    expected_lane_findings: dict[str, tuple[str, ...]] = Field(default_factory=dict)
 
 
 class FixtureCase(StrictModel):

@@ -1,1 +1,1 @@
-"""Publication ownership boundary; no release or signing behavior is implemented."""
+"""Fixed-cohort aggregation and reviewed immutable local release publication."""

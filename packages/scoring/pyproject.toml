@@ -3,10 +3,18 @@ name = "polycodebench-scoring"
 version = "0.1.0"
 description = "PolyCodeBench deterministic scoring ownership boundary"
 requires-python = ">=3.12,<3.13"
-dependencies = ["polycodebench-core==0.1.0"]
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "polycodebench-plugins-api==0.1.0",
+  "PyYAML==6.0.3",
+]
+
+[project.scripts]
+pcb-score = "polycodebench_scoring.cli:main"
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }
+polycodebench-plugins-api = { workspace = true }
 
 [build-system]
 requires = ["uv_build==0.12.15"]

@@ -9,6 +9,9 @@ dependencies = [
   "polycodebench-runner==0.1.0",
 ]
 
+[project.scripts]
+pcb-track-a = "polycodebench_evaluation.track_a_cli:main"
+
 [tool.uv.sources]
 polycodebench-core = { workspace = true }
 polycodebench-plugins-api = { workspace = true }

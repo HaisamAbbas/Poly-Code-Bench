@@ -3,7 +3,10 @@ name = "polycodebench-publication"
 version = "0.1.0"
 description = "PolyCodeBench reviewed release publication ownership boundary"
 requires-python = ">=3.12,<3.13"
-dependencies = ["polycodebench-core==0.1.0", "polycodebench-scoring==0.1.0"]
+dependencies = ["polycodebench-core==0.1.0", "polycodebench-scoring==0.1.0", "cryptography==46.0.5"]
+
+[project.scripts]
+pcb-release = "polycodebench_publication.cli:main"
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }

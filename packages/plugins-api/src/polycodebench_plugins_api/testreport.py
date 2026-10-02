@@ -68,6 +68,11 @@ class InventoryGroup(PluginModel):
     kind: Literal["inventory_group"] = "inventory_group"
     group_id: Slug
     required: bool
+    #: Whether this group is an acceptance gate or required quality-only evidence. Suite admission
+    #: needs it to decide how many repetitions to run: acceptance groups are re-run once per
+    #: declared repetition of the whole evaluation, quality-only groups keep their own count so a
+    #: resource leak or a race cannot be turned into a wrong-answer failure.
+    classification: Literal["acceptance", "quality_only"] = "acceptance"
     cases: tuple[InventoryCase, ...] = Field(min_length=1)
 
 

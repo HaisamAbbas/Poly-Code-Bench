@@ -129,6 +129,22 @@ def _families(observations: list[Observation]) -> set[str]:
     }
 
 
+def _group_classifications(view: FrozenTask) -> dict[str, str]:
+    """Read gate roles from the frozen language-neutral oracle document.
+
+    `InventoryGroup` intentionally contains only case identities, so the source oracle (preserved
+    in `FrozenTask.inventory`) remains authoritative for whether a required group is acceptance or
+    quality-only evidence. Older language fixtures without a classification default to acceptance.
+    """
+    inventory = view.inventory
+    groups = inventory.get("groups", ()) if isinstance(inventory, Mapping) else ()
+    return {
+        str(group["group_id"]): str(group.get("classification", "acceptance"))
+        for group in groups
+        if isinstance(group, Mapping) and isinstance(group.get("group_id"), str)
+    }
+
+
 class SuiteAdmission:
     def __init__(
         self,
@@ -157,9 +173,7 @@ class SuiteAdmission:
         self._overlay_roots: tuple[str, ...] = tuple(
             getattr(plugin, "overlay_roots", ("hidden/tests/", "hidden/perf/"))
         )
-        self._overlay_suffixes: tuple[str, ...] = tuple(
-            getattr(plugin, "overlay_suffixes", ())
-        )
+        self._overlay_suffixes: tuple[str, ...] = tuple(getattr(plugin, "overlay_suffixes", ()))
         self._trusted: Any = getattr(plugin, "trusted_inputs", None)
 
     # ----------------------------------------------------------------- evaluation
@@ -191,6 +205,7 @@ class SuiteAdmission:
             )
         plan = self._plugin.test_plan(view)
         inventory = {g.group_id: g for g in self._plugin.inventory(view)}
+        classifications = _group_classifications(view)
         records: list[TestCaseRecord] = []
         controls: list[GroupControl] = []
         durations: list[int] = []
@@ -215,10 +230,18 @@ class SuiteAdmission:
 
         jobs: list[Coroutine[Any, Any, None]] = []
         for group in plan.groups:
-            count = repetitions if group.required else group.repetitions
+            # `required` says whether the task must produce this evidence; classification says
+            # whether it is an acceptance gate. Quality-only probes can be required evidence
+            # without turning a resource leak or race into a wrong-answer failure.
+            classification = classifications.get(group.group_id, "acceptance")
+            count = repetitions if classification == "acceptance" else group.repetitions
             jobs.extend(one(group, rep) for rep in range(count))
         await asyncio.gather(*jobs)
-        required = [g for g in inventory.values() if g.required]
+        required = [
+            g
+            for g in inventory.values()
+            if g.required and classifications.get(g.group_id, "acceptance") == "acceptance"
+        ]
         required_ids = {g.group_id for g in required}
         gates: list[Gate] = []
         digests: list[str] = []
@@ -239,7 +262,9 @@ class SuiteAdmission:
                 )
             )
         quality_only = [
-            g.model_copy(update={"required": True}) for g in inventory.values() if not g.required
+            g.model_copy(update={"required": True})
+            for g in inventory.values()
+            if classifications.get(g.group_id, "acceptance") == "quality_only"
         ]
         quality_pass: bool | None = None
         if quality_only:
@@ -449,6 +474,7 @@ class SuiteAdmission:
                     analyzer_scans=scans,
                     issue_families=tuple(sorted(_families(observed))),
                     durations_ms=result.durations_ms,
+                    quality_only_pass=result.quality_only_pass,
                 )
             )
             check(
@@ -507,6 +533,24 @@ class SuiteAdmission:
             "quality-defect-detected",
             defect_ok,
             "quality-defective variants pass the functional gate yet show their intended defect",
+        )
+        quality_probe_ok = True
+        quality_probe_detail: list[str] = []
+        for fixture, _candidate_files, result in outcomes:
+            expectation = fixture["expectation"]
+            if "expected_quality_only_pass" not in expectation:
+                continue
+            expected = bool(expectation["expected_quality_only_pass"])
+            if result.quality_only_pass is not expected:
+                quality_probe_ok = False
+                quality_probe_detail.append(
+                    f"{fixture['name']}: expected {expected}, got {result.quality_only_pass}"
+                )
+        check(
+            "required-quality-probe-outcomes",
+            quality_probe_ok,
+            "; ".join(quality_probe_detail[:6])
+            or "all declared quality-only probe outcomes matched",
         )
         # A fixture whose defect only an instrumented lane can observe still has to be *shown* to
         # produce it. Without this the four ownership/leak/race/crash fixtures were declared and

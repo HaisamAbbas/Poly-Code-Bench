@@ -95,7 +95,9 @@ def make_conformance_report(
 class VariantRun(PluginModel):
     kind: Literal["variant_run"] = "variant_run"
     name: Slug
-    variant: Literal["reference", "faulty", "alternative", "quality_defective", "timeout"]
+    # Language task contracts can name the defect subtype while the generic admission engine
+    # still applies its shared acceptance roles (`faulty` / `quality_defective`).
+    variant: Slug
     repetitions: int = Field(ge=1)
     gates: tuple[Literal["pass", "fail", "incomplete"], ...]
     failing_cases: tuple[str, ...] = ()
@@ -104,6 +106,7 @@ class VariantRun(PluginModel):
     analyzer_scans: tuple[str, ...] = ()
     issue_families: tuple[str, ...] = ()
     durations_ms: tuple[int, ...] = ()
+    quality_only_pass: bool | None = None
 
 
 class AdmissionCheck(PluginModel):

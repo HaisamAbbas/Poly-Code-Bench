@@ -25,6 +25,23 @@ def new_entity_id() -> str:
     return str(uuid.uuid4())
 
 
+def derived_entity_id(stage_id: str, plan_id: str, path: str) -> str:
+    """Derive a stable UUIDv4-shaped id for one captured plan output.
+
+    Artifact identity is a function of the execution stage, plan and declared output path. The
+    digest bytes are stable across parser replay; UUID version and variant bits keep the value
+    compatible with the domain's EntityId shape.
+    """
+    if not all(isinstance(value, str) and value for value in (stage_id, plan_id, path)):
+        raise ValueError("derived entity id components must be non-empty strings")
+    validate_relative_path(path)
+    payload = canonical_json_bytes([stage_id, plan_id, path])
+    identity = bytearray(hashlib.sha256(payload).digest()[:16])
+    identity[6] = (identity[6] & 0x0F) | 0x40
+    identity[8] = (identity[8] & 0x3F) | 0x80
+    return str(uuid.UUID(bytes=bytes(identity)))
+
+
 def utc_timestamp(value: datetime | None = None) -> str:
     moment = value or datetime.now(UTC)
     if moment.tzinfo is None or moment.utcoffset() is None:

@@ -10,6 +10,7 @@ from polycodebench_core.canonical import (
 from polycodebench_core.identity import (
     MonotonicTimer,
     derive_sample_seed,
+    derived_entity_id,
     new_entity_id,
     validate_relative_path,
 )
@@ -75,6 +76,7 @@ __all__ = [
     "canonical_envelope_bytes",
     "canonical_json_bytes",
     "derive_sample_seed",
+    "derived_entity_id",
     "new_entity_id",
     "parse_json_strict",
     "parse_document",

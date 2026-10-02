@@ -19,6 +19,7 @@ PlanStatus = Literal[
     "tool_error",
     "timed_out",
     "output_missing",
+    "empty_report",
 ]
 
 Relation = Literal[
@@ -58,6 +59,7 @@ class ToolRecord(PluginModel):
     lock_digest: str | None
     rule_bundle_digest: str | None
     advisory_snapshot_digest: str | None
+    advisory_snapshot_state: Literal["pinned", "absent", "not_applicable"] = "not_applicable"
     parser_version: str
     plan_id: str
     parser_id: str

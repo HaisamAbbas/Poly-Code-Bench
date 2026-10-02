@@ -6,10 +6,12 @@ import hashlib
 from typing import Literal
 
 from polycodebench_core.canonical import canonical_json_bytes, parse_json_strict
+from polycodebench_core.identity import derived_entity_id
 from pydantic import Field
 
 from polycodebench_plugins_api.contracts import (
     EXECUTION_RECORD_PATH,
+    AnalysisPlan,
     ArtifactReader,
     ExecutionPlan,
     PluginModel,
@@ -21,7 +23,17 @@ PlanStatus = Literal[
     "tool_error",  # declared or unexpected error exit, or no execution record
     "timed_out",
     "output_missing",  # a required output is absent
+    "empty_report",  # a successful structured report is present but contains no evidence
 ]
+
+
+def raw_report_ids(plan: AnalysisPlan) -> list[str]:
+    """Stable identities for the exact required output paths declared by an analyzer plan."""
+    return [
+        derived_entity_id(plan.plan_id, plan.tool.name, output.path)
+        for output in plan.outputs
+        if output.required
+    ]
 
 
 class ExecutionRecord(PluginModel):
@@ -94,4 +106,13 @@ def plan_status(
     present = set(raw.list())
     if any(output.required and output.path not in present for output in plan.outputs):
         return "output_missing", record
+    if verdict == "success":
+        for output in plan.outputs:
+            if (
+                output.required
+                and output.format != "text"
+                and not output.empty_is_clean
+                and not raw.read(output.path).strip()
+            ):
+                return "empty_report", record
     return ("completed" if verdict == "success" else "completed_with_findings"), record

@@ -41,7 +41,16 @@ class ToolIdentity(PluginModel):
     lock_digest: Digest | None
     rule_bundle_digest: Digest | None
     advisory_snapshot_digest: Digest | None
+    advisory_snapshot_state: Literal["pinned", "absent", "not_applicable"] = "not_applicable"
     parser_version: str = Field(min_length=1, max_length=64)
+
+    @model_validator(mode="after")
+    def advisory_identity_is_consistent(self) -> ToolIdentity:
+        if self.advisory_snapshot_state == "pinned" and self.advisory_snapshot_digest is None:
+            raise ValueError("pinned advisory snapshot requires a digest")
+        if self.advisory_snapshot_state != "pinned" and self.advisory_snapshot_digest is not None:
+            raise ValueError("no advisory data may not carry an advisory snapshot digest")
+        return self
 
 
 class ResourcePolicy(PluginModel):
@@ -101,6 +110,9 @@ class PlanOutput(PluginModel):
     format: Literal["junit_xml", "xml", "json", "jsonl", "sarif", "text"]
     required: bool = True
     max_bytes: int = Field(default=4 * 1024**2, ge=1, le=64 * 1024**2)
+    # Some tools (notably mypy) define a zero-byte report as a successful clean result. That is a
+    # tool-specific contract, never a supervisor-wide assumption.
+    empty_is_clean: bool = False
 
 
 class ExecutionPlan(PluginModel):
@@ -182,6 +194,17 @@ class AnalysisPlan(ExecutionPlan):
     output_schema: Slug
     evidence_ownership: Mapping[str, ScoreDimension | None] = Field(default_factory=dict)
     baseline_reusable: bool = True
+
+    @model_validator(mode="after")
+    def has_required_report_output(self) -> AnalysisPlan:
+        if not any(
+            output.required
+            and output.path not in {"_execution.json"}
+            and not output.path.endswith((".run.json", ".build.json"))
+            for output in self.outputs
+        ):
+            raise ValueError("analysis plan needs a required report output")
+        return self
 
 
 class WorkloadSpec(PluginModel):

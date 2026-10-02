@@ -19,10 +19,10 @@ from polycodebench_plugins_api.contracts import (
     PlanOutput,
     PluginModel,
     ProfileItem,
-    ResourcePolicy,
     ProfileItemResult,
     ProfileResult,
     PropertyEngineIdentity,
+    ResourcePolicy,
     RuleMapping,
     Symbol,
     SymbolIndex,
@@ -52,6 +52,7 @@ from polycodebench_plugins_api.results import (
     PlanStatus,
     make_record,
     plan_status,
+    raw_report_ids,
     read_record,
     record_bytes,
 )
@@ -102,6 +103,7 @@ __all__ = [
     "load_language_plugin",
     "make_record",
     "plan_status",
+    "raw_report_ids",
     "read_record",
     "record_bytes",
 ]

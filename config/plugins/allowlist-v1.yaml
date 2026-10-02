@@ -6,10 +6,10 @@ plugins:
   api_version: 1
   plugin_version: 0.1.0
   image_digests:
-  - sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b
-  - sha256:66e38808ad11e27ca5195c03cc457ce0a2797833525ca6053781f1bb8f09d291
-  - sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1
-  - sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1
+  - sha256:d570dc96e5aa13c41154f0aad00143ccafd55d791a84684e092fd55ee4df63e5
+  - sha256:dfeaa8ccfc0de8858fb937cc77cd0d4416245bc96f0394aa4e01827ea11d1aa9
+  - sha256:8fe5976c148297d2074824e1dda0739596b8ceb55f4f95725d9eb282facc9e8f
+  - sha256:9ad2d668d3acaef2c6f33cdbfdaf1770890ca604b545665f1104f3681127c74c
 - plugin_id: cpp
   entry_point: polycodebench_lang_cpp.plugin:CppLanguagePlugin
   api_version: 1
@@ -23,9 +23,25 @@ plugins:
   api_version: 1
   plugin_version: 0.1.0
   image_digests:
-  - sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118
-  - sha256:2b6763953a93e28e68461358c65bf604312b17bd1ae360119c49fd313efd2dd9
-  - sha256:9ef8a84009a970ad69e3f3ee30a40647ea2602505aef6d8933229f4d7800badf
+  - sha256:32e6d0fbe6e33aeaec4ab63240d41c04466a3ae2044903616ba840518e379272
+  - sha256:441055d335cfdc40ac70a6b30118277ef06a8961b09be95ae7387d646621437b
+  - sha256:84b80a8918f82aa80c14f451918c85cc0577b984bfaf6bab184e9e0c613e2f46
+- plugin_id: java
+  entry_point: polycodebench_lang_java.plugin:JavaLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:5c33f7597765c4d8ecc15b283c8bcf1385166080a4fe6bca11daf05711309a6d
+  - sha256:5d73131b3f4b9ed45249ba3907d506c53cdcdc2c3f08148a4a8dc3d9b0c90ede
+  - sha256:f4dd044becfe32c59ad2905fdb16006bca5fb45686adee490d9ca40de95f03d5
+- plugin_id: javascript
+  entry_point: polycodebench_lang_javascript.plugin:JavaScriptLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:5525cc983a8f5a4ec5538f04e585f62037abfe49286bd83a3e86a304a15ea258
+  - sha256:5ff3e2279c5ae9bc930081ada765b168ab4802d3915a9b132510df53f9d0362a
+  - sha256:733dd86c72be881f702771c3648878a9615cf00326391b22777cca74281f7e86
 - plugin_id: python
   entry_point: polycodebench_lang_python.plugin:PythonLanguagePlugin
   api_version: 1
@@ -41,3 +57,11 @@ plugins:
   - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
   - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
   - sha256:de4293082733f48aa17c59aad10041893efb086eb5e4e2ef9a2470795775b322
+- plugin_id: typescript
+  entry_point: polycodebench_lang_javascript.plugin:TypeScriptLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:3336f44d886fa5f6232608fb550298b966b23f3625076f51c56a63d97d4e7fbc
+  - sha256:73ba1b3ea585367c9f1f8967f2b748fc676e2d723f845b84d4a6d801faaab84c
+  - sha256:c1ca49e6bca19e843db0bf55742b2f9ff7995257bb7f48a65ca49e60bece685a

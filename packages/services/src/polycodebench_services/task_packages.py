@@ -116,6 +116,10 @@ class FixtureExpectation(StrictModel):
     ] | None = None
     # Analyzer id -> finding families that analyzer must report, e.g. ``{asan: (resource-leak,)}``.
     expected_lane_findings: dict[str, tuple[str, ...]] = Field(default_factory=dict)
+    # Some language plugins refine the shared fixture role (for example Java's null, resource,
+    # concurrency and security cases). The observed role remains in `FixtureCase.variant`; this
+    # field records only the declared subtype and an optional quality-probe expectation.
+    expected_quality_only_pass: bool | None = None
 
 
 class FixtureCase(StrictModel):
@@ -128,6 +132,7 @@ class FixtureCase(StrictModel):
 
     name: str = Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,63}$")
     variant: Literal["reference", "faulty", "alternative", "quality_defective", "timeout"]
+    language_variant: str | None = Field(default=None, pattern=r"^[a-z0-9][a-z0-9._-]{0,63}$")
     solution_path: str
     input_path: str | None = None
     expected_output_path: str | None = None

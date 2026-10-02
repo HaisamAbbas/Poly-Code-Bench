@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "kind": "performance_evidence",
+  "evaluation_id": "3072e703-2746-49cd-a3ca-50a3a93ee4be",
+  "task_id": "conformance-top-words",
+  "task_version": 1,
+  "plugin_id": "python",
+  "plan_id": "python.performance",
+  "plan_digest": "sha256:46a158500144403d0ef38df4e94ac8722feb0e12124b4abc57544327ef8ffde6",
+  "execution_tier": "development_sandbox",
+  "lane": "performance",
+  "reservation": {
+    "schema_version": 1,
+    "kind": "reservation_record",
+    "kind_of_reservation": "exclusive_guest",
+    "exclusive": true,
+    "worker_id": "local_docker:068cedd2883447b63135a812dc2504cceed25e67b20a3b7b061ca17964f6a8e2",
+    "sandbox_id": "dc8a0e6c-3690-4507-8f19-0e7ee6ff57c0",
+    "fence": 1,
+    "acquired_at_ms": 192765656,
+    "released": false
+  },
+  "hardware": {
+    "schema_version": 1,
+    "kind": "hardware_record",
+    "cpu_model": "Intel(R) Core(TM) Ultra 7 155U",
+    "machine": "x86_64",
+    "logical_cpus": 14,
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "cgroup_memory_limit_bytes": 536870912,
+    "cgroup_peak_bytes": 15122432,
+    "python_runtime": "3.12.14",
+    "guest_image_digest": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+    "dedicated": false,
+    "homogeneous": true,
+    "allocation_class": "cpu_millis=1000"
+  },
+  "speed_lane": {
+    "schema_version": 1,
+    "kind": "speed_lane_check",
+    "accepted": true,
+    "declared_recipe": null,
+    "flags_digest": "sha256:fb20239b546612aca9e3601fa5ce65bd55938fa89bc45a7a552206e678435fbd",
+    "forbidden_tokens_found": []
+  },
+  "candidate_digest": "sha256:06965a3f772e4b70ac864ace218704fbcee206d31a796e40cd5907ce1e2c580a",
+  "reference_digest": "sha256:06965a3f772e4b70ac864ace218704fbcee206d31a796e40cd5907ce1e2c580a",
+  "reference_digest_expected": "sha256:06965a3f772e4b70ac864ace218704fbcee206d31a796e40cd5907ce1e2c580a",
+  "environment_digest": "sha256:7ec8233aaa06f5c64e28b772a3de3aa0cb0be3c951ac6fc083e89b1fd5711ca2",
+  "build": [
+    {
+      "schema_version": 1,
+      "kind": "build_timing",
+      "side": "candidate",
+      "duration_ms": 1828,
+      "image_digest": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "flags_digest": "sha256:15fbde6e8ff141b579028b3d1678b3868b923ee365c159c4a545a8974561c2ee"
+    },
+    {
+      "schema_version": 1,
+      "kind": "build_timing",
+      "side": "reference",
+      "duration_ms": 2719,
+      "image_digest": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "flags_digest": "sha256:15fbde6e8ff141b579028b3d1678b3868b923ee365c159c4a545a8974561c2ee"
+    }
+  ],
+  "blocks": [
+    {
+      "schema_version": 1,
+      "kind": "block_record",
+      "block_index": 0,
+      "started_first": true,
+      "status": "invalid_canary",
+      "canary": {
+        "schema_version": 1,
+        "kind": "canary_record",
+        "canary_id": "reference-largest-scale",
+        "baseline_ns": "1",
+        "median_ns": "1230011359",
+        "relative_mad": "0.02980291908019688458828289568665682541880",
+        "band_ratio": "1.10",
+        "max_relative_mad": "0.05",
+        "samples": 3,
+        "baseline_source": "frozen",
+        "status": "invalid",
+        "reason": "canary_median_outside_band"
+      },
+      "reason": "canary_median_outside_band",
+      "iterations": 0
+    },
+    {
+      "schema_version": 1,
+      "kind": "block_record",
+      "block_index": 1,
+      "started_first": false,
+      "status": "invalid_canary",
+      "canary": {
+        "schema_version": 1,
+        "kind": "canary_record",
+        "canary_id": "reference-largest-scale",
+        "baseline_ns": "1",
+        "median_ns": "914568494",
+        "relative_mad": "0.2778595213668053603429728468210277097081",
+        "band_ratio": "1.10",
+        "max_relative_mad": "0.05",
+        "samples": 3,
+        "baseline_source": "frozen",
+        "status": "invalid",
+        "reason": "canary_median_outside_band"
+      },
+      "reason": "canary_median_outside_band",
+      "iterations": 0
+    }
+  ],
+  "selected_block": null,
+  "iterations": [],
+  "workloads": [
+    {
+      "schema_version": 1,
+      "kind": "workload_measurement",
+      "workload_id": "large",
+      "scale": 60000,
+      "weight_bp": 10000,
+      "input_seed": 13,
+      "memory_metric": "guest_process_peak_rss_ru_maxrss_kb",
+      "candidate": {
+        "schema_version": 1,
+        "kind": "series_summary",
+        "samples": 0,
+        "median_ns": null,
+        "median_peak_rss_kb": null,
+        "stdev_ns": null,
+        "mad_ns": null,
+        "relative_mad": null,
+        "min_ns": null,
+        "max_ns": null,
+        "rejected": 0
+      },
+      "reference": {
+        "schema_version": 1,
+        "kind": "series_summary",
+        "samples": 0,
+        "median_ns": null,
+        "median_peak_rss_kb": null,
+        "stdev_ns": null,
+        "mad_ns": null,
+        "relative_mad": null,
+        "min_ns": null,
+        "max_ns": null,
+        "rejected": 0
+      },
+      "time_ratio": null,
+      "memory_ratio": null,
+      "time_censored": null,
+      "status": "invalid",
+      "scale_growth": {
+        "ratio_time": null,
+        "ratio_scale": null,
+        "time_per_unit": null
+      }
+    }
+  ],
+  "efficiency": {
+    "schema_version": 1,
+    "kind": "efficiency_result",
+    "status": "incomplete",
+    "time_geomean_ratio": null,
+    "memory_geomean_ratio": null,
+    "time_censored": null,
+    "memory_censored": null,
+    "score": null,
+    "reasons": [
+      "no_valid_measurement_block"
+    ]
+  },
+  "pair_order_seed": 4242,
+  "warmup_iterations": 1,
+  "measured_iterations": 3,
+  "hardware_gate": "blocked_shared_ci",
+  "hardware_gate_reason": "measurements ran on shared CI hardware; ordinary shared timings cannot establish a production comparison",
+  "raw_artifacts": [
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "performance:reference:warmup:large:0",
+      "path": "out/perf/canary-0-0.json",
+      "digest": "sha256:df3ec6168ddf86cb9dc16f0855091aea4b8099e64d4795cd393c219624282122",
+      "size_bytes": 230,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "performance:reference:warmup:large:1",
+      "path": "out/perf/canary-0-1.json",
+      "digest": "sha256:8cf9685b063d84042e0f4cdb31fd219c72f5bbb1c9c14a3dd38c7c33639a35ab",
+      "size_bytes": 230,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "performance:reference:warmup:large:2",
+      "path": "out/perf/canary-0-2.json",
+      "digest": "sha256:37d8f3f2749704f6f3d83354a1dfd9f1cad7151c58ce7b91252c9039a9f984ad",
+      "size_bytes": 229,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "performance:reference:warmup:large:0",
+      "path": "out/perf/canary-1-0.json",
+      "digest": "sha256:0cc8d07a5ef2426bd71d7edf7891b8e911fef841eef0e101b30b219b52da8adf",
+      "size_bytes": 230,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "performance:reference:warmup:large:1",
+      "path": "out/perf/canary-1-1.json",
+      "digest": "sha256:b5c71ccb73f43974d3db288d67950c9905319c663b9df4bc28826e44d984b501",
+      "size_bytes": 229,
+      "format": "json"
+    },
+    {
+      "schema_version": 1,
+      "kind": "raw_artifact_ref",
+      "stage": "performance:reference:warmup:large:2",
+      "path": "out/perf/canary-1-2.json",
+      "digest": "sha256:2052a3a2943cc8a09bfba09c47a78df649d3973e79112157ade65da4f9436c7a",
+      "size_bytes": 229,
+      "format": "json"
+    }
+  ],
+  "report_digest": "sha256:b571c9ff687d5ed361b9db5500fd4e33f129730f21bac5c9d5eee3b1adcda5ce"
+}

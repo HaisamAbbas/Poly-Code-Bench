@@ -8,8 +8,10 @@ from java_plugin_support import draft, identities
 from polycodebench_core.identity import new_entity_id
 from polycodebench_core.models import Candidate
 from polycodebench_lang_java import JavaLanguagePlugin
+from polycodebench_lang_java.parsers import PARSERS
 from polycodebench_lang_java.taskspec import PerformanceDecl
-from polycodebench_plugins_api import AnalysisContext
+from polycodebench_plugins_api import AnalysisContext, DictArtifactReader
+from polycodebench_plugins_api.results import make_record, record_bytes
 
 SOURCE = "src/main/java/demo/TopWords.java"
 
@@ -58,6 +60,16 @@ def test_java_freeze_build_test_and_analysis_use_shared_plan_contracts() -> None
     assert next(arg for arg in tests.groups[0].plan.argv if arg.startswith("-Dtest=")) == (
         "-Dtest=demo.TopWordsTest"
     )
+    behavior_xml = {
+        output.path
+        for output in tests.groups[0].plan.outputs
+        if output.format == "junit_xml"
+    }
+    assert behavior_xml == {
+        "work/target/surefire-reports/TEST-demo.TopWordsTest.xml",
+    }
+    assert tests.groups[1].plan.outputs[-1].format == "junit_xml"
+    assert tests.groups[2].plan.outputs[-1].format == "junit_xml"
     assert [group.repetitions for group in tests.groups] == [1, 3, 3]
     assert tests.expected_inventory_digest == view.inventory_digest
 
@@ -82,6 +94,53 @@ def test_java_freeze_build_test_and_analysis_use_shared_plan_contracts() -> None
     assert dependency.exit_semantics.findings == (1,)
     assert dependency.exit_semantics.error
     assert all(plan.baseline_reusable is False for plan in plans)
+
+
+def test_dependency_lock_drift_is_missing_evidence_not_a_clean_scan() -> None:
+    plugin = JavaLanguagePlugin(identities())
+    task = draft()
+    view = plugin.freeze_view(task, "sha256:" + "8" * 64)
+    plan = next(
+        plan
+        for plan in plugin.analysis_plans(
+            AnalysisContext(
+                task=view,
+                candidate_digest="sha256:" + "9" * 64,
+                candidate_paths=(SOURCE,),
+            )
+        )
+        if plan.analyzer_id == "dependency"
+    )
+    outputs = {
+        "out/dependency-list.run.json": b"{}",
+        "out/dependency-audit.run.json": b"{}",
+        "work/target/deps.txt": b"   org.example:dependency:jar:1.0:test -- module org.example\n",
+        "out/dependency.json": json.dumps(
+            {
+                "schema": "pcb-dependency-audit-v1",
+                "findings": [],
+                "resolution_drift": ["org.example:dependency:1.0"],
+            }
+        ).encode(),
+    }
+    outputs["_execution.json"] = record_bytes(
+        make_record(
+            plan,
+            exit_code=0,
+            timed_out=False,
+            duration_ms=5,
+            stdout=b"",
+            stderr=b"",
+            isolation_tier="development",
+            sandbox_id=new_entity_id(),
+        )
+    )
+    observations = PARSERS["dependency"](
+        DictArtifactReader(outputs), plan, plugin.profile("java-profile-v1")
+    )
+    scan = next(item for item in observations if item.check_id == "java.dependency.scan")
+    assert scan.status.value == "missing"
+    assert "frozen dependency lock" in scan.explanation
 
 
 def test_java_profile_does_not_score_syntax_presence() -> None:
@@ -121,5 +180,7 @@ def test_java_perf_plan_uses_one_frozen_mode_and_fixed_warmup() -> None:
     assert plan.iteration_plan.argv[0:3] == ("python", "-B", "/opt/pcb/guest/pcb_java_run.py")
     assert "-XX:+UseParallelGC" in plan.iteration_plan.argv
     assert "-XX:-UsePerfData" in plan.iteration_plan.argv
-    assert plan.iteration_plan.environment["PCB_JVM_MEASUREMENT"] == "steady_state"
+    assert plan.iteration_plan.environment == {}
+    assert "HOME" not in plan.iteration_plan.environment
+    assert "PCB_JVM_MEASUREMENT" not in plan.iteration_plan.environment
     assert plan.iteration_plan.tool.image_digest == plugin.identities.performance.digest

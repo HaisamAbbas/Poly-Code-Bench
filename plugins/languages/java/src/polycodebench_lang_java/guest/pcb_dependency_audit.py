@@ -41,7 +41,13 @@ def resolve_report(path):
     except OSError:
         return found
     for line in text.splitlines():
-        parts = line.strip().split(":")
+        # `dependency:list` writes each coordinate as
+        # `group:artifact:type:version:scope -- module <name>`. The trailing clause is part of the
+        # line, so the version and scope fields must be cut at it before splitting; otherwise the
+        # version parses as `5.10.2:test` and the scope as `test -- module ...`, and nothing is
+        # recognised.
+        coordinate = line.split(" -- ", 1)[0].strip()
+        parts = coordinate.split(":")
         if len(parts) == 5 and parts[0] and parts[1] and parts[3]:
             found.append(
                 {

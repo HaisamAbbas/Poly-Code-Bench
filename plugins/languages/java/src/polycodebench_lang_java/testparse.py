@@ -81,11 +81,12 @@ def candidate_error_sites(text: str, candidate_paths: set[str]) -> tuple[list[st
     return candidate, harness
 
 
-def surefire_reports(raw: ArtifactReader, prefix: str) -> list[dict[str, Any]]:
-    """Every ``<testcase>`` in the surefire XML reports a run produced."""
+def surefire_reports(raw: ArtifactReader, paths: tuple[str, ...]) -> list[dict[str, Any]]:
+    """Every ``<testcase>`` in the explicitly captured Surefire XML reports a run produced."""
     cases: list[dict[str, Any]] = []
-    for path in raw.list():
-        if not path.startswith(prefix) or not path.endswith("TEST-*.xml"):
+    present = set(raw.list())
+    for path in paths:
+        if path not in present:
             continue
         try:
             document = ElementTree.fromstring(raw.read(path).decode("utf-8", errors="replace"))
@@ -165,8 +166,8 @@ def parse_group_report(
         else ""
     )
     timed_out = bool(run.get("timed_out")) or status == "timed_out"
-    prefix = f"work/target/surefire-reports/TEST-{name}"
-    events = surefire_reports(raw, prefix)
+    report_paths = tuple(output.path for output in plan.outputs if output.format == "junit_xml")
+    events = surefire_reports(raw, report_paths)
     known = {case.case_id for case in inventory.cases}
     required = {case.case_id: case.required for case in inventory.cases}
     cases: dict[str, TestCaseRecord] = {}

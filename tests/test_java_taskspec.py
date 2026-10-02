@@ -20,7 +20,7 @@ def test_authored_java_task_has_all_required_fixture_variants() -> None:
     report = JavaLanguagePlugin(identities()).validate_task(draft())
     assert report.ok, [item.model_dump() for item in report.issues]
     document = yaml.safe_load((TASK_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
-    variants = {item["variant"] for item in document["fixtures"]}
+    variants = {item["language_variant"] for item in document["fixtures"]}
     assert variants >= {
         "reference",
         "faulty",

@@ -45,7 +45,10 @@
     <module name="SimplifyBooleanExpression"/>
     <module name="SimplifyBooleanReturn"/>
     <module name="StringLiteralEquality"/>
-    <module name="SelfAssignment"/>
+    <!-- `SelfAssignment` is deliberately absent: it does not exist in the Checkstyle 9.3 the
+         pinned plugin ships, and naming it makes the whole goal fail to initialise, which would
+         take down every other Checkstyle rule with it. The same defect is still detected, by the
+         context scanner (`java.context.self-assignment`), which is where the profile owns it. -->
     <module name="EmptyStatement"/>
     <module name="EqualsAvoidNull"/>
     <module name="ArrayTypeStyle"/>

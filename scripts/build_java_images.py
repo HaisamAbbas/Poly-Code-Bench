@@ -233,15 +233,17 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
     """
     argv: tuple[str, ...]
     if tool in PLUGIN_GOALS:
+        # Not `-q`: quiet mode suppresses the banner that names the plugin version, which is the
+        # very thing this probe reads, so every analyzer version would record as "unknown".
         argv = (
             "mvn",
             "-o",
             "-B",
             "--no-transfer-progress",
-            "-q",
             PLUGIN_GOALS[tool],
         )
     elif tool == "junit":
+        # `ls` of the version directory prints a bare version, not an artifact filename.
         argv = ("sh", "-c", "ls /opt/pcb/m2/repository/org/junit/jupiter/junit-jupiter")
     elif tool == "java":
         argv = ("java", "-version")
@@ -266,8 +268,10 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
         return "absent"
     text = (result.stdout + result.stderr).strip()
     if tool == "junit":
-        match = re.search(r"junit-jupiter-([\w.\-]+)", text)
-        return match.group(1) if match else "unknown"
+        match = re.search(r"junit-jupiter-([\w.\-]+)", text) or re.search(
+            r"\b(\d[\w.\-+]*)\s*$", text
+        )
+        return normalize(match.group(1)) if match else "unknown"
     return parsed_version(text)
 
 
@@ -382,69 +386,88 @@ def build(recipe: str) -> dict[str, object]:
         "recipe_digest": sha256_file(IMAGES / "recipes.yaml"),
         "dockerfile_digest": sha256_file(IMAGES / "Dockerfile"),
     }
-    if recipe == "performance":
-        record["jvm_measurement"] = measurement_modes(digest)
-    else:
-        record["jvm_measurement"] = {}
+    # The frozen modes are recorded once, at `build.jvm_measurement`, which is where the strict
+    # model reads them. They are not a per-image field: a mode belongs to the performance image and
+    # the other two must not carry one, and duplicating it per image would assert the opposite.
+    record["jvm_measurement"] = measurement_modes(digest) if recipe == "performance" else {}
     return record
 
 
 def known_digests() -> dict[str, set[str]]:
-    """Image digests already recorded for the other languages, so the allowlist keeps them."""
+    """Every other language's recorded digests, keyed by plugin id.
+
+    The recorded image files are the authority. Rebuilding entries from them rather than copying
+    whatever the previous allowlist held is what stops a stale entry (notably one with an empty
+    digest list) from being preserved indefinitely by whichever language rebuilt last.
+    """
     found: dict[str, set[str]] = {}
-    for name in ("python-v1.json", "rust-v1.json"):
-        path = ROOT / "config" / "images" / name
-        if not path.is_file():
-            continue
+    for path in sorted((ROOT / "config" / "images").glob("*-v1.json")):
         document = json.loads(path.read_text(encoding="utf-8"))
-        language = normalize(document.get("kind", "")).removesuffix("_images")
-        found[language] = {str(record["digest"]) for record in document["images"].values()}
+        # `normalize` turns the recorded `<language>_images` underscore into a hyphen, so the
+        # suffix to strip after normalizing is `-images`. Stripping `_images` matched nothing and
+        # silently emitted empty digest sets.
+        language = normalize(str(document.get("kind", ""))).removesuffix("-images")
+        images = document.get("images")
+        if language and isinstance(images, dict) and images:
+            found[language] = {str(record["digest"]) for record in images.values()}
+    return found
+
+
+def plugin_entry_points() -> dict[str, str]:
+    """Every language plugin's declared entry point, read from its own distribution.
+
+    Read from ``pyproject.toml`` rather than from a table written in one build script. A table
+    here would make the allowlist a race: whichever language rebuilt last would emit only the
+    languages it knew about and silently unregister the rest. The declarations already exist and
+    are the authority, so this only reads them.
+    """
+    found: dict[str, str] = {}
+    for pyproject in sorted((ROOT / "plugins" / "languages").glob("*/pyproject.toml")):
+        for line in pyproject.read_text(encoding="utf-8").splitlines():
+            match = re.match(r'\s*([a-z][a-z0-9]*)\s*=\s*"([\w.]+:[A-Za-z]+)"', line)
+            if match:
+                found[match.group(1)] = match.group(2)
     return found
 
 
 def write_allowlist(java_images: dict[str, dict[str, object]]) -> None:
+    """Rewrite the allowlist from the recorded image files.
+
+    Every entry is rebuilt from `config/images/<language>-v1.json` rather than merged from whatever
+    the previous file held. Preserving prior entries verbatim is what let an entry with an empty
+    digest list survive indefinitely: whichever language rebuilt last copied the broken entry
+    forward, and the plugin stayed registered with no usable image digest. A language whose image
+    file exists is therefore always re-emitted, and one without recorded digests is refused rather
+    than written as a silently empty list.
+    """
     java = {str(record["digest"]) for record in java_images.values()}
-    existing = yaml.safe_load(ALLOWLIST.read_text(encoding="utf-8")) if ALLOWLIST.is_file() else {}
-    others = known_digests()
-    entry_points = {
-        "python": "polycodebench_lang_python.plugin:PythonLanguagePlugin",
-        "rust": "polycodebench_lang_rust.plugin:RustLanguagePlugin",
-    }
+    digests_by_language = known_digests()
+    digests_by_language["java"] = java
+    # Every registered language's entry point is read from its own distribution metadata rather
+    # than from a list written here. A hard-coded map is a race between language builds: whichever
+    # script ran last rewrote the allowlist and dropped every language it did not know about.
+    entry_points = plugin_entry_points()
+    missing = sorted(set(entry_points) - set(digests_by_language))
+    if missing:
+        raise SystemExit(
+            "refusing to write an allowlist with no recorded image digests for: "
+            + ", ".join(missing)
+            + "; build those images first"
+        )
+    # Sort for a stable, reviewable file; a reordering alone must never look like a change of
+    # registration.
     lines = [
         "schema_version: 1",
         "kind: language_plugin_allowlist",
         "plugins:",
     ]
-    # Other languages may be registered by a parallel agent; their entries are preserved verbatim
-    # rather than rewritten, because dropping one would silently unregister a working plugin.
-    for entry in existing.get("plugins", []) or []:
-        plugin_id = normalize(str(entry.get("plugin_id", "")))
-        if plugin_id == "java":
-            continue
-        if plugin_id in entry_points and plugin_id not in others:
-            lines.append(f"  - plugin_id: {plugin_id}")
-            lines.append(f"    entry_point: {entry_points[plugin_id]}")
-            lines.append(f"    api_version: {entry.get('api_version', 1)}")
-            lines.append(f'    plugin_version: "{entry.get("plugin_version", "0.1.0")}"')
-            lines.append("    image_digests:")
-            lines.extend(f"      - {digest}" for digest in sorted(others.get(plugin_id, set())))
-            continue
-        lines.append(f"  - plugin_id: {entry.get('plugin_id')}")
-        lines.append(f"    entry_point: {entry.get('entry_point')}")
-        lines.append(f"    api_version: {entry.get('api_version', 1)}")
-        lines.append(f'    plugin_version: "{entry.get("plugin_version", "0.1.0")}"')
+    for plugin_id in sorted(entry_points):
+        lines.append(f"  - plugin_id: {plugin_id}")
+        lines.append(f"    entry_point: {entry_points[plugin_id]}")
+        lines.append("    api_version: 1")
+        lines.append('    plugin_version: "0.1.0"')
         lines.append("    image_digests:")
-        lines.extend(f"      - {digest}" for digest in sorted(entry.get("image_digests", []) or []))
-    lines.extend(
-        [
-            "  - plugin_id: java",
-            "    entry_point: polycodebench_lang_java.plugin:JavaLanguagePlugin",
-            "    api_version: 1",
-            '    plugin_version: "0.1.0"',
-            "    image_digests:",
-            *(f"      - {digest}" for digest in sorted(java)),
-        ]
-    )
+        lines.extend(f"      - {digest}" for digest in sorted(digests_by_language[plugin_id]))
     ALLOWLIST.parent.mkdir(parents=True, exist_ok=True)
     ALLOWLIST.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -507,7 +530,13 @@ def main() -> int:
         },
         "rule_bundle_digest": tree_digest(PLUGIN, ("rules",)),
         "guest_digest": tree_digest(PLUGIN, ("guest",)),
-        "images": images,
+        # The per-image `jvm_measurement` is how `require_distinct` proved that only the
+        # performance image carries a policy; the strict identity model has no such field, so the
+        # evidence is dropped here now that it has been checked.
+        "images": {
+            recipe: {key: value for key, value in record.items() if key != "jvm_measurement"}
+            for recipe, record in images.items()
+        },
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")

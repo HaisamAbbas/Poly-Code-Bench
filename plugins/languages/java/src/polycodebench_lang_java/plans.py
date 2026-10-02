@@ -11,14 +11,14 @@ optimisation, it is the contract: a scored Java run must not be able to reach Ma
 task whose POM needs an artifact the image does not carry must fail loudly rather than silently
 resolve a different version than the one admission froze.
 
-The frozen JIT policy lives in :func:`jvm_environment`. It reads exactly one thing - the task's
-admission-frozen ``measurement_mode`` - and returns the flag set baked into the performance image
-for that mode. Nothing in this module consults a candidate, a timing, or anything observed at run
-time, which is what PCB-23-1's DoD requires.
+The frozen JIT policy is encoded directly in :func:`jvm_argv` from the task's admission-frozen
+``measurement_mode``. Nothing in this module consults a candidate, a timing, or anything observed
+at run time, which is what PCB-23-1's DoD requires.
 """
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -68,10 +68,15 @@ MAVEN_FAILED = 1
 TOOL_ERRORS = (2, 126, 127)
 #: Analyzers whose findings arrive as a report file while Maven itself exits 0. SpotBugs' ``check``
 #: goal and PMD's ``check`` goal both fail the build on violations, so this plugin uses the
-#: report-generating goals (``spotbugs:check`` writes its XML then reports; ``pmd:pmd`` and
-#: ``checkstyle:checkstyle`` never fail) and reads the XML instead of the status.
+#: report-generating goals write XML which the profile reads instead of treating a status as a
+#: verdict. Fully-qualified coordinates avoid Maven's online plugin-prefix metadata lookup.
 ANALYZER_SUCCESS = (0,)
 ANALYZER_ERRORS = (MAVEN_FAILED, *TOOL_ERRORS)
+
+
+def advisory_snapshot() -> bytes:
+    """The exact Java advisory snapshot copied into the evaluator image."""
+    return (Path(__file__).resolve().parent / "rules" / "advisories" / "snapshot.json").read_bytes()
 
 
 def resources(timeout: int, *, memory_mib: int = 3072) -> ResourcePolicy:
@@ -170,15 +175,9 @@ def _base(
         "image_digest": image.digest,
         "argv": argv,
         "working_directory": ".",
-        # Offline is not optional: it is what makes the frozen resolution the only resolution.
-        "environment": {
-            "MAVEN_OPTS": "-Dmaven.repo.local=" + M2,
-            "MAVEN_CONFIG": f"{GUEST_ROOT}/maven",
-            "HOME": f"{GUEST_ROOT}/home",
-            "LC_ALL": "C",
-            "TZ": "UTC",
-            **(environment or {}),
-        },
+        # The image pins Maven's offline repository, home, locale and timezone. Keep plan
+        # environments empty unless a task-independent, non-protected addition is needed.
+        "environment": dict(environment or {}),
         "inputs": inputs,
         "outputs": outputs,
         "resources": resources(timeout, memory_mib=memory_mib),
@@ -211,18 +210,6 @@ def _mvn(*goals: str) -> tuple[str, ...]:
 
 
 # --------------------------------------------------------------- frozen JIT measurement policy
-
-
-def jvm_environment(ids: ImageIdentities, mode: str) -> dict[str, str]:
-    """The environment for one measured iteration, from the task's frozen mode.
-
-    ``mode`` is the task's admission-frozen ``measurement_mode``. The flag set comes from the
-    image's recorded ``build.jvm_measurement`` block - the same two sets for every candidate, chosen
-    before any candidate existed. This function has no parameter for a candidate, a result or a
-    timing, which is the structural reason a Java run cannot warm up or switch JIT policy to suit
-    an individual candidate.
-    """
-    return {"PCB_JVM_MEASUREMENT": mode}
 
 
 def jvm_argv(ids: ImageIdentities, mode: str, *command: str) -> tuple[str, ...]:
@@ -289,7 +276,18 @@ def make_test_plan(ids: ImageIdentities, task: FrozenTask) -> TestPlan:
                 *_pinned_inputs(quality.pinned_files),
                 *(PlanInput(path=f"work/{p}", role="overlay") for p in group.files),
             ),
-            outputs=_captured(group.group_id, "text"),
+            # The parser's test inventory comes from Surefire XML. Those files must be explicit
+            # plan outputs or the supervisor snapshot will discard them before evidence parsing.
+            outputs=(
+                *_captured(group.group_id, "text"),
+                *(
+                    PlanOutput(
+                        path=f"work/target/surefire-reports/TEST-{selector}.xml",
+                        format="junit_xml",
+                    )
+                    for selector in group.selectors
+                ),
+            ),
             scope=tuple(task.required_outputs),
             timeout=timeout,
             semantics=ExitSemantics(success=(0,), findings=(MAVEN_FAILED,), error=TOOL_ERRORS),
@@ -333,7 +331,15 @@ def _analysis(
         ids,
         plan_id=f"java.analysis.{analyzer}",
         argv=argv,
-        tool=ids.tool(tool, lock_digest=quality.dependency_lock_digest if needs_lock else None),
+        tool=ids.tool(
+            tool,
+            lock_digest=quality.dependency_lock_digest if needs_lock else None,
+            advisory_snapshot_digest=(
+                "sha256:" + hashlib.sha256(advisory_snapshot()).hexdigest()
+                if analyzer == "dependency"
+                else None
+            ),
+        ),
         parser_id=f"java-{analyzer}",
         inputs=(
             *_candidate_inputs(context.candidate_paths),
@@ -387,7 +393,7 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                     MAX_PLAN_SECONDS,
                     *_mvn(
                         "compile",
-                        "spotbugs:check",
+                        "com.github.spotbugs:spotbugs-maven-plugin:4.8.6.0:check",
                         f"-Dspotbugs.excludeFilterFile={rules['spotbugs']}",
                         # Low threshold + Max effort is the setting that reports real defects; the
                         # profile's rule mappings decide what actually counts.
@@ -417,12 +423,15 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                     "pmd",
                     60,
                     *_mvn(
-                        "pmd:pmd",
+                        "org.apache.maven.plugins:maven-pmd-plugin:3.21.2:pmd",
                         f"-Dpmd.rulesets={rules['pmd']}",
                         "-Dpmd.format=xml",
                         # PMD 6.55 rejects a targetJdk above 17; the ruleset is written for 17 and
-                        # the compiler release is what actually gates the language level.
-                        "-Dpmd.targetJdk=17",
+                        # the compiler release is what actually gates the language level. The
+                        # property is NOT `-Dpmd.targetJdk`: for a `default-cli` invocation that
+                        # name is unbound, so PMD falls back to the running JVM (21) and fails.
+                        # The unprefixed `targetJdk` is the name this goal actually reads.
+                        "-DtargetJdk=17",
                         "-Dpmd.linkXRef=false",
                     ),
                 ),
@@ -444,7 +453,7 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                     "checkstyle",
                     60,
                     *_mvn(
-                        "checkstyle:checkstyle",
+                        "org.apache.maven.plugins:maven-checkstyle-plugin:3.3.1:checkstyle",
                         f"-Dcheckstyle.config.location={rules['checkstyle']}",
                         "-Dcheckstyle.output.file=target/checkstyle-result.xml",
                         "-Dcheckstyle.output.format=xml",
@@ -492,32 +501,28 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                 context,
                 analyzer="dependency",
                 tool="dependency",
-                # Two steps, because they answer different questions and only one of them needs a
-                # network-free Maven run. `dependency:list` says what the POM resolved to *here*;
-                # the guest audit then checks that resolution, and the task's frozen lock, against
-                # the advisory snapshot shipped in the image. Running only Maven would mean the
-                # advisories are never applied, and a scan that checked nothing would look clean.
-                argv=_run(
-                    "dependency-list",
-                    60,
-                    *_mvn(
-                        "dependency:list",
-                        "-DoutputFile=target/deps.txt",
-                        "-DincludeScope=runtime",
-                    ),
-                )
-                + _run(
-                    "dependency-audit",
-                    60,
+                # The guest pipeline runs two independently captured commands in order. Maven's
+                # dependency list is preserved until the audit consumes it; concatenating two
+                # runner argv vectors would instead pass the second runner's flags to Maven.
+                argv=(
                     "python",
                     "-B",
+                    f"{GUEST}/pcb_java_dependency_pipeline.py",
+                    "--runner",
+                    f"{GUEST}/pcb_java_run.py",
+                    "--audit",
                     f"{GUEST}/pcb_dependency_audit.py",
-                    "--report",
-                    f"{TARGET_DIR}/deps.txt",
+                    "--pom",
+                    POM,
                     "--lock",
                     LOCK,
                     "--advisories",
                     f"{RULES}/advisories/snapshot.json",
+                    "--report",
+                    # Maven resolves this path relative to the POM, which lives in `work/`, so the
+                    # listing lands in `work/target/`. Pointing at `/workspace/target` silently
+                    # yields an empty resolution and every artifact looks drifted.
+                    f"{POM.rsplit('/', 1)[0]}/target/deps.txt",
                     "--output",
                     "out/dependency.json",
                 ),
@@ -529,11 +534,9 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                 # shared findings convention every analyzer plan in this repository follows. A
                 # failure to *run* is distinct from a failure to find: only the runner's own codes
                 # are read as a tool error.
-                semantics=ExitSemantics(
-                    success=(0,), findings=(1,), error=TOOL_ERRORS
-                ),
+                semantics=ExitSemantics(success=(0,), findings=(1,), error=TOOL_ERRORS),
                 output_schema="pcb-dependency-audit-v1",
-                timeout=60,
+                timeout=100,
                 extra_inputs=(PlanInput(path=LOCK, role="config"),),
                 ownership={"canonical-security-issue": ScoreDimension.SECURITY},
                 needs_lock=True,
@@ -591,7 +594,6 @@ def performance_plan(ids: ImageIdentities, task: FrozenTask) -> PerformancePlan 
             scope=tuple(task.required_outputs),
             timeout=timeout,
             semantics=ExitSemantics(success=(0,), findings=(MAVEN_FAILED,), error=TOOL_ERRORS),
-            environment=jvm_environment(ids, mode),
         )
     )
     return PerformancePlan(

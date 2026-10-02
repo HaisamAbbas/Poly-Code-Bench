@@ -17,6 +17,13 @@
     </dependency>
   </dependencies>
   <build>
+    <!--
+      Hidden tests are staged into `tests/`, not into Maven's default `src/test/java`. The task
+      package keeps the candidate's sources in `src/main/java` and the oracle's tests in a sibling
+      directory, so the default layout compiles zero tests and Surefire reports "No tests to run" -
+      a green build that ran nothing.
+    -->
+    <testSourceDirectory>${project.basedir}/tests</testSourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -28,6 +35,36 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration><useModulePath>false</useModulePath></configuration>
+      </plugin>
+      <!--
+        The analyzers are declared here, not only invoked on the command line. A plugin invoked by
+        prefix alone has no chance to pin its own classpath: maven-checkstyle-plugin 3.3.1 calls a
+        Guava method that newer Guava removed, so without the pin below the goal dies with
+        NoSuchMethodError before it reads a file. Declaring it here is what makes the offline
+        evaluator run reproducible, and it also pins the version that will report the findings.
+      -->
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.8.6.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.21.2</version>
+        <configuration><targetJdk>17</targetJdk><linkXRef>false</linkXRef></configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.3.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.0.1-jre</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>

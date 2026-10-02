@@ -2,30 +2,33 @@
 
 Run with ``$env:PCB_TEST_DOCKER='1'; uv run pytest -q tests/test_java_docker.py`` after
 ``scripts/build_java_images.py``. These authored fixtures are not model benchmark results.
+
+Every case here plans with the real plugin, executes in the pinned Java images with no network, and
+parses the recorded bytes back through the production parsers. Nothing is simulated, so a stale
+image identity, an analyzer artifact missing from the offline repository, or a guest that cannot
+start Maven fails an assertion instead of producing a plausible-looking observation.
 """
 
 from __future__ import annotations
 
 import asyncio
 import os
-import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import pytest
 import yaml
+from java_plugin_support import TASK_ROOT, draft
+from polycodebench_core.identity import new_entity_id
+from polycodebench_core.models import Candidate, MeasurementStatus
+from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
+from polycodebench_lang_java import JavaLanguagePlugin
+from polycodebench_plugins_api import AnalysisContext, TaskDraft
+from polycodebench_plugins_api.testreport import reconcile
+from polycodebench_runner.provider import LocalDockerSandboxProvider
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "plugins" / "languages" / "java" / "src"))
-
-from java_plugin_support import TASK_ROOT, draft  # noqa: E402
-from polycodebench_core.identity import new_entity_id  # noqa: E402
-from polycodebench_core.models import Candidate, MeasurementStatus  # noqa: E402
-from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs  # noqa: E402
-from polycodebench_lang_java import JavaLanguagePlugin  # noqa: E402
-from polycodebench_plugins_api import AnalysisContext  # noqa: E402
-from polycodebench_plugins_api.testreport import reconcile  # noqa: E402
-from polycodebench_runner.provider import LocalDockerSandboxProvider  # noqa: E402
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("PCB_TEST_DOCKER") != "1",
@@ -33,22 +36,42 @@ pytestmark = pytest.mark.skipif(
 )
 
 SOURCE = "src/main/java/demo/TopWords.java"
-PACKAGE = draft()
-plugin = JavaLanguagePlugin()
-VIEW = plugin.freeze_view(PACKAGE, "sha256:" + "1" * 64)
-INVENTORY = {group.group_id: group for group in plugin.inventory(VIEW)}
-GROUPS = {group.group_id: group for group in plugin.test_plan(VIEW).groups}
 
 
-def _candidate() -> Candidate:
+@dataclass(frozen=True)
+class JavaContext:
+    """Everything a case needs, built once so the plugin is not reconstructed per test."""
+
+    draft: TaskDraft
+    plugin: JavaLanguagePlugin
+    view: Any
+    inventory: dict[str, Any]
+    groups: dict[str, Any]
+
+
+@pytest.fixture(scope="module")
+def java() -> JavaContext:
+    package = draft()
+    plugin = JavaLanguagePlugin()
+    view = plugin.freeze_view(package, "sha256:" + "1" * 64)
+    return JavaContext(
+        package,
+        plugin,
+        view,
+        {group.group_id: group for group in plugin.inventory(view)},
+        {group.group_id: group for group in plugin.test_plan(view).groups},
+    )
+
+
+def _candidate(context: JavaContext) -> Candidate:
     return Candidate.model_validate(
         {
             "kind": "candidate",
             "schema_version": 1,
             "candidate_id": new_entity_id(),
             "run_id": new_entity_id(),
-            "task_id": VIEW.task_id,
-            "task_version": VIEW.task_version,
+            "task_id": context.view.task_id,
+            "task_version": context.view.task_version,
             "sample_index": 0,
             "submission_kind": "source_bundle",
             "payload_digest": "sha256:" + "2" * 64,
@@ -58,50 +81,60 @@ def _candidate() -> Candidate:
     )
 
 
-def _sources(variant: str) -> dict[str, dict[str, bytes]]:
-    fixture = yaml.safe_load((TASK_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
-    entry = next(item for item in fixture["fixtures"] if item["variant"] == variant)
-    candidate_path = str(entry["solution_path"])
-    candidate = PACKAGE.files[candidate_path]
-    overlay = {
-        "work/" + path.removeprefix("hidden/"): data
-        for path, data in PACKAGE.files.items()
-        if path.startswith("hidden/tests/")
-    }
+def _sources(context: JavaContext, variant: str) -> dict[str, dict[str, bytes]]:
+    """The input roles the Java plans declare, for one fixture variant.
+
+    The candidate is read from the manifest rather than from a hard-coded path so that a fixture
+    cannot silently stop exercising the file the manifest names.
+    """
+    manifest = yaml.safe_load((TASK_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
+    entry = next(
+        item
+        for item in manifest["fixtures"]
+        if item.get("language_variant", item["variant"]) == variant
+    )
     return {
-        "candidate": {SOURCE: candidate},
-        "overlay": overlay,
-        "config": plugin.trusted_inputs(PACKAGE.files, VIEW),
+        "candidate": {SOURCE: context.draft.files[str(entry["solution_path"])]},
+        "overlay": {
+            "work/" + path.removeprefix("hidden/"): data
+            for path, data in context.draft.files.items()
+            if path.startswith("hidden/tests/")
+        },
+        "config": context.plugin.trusted_inputs(context.draft.files, context.view),
     }
 
 
-def _runner(label: str) -> PlanRunner:
-    ids = plugin.identities
+def _runner(context: JavaContext, label: str) -> PlanRunner:
+    ids = context.plugin.identities
     provider = LocalDockerSandboxProvider(
         allowed_images={
             ids.runtime.reference: ids.runtime.digest,
             ids.evaluator.reference: ids.evaluator.digest,
         },
         state_dir=ROOT / ".cache" / f"java-docker-test-{label}",
-        operation_timeout_seconds=180,
+        # The provider caps this at 120s. A full offline Maven `test` on this task measures about
+        # 30s (JVM start plus Surefire), so 120s leaves ample headroom.
+        operation_timeout_seconds=120,
     )
     return PlanRunner(provider, lane="admission")
 
 
-async def _build(variant: str, label: str) -> None:
-    sources = _sources(variant)
-    plan = plugin.build_plan(VIEW, _candidate())
-    result = await _runner(label).run(
+async def _build(context: JavaContext, variant: str, label: str) -> None:
+    sources = _sources(context, variant)
+    plan = context.plugin.build_plan(context.view, _candidate(context))
+    result = await _runner(context, label).run(
         plan, materialize_inputs(plan, sources), stage_id="java-fixture-admission"
     )
-    status, reason = plugin.parse_build(plan, result.reader())
+    status, reason = context.plugin.parse_build(plan, result.reader())
+    # Every admitted variant must compile. A build failure would mean the fixture no longer tests
+    # the behaviour its variant is named for.
     assert status == "pass", (variant, status, reason)
 
 
-async def _group_gate(variant: str, group_id: str, label: str) -> Any:
-    group = GROUPS[group_id]
-    sources = _sources(variant)
-    runner = _runner(label)
+async def _group_gate(context: JavaContext, variant: str, group_id: str, label: str) -> Any:
+    group = context.groups[group_id]
+    sources = _sources(context, variant)
+    runner = _runner(context, label)
     records: list[Any] = []
     controls: list[Any] = []
     for repetition in range(group.repetitions):
@@ -110,109 +143,164 @@ async def _group_gate(variant: str, group_id: str, label: str) -> Any:
             materialize_inputs(group.plan, sources),
             stage_id="java-fixture-admission",
         )
-        got, control = plugin.parse_test_group(
-            group, INVENTORY[group_id], result.reader(), repetition=repetition
+        got, control = context.plugin.parse_test_group(
+            group, context.inventory[group_id], result.reader(), repetition=repetition
         )
         records.extend(got)
         controls.append(control)
-    return reconcile((INVENTORY[group_id],), records, controls)
+    return reconcile((context.inventory[group_id],), records, controls), controls
 
 
-def test_java_reference_passes_all_groups_and_the_evaluator_analyzers() -> None:
+def test_java_reference_passes_all_groups_and_the_evaluator_analyzers(java: JavaContext) -> None:
     async def run() -> None:
-        report = plugin.validate_task(PACKAGE)
+        context = java
+        report = context.plugin.validate_task(context.draft)
         assert report.ok, [issue.model_dump() for issue in report.issues]
-        assert VIEW.image_digest == plugin.identities.runtime.digest
-        await _build("reference", "reference-build")
+        assert context.view.image_digest == context.plugin.identities.runtime.digest
+        await _build(context, "reference", "reference-build")
 
-        groups = tuple(INVENTORY.values())
         records: list[Any] = []
         controls: list[Any] = []
-        runner = _runner("reference-tests")
-        sources = _sources("reference")
-        for group in GROUPS.values():
+        runner = _runner(context, "reference-tests")
+        sources = _sources(context, "reference")
+        for group in context.groups.values():
             for repetition in range(group.repetitions):
                 result = await runner.run(
                     group.plan,
                     materialize_inputs(group.plan, sources),
                     stage_id="java-fixture-admission",
                 )
-                got, control = plugin.parse_test_group(
-                    group, INVENTORY[group.group_id], result.reader(), repetition=repetition
+                got, control = context.plugin.parse_test_group(
+                    group, context.inventory[group.group_id], result.reader(), repetition=repetition
                 )
                 records.extend(got)
                 controls.append(control)
-        verdict = reconcile(groups, records, controls)
+        verdict = reconcile(tuple(context.inventory.values()), records, controls)
         assert verdict.gate == "pass", verdict
 
-        context = AnalysisContext(
-            task=VIEW,
+        analysis = AnalysisContext(
+            task=context.view,
             candidate_digest="sha256:" + "3" * 64,
             candidate_paths=(SOURCE,),
         )
-        plans = plugin.analysis_plans(context)
-        assert {plan.analyzer_id for plan in plans} == {
-            "spotbugs",
-            "pmd",
-            "checkstyle",
-            "context",
-            "dependency",
-        }
-        for plan in plans:
+        plans = {plan.analyzer_id: plan for plan in context.plugin.analysis_plans(analysis)}
+        assert set(plans) == {"spotbugs", "pmd", "checkstyle", "context", "dependency"}
+        for analyzer_id, plan in plans.items():
             result = await runner.run(
                 plan,
                 materialize_inputs(plan, sources),
                 stage_id="java-fixture-admission",
             )
-            observations = plugin.parse_analysis(result.reader(), plan)
+            observations = context.plugin.parse_analysis(result.reader(), plan)
             scan = next(item for item in observations if item.check_id.endswith(".scan"))
-            assert scan.status == MeasurementStatus.MEASURED, (plan.analyzer_id, observations)
+            # A scan that is not MEASURED means the image could not run the tool. The shared
+            # contract requires that be visible rather than read as "no findings".
+            assert scan.status == MeasurementStatus.MEASURED, (analyzer_id, observations)
 
     asyncio.run(run())
 
 
 @pytest.mark.parametrize(
-    ("variant", "group_id"),
+    ("variant", "group_id", "expected"),
     (
-        ("alternative", "behaviour"),
-        ("faulty", "behaviour"),
-        ("null_unsafe", "behaviour"),
-        ("resource_leak", "resource-probe"),
-        ("concurrent_defect", "concurrency-probe"),
-        ("timeout", "behaviour"),
+        # An alternative design must be accepted: the task constrains behaviour, not spelling.
+        ("alternative", "behaviour", "pass"),
+        ("faulty", "behaviour", "fail"),
+        ("null_unsafe", "behaviour", "fail"),
+        ("timeout", "behaviour", "fail"),
     ),
 )
-def test_java_fixture_variant_has_its_declared_acceptance_outcome(
-    variant: str, group_id: str
+def test_java_correctness_fixture_variant_has_its_declared_acceptance_outcome(
+    java: JavaContext, variant: str, group_id: str, expected: str
 ) -> None:
+    """These variants are wrong about behaviour, so the JUnit gate must reject them.
+
+    The resource and concurrency variants are a different kind of fixture and are checked by
+    ``test_java_robustness_fixtures_are_detected_by_their_analyzer`` instead: they behave
+    correctly and are wrong about design, so a passing test group is the correct outcome for them.
+    Asserting they fail the gate would be asserting something untrue.
+    """
+
     async def run() -> None:
-        await _build(variant, f"{variant}-build")
-        verdict = await _group_gate(variant, group_id, f"{variant}-{group_id}")
-        if variant == "alternative":
-            assert verdict.gate == "pass", verdict
-        else:
-            assert verdict.gate == "fail", verdict
+        await _build(java, variant, f"{variant}-build")
+        verdict, _controls = await _group_gate(java, variant, group_id, f"{variant}-{group_id}")
+        assert verdict.gate == expected, (variant, verdict)
 
     asyncio.run(run())
 
 
-def test_java_security_fixture_is_detected_by_the_context_analyzer() -> None:
+@pytest.mark.parametrize(
+    ("variant", "check_prefix"),
+    (
+        ("resource_leak", "java.context.resource-unclosed"),
+        ("concurrent_defect", "java.context.published-mutable-state"),
+    ),
+)
+def test_java_robustness_fixtures_are_detected_by_their_analyzer(
+    java: JavaContext, variant: str, check_prefix: str
+) -> None:
+    """A defect that does not change behaviour must still be caught by an analyzer.
+
+    These variants pass their JUnit group, and that is correct: a leaked stream on a path nothing
+    exercises, or a shared map nothing reads back, is not a wrong answer. What must catch them is
+    the context scanner, so that is what is asserted here. Asserting the gate failed instead would
+    be asserting something untrue about what these fixtures do.
+    """
+
     async def run() -> None:
-        await _build("security_defective", "security-build")
-        context = AnalysisContext(
-            task=VIEW,
+        context = java
+        await _build(context, variant, f"{variant}-build")
+        sources = _sources(context, variant)
+        analysis = AnalysisContext(
+            task=context.view,
+            candidate_digest="sha256:" + "7" * 64,
+            candidate_paths=(SOURCE,),
+        )
+        plans = list(context.plugin.analysis_plans(analysis))
+        plan = next(item for item in plans if item.analyzer_id == "context")
+        result = await _runner(context, f"{variant}-context").run(
+            plan,
+            materialize_inputs(plan, sources),
+            stage_id="java-fixture-admission",
+        )
+        observations = context.plugin.parse_analysis(result.reader(), plan)
+        assert any(
+            item.check_id == check_prefix and item.status == MeasurementStatus.MEASURED
+            for item in observations
+        ), (variant, check_prefix, observations)
+
+    asyncio.run(run())
+
+
+def test_java_a_nonterminating_candidate_is_killed_rather_than_left_running(
+    java: JavaContext,
+) -> None:
+    async def run() -> None:
+        verdict, controls = await _group_gate(java, "timeout", "behaviour", "timeout-named")
+        assert verdict.gate == "fail"
+        assert any(control.status == "candidate_timeout" for control in controls), controls
+
+    asyncio.run(run())
+
+
+def test_java_security_fixture_is_detected_by_the_context_analyzer(java: JavaContext) -> None:
+    async def run() -> None:
+        context = java
+        await _build(context, "security_defective", "security-build")
+        analysis = AnalysisContext(
+            task=context.view,
             candidate_digest="sha256:" + "4" * 64,
             candidate_paths=(SOURCE,),
         )
-        plan = next(
-            item for item in plugin.analysis_plans(context) if item.analyzer_id == "context"
-        )
-        result = await _runner("security-context").run(
+        plans = list(context.plugin.analysis_plans(analysis))
+        plan = next(item for item in plans if item.analyzer_id == "context")
+        sources = _sources(context, "security_defective")
+        result = await _runner(context, "security-context").run(
             plan,
-            materialize_inputs(plan, _sources("security_defective")),
+            materialize_inputs(plan, sources),
             stage_id="java-fixture-admission",
         )
-        observations = plugin.parse_analysis(result.reader(), plan)
+        observations = context.plugin.parse_analysis(result.reader(), plan)
         assert any(
             item.check_id == "java.context.command-injection"
             and item.status == MeasurementStatus.MEASURED
@@ -220,3 +308,19 @@ def test_java_security_fixture_is_detected_by_the_context_analyzer() -> None:
         ), observations
 
     asyncio.run(run())
+
+
+def test_java_the_recipe_distinction_and_frozen_modes_are_real(java: JavaContext) -> None:
+    """Isolation and the frozen JIT policy must hold in the artifacts, not only in the record.
+
+    A runtime image that could run SpotBugs would let a candidate inspect the tools that judge it,
+    and a measurement mode selectable per run would make two candidates incomparable.
+    """
+    ids = java.plugin.identities
+    for tool in ("spotbugs", "pmd", "checkstyle"):
+        assert ids.runtime.tools[tool] == "absent", tool
+        assert ids.evaluator.tools[tool] != "absent", tool
+    modes = ids.build.jvm_measurement
+    assert set(modes) == {"cold", "steady-state"}
+    assert "-Xint" in modes["cold"]
+    assert "-Xint" not in modes["steady-state"]

@@ -23,6 +23,7 @@ as not parsed, and the parser turns that into a missing scan rather than a clean
 
 import argparse
 import json
+import os
 import re
 import sys
 
@@ -306,6 +307,9 @@ def main(argv=None):
         "files": results,
         "findings": [item for entry in results for item in entry["findings"]],
     }
+    parent = os.path.dirname(options.output)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     with open(options.output, "w", encoding="utf-8") as handle:
         json.dump(document, handle, sort_keys=True, separators=(",", ":"))
     return 1 if document["findings"] else 0

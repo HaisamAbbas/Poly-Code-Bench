@@ -2,13 +2,13 @@
   "base_image": "maven@sha256:3a4ab3276a087bf276f79cae96b1af04f53731bec53fb2e651aca79e4b10211e",
   "components": {
     "pcb-java-components-base:v1": {
-      "digest": "sha256:fcbb74538f737ad5e0ab92af565806530a7292fe671f430433cf72d1e10e44ed",
-      "repository_digest": "sha256:b0586d533db03a6856b26cb93413cf1041820d89d394a6ac17669c62d9e8dfeb",
+      "digest": "sha256:2c134b9dffd44e836c6840ddef0b8e12e2db8d8b714e7394660cf8ead3cb8b22",
+      "repository_digest": "sha256:aa6dfaed2e4c13345e9d2013c12ae2dccc7d2843bbea68ec68a2afc9b36dc090",
       "tag": "pcb-java-components-base:v1"
     },
     "pcb-java-components:v1": {
-      "digest": "sha256:0ac790de995891d58548e74b5caccab816e47d7395a7ba75fe2d05fc324ed56b",
-      "repository_digest": "sha256:8f6053ed05c06b93121f8eb46ca6a08c0bfac8f7faac748e64d6dd3ed303342a",
+      "digest": "sha256:1e16b298b4a6e5cc92239bb347aa82f5b481a6ac793335fa2829863b7e702ab4",
+      "repository_digest": "sha256:a98f6562070ad7b2c0fd8566294ec2f6509a524d1f6901991845a23c2b6d04bf",
       "tag": "pcb-java-components:v1"
     }
   },

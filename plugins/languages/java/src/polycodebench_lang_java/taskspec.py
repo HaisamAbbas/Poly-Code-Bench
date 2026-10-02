@@ -619,7 +619,13 @@ def _check_fixtures(
     fixtures = manifest.get("fixtures")
     if not isinstance(fixtures, list):
         return [_issue("fixtures-missing", "manifest has no fixtures list")]
-    variants = {str(f.get("variant")) for f in fixtures if isinstance(f, Mapping)}
+    # `variant` is the shared admission role (faulty / quality_defective); `language_variant`
+    # preserves Java's richer authored-fixture subtype without forking the core admission schema.
+    variants = {
+        str(f.get("language_variant", f.get("variant")))
+        for f in fixtures
+        if isinstance(f, Mapping)
+    }
     for needed in VARIANTS:
         if needed not in variants:
             issues.append(_issue("variant-missing", f"no {needed} fixture declared"))

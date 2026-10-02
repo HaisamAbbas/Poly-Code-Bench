@@ -50,6 +50,7 @@ class JavaBuild(_Strict):
 
     network: Literal["none"]
     offline_install: Literal[True]
+    components_installed_at_build_time: Literal[True] = True
     scored_runs_offline: Literal[True]
     java: str
     maven: str
@@ -72,6 +73,9 @@ class ImageRecord(_Strict):
     # Probed for every tool in every recipe; a tool this image does not ship is recorded as
     # ``absent`` rather than omitted, so the record states the recipe difference explicitly.
     tools: dict[str, str]
+    #: Per-recipe copy of a baked measurement policy. Only the performance recipe is populated;
+    #: the top-level JavaBuild block must agree with that artifact's inspected values.
+    jvm_measurement: dict[str, tuple[str, ...]] = Field(default_factory=dict)
     expected_tools: tuple[str, ...] = ()
     components: tuple[str, ...]
     guest_and_rules_digest: Digest
@@ -125,6 +129,7 @@ class ImageIdentities(_Strict):
         recipe: Recipe = "evaluator",
         parser_version: str = PARSER_VERSION,
         lock_digest: str | None = None,
+        advisory_snapshot_digest: str | None = None,
     ) -> ToolIdentity:
         """Identity of one Java tool.
 
@@ -140,7 +145,12 @@ class ImageIdentities(_Strict):
             image_digest=record.digest,
             lock_digest=lock_digest or record.recipe_digest,
             rule_bundle_digest=self.rule_bundle_digest,
-            advisory_snapshot_digest=None,
+            advisory_snapshot_digest=advisory_snapshot_digest,
+            advisory_snapshot_state=(
+                "pinned" if advisory_snapshot_digest is not None
+                else "absent" if name == "dependency"
+                else "not_applicable"
+            ),
             parser_version=parser_version,
         )
 

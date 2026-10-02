@@ -23,8 +23,8 @@ def draft() -> TaskDraft:
         if path.is_file() and path.name != "manifest.yaml"
     }
     return TaskDraft(
-        task_id=document["task_id"],
-        primary_language=document["primary_language"],
+        task_id=document["task"]["task_id"],
+        primary_language=document["task"]["primary_language"],
         manifest=document,
         files=files,
     )

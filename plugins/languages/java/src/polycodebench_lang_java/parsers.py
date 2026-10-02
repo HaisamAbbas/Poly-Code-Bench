@@ -356,8 +356,10 @@ def _context(
 # -------------------------------------------------------------------------- dependency
 
 
-def dependency_findings(raw: ArtifactReader) -> tuple[list[str], list[dict[str, Any]], bool]:
-    """``(resolved coordinates, advisories, audit_ran)`` from the dependency plan's evidence.
+def dependency_findings(
+    raw: ArtifactReader,
+) -> tuple[list[str], list[dict[str, Any]], list[str], bool]:
+    """``(resolved coordinates, advisories, lock drift, audit_ran)`` from the plan evidence.
 
     The advisory snapshot is applied by the guest audit rather than from Maven's output, so the same
     pinned snapshot decides which coordinates are affected on every run. ``audit_ran`` is reported
@@ -367,26 +369,22 @@ def dependency_findings(raw: ArtifactReader) -> tuple[list[str], list[dict[str, 
     listing = _text(raw, "work/target/deps.txt")
     resolved: list[str] = []
     for line in listing.splitlines():
-        stripped = line.strip()
-        if (
-            ":" in stripped
-            and ":" in stripped.split(":")[-1]
-            or (stripped.startswith(" ") and stripped.count(":") >= 2)
-        ):
-            parts = stripped.split(":")
-            if len(parts) >= 5:
-                resolved.append(f"{parts[0]}:{parts[1]}:{parts[3]}")
+        coordinate = line.split(" -- ", 1)[0].strip()
+        parts = coordinate.split(":")
+        if len(parts) == 5 and parts[0] and parts[1] and parts[3]:
+            resolved.append(f"{parts[0]}:{parts[1]}:{parts[3]}")
     audit_path = "out/dependency.json"
     if audit_path not in raw.list():
-        return resolved, [], False
+        return resolved, [], [], False
     document = json.loads(_text(raw, audit_path))
-    return resolved, list(document.get("findings", [])), True
+    drift = [str(item) for item in document.get("resolution_drift", [])]
+    return resolved, list(document.get("findings", [])), drift, True
 
 
 def _dependency(
     plan: AnalysisPlan, raw: ArtifactReader, profile: JavaProfile, status: str, code: int | None
 ) -> list[Observation]:
-    resolved, advisories, audit_ran = dependency_findings(raw)
+    resolved, advisories, drift, audit_ran = dependency_findings(raw)
     if not resolved:
         return _missing(plan, "dependency", "no dependency resolution was produced")
     if not audit_ran:
@@ -394,6 +392,12 @@ def _dependency(
         # advisories here would make an analyzer that never ran indistinguishable from a clean
         # dependency set, which is the exact failure the shared contract forbids.
         return _missing(plan, "dependency", "the advisory audit produced no result")
+    if drift:
+        return _missing(
+            plan,
+            "dependency",
+            "resolved graph differs from the frozen dependency lock: " + ", ".join(drift[:4]),
+        )
     observations: list[Observation] = []
     for item in advisories:
         check = f"java.dependency.{slug(item['advisory'])}"

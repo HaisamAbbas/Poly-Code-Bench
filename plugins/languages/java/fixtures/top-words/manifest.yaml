@@ -1,24 +1,181 @@
 schema_version: 1
-kind: java_task_fixture
-task_id: java-top-words
-primary_language: java
-profile_version: java-profile-v1
+kind: task_package
+task:
+  task_id: java-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: java
+  secondary_languages: []
+  cluster_id: java-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:e4d8794f1d146ae33e8f00ac33614ca9df4307e81f648fb1dbcc6ccd33406051
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - src/main/java/demo/TopWords.java
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-java-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-02T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-java-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 23 authored Java conformance fixture
+  review_reference: local-authorship
 acceptance:
-  required_outputs: [src/main/java/demo/TopWords.java]
-  required_test_group_ids: [behaviour, resource-probe, concurrency-probe]
-  hard_condition_ids: [ordering-contract]
+  schema_version: 1
+  kind: task_acceptance
+  required_outputs:
+  - src/main/java/demo/TopWords.java
+  required_test_group_ids:
+  - behaviour
+  - resource-probe
+  - concurrency-probe
+  hard_condition_ids:
+  - ordering-contract
   protected_paths: []
 runtime:
-  image_digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:5c33f7597765c4d8ecc15b283c8bcf1385166080a4fe6bca11daf05711309a6d
+  language_plugin_id: java
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:4e1b566c6f53292c0682f8bda55980082be0050660089afa247e058f710c4f5d
+  test_recipe_digest: sha256:3e4a52d8beb2ba584656523b523de6f144286b6279ef59e2d25eb4124a33c6a9
+  resource_class: local-development-small
 quality_plan:
-  applicable_dimensions: [correctness, code_quality, idiomatic, robustness, security]
-  required_analyzers: [spotbugs, pmd, checkstyle, context, dependency]
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  - security
+  evidence_owners: {}
+  required_analyzers:
+  - spotbugs
+  - pmd
+  - checkstyle
+  - context
+  - dependency
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: java-top-words-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 60
+visible_files:
+- visible/repo/pom.xml
+- visible/task.md
+hidden_files:
+- admission/alternative/src/main/java/demo/TopWords.java
+- admission/concurrent-defect/src/main/java/demo/TopWords.java
+- admission/exposure-rights.json
+- admission/faulty/src/main/java/demo/TopWords.java
+- admission/null-unsafe/src/main/java/demo/TopWords.java
+- admission/resource-leak/src/main/java/demo/TopWords.java
+- admission/security-defective/src/main/java/demo/TopWords.java
+- admission/timeout/src/main/java/demo/TopWords.java
+- hidden/deps.lock.json
+- hidden/oracle.json
+- hidden/quality-plan.yaml
+- hidden/reference/src/main/java/demo/TopWords.java
+- hidden/tests/demo/ConcurrencyProbeTest.java
+- hidden/tests/demo/ResourceProbeTest.java
+- hidden/tests/demo/TopWordsTest.java
 fixtures:
-  - {name: reference, variant: reference, solution_path: hidden/reference/src/main/java/demo/TopWords.java}
-  - {name: wrong-ties, variant: faulty, solution_path: admission/faulty/src/main/java/demo/TopWords.java}
-  - {name: stream-alternative, variant: alternative, solution_path: admission/alternative/src/main/java/demo/TopWords.java}
-  - {name: null-unsafe, variant: null_unsafe, solution_path: admission/null-unsafe/src/main/java/demo/TopWords.java}
-  - {name: leaked-resource, variant: resource_leak, solution_path: admission/resource-leak/src/main/java/demo/TopWords.java}
-  - {name: unsafe-publication, variant: concurrent_defect, solution_path: admission/concurrent-defect/src/main/java/demo/TopWords.java}
-  - {name: command-injection, variant: security_defective, solution_path: admission/security-defective/src/main/java/demo/TopWords.java}
-  - {name: nonterminating, variant: timeout, solution_path: admission/timeout/src/main/java/demo/TopWords.java}
+- name: reference
+  variant: reference
+  language_variant: reference
+  solution_path: hidden/reference/src/main/java/demo/TopWords.java
+  expectation: {}
+- name: wrong-ties
+  variant: faulty
+  language_variant: faulty
+  solution_path: admission/faulty/src/main/java/demo/TopWords.java
+  expectation:
+    failing_cases:
+    - demo.TopWordsTest#ordersByCountAndToken
+- name: stream-alternative
+  variant: alternative
+  language_variant: alternative
+  solution_path: admission/alternative/src/main/java/demo/TopWords.java
+  expectation: {}
+- name: null-unsafe
+  variant: faulty
+  language_variant: null_unsafe
+  solution_path: admission/null-unsafe/src/main/java/demo/TopWords.java
+  expectation:
+    failing_cases:
+    - demo.TopWordsTest#handlesNullAndNonPositiveLimit
+- name: leaked-resource
+  variant: quality_defective
+  language_variant: resource_leak
+  solution_path: admission/resource-leak/src/main/java/demo/TopWords.java
+  expectation:
+    expected_issue_families:
+    - resource-not-closed
+    expected_lane_findings:
+      context:
+      - resource-not-closed
+    expected_quality_only_pass: false
+- name: unsafe-publication
+  variant: quality_defective
+  language_variant: concurrent_defect
+  solution_path: admission/concurrent-defect/src/main/java/demo/TopWords.java
+  expectation:
+    expected_issue_families:
+    - unsafe-publication
+    expected_lane_findings:
+      context:
+      - unsafe-publication
+    expected_quality_only_pass: false
+- name: command-injection
+  variant: quality_defective
+  language_variant: security_defective
+  solution_path: admission/security-defective/src/main/java/demo/TopWords.java
+  expectation:
+    expected_issue_families:
+    - command-injection
+    expected_lane_findings:
+      context:
+      - command-injection
+- name: nonterminating
+  variant: timeout
+  language_variant: timeout
+  solution_path: admission/timeout/src/main/java/demo/TopWords.java
+  expectation:
+    failing_cases:
+    - demo.TopWordsTest#ordersByCountAndToken

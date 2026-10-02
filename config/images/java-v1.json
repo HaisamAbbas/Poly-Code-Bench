@@ -1,0 +1,163 @@
+{
+  "base_image": {
+    "digest": "sha256:2c134b9dffd44e836c6840ddef0b8e12e2db8d8b714e7394660cf8ead3cb8b22",
+    "reference": "maven@sha256:3a4ab3276a087bf276f79cae96b1af04f53731bec53fb2e651aca79e4b10211e"
+  },
+  "build": {
+    "components_installed_at_build_time": true,
+    "guest_interpreter": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+    "java": "21-0-7",
+    "jvm_measurement": {
+      "cold": [
+        "-Xint",
+        "-XX:-UsePerfData"
+      ],
+      "steady-state": [
+        "-XX:+UseParallelGC",
+        "-XX:-UsePerfData",
+        "-XX:+AlwaysPreTouch",
+        "-XX:+UseCompressedOops",
+        "-XX:ActiveProcessorCount=1"
+      ]
+    },
+    "maven": "3-9-9",
+    "network": "none",
+    "note": "Local development build. The JDK and Maven ship in pinned components images whose offline repository was seeded once by scripts/fetch_java_components.py, the only networked step. Every recipe is built with --network none; every plan runs Maven with --offline; a task whose POM needs an artifact the image lacks fails loudly instead of resolving something other than the frozen deps.lock.json. Each task freezes its own resolution at admission and that digest is part of the evaluator identity. The two measurement modes are constants of the performance image. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
+    "offline_install": true,
+    "offline_repository": "/opt/pcb/m2/repository",
+    "offline_repository_digest": "sha256:a98f6562070ad7b2c0fd8566294ec2f6509a524d1f6901991845a23c2b6d04bf",
+    "scored_runs_offline": true
+  },
+  "guest_digest": "sha256:6c14aa0f2a3dd8b3464c22f7a85c98f0c1d139c1b9938a771c85368efa03699f",
+  "images": {
+    "evaluator": {
+      "components": [
+        "temurin-jdk:21",
+        "maven:3.9.9",
+        "junit-jupiter:5.10.2",
+        "maven-compiler-plugin:3.13.0",
+        "maven-surefire-plugin:3.2.5",
+        "maven-dependency-plugin:3.6.1",
+        "spotbugs-maven-plugin:4.8.6.0",
+        "maven-pmd-plugin:3.21.2",
+        "maven-checkstyle-plugin:3.3.1"
+      ],
+      "digest": "sha256:5d73131b3f4b9ed45249ba3907d506c53cdcdc2c3f08148a4a8dc3d9b0c90ede",
+      "dockerfile_digest": "sha256:1f4eb773a12a2bdb588e628726f7bb9a6f7ddd728b70800b4866519969e44384",
+      "expected_tools": [
+        "java",
+        "javac",
+        "maven",
+        "junit",
+        "compiler",
+        "surefire",
+        "dependency",
+        "spotbugs",
+        "pmd",
+        "checkstyle"
+      ],
+      "guest_and_rules_digest": "sha256:9e043f5fcf0625f072db3c05add38b92144b0781c5b12bf9e770bb78c8984a17",
+      "java": "21-0-7",
+      "maven": "3-9-9",
+      "recipe": "evaluator",
+      "recipe_digest": "sha256:9ff674ec1f05982e6864c72134a01d2982d2dfcb70f9c9af59b41bd1bef31fdb",
+      "reference": "pcb-java-evaluator@sha256:5d73131b3f4b9ed45249ba3907d506c53cdcdc2c3f08148a4a8dc3d9b0c90ede",
+      "tag": "pcb-java-evaluator:v1",
+      "tools": {
+        "checkstyle": "3-3-1",
+        "compiler": "3-13-0",
+        "dependency": "3-6-1",
+        "java": "21-0-7",
+        "javac": "21-0-7",
+        "junit": "5-10-2",
+        "maven": "3-9-9",
+        "pmd": "3-21-2",
+        "spotbugs": "4-8-6-0",
+        "surefire": "3-2-5"
+      }
+    },
+    "performance": {
+      "components": [
+        "temurin-jdk:21",
+        "maven:3.9.9",
+        "junit-jupiter:5.10.2",
+        "maven-compiler-plugin:3.13.0",
+        "maven-surefire-plugin:3.2.5",
+        "maven-dependency-plugin:3.6.1"
+      ],
+      "digest": "sha256:f4dd044becfe32c59ad2905fdb16006bca5fb45686adee490d9ca40de95f03d5",
+      "dockerfile_digest": "sha256:1f4eb773a12a2bdb588e628726f7bb9a6f7ddd728b70800b4866519969e44384",
+      "expected_tools": [
+        "java",
+        "javac",
+        "maven",
+        "junit",
+        "compiler",
+        "surefire",
+        "dependency"
+      ],
+      "guest_and_rules_digest": "sha256:9e043f5fcf0625f072db3c05add38b92144b0781c5b12bf9e770bb78c8984a17",
+      "java": "21-0-7",
+      "maven": "3-9-9",
+      "recipe": "performance",
+      "recipe_digest": "sha256:9ff674ec1f05982e6864c72134a01d2982d2dfcb70f9c9af59b41bd1bef31fdb",
+      "reference": "pcb-java-performance@sha256:f4dd044becfe32c59ad2905fdb16006bca5fb45686adee490d9ca40de95f03d5",
+      "tag": "pcb-java-performance:v1",
+      "tools": {
+        "checkstyle": "absent",
+        "compiler": "3-13-0",
+        "dependency": "3-6-1",
+        "java": "21-0-7",
+        "javac": "21-0-7",
+        "junit": "5-10-2",
+        "maven": "3-9-9",
+        "pmd": "absent",
+        "spotbugs": "absent",
+        "surefire": "3-2-5"
+      }
+    },
+    "runtime": {
+      "components": [
+        "temurin-jdk:21",
+        "maven:3.9.9",
+        "junit-jupiter:5.10.2",
+        "maven-compiler-plugin:3.13.0",
+        "maven-surefire-plugin:3.2.5",
+        "maven-dependency-plugin:3.6.1"
+      ],
+      "digest": "sha256:5c33f7597765c4d8ecc15b283c8bcf1385166080a4fe6bca11daf05711309a6d",
+      "dockerfile_digest": "sha256:1f4eb773a12a2bdb588e628726f7bb9a6f7ddd728b70800b4866519969e44384",
+      "expected_tools": [
+        "java",
+        "javac",
+        "maven",
+        "junit",
+        "compiler",
+        "surefire",
+        "dependency"
+      ],
+      "guest_and_rules_digest": "sha256:9e043f5fcf0625f072db3c05add38b92144b0781c5b12bf9e770bb78c8984a17",
+      "java": "21-0-7",
+      "maven": "3-9-9",
+      "recipe": "runtime",
+      "recipe_digest": "sha256:9ff674ec1f05982e6864c72134a01d2982d2dfcb70f9c9af59b41bd1bef31fdb",
+      "reference": "pcb-java-runtime@sha256:5c33f7597765c4d8ecc15b283c8bcf1385166080a4fe6bca11daf05711309a6d",
+      "tag": "pcb-java-runtime:v1",
+      "tools": {
+        "checkstyle": "absent",
+        "compiler": "3-13-0",
+        "dependency": "3-6-1",
+        "java": "21-0-7",
+        "javac": "21-0-7",
+        "junit": "5-10-2",
+        "maven": "3-9-9",
+        "pmd": "absent",
+        "spotbugs": "absent",
+        "surefire": "3-2-5"
+      }
+    }
+  },
+  "kind": "java_images",
+  "rule_bundle_digest": "sha256:6fe2c434535ff596de50a1a7ad7c015db3decd2dfb54f6e3ad1948da67f03174",
+  "schema_version": 1
+}

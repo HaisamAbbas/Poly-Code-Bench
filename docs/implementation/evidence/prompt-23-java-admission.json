@@ -1,0 +1,486 @@
+{
+  "schema_version": 1,
+  "kind": "suite_admission_report",
+  "profile_id": "java-fixture-admission-v1",
+  "task_id": "java-top-words",
+  "task_version": 1,
+  "package_digest": "sha256:1c400f3de8065d6d1a332fc799bf8124b3c9b964922e85b4ff32c88eab25a762",
+  "plugin_id": "java",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:5c33f7597765c4d8ecc15b283c8bcf1385166080a4fe6bca11daf05711309a6d",
+    "sha256:5d73131b3f4b9ed45249ba3907d506c53cdcdc2c3f08148a4a8dc3d9b0c90ede"
+  ],
+  "checks": [
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "disclosure-scan",
+      "status": "pass",
+      "detail": "visible bundle contains no hidden bytes or hidden digests"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "rights-and-provenance",
+      "status": "pass",
+      "detail": "local authored fixture; no provider transmission or benchmark result is claimed"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "safe-paths-and-snapshot",
+      "status": "pass",
+      "detail": "contained regular files; no links or undeclared files"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "strict-schema",
+      "status": "pass",
+      "detail": "safe task package importer accepted the fixture manifest"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "visible-hidden-separation",
+      "status": "pass",
+      "detail": "separate archives; disclosure scan passed"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "plugin-task-validation",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-reference",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-wrong-ties",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-stream-alternative",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-null-unsafe",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-leaked-resource",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-unsafe-publication",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-command-injection",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-nonterminating",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "reference-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "five-reference-repetitions",
+      "status": "pass",
+      "detail": "five identical outcome inventories required"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "known-fault-rejection",
+      "status": "pass",
+      "detail": "faulty variants must fail their declared cases"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "alternative-solution-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "timeout-variants-rejected",
+      "status": "pass",
+      "detail": "timeouts are candidate failures, not harness errors"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-defect-detected",
+      "status": "pass",
+      "detail": "quality-defective variants pass the functional gate yet show their intended defect"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-quality-probe-outcomes",
+      "status": "pass",
+      "detail": "all declared quality-only probe outcomes matched"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "instrumented-lane-defect-detected",
+      "status": "pass",
+      "detail": "every declared lane reported its families"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "crash-and-build-fixtures-rejected",
+      "status": "pass",
+      "detail": "a crashing or unbuildable solution is a candidate failure, not a harness error"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-analyzer-compatibility",
+      "status": "pass",
+      "detail": "scans: [('java.checkstyle.scan', 'measured'), ('java.context.scan', 'measured'), ('java.dependency.scan', 'measured'), ('java.pmd.scan', 'measured'), ('java.spotbugs.scan', 'measured')]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "performance-workload-smoke",
+      "status": "pass",
+      "detail": "no performance workload declared"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-opportunity-coverage",
+      "status": "pass",
+      "detail": "dimensions: code_quality,correctness,idiomatic,robustness,security"
+    }
+  ],
+  "runs": [
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "reference",
+      "variant": "reference",
+      "repetitions": 5,
+      "gates": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=measured",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "unusedimportscheck"
+      ],
+      "durations_ms": [
+        34921,
+        33202,
+        33266,
+        31717,
+        36765,
+        36078,
+        33296,
+        37155,
+        30921,
+        31530,
+        34358
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "wrong-ties",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#handlesNullAndNonPositiveLimit",
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[Count[token=b, count=2], Count[token=a, count=2]]>",
+        "fail:demo.TopWordsTest#handlesNullAndNonPositiveLimit:expected: <[]> but was: <[Count[token=b, count=2], Count[token=a, count=2]]>"
+      ],
+      "outcome_digests": [
+        "sha256:cd8a93392d40651ad23135152d05a2acd882c5f2706938c172834113dee8aff3"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        29000,
+        33578,
+        33546,
+        30515,
+        27969,
+        31500,
+        31687
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "stream-alternative",
+      "variant": "alternative",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        30985,
+        35047,
+        34078,
+        30296,
+        35608,
+        37796,
+        39530
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "null-unsafe",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#handlesNullAndNonPositiveLimit",
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[Count[token=b a a b c, count=1]]>",
+        "error:demo.TopWordsTest#handlesNullAndNonPositiveLimit:No value present"
+      ],
+      "outcome_digests": [
+        "sha256:0191cc5a4da4db4572e16ba15614307371630483e0583c657ef3e648afbc0360"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        29796,
+        33858,
+        31985,
+        34233,
+        34515,
+        33750,
+        36296
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "leaked-resource",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=measured",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "resource-not-closed"
+      ],
+      "durations_ms": [
+        35390,
+        32562,
+        36312,
+        38358,
+        35281,
+        31405,
+        33407
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "unsafe-publication",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=measured",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "unsafe-publication"
+      ],
+      "durations_ms": [
+        27858,
+        29578,
+        33171,
+        29656,
+        32796,
+        32282,
+        33734
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "command-injection",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=measured",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "command-injection"
+      ],
+      "durations_ms": [
+        32375,
+        35500,
+        28092,
+        33468,
+        33046,
+        32968,
+        32640
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "nonterminating",
+      "variant": "timeout",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        27656,
+        27359,
+        31844,
+        91750,
+        90592,
+        89766,
+        89921
+      ],
+      "quality_only_pass": false
+    }
+  ],
+  "executable_admission_passed": true,
+  "pending_gates": [
+    "generic-evaluator-stage-integration (Prompt 12)",
+    "performance-baseline-canary-and-paired-measurement (Prompt 13)",
+    "judge-anchors-and-human-calibration (Prompt 14)",
+    "deterministic-scoring-replay-and-golden-calculations (Prompt 15)",
+    "production-worker-execution-tier (Prompt 06 owner-deferred)",
+    "curator-approval-and-task-freeze",
+    "owner-rights-confirmation"
+  ],
+  "quality_admission": "pending",
+  "report_digest": "sha256:7b26f0af53c838cc844390fff95e14de5242082b50823661e6acf0a343c3e832"
+}

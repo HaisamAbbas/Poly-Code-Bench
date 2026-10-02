@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!-- PolyCodeBench Java Checkstyle rules (Prompt 23, PCB-23-2).
+
+     Only rules whose mapping is a *defect* family live here. Architecture 11.2 is explicit that
+     "Streams, records, and SOLID terminology are not automatic quality points", so nothing in this
+     file rewards a construct for being present: every rule below fires on something wrong, not on
+     something stylistic-modern.
+
+     The profile (config/languages/java-profile-v1.yaml) decides which of these check ids actually
+     feed a scored item; an unreviewed rule lands on the `java.checkstyle.` prefix mapping, which
+     counts only for an item the task froze an opportunity for. -->
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="warning"/>
+  <property name="fileExtensions" value="java"/>
+
+  <module name="TreeWalker">
+    <!-- imports -->
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+    <module name="IllegalImport">
+      <property name="illegalPkgs" value="sun, com.sun, jdk.internal"/>
+    </module>
+    <module name="AvoidStarImport"/>
+
+    <!-- naming and boundaries: a class whose API leaks its representation, not a class that
+         happens to be short or long -->
+    <module name="VisibilityModifier">
+      <property name="protectedAllowed" value="false"/>
+      <property name="packageAllowed" value="false"/>
+    </module>
+    <module name="HideUtilityClassConstructor"/>
+    <module name="FinalClass"/>
+    <module name="InterfaceIsType"/>
+    <module name="OneTopLevelClass"/>
+
+    <!-- correctness -->
+    <module name="EqualsHashCode"/>
+    <module name="CovariantEquals"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="FallThrough"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="StringLiteralEquality"/>
+    <module name="SelfAssignment"/>
+    <module name="EmptyStatement"/>
+    <module name="EqualsAvoidNull"/>
+    <module name="ArrayTypeStyle"/>
+    <module name="MissingOverride"/>
+    <module name="NoFinalizer"/>
+    <module name="DefaultComesLast"/>
+  </module>
+</module>

@@ -222,7 +222,7 @@ def make_test_plan(ids: ImageIdentities, task: FrozenTask) -> TestPlan:
                 plan=ExecutionPlan(**fields),  # type: ignore[arg-type]
             )
         )
-    return TestPlan(groups=tuple(groups), expected_inventory_digest=task.inventory_digest)
+    return TestPlan(groups=tuple(groups), expected_inventory_digest=str(oracle.inventory_digest()))
 
 
 def _analysis(
@@ -262,6 +262,7 @@ def _analysis(
     )
     return AnalysisPlan(
         **fields,  # type: ignore[arg-type]
+        language_id="rust",
         analyzer_id=analyzer,
         candidate_digest=context.candidate_digest,
         required=analyzer in task.required_analyzers,

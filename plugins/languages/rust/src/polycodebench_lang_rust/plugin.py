@@ -17,6 +17,7 @@ from polycodebench_plugins_api import (
     FrozenTask,
     LanguageProfile,
     PerformancePlan,
+    PropertyEngineIdentity,
     SymbolIndex,
     TaskDraft,
     TestGroupPlan,
@@ -235,6 +236,21 @@ class RustLanguagePlugin:
 
     def normalize(self, observations: list[Observation]) -> list[Observation]:
         return self._profile.normalize(observations)
+
+    @property
+    def language_profile(self) -> RustProfile:
+        return self._profile
+
+    def property_engine(
+        self, task: FrozenTask, raw: Mapping[str, bytes]
+    ) -> PropertyEngineIdentity:
+        """Rust evidence comes from fixed Cargo test cases, not a generated property engine."""
+        del task, raw
+        return PropertyEngineIdentity(
+            engine="cargo-test",
+            engine_version=self._identities.runtime.cargo,
+            deterministic_policy="fixed-test-cases",
+        )
 
     @property
     def rust_profile(self) -> RustProfile:

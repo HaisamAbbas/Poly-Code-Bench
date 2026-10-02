@@ -1,0 +1,20 @@
+{
+  "//": "Strict compiler options for the PolyCodeBench TypeScript profile (Prompt 19). Used by a task whose hidden quality plan sets typing_expectation: required. `strict` is true here and only here; the base config keeps it off so a task that has not asked for typing is not judged on strictness it never claimed. Each extra option below is one a TypeScript candidate can silently rely on being off: `noUncheckedIndexedAccess` makes `arr[0]` possibly-undefined, `exactOptionalPropertyTypes` makes `{a: undefined}` different from `{}`, `noImplicitOverride` requires `override` on a member that replaces a base member, `useUnknownInCatchVariables` makes a caught value `unknown` instead of `any`, and `noFallthroughCasesInSwitch` stops a case from silently running into the next one. Every one of those defaults to off, so each one has to be asked for here.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}

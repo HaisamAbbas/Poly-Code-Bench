@@ -1,0 +1,32 @@
+{
+  "//": "Base compiler options for the PolyCodeBench TypeScript profile (Prompt 19). A task's work/tsconfig.json extends this file and adds only what its own sources need. Everything here is pinned: the candidate must get the same diagnostics on every run, so nothing is left to a default that a different toolchain version could change. `noEmit` is true because a plan type-checks with `tsc --noEmit`; a task that needs output sets `noEmit: false` and its own `outDir`, and cannot emit into the source tree by accident.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "types": [],
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": false,
+    "skipLibCheck": true,
+    "strictBindCallApply": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "useUnknownInCatchVariables": false,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  }
+}

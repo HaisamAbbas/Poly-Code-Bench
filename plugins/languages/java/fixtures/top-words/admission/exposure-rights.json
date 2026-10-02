@@ -1,0 +1,10 @@
+{
+  "kind": "exposure_rights_record",
+  "authorship": "PolyCodeBench internal authored fixture",
+  "originality_statement": "Created locally for Java plugin acceptance; no benchmark outcome is asserted.",
+  "first_public_at": null,
+  "public_exposure_review": "Internal synthetic exercise; not a public benchmark item.",
+  "access_history": [{"actor": "author", "action": "created", "scope": "local"}],
+  "provider_transmission_policy": "Do not transmit this fixture to providers until owner approval.",
+  "rights": {"license_expression": "CC0-1.0", "status": "authored_fixture", "owner_confirmation": "pending"}
+}

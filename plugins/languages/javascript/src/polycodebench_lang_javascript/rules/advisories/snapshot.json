@@ -1,0 +1,6 @@
+{
+  "schema": "pcb-advisory-snapshot-v1",
+  "source": "unpopulated-local-development-placeholder",
+  "note": "No advisory database is vendored: building one needs a network fetch of the npm advisory database, which is an owner action. An empty snapshot makes the dependency audit fail closed (exit 2, scan missing) instead of reporting a clean lock.",
+  "advisories": {}
+}

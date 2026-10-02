@@ -1,0 +1,112 @@
+# PolyCodeBench C analyzer rule bundle (Prompt 20, PCB-20-3).
+#
+# These are the checks the scoring lanes run, frozen before any candidate is scored. The list is
+# deliberately *not* "whatever bugprone happens to contain": an unfrozen check set makes a score depend
+# on whichever analyzer release the image happened to ship, which is exactly the failure the versioned
+# evaluator identity exists to prevent. `scripts/build_c_images.py` verifies every name below against
+# the image's own `clang-tidy --list-checks`, so a renamed or removed check fails the image build
+# instead of silently shrinking the lane.
+#
+# Two rules govern the selection:
+#
+#   * C-only. A check that can only fire in C++ is not selected even when its name looks relevant -
+#     `bugprone-use-after-move` and `bugprone-sizeof-container` have no C meaning, and selecting them
+#     would advertise coverage the plugin does not have.
+#   * Portable C. The frozen target is C17 with no extensions, so `cert-*-cpp`, `osx.*` and
+#     `webkit.*` checkers are out: they would report on a platform this benchmark does not run.
+#
+# Grouping matters for scoring, not just for output: `profile.py` reads this file to derive the stable
+# check ids an analyzer can declare before a scan has run.
+schema_version: 1
+kind: c_clang_tidy_checks
+format: clang-tidy-v1
+
+bugprone:
+  - bool-pointer-implicit-conversion
+  - branch-clone
+  - dangling-handle
+  - dynamic-static-initializers
+  - easily-swappable-parameters
+  - fold-init-type
+  - infinite-loop
+  - integer-division
+  - macro-parentheses
+  - macro-repeated-side-effects
+  - misplaced-operator-in-strlen-in-alloc
+  - misplaced-pointer-arithmetic-in-alloc
+  - misplaced-widening-cast
+  - no-escape
+  - not-null-terminated-result
+  - posix-return
+  - reserved-identifier
+  - signal-handler
+  - signed-char-misuse
+  - sizeof-expression
+  - string-integer-assignment
+  - string-literal-with-embedded-nul
+  - suspicious-enum-usage
+  - suspicious-memory-comparison
+  - suspicious-memset-usage
+  - suspicious-missing-comma
+  - suspicious-semicolon
+  - suspicious-string-compare
+  - swapped-arguments
+  - terminating-continue
+  - too-small-loop-variable
+  - undefined-memory-manipulation
+  - unused-return-value
+
+cert:
+  - con36-c
+  - dcl03-c
+  - dcl16-c
+  - dcl37-c
+  - env33-c
+  - err33-c
+  - err34-c
+  - exp42-c
+  - flp30-c
+  - flp37-c
+  - pos44-c
+  - pos47-c
+  - sig30-c
+  - str34-c
+
+clang-analyzer:
+  - core.CallAndMessage
+  - core.DivideZero
+  - core.NonNullParamChecker
+  - core.NonnilStringConstants
+  - core.NullDereference
+  - core.StackAddressEscape
+  - core.UndefinedBinaryOperatorResult
+  - core.VLASize
+  - core.uninitialized.ArraySubscript
+  - core.uninitialized.Assign
+  - core.uninitialized.Branch
+  - deadcode.DeadStores
+  - security.insecureAPI.UncheckedReturn
+  - security.insecureAPI.bcmp
+  - security.insecureAPI.bcopy
+  - security.insecureAPI.bzero
+  - security.insecureAPI.gets
+  - security.insecureAPI.mktemp
+  - security.insecureAPI.rand
+  - security.insecureAPI.strcpy
+  - unix.Malloc
+  - unix.MallocSizeof
+  - unix.MismatchedDeallocator
+  - unix.cstring.BadSizeArg
+  - unix.cstring.NullArg
+  - valist.Uninitialized
+  - valist.Unterminated
+
+performance:
+  - faster-string-find
+  - implicit-conversion-in-loop
+  - inefficient-algorithm
+  - inefficient-string-concatenation
+
+portability:
+  - restrict-system-includes
+  - simd-intrinsics

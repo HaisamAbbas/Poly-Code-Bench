@@ -1,0 +1,95 @@
+schema_version: 1
+kind: typescript_profile
+profile_version: typescript-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.typescript
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity
+# means not_applicable, never a perfect score. Syntax counts earn no bonus, and one canonical
+# issue is counted once however many tools report it.
+#
+# TypeScript is a distinct profile identity from JavaScript, not a superset of it: it carries the
+# `type_safety` diagnostic item and the `type_domain_modeling` idiom item that JavaScript does not
+# have, and the two weights are renormalised accordingly (Architecture 11.1, Technical Spec 18.3).
+# JavaScript is never charged for missing these items.
+#
+# Compiler strictness is task-scoped, not language-scoped (Technical Spec 18.2: "Strictness must
+# match task/reference contract"). The `typescript` analyzer is planned only when the frozen task
+# declares `typing_expectation: required`, and it then runs with the strict config the reference
+# passes. A task that declares `typing_expectation: none` never gets a tsc plan, so an untyped
+# TypeScript task cannot lose type points it was never offered.
+#
+# JS/TS-specific rule: some ESLint rules fire on a bare construct rather than on a defect.
+# `var` is the canonical example - the token is only wrong because of function scoping, so the
+# real defect (redeclaration, shadowing, leak past its block) is what the context scanner reports.
+# A mapping whose context_evaluator is `context-required` (a lint that fires on the bare token) is
+# counted only when the context scanner independently confirms a violation at the same site;
+# otherwise it is demoted to needs_review. The scanner, not the token, decides.
+#
+# A missed concurrency opportunity (`unbounded-sequential-await`) feeds the async items only. It is
+# never an efficiency penalty: no timing was measured, so charging the efficiency dimension for an
+# unmeasured regression would break the ownership rule in Technical Spec 14.4.
+applicability_rules:
+  - {rule_id: always, description: Applies to every TypeScript task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: async-expected, description: Counts only when the task contract has an async opportunity, opportunity_detector: task-declared, requires_task_opportunity: async_correctness}
+  - {rule_id: async-composition-expected, description: Counts only when the task contract has an async composition opportunity, opportunity_detector: task-declared, requires_task_opportunity: async_composition}
+  - {rule_id: security-expected, description: Counts only when the task contract has a security surface, opportunity_detector: task-declared, requires_task_opportunity: security}
+  - {rule_id: mutation-expected, description: Counts only when the task contract has a shared mutable state opportunity, opportunity_detector: task-declared, requires_task_opportunity: modern_immutability}
+  - {rule_id: type-safety-expected, description: Counts only when the task requires static typing, opportunity_detector: task-declared, requires_task_opportunity: type_safety}
+  - {rule_id: type-domain-expected, description: Counts only when the task has a domain modelling opportunity, opportunity_detector: task-declared, requires_task_opportunity: type_domain_modeling}
+ownership:
+  canonical-security-issue: security
+  measured-runtime-regression: efficiency
+  resource-cleanup-failure: robustness
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- static typing ------------------------------------------------------------------------------
+  # Every tsc diagnostic the strict configuration reports is a measured type fact and needs no
+  # task opportunity to be real, but only a task that requires typing scores the item.
+  - {check_prefix: typescript.typescript., items: [type_safety], owner: null, applicability: type-safety-expected}
+  # `any` crossing a public boundary, or an untyped JSON result that escapes the module, is the
+  # concrete way a TypeScript task loses its domain model.
+  - {check_id: typescript.context.any-escape, items: [type_safety], idiom_item: type_domain_modeling, owner: null, applicability: type-domain-expected, context_evaluator: context-scan, equivalence_family: any-escape}
+  # TypeScript has no `restrained_mutation` idiom item of its own: its weights renormalise the
+  # mutation discipline into `modern_immutability` (diagnostic) and `data_module_api` (idiom).
+  # Referencing a JavaScript-only item here would be a profile that cannot load, so it is not done.
+  # --- mutability and modern syntax --------------------------------------------------------------
+  - {check_id: typescript.eslint.no-var, items: [modern_immutability], owner: null, applicability: mutation-expected, context_evaluator: context-required, equivalence_family: var-scope}
+  - {check_id: typescript.context.var-redeclaration, items: [modern_immutability], owner: null, applicability: mutation-expected, context_evaluator: context-scan, equivalence_family: var-scope}
+  - {check_id: typescript.eslint.prefer-const, items: [modern_immutability], owner: null, applicability: mutation-expected, equivalence_family: needless-mutation}
+  - {check_id: typescript.context.needless-mutation, items: [modern_immutability], owner: null, applicability: mutation-expected, context_evaluator: context-scan, equivalence_family: needless-mutation}
+  - {check_id: typescript.context.unhandled-rejection, items: [async_error_handling], idiom_item: async_composition, owner: null, applicability: async-expected, context_evaluator: context-scan, equivalence_family: unhandled-rejection}
+  # Independent work awaited one item at a time is a composition problem, not a measured regression.
+  - {check_id: typescript.context.unbounded-sequential-await, items: [async_error_handling], idiom_item: async_composition, owner: null, applicability: async-composition-expected, context_evaluator: context-scan, equivalence_family: sequential-await}
+  - {check_id: typescript.eslint.require-await, items: [async_correctness], owner: null, applicability: async-expected, equivalence_family: redundant-async}
+  - {check_id: typescript.eslint.no-async-promise-executor, items: [async_correctness], owner: null, applicability: async-expected, equivalence_family: async-executor}
+  - {check_id: typescript.eslint.no-promise-executor-return, items: [async_correctness], owner: null, applicability: async-expected, equivalence_family: async-executor}
+  # `return await` inside a try is redundant; elsewhere it is the only way to catch. The precise
+  # lint is context-required because the tool cannot see the enclosing try.
+  - {check_id: typescript.eslint.no-return-await, items: [], idiom_item: async_composition, owner: null, applicability: async-composition-expected, context_evaluator: context-required, equivalence_family: redundant-await}
+  - {check_id: typescript.context.redundant-await-in-try, items: [], idiom_item: async_composition, owner: null, applicability: async-composition-expected, context_evaluator: context-scan, equivalence_family: redundant-await}
+  # --- module boundary and data API -------------------------------------------------------------
+  - {check_id: typescript.context.exported-mutable-binding, items: [modern_immutability], idiom_item: data_module_api, owner: null, applicability: mutation-expected, context_evaluator: context-scan, equivalence_family: exported-mutable-binding}
+  - {check_id: typescript.context.import-time-side-effect, items: [], idiom_item: data_module_api, owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: import-side-effect}
+  # --- lint hygiene -------------------------------------------------------------------------------
+  - {check_id: typescript.eslint.no-unused-vars, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: typescript.eslint.no-shadow, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: typescript.eslint.no-implicit-coercion, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: typescript.eslint.no-empty, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: typescript.eslint.no-useless-catch, items: [lint], idiom_item: language_constructs, owner: null, applicability: item-opportunity, equivalence_family: dead-code}
+  # --- security evidence (single composite owner; no diagnostic-only double charge) ----------------
+  - {check_id: typescript.context.dynamic-eval, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: dynamic-code-execution}
+  - {check_id: typescript.context.command-injection, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: command-injection}
+  - {check_id: typescript.context.hardcoded-credential, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: hardcoded-credential}
+  - {check_id: typescript.context.prototype-pollution, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: prototype-pollution}
+  - {check_id: typescript.context.unsafe-html, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: unsafe-html}
+  - {check_id: typescript.context.unvalidated-path-join, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: path-traversal}
+  # `==` against null/undefined is the idiomatic null check; only a mixed-kind comparison is a defect.
+  - {check_id: typescript.eslint.eqeqeq, items: [lint], owner: null, applicability: item-opportunity, context_evaluator: context-required, equivalence_family: loose-equality}
+  - {check_id: typescript.context.loose-equality, items: [lint], owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: loose-equality}
+  - {check_prefix: typescript.dependency., owner: security, applicability: always}
+  # Anything the pinned rule bundle reports that is not claimed above is plain lint evidence.
+  - {check_prefix: typescript.eslint., items: [lint], owner: null, applicability: item-opportunity}

@@ -1,0 +1,125 @@
+{
+  "base_image": {
+    "digest": "sha256:abe4f87f354c4f6d7ee3fb11b241c6b6c24a32ca50a2ebcc30493a2168e14048",
+    "reference": "golang@sha256:abe4f87f354c4f6d7ee3fb11b241c6b6c24a32ca50a2ebcc30493a2168e14048"
+  },
+  "build": {
+    "components_installed_at_build_time": true,
+    "goproxy": "off",
+    "gotoolchain": "local",
+    "guest_interpreter": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+    "network": "none",
+    "note": "Local development build. The toolchain ships in the pinned base image; task modules are stdlib-only and each task pins its own go.mod/go.sum, whose digest is part of the evaluator identity. staticcheck and gosec are installed at pinned module versions in the evaluator recipe only. GOTOOLCHAIN=local is what keeps a task from downloading a different compiler mid-run. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
+    "offline_install": true,
+    "scored_runs_offline": true
+  },
+  "guest_digest": "sha256:0b3d2334a2a8b86f1f6d5fec6c7c2d2fe66754833bbc4414c8ee3602ef0c6e2b",
+  "images": {
+    "evaluator": {
+      "accepts_instrumented_plans": false,
+      "components": [
+        "go:1.26.8",
+        "gofmt:1.26.8",
+        "go-vet:1.26.8",
+        "go-race-detector:1.26.8",
+        "staticcheck:v0.8.1",
+        "gosec:v2.29.0"
+      ],
+      "digest": "sha256:9ef8a84009a970ad69e3f3ee30a40647ea2602505aef6d8933229f4d7800badf",
+      "dockerfile_digest": "sha256:5bad5c9f00491aec7e57572f8dcc7485d27ac71d3e8143094ad48ec8ed4ac000",
+      "expected_tools": [
+        "go-build",
+        "go-test",
+        "gofmt",
+        "go-vet",
+        "go-test-race",
+        "staticcheck",
+        "gosec"
+      ],
+      "go": "1.26.8",
+      "guest_and_rules_digest": "sha256:6ccd301f840ddabc1944737e5afb76851edfee60048453222e84b19d3f27f3b6",
+      "instrumentation": "none",
+      "recipe": "evaluator",
+      "recipe_digest": "sha256:071864bfa1fc6dc65295957916762c45f89b2e11289bf40f4597a514509a3e4d",
+      "reference": "pcb-go-evaluator@sha256:9ef8a84009a970ad69e3f3ee30a40647ea2602505aef6d8933229f4d7800badf",
+      "tag": "pcb-go-evaluator:v1",
+      "tools": {
+        "go-build": "1.26.8",
+        "go-test": "1.26.8",
+        "go-test-race": "supported",
+        "go-vet": "absent",
+        "gofmt": "bundled-abe4f87f354c",
+        "gosec": "Version: dev",
+        "staticcheck": "2026.2.1"
+      }
+    },
+    "performance": {
+      "accepts_instrumented_plans": false,
+      "components": [
+        "go:1.26.8",
+        "gofmt:1.26.8",
+        "go-vet:1.26.8"
+      ],
+      "digest": "sha256:2b6763953a93e28e68461358c65bf604312b17bd1ae360119c49fd313efd2dd9",
+      "dockerfile_digest": "sha256:5bad5c9f00491aec7e57572f8dcc7485d27ac71d3e8143094ad48ec8ed4ac000",
+      "expected_tools": [
+        "go-build",
+        "go-test",
+        "gofmt"
+      ],
+      "go": "1.26.8",
+      "guest_and_rules_digest": "sha256:6ccd301f840ddabc1944737e5afb76851edfee60048453222e84b19d3f27f3b6",
+      "instrumentation": "none",
+      "recipe": "performance",
+      "recipe_digest": "sha256:071864bfa1fc6dc65295957916762c45f89b2e11289bf40f4597a514509a3e4d",
+      "reference": "pcb-go-performance@sha256:2b6763953a93e28e68461358c65bf604312b17bd1ae360119c49fd313efd2dd9",
+      "tag": "pcb-go-performance:v1",
+      "tools": {
+        "go-build": "1.26.8",
+        "go-test": "1.26.8",
+        "go-test-race": "supported",
+        "go-vet": "absent",
+        "gofmt": "bundled-abe4f87f354c",
+        "gosec": "absent",
+        "staticcheck": "absent"
+      }
+    },
+    "runtime": {
+      "accepts_instrumented_plans": true,
+      "components": [
+        "go:1.26.8",
+        "gofmt:1.26.8",
+        "go-vet:1.26.8",
+        "go-race-detector:1.26.8"
+      ],
+      "digest": "sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118",
+      "dockerfile_digest": "sha256:5bad5c9f00491aec7e57572f8dcc7485d27ac71d3e8143094ad48ec8ed4ac000",
+      "expected_tools": [
+        "go-build",
+        "go-test",
+        "gofmt",
+        "go-vet",
+        "go-test-race"
+      ],
+      "go": "1.26.8",
+      "guest_and_rules_digest": "sha256:6ccd301f840ddabc1944737e5afb76851edfee60048453222e84b19d3f27f3b6",
+      "instrumentation": "none",
+      "recipe": "runtime",
+      "recipe_digest": "sha256:071864bfa1fc6dc65295957916762c45f89b2e11289bf40f4597a514509a3e4d",
+      "reference": "pcb-go-runtime@sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118",
+      "tag": "pcb-go-runtime:v1",
+      "tools": {
+        "go-build": "1.26.8",
+        "go-test": "1.26.8",
+        "go-test-race": "supported",
+        "go-vet": "absent",
+        "gofmt": "bundled-abe4f87f354c",
+        "gosec": "absent",
+        "staticcheck": "absent"
+      }
+    }
+  },
+  "kind": "go_images",
+  "rule_bundle_digest": "sha256:dcdf11b6919e2aaa8b57b00f03fe25fbf36f534aa86c51ee86de50a2c44b6b13",
+  "schema_version": 1
+}

@@ -161,7 +161,7 @@ class RustOracle(PluginModel):
         return inventory_from_document(self.inventory_document())
 
     def inventory_digest(self) -> str:
-        return str(canonical_digest(self.model_dump(mode="json")))
+        return str(canonical_digest(self.inventory_document()))
 
 
 class ExposureRights(PluginModel):

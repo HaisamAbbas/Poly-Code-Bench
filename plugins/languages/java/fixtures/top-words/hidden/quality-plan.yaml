@@ -1,0 +1,21 @@
+kind: java_task_quality_plan
+resources: required
+concurrency: required
+security_surface: required
+resource_groups: [resource-probe]
+concurrency_groups: [concurrency-probe]
+opportunity_tags: [null-expected, resource-expected, concurrency-expected, security_surface]
+opportunities:
+  design_boundaries: 1
+  resource_handling: 1
+  concurrency: 1
+  modern_apis: 1
+  null_safety: 1
+  security: 1
+  class_api_boundaries: 1
+  library_abstractions: 1
+  value_nullability: 1
+  resource_concurrency: 1
+required_analyzers: [spotbugs, pmd, checkstyle, context, dependency]
+dependency_inventory: [org.junit.jupiter:junit-jupiter:5.10.2]
+judge_items: []

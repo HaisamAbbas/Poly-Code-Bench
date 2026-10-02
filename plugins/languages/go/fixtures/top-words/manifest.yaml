@@ -1,0 +1,148 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: conformance-go-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: go
+  secondary_languages: []
+  cluster_id: conformance-go-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:5d72455038582c4d9f8a70510e455c634bae934c45dbbe41aa9e23333f5b514f
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - topwords/topwords.go
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-go-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-02T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-go-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 22 authored conformance fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118
+  language_plugin_id: go
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:874e28b94fc5bd4db51d99e5443805d2ca89ba86143e914b5df2f69c008754d1
+  test_recipe_digest: sha256:7677fd0d037d420b41a5ef7386c8e1d6e09077d49f6e17206d8c0b1fe76c383a
+  resource_class: local-development-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids:
+  - behaviour
+  hard_condition_ids:
+  - ordering-contract
+  required_outputs:
+  - topwords/topwords.go
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  evidence_owners: {}
+  required_analyzers:
+  - gofmt
+  - vet
+  - staticcheck
+  - gosec
+  - context
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: go-top-words-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 60
+visible_files:
+- visible/repo/go.mod
+- visible/repo/go.sum
+- visible/repo/topwords/contract.go
+- visible/repo/topwords/topwords.go
+- visible/task.md
+hidden_files:
+- admission/alternative-heaps/topwords/topwords.go
+- admission/exposure-rights.json
+- admission/faulty-ties/topwords/topwords.go
+- admission/quality-defective/topwords/topwords.go
+- admission/race-defective/topwords/topwords.go
+- admission/timeout-case/topwords/topwords.go
+- hidden/oracle.json
+- hidden/quality-plan.yaml
+- hidden/reference/topwords/topwords.go
+- hidden/topwords/behaviour_test.go
+- hidden/topwords/stress_test.go
+fixtures:
+- name: reference
+  variant: reference
+  solution_path: hidden/reference/topwords/topwords.go
+  expectation: {}
+- name: faulty-ties
+  variant: faulty
+  solution_path: admission/faulty-ties/topwords/topwords.go
+  expectation:
+    failing_cases:
+    - TestTiesBreakAlphabetically
+- name: alternative-heaps
+  variant: alternative
+  solution_path: admission/alternative-heaps/topwords/topwords.go
+  expectation: {}
+- name: quality-defective
+  variant: quality_defective
+  solution_path: admission/quality-defective/topwords/topwords.go
+  expectation:
+    expected_issue_families:
+    - ignored-error
+    - error-chain
+    - error-sentinel
+    - string-building
+- name: timeout-case
+  variant: timeout
+  solution_path: admission/timeout-case/topwords/topwords.go
+  expectation:
+    expected_failure: candidate_timeout
+- name: race-defective
+  variant: quality_defective
+  solution_path: admission/race-defective/topwords/topwords.go
+  expectation:
+    expected_issue_families:
+    - data-race

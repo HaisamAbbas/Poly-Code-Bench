@@ -1,0 +1,3 @@
+{"schema_version": 1, "kind": "cpp_task_recipe", "recipe_version": "cpp-recipe-v1",
+ "compiler": "clang", "standard": "c++20", "build_profile": "debug",
+ "include_dirs": ["include"], "link_flags": []}

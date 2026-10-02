@@ -1,0 +1,112 @@
+schema_version: 1
+kind: java_profile
+profile_version: java-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.java
+# Opportunity counts are frozen per task at authoring time (hidden/quality-plan.yaml). No
+# opportunity means not_applicable, never a perfect score. Syntax counts earn no bonus, and one
+# canonical issue is counted once however many tools report it.
+#
+# Java-specific rule (Architecture 11.2, verbatim): "Streams, records, and SOLID terminology are
+# not automatic quality points." This is enforced in code, not only here:
+# `polycodebench_lang_java.profile.PRESENCE_ONLY_FAMILIES` names the families a mapping may not
+# create, and the profile refuses to load if any mapping below would score one. There is therefore
+# no "modern constructs" or "idiomatic stream use" mapping here, and adding one is a load-time
+# error rather than a quiet bonus.
+#
+# Java-specific rule: `new Closeable(...)`, `dm.default-encoding` and `unclosed resource` are
+# *tokens*. A mapping whose context_evaluator is `context-required` (a lint that fires on the bare
+# token) is counted only when the context scanner independently confirms a violation at the same
+# site; otherwise it is demoted to needs_review. The scanner, not the token, decides. SpotBugs
+# bytecode evidence (an unsatisfied obligation, an actually-null dereference) is a measured fact
+# and needs no scanner confirmation.
+applicability_rules:
+  - {rule_id: always, description: Applies to every Java task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: resource-expected, description: Counts only when the task has an acquire/release opportunity, opportunity_detector: task-declared, requires_task_opportunity: resource_handling}
+  - {rule_id: concurrency-expected, description: Counts only when the task requires shared-state concurrency or shutdown, opportunity_detector: task-declared, requires_task_opportunity: concurrency}
+  - {rule_id: null-expected, description: Counts only when the task has an Optional or null-contract opportunity, opportunity_detector: task-declared, requires_task_opportunity: null_safety}
+  - {rule_id: boundary-expected, description: Counts only when the task has a type or module boundary opportunity, opportunity_detector: task-declared, requires_task_opportunity: design_boundaries}
+  - {rule_id: security-surface-expected, description: Counts only when the task has a declared security surface, opportunity_detector: task-declared, requires_task_opportunity: security_surface}
+  - {rule_id: library-expected, description: Counts only when the task has a standard-library abstraction opportunity, opportunity_detector: task-declared, requires_task_opportunity: library_abstractions}
+ownership:
+  canonical-security-issue: security
+  resource-cleanup-failure: robustness
+  null-dereference-candidate: robustness
+  measured-runtime-regression: efficiency
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- resource handling ---------------------------------------------------------------------
+  # SpotBugs reads the bytecode, so an unsatisfied close obligation is measured, not inferred.
+  - {check_id: java.spotbugs.obligation-unreported-exception, items: [resource_handling], idiom_item: resource_concurrency, owner: null, applicability: resource-expected, equivalence_family: resource-not-closed}
+  - {check_id: java.spotbugs.obligation-unrecoverable-exception, items: [resource_handling], owner: robustness, applicability: resource-expected, equivalence_family: resource-not-closed}
+  - {check_id: java.spotbugs.jdbc-connection-not-closed, items: [resource_handling], owner: robustness, applicability: resource-expected, equivalence_family: resource-not-closed}
+  - {check_id: java.spotbugs.stream-not-closed, items: [resource_handling], idiom_item: resource_concurrency, owner: null, applicability: resource-expected, equivalence_family: resource-not-closed}
+  - {check_id: java.spotbugs.reader-not-closed, items: [resource_handling], owner: null, applicability: resource-expected, equivalence_family: resource-not-closed}
+  # The scanner decides whether an acquisition is actually released on every path.
+  - {check_id: java.context.resource-closed-on-all-paths, items: [resource_handling], idiom_item: resource_concurrency, owner: null, applicability: resource-expected, context_evaluator: context-scan, equivalence_family: resource-closed}
+  - {check_id: java.context.resource-unclosed, items: [resource_handling], idiom_item: resource_concurrency, owner: robustness, applicability: resource-expected, context_evaluator: context-scan, equivalence_family: resource-not-closed}
+  - {check_id: java.context.resource-acquisition-in-loop, items: [resource_handling], idiom_item: resource_concurrency, owner: null, applicability: resource-expected, context_evaluator: context-scan, equivalence_family: resource-in-loop}
+  # Bare tokens: never a finding by themselves.
+  - {check_id: java.pmd.close-resource, items: [resource_handling], owner: null, applicability: resource-expected, context_evaluator: context-required, equivalence_family: resource-not-closed}
+  - {check_id: java.pmd.close-stream, items: [resource_handling], owner: null, applicability: resource-expected, context_evaluator: context-required, equivalence_family: resource-not-closed}
+  - {check_id: java.checkstyle.need-close, items: [resource_handling], owner: null, applicability: resource-expected, context_evaluator: context-required, equivalence_family: resource-not-closed}
+  # --- concurrency ---------------------------------------------------------------------------
+  - {check_id: java.spotbugs.double-checked-locking, items: [concurrency], idiom_item: resource_concurrency, owner: robustness, applicability: concurrency-expected, equivalence_family: unsafe-publication}
+  - {check_id: java.spotbugs.non-synchronized-volatile, items: [concurrency], owner: robustness, applicability: concurrency-expected, equivalence_family: unsafe-publication}
+  - {check_id: java.spotbugs.wait-not-in-loop, items: [concurrency], owner: robustness, applicability: concurrency-expected, equivalence_family: missed-signal}
+  - {check_id: java.spotbugs.unconditional-wait, items: [concurrency], owner: null, applicability: concurrency-expected, context_evaluator: context-required, equivalence_family: missed-signal}
+  - {check_id: java.spotbugs.synchronization-on-shared-literal, items: [concurrency], owner: robustness, applicability: concurrency-expected, equivalence_family: shared-lock}
+  - {check_id: java.context.await-not-in-loop, items: [concurrency], idiom_item: resource_concurrency, owner: robustness, applicability: concurrency-expected, context_evaluator: context-scan, equivalence_family: missed-signal}
+  - {check_id: java.context.executor-never-shutdown, items: [concurrency], idiom_item: resource_concurrency, owner: robustness, applicability: concurrency-expected, context_evaluator: context-scan, equivalence_family: executor-not-shutdown}
+  - {check_id: java.context.published-mutable-state, items: [concurrency], owner: robustness, applicability: concurrency-expected, context_evaluator: context-scan, equivalence_family: unsafe-publication}
+  - {check_id: java.pmd.do-not-use-wait-notify, items: [concurrency], owner: null, applicability: concurrency-expected, context_evaluator: context-required, equivalence_family: wait-notify}
+  # --- null safety ---------------------------------------------------------------------------
+  - {check_id: java.spotbugs.null-return-dereferenced, items: [null_safety], owner: robustness, applicability: null-expected, equivalence_family: null-dereference}
+  - {check_id: java.spotbugs.possible-null-pointer-dereference, items: [null_safety], owner: null, applicability: null-expected, equivalence_family: null-dereference}
+  - {check_id: java.spotbugs.np-compare-with-primitive, items: [null_safety], owner: null, applicability: null-expected, equivalence_family: null-compare}
+  - {check_id: java.spotbugs.np-always-null, items: [null_safety], owner: null, applicability: null-expected, equivalence_family: null-value}
+  - {check_id: java.context.optional-ignored, items: [null_safety], idiom_item: value_nullability, owner: null, applicability: null-expected, context_evaluator: context-scan, equivalence_family: optional-ignored}
+  - {check_id: java.context.implicit-optional-get, items: [null_safety], idiom_item: value_nullability, owner: robustness, applicability: null-expected, context_evaluator: context-scan, equivalence_family: implicit-null}
+  - {check_id: java.pmd.avoid-returning-null, items: [null_safety], idiom_item: value_nullability, owner: null, applicability: null-expected, context_evaluator: context-required, equivalence_family: null-return}
+  - {check_id: java.checkstyle.return-count, items: [null_safety], owner: null, applicability: item-opportunity}
+  # --- design boundaries ---------------------------------------------------------------------
+  - {check_id: java.spotbugs.expose-representation, items: [design_boundaries], owner: null, applicability: boundary-expected, equivalence_family: expose-representation}
+  - {check_id: java.spotbugs.mutable-static-array, items: [design_boundaries], owner: null, applicability: boundary-expected, equivalence_family: mutable-shared-state}
+  - {check_id: java.spotbugs.mutable-static-field, items: [design_boundaries], owner: null, applicability: boundary-expected, equivalence_family: mutable-shared-state}
+  - {check_id: java.spotbugs.si-field-not-final-in-class, items: [design_boundaries], owner: null, applicability: boundary-expected, equivalence_family: unsafe-publication}
+  - {check_id: java.spotbugs.unchecked-cast, items: [design_boundaries], owner: null, applicability: boundary-expected, equivalence_family: unchecked-return}
+  - {check_id: java.context.dead-store, items: [design_boundaries], owner: null, applicability: boundary-expected, context_evaluator: context-scan, equivalence_family: dead-store}
+  - {check_id: java.context.self-assignment, items: [design_boundaries], owner: null, applicability: boundary-expected, context_evaluator: context-scan, equivalence_family: self-assignment}
+  - {check_id: java.context.system-out-in-library, items: [design_boundaries], owner: null, applicability: boundary-expected, context_evaluator: context-scan, equivalence_family: debug-output}
+  - {check_id: java.pmd.immutable-field, items: [design_boundaries], owner: null, applicability: item-opportunity}
+  - {check_id: java.pmd.singular-field, items: [design_boundaries], owner: null, applicability: item-opportunity}
+  - {check_id: java.checkstyle.hide-utility-class-constructor, items: [design_boundaries], owner: null, applicability: item-opportunity}
+  - {check_id: java.checkstyle.visibility-modifier, items: [design_boundaries], owner: null, applicability: item-opportunity}
+  # --- standard library abstractions ----------------------------------------------------------
+  # NOTE: these are defect families, not presence families. Using a stream is never rewarded; a
+  # stream that is never closed, a legacy `new String(bytes)` with a platform charset, or a hand
+  # -rolled collection replace are all *defects* with a measured or scanned site.
+  - {check_id: java.pmd.default-encoding, items: [modern_apis], idiom_item: library_abstractions, owner: null, applicability: resource-expected, context_evaluator: context-required, equivalence_family: default-encoding}
+  - {check_id: java.spotbugs.dm-default-encoding, items: [modern_apis], owner: null, applicability: item-opportunity, equivalence_family: default-encoding}
+  - {check_id: java.pmd.avoid-string-buffer-field, items: [modern_apis], idiom_item: library_abstractions, owner: null, applicability: item-opportunity}
+  - {check_id: java.pmd.use-stringbuffer-length, items: [modern_apis], owner: null, applicability: item-opportunity}
+  - {check_id: java.pmd.primitive-wrapper-instantiation, items: [modern_apis], idiom_item: library_abstractions, owner: null, applicability: item-opportunity}
+  - {check_id: java.checkstyle.illegal-import, items: [modern_apis], owner: null, applicability: item-opportunity}
+  - {check_id: java.context.legacy-string-concat, items: [modern_apis], idiom_item: library_abstractions, owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: legacy-string-concat}
+  # --- security evidence (single composite owner; no diagnostic item for the dependency view) ---
+  - {check_prefix: java.dependency., owner: security, applicability: always}
+  # --- context-scanner security surface (injection, deserialisation, weak crypto) ---------------
+  - {check_id: java.context.command-injection, owner: security, applicability: security-surface-expected, context_evaluator: context-scan, equivalence_family: command-injection}
+  - {check_id: java.context.sql-concatenation, owner: security, applicability: security-surface-expected, context_evaluator: context-scan, equivalence_family: sql-injection}
+  - {check_id: java.context.path-traversal, owner: security, applicability: security-surface-expected, context_evaluator: context-scan, equivalence_family: path-traversal}
+  - {check_id: java.context.unsafe-deserialization, owner: security, applicability: security-surface-expected, context_evaluator: context-scan, equivalence_family: unsafe-deserialization}
+  - {check_id: java.context.weak-randomness, owner: security, applicability: security-surface-expected, context_evaluator: context-scan, equivalence_family: weak-randomness}
+  - {check_id: java.context.weak-message-digest, owner: security, applicability: security-surface-expected, context_evaluator: context-scan, equivalence_family: weak-crypto}
+  - {check_id: java.pmd.insecure-crypto, owner: security, applicability: security-surface-expected, context_evaluator: context-required, equivalence_family: weak-crypto}
+  # --- selected hygiene (everything not claimed above) ----------------------------------------
+  - {check_prefix: java.checkstyle., items: [design_boundaries], owner: null, applicability: item-opportunity}
+  - {check_prefix: java.pmd., items: [modern_apis], owner: null, applicability: item-opportunity}
+  - {check_prefix: java.spotbugs., items: [design_boundaries], owner: null, applicability: item-opportunity}

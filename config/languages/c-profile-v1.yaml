@@ -1,0 +1,194 @@
+schema_version: 1
+kind: c_profile
+profile_version: c-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.c
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity means
+# not_applicable, never a perfect score. Syntax counts earn no bonus and one canonical issue is
+# counted once however many tools report it: a bounds error seen by clang-tidy, cppcheck and ASan is
+# one issue, filed against one composite owner.
+#
+# Every `check_id` below names a check that is actually in the frozen selection in
+# plugins/languages/c/src/polycodebench_lang_c/rules/clang-tidy.yaml, verified against the image's own
+# `clang-tidy --list-checks`. A mapping for a check the tool never runs is worse than no mapping: it
+# advertises coverage the lane does not have.
+#
+# Ownership is the whole point of this file (Architecture 8.7). An unchecked allocation result is a
+# memory-safety defect whose consequence, if the allocation is later written with untrusted data, is
+# separately a security defect - but the penalty is charged once, to the owner named here.
+applicability_rules:
+  - {rule_id: always, description: Applies to every C task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: memory-opportunity, description: Counts only when the task declares memory-ownership opportunities, opportunity_detector: task-declared, requires_task_opportunity: memory_safety}
+  - {rule_id: ub-opportunity, description: Counts only when the task declares undefined-behaviour opportunities, opportunity_detector: task-declared, requires_task_opportunity: undefined_behavior}
+  - {rule_id: allocation-opportunity, description: Counts only when the task allocates dynamically, opportunity_detector: task-declared, requires_task_opportunity: ownership_api_contracts}
+  - {rule_id: interface-opportunity, description: Counts only when the task defines a public interface, opportunity_detector: task-declared, requires_task_opportunity: data_function_interfaces}
+  - {rule_id: const-opportunity, description: Counts only when the task declares const/portability opportunities, opportunity_detector: task-declared, requires_task_opportunity: const_type_portability}
+  - {rule_id: error-opportunity, description: Counts only when the task declares failure-returning calls, opportunity_detector: task-declared, requires_task_opportunity: error_checks}
+  - {rule_id: performance-opportunity, description: Counts only when the task declares measurable cost opportunities, opportunity_detector: task-declared, requires_task_opportunity: performance_cache}
+  - {rule_id: portability-opportunity, description: Counts only when the task declares portability opportunities, opportunity_detector: task-declared, requires_task_opportunity: portability}
+ownership:
+  canonical-security-issue: security
+  candidate-undefined-behaviour: robustness
+  measured-runtime-regression: efficiency
+  resource-cleanup-failure: robustness
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins, so the specific entries come before the family prefixes.
+rule_mappings:
+  # --- dynamic evidence (measured facts; no pattern matcher may downgrade them) --------------------
+  # AddressSanitizer families. A bounds violation reached from untrusted input is a security defect;
+  # one reached entirely from internal computation is a robustness defect. The plan's
+  # `evidence_ownership` decides which, and it is recorded on the plan rather than guessed here.
+  - {check_id: c.asan.bounds-violation, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.asan.use-after-free, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: use-after-free}
+  - {check_id: c.asan.double-free, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: double-free}
+  - {check_id: c.asan.invalid-free, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: double-free}
+  - {check_id: c.asan.null-pointer-dereference, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: null-pointer-dereference}
+  - {check_id: c.asan.stack-overflow, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: stack-overflow}
+  - {check_id: c.asan.memory-error, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: memory-error}
+  - {check_id: c.asan.definition-mismatch, items: [undefined_behavior], owner: robustness, applicability: always, equivalence_family: definition-mismatch}
+  # UndefinedBehaviorSanitizer families.
+  - {check_id: c.ubsan.signed-overflow, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: signed-overflow}
+  - {check_id: c.ubsan.shift-out-of-range, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: shift-out-of-range}
+  - {check_id: c.ubsan.division-by-zero, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: division-by-zero}
+  - {check_id: c.ubsan.misaligned-access, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: misaligned-access}
+  - {check_id: c.ubsan.null-pointer-dereference, items: [memory_safety, undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: null-pointer-dereference}
+  - {check_id: c.ubsan.invalid-memory-access, items: [memory_safety], owner: robustness, applicability: ub-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.ubsan.pointer-arithmetic-out-of-bounds, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: pointer-arithmetic-out-of-bounds}
+  - {check_id: c.ubsan.undefined-behaviour, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: undefined-behaviour}
+  # Valgrind memcheck families. A leak is a resource consequence, not a bounds violation.
+  - {check_id: c.valgrind.resource-leak, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: resource-leak}
+  - {check_id: c.valgrind.uninitialised-value, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.valgrind.bounds-violation, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.valgrind.use-after-free, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: use-after-free}
+  - {check_id: c.valgrind.double-free, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: double-free}
+  - {check_id: c.valgrind.memory-error, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: memory-error}
+  # --- clang-analyzer: executed static paths, owned by robustness -------------------------------
+  # A null dereference or an out-of-bounds subscript the analyzer *proves* is a correctness fact, not
+  # a pattern match, so it lands on robustness with a single composite owner.
+  - {check_id: c.tidy.clang-analyzer.core.nulldereference, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: null-pointer-dereference}
+  - {check_id: c.tidy.clang-analyzer.core.dividezero, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: division-by-zero}
+  - {check_id: c.tidy.clang-analyzer.core.undefinedbinaryoperatorresult, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: undefined-behaviour}
+  - {check_id: c.tidy.clang-analyzer.core.uninitialized.arraysubscript, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.tidy.clang-analyzer.core.uninitialized.assign, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.tidy.clang-analyzer.core.uninitialized.branch, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.tidy.clang-analyzer.unix.malloc, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: resource-leak}
+  - {check_id: c.tidy.clang-analyzer.unix.mismatcheddeallocator, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: mismatched-new-delete}
+  - {check_id: c.tidy.clang-analyzer.unix.mallowsizeof, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: malloc-size-mismatch}
+  - {check_id: c.tidy.clang-analyzer.unix.cstring.badsizearg, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.tidy.clang-analyzer.unix.cstring.nullarg, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: null-argument}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.strcpy, items: [memory_safety], owner: security, applicability: memory-opportunity, equivalence_family: unbounded-copy}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.gets, items: [memory_safety], owner: security, applicability: memory-opportunity, equivalence_family: unbounded-copy}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.bcopy, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: suspicious-memset-usage}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.bcmp, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.uncheckedreturn, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.rand, items: [portability], owner: null, applicability: portability-opportunity, equivalence_family: rand-modulus}
+  - {check_id: c.tidy.clang-analyzer.security.insecureapi.mktemp, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: insecure-temporary-file}
+  - {check_id: c.tidy.clang-analyzer.core.stackaddressescape, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: dangling-handle}
+  - {check_id: c.tidy.clang-analyzer.core.callandmessage, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.clang-analyzer.core.nonnilstringconstants, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.tidy.clang-analyzer.deadcode.deadstores, items: [const_ownership], owner: null, applicability: item-opportunity, equivalence_family: dead-stores}
+  - {check_id: c.tidy.clang-analyzer.core.stackaddrescapesbase, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: dangling-handle}
+  - {check_id: c.tidy.clang-analyzer.valist.uninitialized, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.tidy.clang-analyzer.valist.unterminated, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  # --- clang-analyzer: measured only on paths it could prove, so owned by robustness where it can ---
+  - {check_prefix: c.tidy.clang-analyzer., items: [memory_safety, undefined_behavior], owner: robustness, applicability: item-opportunity}
+  # --- bugprone: ownership and resource handling -----------------------------------------------
+  - {check_id: c.tidy.bugprone.dangling-handle, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: dangling-handle}
+  - {check_id: c.tidy.bugprone.no-escape, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: use-after-free}
+  - {check_id: c.tidy.bugprone.misplaced-pointer-arithmetic-in-alloc, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: pointer-arithmetic-out-of-bounds}
+  - {check_id: c.tidy.bugprone.misplaced-operator-in-strlen-in-alloc, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.tidy.bugprone.misplaced-widening-cast, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: suspicious-memory-comparison}
+  - {check_id: c.tidy.bugprone.undefined-memory-manipulation, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: undefined-memory-manipulation}
+  - {check_id: c.tidy.bugprone.not-null-terminated-result, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: not-null-terminated-result}
+  - {check_id: c.tidy.bugprone.string-literal-with-embedded-nul, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: not-null-terminated-result}
+  - {check_id: c.tidy.bugprone.suspicious-memory-comparison, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: suspicious-memory-comparison}
+  - {check_id: c.tidy.bugprone.suspicious-memset-usage, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: suspicious-memset-usage}
+  - {check_id: c.tidy.bugprone.signed-char-misuse, items: [portability], owner: null, applicability: portability-opportunity, equivalence_family: signed-char-misuse}
+  - {check_id: c.tidy.bugprone.sizeof-expression, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: sizeof-expression}
+  - {check_id: c.tidy.bugprone.too-small-loop-variable, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: too-small-loop-variable}
+  - {check_id: c.tidy.bugprone.bool-pointer-implicit-conversion, items: [error_checks], idiom_item: ownership_api_contracts, owner: null, applicability: error-opportunity, equivalence_family: bool-pointer-implicit-conversion}
+  - {check_id: c.tidy.bugprone.easily-swappable-parameters, items: [const_ownership], idiom_item: ownership_api_contracts, owner: null, applicability: interface-opportunity, equivalence_family: easily-swappable-parameters}
+  - {check_id: c.tidy.bugprone.terminating-continue, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: terminating-continue}
+  - {check_id: c.tidy.bugprone.branch-clone, items: [error_checks], owner: null, applicability: item-opportunity, equivalence_family: branch-clone}
+  - {check_id: c.tidy.bugprone.dynamic-static-initializers, items: [undefined_behavior], owner: null, applicability: always, equivalence_family: dynamic-static-initializers}
+  - {check_id: c.tidy.bugprone.macro-parentheses, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: macro-parentheses}
+  - {check_id: c.tidy.bugprone.macro-repeated-side-effects, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: macro-repeated-side-effects}
+  - {check_id: c.tidy.bugprone.infinite-loop, items: [undefined_behavior], owner: null, applicability: always, equivalence_family: infinite-loop}
+  - {check_id: c.tidy.bugprone.string-integer-assignment, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: string-integer-assignment}
+  - {check_id: c.tidy.bugprone.suspicious-enum-usage, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: suspicious-enum-usage}
+  - {check_id: c.tidy.bugprone.suspicious-missing-comma, items: [undefined_behavior], owner: null, applicability: always, equivalence_family: suspicious-missing-comma}
+  - {check_id: c.tidy.bugprone.suspicious-semicolon, items: [undefined_behavior], owner: null, applicability: always, equivalence_family: suspicious-semicolon}
+  - {check_id: c.tidy.bugprone.suspicious-string-compare, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: suspicious-string-compare}
+  - {check_id: c.tidy.bugprone.swapped-arguments, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: swapped-arguments}
+  - {check_id: c.tidy.bugprone.unused-return-value, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.bugprone.posix-return, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.bugprone.signal-handler, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: signal-handler}
+  - {check_id: c.tidy.bugprone.reserved-identifier, items: [portability], owner: null, applicability: portability-opportunity, equivalence_family: reserved-identifier}
+  - {check_id: c.tidy.bugprone.integer-division, items: [performance_cache], owner: null, applicability: performance-opportunity, equivalence_family: integer-division}
+  - {check_id: c.tidy.bugprone.fold-init-type, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: fold-init-type}
+  # --- cert: the portable-C checks that map onto the C idiom rubric --------------------------
+  - {check_id: c.tidy.cert.err34-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.cert.err33-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.tidy.cert.dcl03-c, items: [error_checks], owner: null, applicability: item-opportunity, equivalence_family: dcl03-c}
+  - {check_id: c.tidy.cert.dcl16-c, items: [const_ownership], idiom_item: data_function_interfaces, owner: null, applicability: interface-opportunity, equivalence_family: dcl16-c}
+  - {check_id: c.tidy.cert.dcl37-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: dcl37-c}
+  - {check_id: c.tidy.cert.env33-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: env33-c}
+  - {check_id: c.tidy.cert.exp42-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: exp42-c}
+  - {check_id: c.tidy.cert.con36-c, items: [const_ownership], owner: null, applicability: const-opportunity, equivalence_family: con36-c}
+  - {check_id: c.tidy.cert.flp30-c, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: flp30-c}
+  - {check_id: c.tidy.cert.flp37-c, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: flp37-c}
+  - {check_id: c.tidy.cert.pos44-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: pos44-c}
+  - {check_id: c.tidy.cert.pos47-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: pos47-c}
+  - {check_id: c.tidy.cert.sig30-c, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: sig30-c}
+  - {check_id: c.tidy.cert.str34-c, items: [memory_safety], owner: security, applicability: memory-opportunity, equivalence_family: printf-family}
+  # --- performance ----------------------------------------------------------------------------
+  - {check_id: c.tidy.performance.inefficient-algorithm, items: [performance_cache], owner: null, applicability: performance-opportunity, equivalence_family: inefficient-algorithm}
+  - {check_id: c.tidy.performance.faster-string-find, items: [performance_cache], owner: null, applicability: performance-opportunity, equivalence_family: inefficient-string-search}
+  - {check_id: c.tidy.performance.inefficient-string-concatenation, items: [performance_cache], owner: null, applicability: performance-opportunity, equivalence_family: inefficient-string-concatenation}
+  - {check_id: c.tidy.performance.implicit-conversion-in-loop, items: [performance_cache], owner: null, applicability: performance-opportunity, equivalence_family: implicit-conversion-in-loop}
+  # --- portability ----------------------------------------------------------------------------
+  - {check_id: c.tidy.portability.restrict-system-includes, items: [portability], owner: null, applicability: always, equivalence_family: restrict-system-includes}
+  - {check_id: c.tidy.portability.simd-intrinsics, items: [portability], idiom_item: const_type_portability, owner: null, applicability: portability-opportunity, equivalence_family: simd-intrinsic}
+  # --- cppcheck: an independent second opinion on the same families ---------------------------
+  # A bounds error, a use-after-free or an uninitialised read reported by cppcheck maps to the *same*
+  # equivalence family as the sanitizer finding for it, which is what makes one defect one issue.
+  - {check_id: c.cppcheck.uninitvar, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.cppcheck.uninitdata, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: uninitialised-value}
+  - {check_id: c.cppcheck.nullpointer, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: null-pointer-dereference}
+  - {check_id: c.cppcheck.arrayindexoutofbounds, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.cppcheck.bufferaccessoutofbounds, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.cppcheck.useafterfree, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: use-after-free}
+  - {check_id: c.cppcheck.doublefree, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: double-free}
+  - {check_id: c.cppcheck.memleak, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: resource-leak}
+  - {check_id: c.cppcheck.resourceleak, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: resource-leak}
+  - {check_id: c.cppcheck.zerodiv, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: division-by-zero}
+  - {check_id: c.cppcheck.integeroverflow, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: signed-overflow}
+  - {check_id: c.cppcheck.mismatchallocdealloc, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: mismatched-new-delete}
+  - {check_id: c.cppcheck.strlencall, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: bounds-violation}
+  - {check_id: c.cppcheck.strcpy, items: [memory_safety], owner: security, applicability: memory-opportunity, equivalence_family: unbounded-copy}
+  - {check_id: c.cppcheck.sprintfoverlappingdata, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: unbounded-copy}
+  - {check_id: c.cppcheck.unreadvariable, items: [undefined_behavior], owner: null, applicability: ub-opportunity, equivalence_family: unread-variable}
+  - {check_id: c.cppcheck.readwriteonlyfile, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: read-write-only-file}
+  - {check_id: c.cppcheck.ignoredreturnvalue, items: [error_checks], owner: null, applicability: error-opportunity, equivalence_family: unchecked-return-value}
+  - {check_id: c.cppcheck.unnecessaryelse, items: [error_checks], idiom_item: data_function_interfaces, owner: null, applicability: error-opportunity, equivalence_family: unnecessary-else}
+  - {check_id: c.cppcheck.variablescope, items: [const_ownership], owner: null, applicability: const-opportunity, equivalence_family: variable-scope}
+  - {check_id: c.cppcheck.constparameterpointer, items: [const_ownership], owner: null, applicability: const-opportunity, equivalence_family: const-parameter-pointer}
+  - {check_id: c.cppcheck.functionstatic, items: [const_ownership], idiom_item: ownership_api_contracts, owner: null, applicability: item-opportunity, equivalence_family: function-static}
+  - {check_id: c.cppcheck.functionconst, items: [const_ownership], idiom_item: ownership_api_contracts, owner: null, applicability: const-opportunity, equivalence_family: function-const}
+  - {check_id: c.cppcheck.pointersize, items: [const_ownership], owner: null, applicability: const-opportunity, equivalence_family: pointer-size}
+  - {check_id: c.cppcheck.ctuonsameline, items: [const_ownership], owner: null, applicability: const-opportunity, equivalence_family: single-line-statement}
+  # --- catch-alls ------------------------------------------------------------------------------
+  # Anything a checker reports that no reviewed mapping names is recorded as a lint-style observation
+  # and never silently discarded - so a check added to the bundle later still shows up, unmapped,
+  # rather than vanishing.
+  - {check_prefix: c.tidy.bugprone., items: [const_ownership, error_checks], owner: null, applicability: item-opportunity}
+  - {check_prefix: c.tidy.performance., items: [performance_cache], owner: null, applicability: item-opportunity}
+  - {check_prefix: c.tidy.portability., items: [portability], owner: null, applicability: item-opportunity}
+  - {check_prefix: c.tidy.cert., items: [const_ownership, error_checks], owner: null, applicability: item-opportunity}
+  - {check_prefix: c.tidy., items: [const_ownership], owner: null, applicability: item-opportunity}
+  - {check_prefix: c.cppcheck., items: [const_ownership], owner: null, applicability: item-opportunity}
+  # --- security (measured evidence only; there is no diagnostic item for it) -------------------
+  - {check_prefix: c.asan.severity-surface, owner: security, applicability: always}

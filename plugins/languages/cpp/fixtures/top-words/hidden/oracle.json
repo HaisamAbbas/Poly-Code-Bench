@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "cpp_task_oracle",
+  "oracle_version": "cpp-top-words-oracle-v1",
+  "case_timeout_seconds": 10,
+  "suite_timeout_seconds": 60,
+  "groups": [
+    {
+      "group_id": "behaviour",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["tests/behaviour.cpp"],
+      "cases": [
+        {"case_id": "behaviour::ties_break_alphabetically", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour::case_and_separators", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour::k_larger_than_distinct", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour::empty_input", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour::zero_k", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour::non_ascii_letters_are_separators", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour::uppercase_runs_are_ordinary_words", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour::ordering::counts_never_increase_down_the_list", "required": true, "case_kind": "example"}
+      ]
+    },
+    {
+      "group_id": "stress",
+      "required": false,
+      "classification": "quality_only",
+      "files": ["tests/stress.cpp"],
+      "cases": [
+        {"case_id": "stress::large_input_finishes_with_correct_counts", "required": true, "case_kind": "robustness"}
+      ]
+    }
+  ],
+  "hard_conditions": [
+    {"condition_id": "ordering-contract", "group_id": "behaviour"}
+  ],
+  "robustness_scenarios": [
+    {
+      "scenario_id": "large-input",
+      "group_id": "stress",
+      "weight_bp": 10000,
+      "repetitions": 3,
+      "hard_acceptance": false
+    }
+  ]
+}

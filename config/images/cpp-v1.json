@@ -1,0 +1,94 @@
+{
+  "base_image": {
+    "digest": "sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251",
+    "reference": "debian@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251"
+  },
+  "build": {
+    "components_installed_at_build_time": true,
+    "guest_interpreter": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+    "network": "none",
+    "note": "Local development build. The compiler, the analyzers and the sanitizer runtimes ship in the pinned base images; a task's recipe and its declared sanitizers come from config/languages/cpp-toolchain-v1.json, whose digest is part of every tool identity. clang-tidy and cppcheck exist only in the evaluator recipe. The performance recipe bakes the release flags, so a sanitized binary can never be timed as release code. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
+    "offline_install": true,
+    "scored_runs_offline": true,
+    "toolchain_lock": "config/languages/cpp-toolchain-v1.json"
+  },
+  "guest_digest": "sha256:91a051cc320e97f069fa3fcf848682780cd862ba0d634fcfa2517532a440200b",
+  "images": {
+    "evaluator": {
+      "clang": "14.0.6",
+      "components": [
+        "clang=1:14.0-55.7~deb12u1",
+        "clang-tidy=1:14.0-55.7~deb12u1",
+        "cppcheck=2.10-2",
+        "libstdc++-12-dev=12.2.0-14+deb12u1"
+      ],
+      "digest": "sha256:6d4220370dd351538b8a48c35db2e195d91dfd9557b13c068fed73d61b8ced71",
+      "dockerfile_digest": "sha256:6f0151de26a2e33f0b6b3dd3dabbf98b1d87c744917b88194d89360c8dbdeb91",
+      "expected_tools": [
+        "clang++",
+        "clang-tidy",
+        "cppcheck"
+      ],
+      "guest_and_rules_digest": "sha256:2a566523366ebb7c8ef12f0b327c7997ff99de4fae06b9301a1ccbac414274eb",
+      "recipe": "evaluator",
+      "recipe_digest": "sha256:b60f1d35023cd388e24d14d4e23ffcd71a2c6698f2e458946a0bde409b2584a6",
+      "reference": "pcb-cpp-evaluator@sha256:6d4220370dd351538b8a48c35db2e195d91dfd9557b13c068fed73d61b8ced71",
+      "release_flags": "",
+      "tag": "pcb-cpp-evaluator:v1",
+      "tools": {
+        "clang++": "14.0.6",
+        "clang-tidy": "14.0.6",
+        "cppcheck": "unknown"
+      }
+    },
+    "performance": {
+      "clang": "14.0.6",
+      "components": [
+        "clang=1:14.0-55.7~deb12u1",
+        "libstdc++-12-dev=12.2.0-14+deb12u1"
+      ],
+      "digest": "sha256:6d793711bf2e80acd4913326f5f1660c7b66a76877ebf0909907f29427c7419b",
+      "dockerfile_digest": "sha256:6f0151de26a2e33f0b6b3dd3dabbf98b1d87c744917b88194d89360c8dbdeb91",
+      "expected_tools": [
+        "clang++"
+      ],
+      "guest_and_rules_digest": "sha256:2a566523366ebb7c8ef12f0b327c7997ff99de4fae06b9301a1ccbac414274eb",
+      "recipe": "performance",
+      "recipe_digest": "sha256:b60f1d35023cd388e24d14d4e23ffcd71a2c6698f2e458946a0bde409b2584a6",
+      "reference": "pcb-cpp-performance@sha256:6d793711bf2e80acd4913326f5f1660c7b66a76877ebf0909907f29427c7419b",
+      "release_flags": "-O3 -DNDEBUG -fno-omit-frame-pointer",
+      "tag": "pcb-cpp-performance:v1",
+      "tools": {
+        "clang++": "14.0.6",
+        "clang-tidy": "absent",
+        "cppcheck": "absent"
+      }
+    },
+    "runtime": {
+      "clang": "14.0.6",
+      "components": [
+        "clang=1:14.0-55.7~deb12u1",
+        "libstdc++-12-dev=12.2.0-14+deb12u1"
+      ],
+      "digest": "sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b",
+      "dockerfile_digest": "sha256:6f0151de26a2e33f0b6b3dd3dabbf98b1d87c744917b88194d89360c8dbdeb91",
+      "expected_tools": [
+        "clang++"
+      ],
+      "guest_and_rules_digest": "sha256:2a566523366ebb7c8ef12f0b327c7997ff99de4fae06b9301a1ccbac414274eb",
+      "recipe": "runtime",
+      "recipe_digest": "sha256:b60f1d35023cd388e24d14d4e23ffcd71a2c6698f2e458946a0bde409b2584a6",
+      "reference": "pcb-cpp-runtime@sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b",
+      "release_flags": "",
+      "tag": "pcb-cpp-runtime:v1",
+      "tools": {
+        "clang++": "14.0.6",
+        "clang-tidy": "absent",
+        "cppcheck": "absent"
+      }
+    }
+  },
+  "kind": "cpp_images",
+  "rule_bundle_digest": "sha256:32fbaf3b4034d540fd24b836e16dad706782062fbfeecc75f18636c41238f1f2",
+  "schema_version": 1
+}

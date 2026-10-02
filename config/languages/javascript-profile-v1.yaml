@@ -1,0 +1,82 @@
+schema_version: 1
+kind: javascript_profile
+profile_version: javascript-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.javascript
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity
+# means not_applicable, never a perfect score. Syntax counts earn no bonus, and one canonical
+# issue is counted once however many tools report it.
+#
+# JavaScript is a distinct runtime/profile variant (Architecture 11.1): there is no `type_safety`
+# item here at all, so a JavaScript candidate cannot be deducted for lacking TypeScript types and
+# the TypeScript compiler is never planned for a JavaScript task. That is the E2E-35 guarantee,
+# enforced by the absence of the item rather than by a special case.
+#
+# JS/TS-specific rule: some ESLint rules fire on a bare construct rather than on a defect.
+# `var` is the canonical example - the token is only wrong because of function scoping, so the
+# real defect (redeclaration, shadowing, leak past its block) is what the context scanner reports.
+# A mapping whose context_evaluator is `context-required` (a lint that fires on the bare token) is
+# counted only when the context scanner independently confirms a violation at the same site;
+# otherwise it is demoted to needs_review. The scanner, not the token, decides.
+#
+# A missed concurrency opportunity (`unbounded-sequential-await`) feeds the async items only. It is
+# never an efficiency penalty: no timing was measured, so charging the efficiency dimension for an
+# unmeasured regression would break the ownership rule in Technical Spec 14.4.
+applicability_rules:
+  - {rule_id: always, description: Applies to every JavaScript task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: async-expected, description: Counts only when the task contract has an async opportunity, opportunity_detector: task-declared, requires_task_opportunity: async_correctness}
+  - {rule_id: async-composition-expected, description: Counts only when the task contract has an async composition opportunity, opportunity_detector: task-declared, requires_task_opportunity: async_composition}
+  - {rule_id: security-expected, description: Counts only when the task contract has a security surface, opportunity_detector: task-declared, requires_task_opportunity: security}
+  - {rule_id: mutation-expected, description: Counts only when the task contract has a shared mutable state opportunity, opportunity_detector: task-declared, requires_task_opportunity: modern_immutability}
+ownership:
+  canonical-security-issue: security
+  measured-runtime-regression: efficiency
+  resource-cleanup-failure: robustness
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- async correctness and composition --------------------------------------------------------
+  - {check_id: javascript.context.floating-promise, items: [async_correctness], idiom_item: async_composition, owner: null, applicability: async-expected, context_evaluator: context-scan, equivalence_family: floating-promise}
+  - {check_id: javascript.context.missing-await, items: [async_correctness, async_error_handling], idiom_item: async_composition, owner: null, applicability: async-expected, context_evaluator: context-scan, equivalence_family: missing-await}
+  - {check_id: javascript.context.unhandled-rejection, items: [async_error_handling], idiom_item: async_composition, owner: null, applicability: async-expected, context_evaluator: context-scan, equivalence_family: unhandled-rejection}
+  # Independent work awaited one item at a time is a composition problem, not a measured regression.
+  - {check_id: javascript.context.unbounded-sequential-await, items: [async_error_handling], idiom_item: async_composition, owner: null, applicability: async-composition-expected, context_evaluator: context-scan, equivalence_family: sequential-await}
+  - {check_id: javascript.eslint.require-await, items: [async_correctness], owner: null, applicability: async-expected, equivalence_family: redundant-async}
+  - {check_id: javascript.eslint.no-async-promise-executor, items: [async_correctness], owner: null, applicability: async-expected, equivalence_family: async-executor}
+  - {check_id: javascript.eslint.no-promise-executor-return, items: [async_correctness], owner: null, applicability: async-expected, equivalence_family: async-executor}
+  # `return await` inside a try is redundant; elsewhere it is the only way to catch. The precise
+  # lint is context-required because the tool cannot see the enclosing try.
+  - {check_id: javascript.eslint.no-return-await, items: [], idiom_item: async_composition, owner: null, applicability: async-composition-expected, context_evaluator: context-required, equivalence_family: redundant-await}
+  - {check_id: javascript.context.redundant-await-in-try, items: [], idiom_item: async_composition, owner: null, applicability: async-composition-expected, context_evaluator: context-scan, equivalence_family: redundant-await}
+  # --- mutability and modern syntax --------------------------------------------------------------
+  # `var` is a token, not a finding: only the scope defect it causes is counted.
+  - {check_id: javascript.eslint.no-var, items: [modern_immutability], idiom_item: restrained_mutation, owner: null, applicability: mutation-expected, context_evaluator: context-required, equivalence_family: var-scope}
+  - {check_id: javascript.context.var-redeclaration, items: [modern_immutability], idiom_item: restrained_mutation, owner: null, applicability: mutation-expected, context_evaluator: context-scan, equivalence_family: var-scope}
+  - {check_id: javascript.eslint.prefer-const, items: [modern_immutability], idiom_item: restrained_mutation, owner: null, applicability: mutation-expected, equivalence_family: needless-mutation}
+  - {check_id: javascript.context.needless-mutation, items: [modern_immutability], idiom_item: restrained_mutation, owner: null, applicability: mutation-expected, context_evaluator: context-scan, equivalence_family: needless-mutation}
+  # --- lint hygiene -------------------------------------------------------------------------------
+  - {check_id: javascript.eslint.no-unused-vars, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: javascript.eslint.no-shadow, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: javascript.eslint.no-implicit-coercion, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: javascript.eslint.no-empty, items: [lint], owner: null, applicability: item-opportunity}
+  - {check_id: javascript.eslint.no-useless-catch, items: [lint], idiom_item: language_constructs, owner: null, applicability: item-opportunity, equivalence_family: dead-code}
+  # --- module boundary and data API -------------------------------------------------------------
+  - {check_id: javascript.context.exported-mutable-binding, items: [modern_immutability], idiom_item: data_module_api, owner: null, applicability: mutation-expected, context_evaluator: context-scan, equivalence_family: exported-mutable-binding}
+  - {check_id: javascript.context.import-time-side-effect, items: [], idiom_item: data_module_api, owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: import-side-effect}
+  # --- security evidence (single composite owner; no diagnostic-only double charge) ----------------
+  - {check_id: javascript.context.dynamic-eval, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: dynamic-code-execution}
+  - {check_id: javascript.context.command-injection, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: command-injection}
+  - {check_id: javascript.context.hardcoded-credential, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: hardcoded-credential}
+  - {check_id: javascript.context.prototype-pollution, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: prototype-pollution}
+  - {check_id: javascript.context.unsafe-html, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: unsafe-html}
+  - {check_id: javascript.context.unsafe-json-parse, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: unsafe-json-parse}
+  - {check_id: javascript.context.unvalidated-path-join, items: [security], owner: security, applicability: security-expected, context_evaluator: context-scan, equivalence_family: path-traversal}
+  # `==` against null/undefined is the idiomatic null check; only a mixed-kind comparison is a defect.
+  - {check_id: javascript.eslint.eqeqeq, items: [lint], owner: null, applicability: item-opportunity, context_evaluator: context-required, equivalence_family: loose-equality}
+  - {check_id: javascript.context.loose-equality, items: [lint], owner: null, applicability: item-opportunity, context_evaluator: context-scan, equivalence_family: loose-equality}
+  - {check_prefix: javascript.dependency., owner: security, applicability: always}
+  # Anything the pinned rule bundle reports that is not claimed above is plain lint evidence.
+  - {check_prefix: javascript.eslint., items: [lint], owner: null, applicability: item-opportunity}

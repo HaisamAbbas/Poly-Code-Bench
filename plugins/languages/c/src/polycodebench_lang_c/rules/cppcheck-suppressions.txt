@@ -1,0 +1,29 @@
+# PolyCodeBench cppcheck suppressions (Prompt 20, PCB-20-3).
+#
+# Every suppression here states *why* the finding is not evidence for this benchmark. A suppression
+# with no reason is a way to hide a defect from scoring, so the reason is mandatory and a reviewer can
+# check it against the frozen task.
+#
+# Format is cppcheck's own: id:file-or-pattern  reason.
+#
+# --- vendored and generated code ---------------------------------------------------------------
+# Task packages exclude generated and vendored code from the frozen scope (Architecture 8.6), so a
+# finding inside one is not a candidate defect. The pattern is deliberately narrow: a candidate may
+# not avoid review by writing into a directory named here.
+unmatchedSuppression: missingInclude
+
+# --- checks cppcheck cannot decide from source alone --------------------------------------------
+# "may leak" without an escape analysis cannot separate a real leak from an intentional handoff
+# through a returned pointer. The AddressSanitizer lane (detect_leaks=1) measures this instead, on
+# executed paths, which is stronger evidence than the pattern match.
+memleak:*.c  a may-leak pattern match is not a measured leak; the address lane measures it
+resourceLeak:*.c  same as memleak: the address lane measures leaks on executed paths
+uninitvar:*.c  cppcheck's flow analysis cannot see a whole-program initialisation; the undefined lane and valgrind measure it
+uninitdata:*.c  same as uninitvar: valgrind memcheck measures it on executed paths
+
+# --- style findings the scoring rubric does not own ---------------------------------------------
+# Line length, whitespace and comment style are not quality dimensions in this benchmark, and a
+# finding about them would add noise to a dimension the scorer weights.
+unmatchedSuppression: unusedFunction
+style:*  style-only findings are reported as context and do not deduct a quality item
+readability:*.c  same as style: not a scored quality dimension

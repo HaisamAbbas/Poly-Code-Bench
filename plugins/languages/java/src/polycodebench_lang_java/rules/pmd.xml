@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!-- PolyCodeBench Java PMD ruleset (Prompt 23, PCB-23-2).
+
+     PMD 6.55 is the pinned version (the maven-pmd-plugin 3.21.2 default) and it rejects a
+     targetJdk above 17, so the plans pass `-Dpmd.targetJdk=17` while the compiler enforces the
+     real release level. Only defect rules are listed.
+
+     The token-only rules are marked in config/languages/java-profile-v1.yaml with
+     `context_evaluator: context-required`, which means a report here alone is *not* counted: the
+     context scanner must independently confirm the site is actually misused. That is why
+     CloseResource and CloseStream appear here at all - they fire on every acquisition, and the
+     scanner decides which of them matter. -->
+<ruleset name="polycodebench-java"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+  <description>PolyCodeBench Java diagnostic rules: defects only, no construct-presence bonuses.</description>
+
+  <rule ref="category/java/errorprone.xml/AvoidBranchingStatementAsLastInLoop"/>
+  <rule ref="category/java/errorprone.xml/AvoidDecimalLiteralsInBigDecimalConstructor"/>
+  <rule ref="category/java/errorprone.xml/AvoidMultipleUnaryOperators"/>
+  <rule ref="category/java/errorprone.xml/AvoidUsingOctalValues"/>
+  <rule ref="category/java/errorprone.xml/BrokenNullCheck"/>
+  <rule ref="category/java/errorprone.xml/CheckSkipResult"/>
+  <rule ref="category/java/errorprone.xml/ClassCastExceptionWithToArray"/>
+  <rule ref="category/java/errorprone.xml/ComparisonWithNaN"/>
+  <rule ref="category/java/errorprone.xml/ConstructorCallsOverridableMethod"/>
+  <rule ref="category/java/errorprone.xml/IdempotentOperations"/>
+  <rule ref="category/java/errorprone.xml/ImplicitSwitchFallThrough"/>
+  <rule ref="category/java/errorprone.xml/JumbledIncrementer"/>
+  <rule ref="category/java/errorprone.xml/MisplacedNullCheck"/>
+  <rule ref="category/java/errorprone.xml/OverrideBothEqualsAndHashcode"/>
+  <rule ref="category/java/errorprone.xml/ReturnEmptyCollectionRatherThanNull"/>
+  <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
+  <rule ref="category/java/errorprone.xml/UnconditionalIfStatement"/>
+  <rule ref="category/java/errorprone.xml/UnnecessaryCaseChange"/>
+  <rule ref="category/java/errorprone.xml/UselessOperationOnImmutable"/>
+
+  <rule ref="category/java/security.xml/InsecureCryptoIv"/>
+
+  <rule ref="category/java/multithreading.xml/AvoidThreadGroup"/>
+  <rule ref="category/java/multithreading.xml/DontCallThreadRun"/>
+  <rule ref="category/java/multithreading.xml/DoubleCheckedLocking"/>
+  <rule ref="category/java/multithreading.xml/NonThreadSafeSingleton"/>
+  <rule ref="category/java/multithreading.xml/UnsynchronizedStaticFormatter"/>
+  <rule ref="category/java/multithreading.xml/UseNotifyThreadInsteadOfNotify"/>
+
+  <rule ref="category/java/performance.xml/AddEmptyString"/>
+  <rule ref="category/java/performance.xml/AppendCharacterWithChar"/>
+  <rule ref="category/java/performance.xml/ConsecutiveAppendsShouldReuse"/>
+  <rule ref="category/java/performance.xml/InsufficientStringBufferDeclaration"/>
+  <rule ref="category/java/performance.xml/StringInstantiation"/>
+  <rule ref="category/java/performance.xml/UselessStringValueOf"/>
+  <rule ref="category/java/performance.xml/UseStringBufferLength"/>
+
+  <rule ref="category/java/bestpractices.xml/AbstractClassWithoutAbstractMethod"/>
+  <rule ref="category/java/bestpractices.xml/AccessorClassGeneration"/>
+  <rule ref="category/java/bestpractices.xml/ArrayIsStoredDirectly"/>
+  <rule ref="category/java/bestpractices.xml/ForLoopCanBeForeach"/>
+  <rule ref="category/java/bestpractices.xml/MethodReturnsInternalArray"/>
+  <rule ref="category/java/bestpractices.xml/UnusedAssignment"/>
+  <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+  <rule ref="category/java/bestpractices.xml/UseCollectionIsEmpty"/>
+
+  <rule ref="category/java/design.xml/CollapsibleIfStatements"/>
+  <rule ref="category/java/design.xml/ConfusingTernary"/>
+  <rule ref="category/java/design.xml/CyclomaticComplexity"/>
+  <rule ref="category/java/design.xml/ExcessiveParameterList"/>
+  <rule ref="category/java/design.xml/NPathComplexity"/>
+  <rule ref="category/java/design.xml/UselessOverridingMethod"/>
+
+  <rule ref="category/java/documentation.xml/UncommentedEmptyConstructor"/>
+</ruleset>

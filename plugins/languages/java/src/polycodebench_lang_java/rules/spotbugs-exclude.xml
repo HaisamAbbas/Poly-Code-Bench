@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!-- PolyCodeBench Java SpotBugs exclude filter (Prompt 23, PCB-23-2).
+
+     SpotBugs analyses bytecode, so its findings are measured facts about what the compiled code
+     actually does. Nothing here suppresses a *defect* pattern. Each entry is one of:
+
+       * a pattern whose report is purely a modelling artifact of the fixture's own test scaffolding
+         (the oracle tests are compiled into the same module as the candidate);
+       * a pattern SpotBugs reports against the generated `package-info` / synthetic bridge, which
+         no line of candidate source owns.
+
+     The digest of this file is part of every SpotBugs tool identity, so changing it changes the
+     evidence a future run produces and must be a reviewed edit. -->
+<FindBugsFilter>
+  <!-- Test scaffolding is not the candidate's API surface; the oracle's own style is not graded. -->
+  <Match>
+    <Source name="~.*[/\\]target[/\\]test-classes[/\\].*"/>
+  </Match>
+  <!-- Records and enums generate equals/hashCode/serialVersionUID members SpotBugs annotates;
+       the construct is not a defect, and Architecture 11.2 forbids rewarding or penalising it on
+       presence grounds. -->
+  <Match>
+    <Or>
+      <Bug pattern="SE_BAD_FIELD"/>
+      <Bug pattern="SE_NO_SERIALVERSIONID"/>
+      <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED"/>
+    </Or>
+  </Match>
+  <!-- Maven's own generated sources (module-info, the synthetic package-info bridge). -->
+  <Match>
+    <Or>
+      <Class name="~.*module-info.*"/>
+      <Source name="~.*[/\\]package-info\.java"/>
+    </Or>
+  </Match>
+</FindBugsFilter>

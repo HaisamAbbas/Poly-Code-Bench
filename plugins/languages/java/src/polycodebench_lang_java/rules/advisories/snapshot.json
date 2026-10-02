@@ -1,0 +1,39 @@
+{
+  "kind": "dependency_advisory_snapshot",
+  "schema_version": 1,
+  "snapshot_id": "polycodebench-java-advisories-2026-10-02",
+  "review_reference": "local-review-2026-10-02",
+  "note": "Authored advisory snapshot for the Java pilot. It is data, not code: each entry names a Maven coordinate prefix and a severity, so adding one is a reviewed data edit. An empty or absent snapshot is an error in the guest auditor, because a dependency audit that found nothing because it knew nothing is the same failure mode as a scan that did not run.",
+  "advisories": [
+    {
+      "id": "PCB-JAVA-0001",
+      "coordinate_prefix": "log4j:log4j:",
+      "severity": "critical",
+      "summary": "Log4j 1.x lookup-based interpolation allows remote code execution (CVE-2019-17571 class)."
+    },
+    {
+      "id": "PCB-JAVA-0002",
+      "coordinate_prefix": "org.apache.logging.log4j:log4j-core:2.1",
+      "severity": "critical",
+      "summary": "Log4j2 JNDI lookup allows remote code execution (CVE-2021-44228 class)."
+    },
+    {
+      "id": "PCB-JAVA-0003",
+      "coordinate_prefix": "commons-collections:commons-collections:3.",
+      "severity": "high",
+      "summary": "commons-collections 3.x deserialization gadget chain."
+    },
+    {
+      "id": "PCB-JAVA-0004",
+      "coordinate_prefix": "org.apache.commons:commons-collections4:3.2.1",
+      "severity": "high",
+      "summary": "commons-collections4 3.2.1 deserialization gadget chain."
+    },
+    {
+      "id": "PCB-JAVA-0005",
+      "coordinate_prefix": "com.fasterxml.jackson.core:jackson-databind:2.9.",
+      "severity": "high",
+      "summary": "jackson-databind 2.9.x polymorphic deserialization gadget classes."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+---
+# Pinned clang-tidy checks for the C++ analyzer (cpp.clang_tidy.* in cpp-profile-v1.yaml).
+#
+# This list is the *whole* contract, in both directions. Every check named by a `cpp.clang_tidy.`
+# rule mapping in config/languages/cpp-profile-v1.yaml is enabled here, and nothing else is: a
+# check that fires but has no mapping is reported as a defect with nowhere to land, and a check
+# that never fires can never raise a score. The rule_mappings `check_prefix: cpp.clang_tidy.`
+# catch-all exists for hygiene checks a future profile adds, not as licence to enable clang-tidy's
+# defaults.
+#
+# The checks are the non-token lints only. `new`/`delete`, a raw `T*` parameter, a by-value
+# container and `std::move` are *tokens*: they are confirmed by the context scanner
+# (cpp.context.*), and the two token-level exceptions the profile declares
+# (`cppcoreguidelines-owning-memory`, `performance-no-automatic-move`) are enabled here so the
+# scanner has a second, independent witness at the same site.
+#
+# Verified against the pinned analyzer (clang-tidy 14.0.0-55.7, the toolchain lock's
+# `clang=1:14.0-55.7~deb12u1`): every name below is in `clang-tidy --list-checks`.
+#
+# modernize-use-std-print is *not* here: the profile maps `cpp.clang_tidy.modernize-use-std-print`,
+# but the check was introduced in clang-tidy 17 and does not exist in the pinned 14. Enabling an
+# unknown name makes clang-tidy reject the whole configuration, so the mapping has no witness in
+# this toolchain.
+Checks: >
+  bugprone-dangling-handle,
+  bugprone-exception-escape,
+  bugprone-fold-init-type,
+  bugprone-unused-raii,
+  cppcoreguidelines-owning-memory,
+  cppcoreguidelines-rvalue-reference-param-not-moved,
+  cppcoreguidelines-special-member-functions,
+  modernize-avoid-c-arrays,
+  modernize-loop-convert,
+  modernize-return-braced-init-list,
+  modernize-use-emplace,
+  modernize-use-equals-default,
+  modernize-use-nullptr,
+  modernize-use-override,
+  performance-for-range-copy,
+  performance-implicit-conversion-in-loop,
+  performance-inefficient-algorithm,
+  performance-move-const-arg,
+  performance-no-automatic-move,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  readability-container-size-empty
+# The candidates' own headers are part of what is judged; system headers are not, and scanning
+# them would drown the report in third-party style.
+HeaderFilterRegex: '^(include|src|hidden|visible)/.*'
+WarningsAsErrors: ''
+FormatStyle: none

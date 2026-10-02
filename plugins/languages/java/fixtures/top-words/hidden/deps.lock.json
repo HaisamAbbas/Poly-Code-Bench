@@ -1,0 +1,6 @@
+{
+  "lock_version": 1,
+  "artifacts": [
+    {"group_id": "org.junit.jupiter", "artifact_id": "junit-jupiter", "version": "5.10.2", "scope": "test"}
+  ]
+}

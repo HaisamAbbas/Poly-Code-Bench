@@ -1,0 +1,27 @@
+[project]
+# One runtime implementation, two identities: this single distribution registers the `javascript`
+# and the `typescript` entry point below, so both plugin identities share the same Node runtime,
+# plans, parsers and guest tooling while remaining separately allowlisted, separately profiled and
+# separately scored. Two identities are what Technical Spec 18.2 requires; one implementation is
+# what makes them comparable and what keeps the second language from forking the pipeline.
+name = "polycodebench-lang-javascript"
+version = "0.1.0"
+description = "PolyCodeBench JavaScript/TypeScript language plugin: plans, parsers, profile and guest tooling"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "polycodebench-plugins-api==0.1.0",
+  "PyYAML==6.0.3",
+]
+
+[project.entry-points."polycodebench.language_plugins"]
+javascript = "polycodebench_lang_javascript.plugin:JavaScriptLanguagePlugin"
+typescript = "polycodebench_lang_javascript.plugin:TypeScriptLanguagePlugin"
+
+[tool.uv.sources]
+polycodebench-core = { workspace = true }
+polycodebench-plugins-api = { workspace = true }
+
+[build-system]
+requires = ["uv_build==0.12.15"]
+build-backend = "uv_build"

@@ -1,0 +1,17 @@
+{
+  "base_image": "maven@sha256:3a4ab3276a087bf276f79cae96b1af04f53731bec53fb2e651aca79e4b10211e",
+  "components": {
+    "pcb-java-components-base:v1": {
+      "digest": "sha256:fcbb74538f737ad5e0ab92af565806530a7292fe671f430433cf72d1e10e44ed",
+      "repository_digest": "sha256:b0586d533db03a6856b26cb93413cf1041820d89d394a6ac17669c62d9e8dfeb",
+      "tag": "pcb-java-components-base:v1"
+    },
+    "pcb-java-components:v1": {
+      "digest": "sha256:0ac790de995891d58548e74b5caccab816e47d7395a7ba75fe2d05fc324ed56b",
+      "repository_digest": "sha256:8f6053ed05c06b93121f8eb46ca6a08c0bfac8f7faac748e64d6dd3ed303342a",
+      "tag": "pcb-java-components:v1"
+    }
+  },
+  "kind": "java_components",
+  "schema_version": 1
+}

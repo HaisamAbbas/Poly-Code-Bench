@@ -1,0 +1,80 @@
+schema_version: 1
+kind: go_profile
+profile_version: go-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.go
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity
+# means not_applicable, never a perfect score. Syntax counts earn no bonus, and one canonical
+# issue is counted once however many tools report it.
+#
+# Go-specific rules:
+#
+# * Concurrency is opt-in. A task that declares no shared-state concurrency has zero frozen
+#   opportunities for goroutines_channels and cancellation_context, so both items are
+#   not_applicable and no race run is produced: a nonconcurrent task is never charged for not
+#   using channels. A task that requires a race run lists `race` in required_analyzers, which is
+#   what makes the plan mandatory rather than advisory.
+# * A discarded error is a *token*, not a finding. gosec's G104 fires on any unhandled error
+#   result; it counts only when the context scanner independently confirms that the call returns
+#   an error and discards it at that site. The scanner, not the tool, decides.
+# * Lifecycle and cancellation findings have a concrete composite owner (robustness): a replaced
+#   context, a context that is never cancelled, a goroutine nothing joins and a measured data race
+#   are lifecycle failures, not style.
+applicability_rules:
+  - {rule_id: always, description: Applies to every Go task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: error-handling-expected, description: Counts only when the task contract has a fallible or partially-ignorable error path, opportunity_detector: task-declared, requires_task_opportunity: error_handling}
+  - {rule_id: concurrency-expected, description: Counts only when the task requires shared-state concurrency, opportunity_detector: task-declared, requires_task_opportunity: goroutines_channels}
+  - {rule_id: context-expected, description: Counts only when the task's contract carries cancellation, opportunity_detector: task-declared, requires_task_opportunity: cancellation_context}
+  - {rule_id: interface-expected, description: Counts only when the task has an interface or type-parameter design opportunity, opportunity_detector: task-declared, requires_task_opportunity: simple_interfaces}
+  - {rule_id: stdlib-expected, description: Counts only when the task has a standard-library composition opportunity, opportunity_detector: task-declared, requires_task_opportunity: standard_library}
+  - {rule_id: hygiene-expected, description: Counts only for items with a frozen formatting/vet/staticcheck opportunity, opportunity_detector: task-declared, requires_task_opportunity: formatting_vet_staticcheck}
+ownership:
+  canonical-security-issue: security
+  measured-data-race: robustness
+  lifecycle-cancellation-failure: robustness
+  measured-runtime-regression: efficiency
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- error handling -----------------------------------------------------------------------
+  - {check_id: go.context.error-ignored-blank, items: [error_handling], idiom_item: error_api, owner: null, applicability: error-handling-expected, context_evaluator: context-scan, equivalence_family: ignored-error}
+  # G104 fires on the unhandled result; the scanner decides whether that call really returns an
+  # error and is really discarded here. Both reports share one canonical issue family.
+  - {check_id: go.gosec.g104, items: [error_handling], idiom_item: error_api, owner: null, applicability: error-handling-expected, context_evaluator: context-required, equivalence_family: ignored-error}
+  - {check_id: go.context.error-chain-broken, items: [error_handling], idiom_item: error_api, owner: null, applicability: error-handling-expected, context_evaluator: context-scan, equivalence_family: error-chain}
+  - {check_id: go.context.error-sentinel-comparison, items: [error_handling], idiom_item: error_api, owner: null, applicability: error-handling-expected, context_evaluator: context-scan, equivalence_family: error-sentinel}
+  # `error-ignored-deferred` is deliberately *not* mapped: it is a hint, and an unmapped check
+  # feeds no item and claims no composite owner. Mapping it would let a review hint share a
+  # canonical issue family with the counted `ignored-error` defect it sits next to.
+  # --- cancellation and lifecycle ------------------------------------------------------------
+  - {check_id: go.context.context-replaced, items: [cancellation_context], idiom_item: context_concurrency, owner: robustness, applicability: context-expected, context_evaluator: context-scan, equivalence_family: context-replaced}
+  - {check_id: go.context.context-cancel-not-deferred, items: [cancellation_context], idiom_item: context_concurrency, owner: robustness, applicability: context-expected, context_evaluator: context-scan, equivalence_family: context-lifecycle}
+  - {check_id: go.context.context-not-honoured, items: [cancellation_context], idiom_item: context_concurrency, owner: robustness, applicability: context-expected, context_evaluator: context-scan, equivalence_family: context-honoured}
+  - {check_id: go.context.context-not-first-parameter, items: [cancellation_context], idiom_item: context_concurrency, owner: null, applicability: context-expected, context_evaluator: context-scan, equivalence_family: context-convention}
+  # `context-created-at-entry` is deliberately unmapped for the same reason: a root context at an
+  # entry point is benign evidence, not a defect and not a composite issue.
+  # A measured data race is a fact about the candidate, not an opportunity score: the item still
+  # needs a frozen concurrency opportunity, but the finding is never downgraded to a hint.
+  - {check_id: go.race.data-race, items: [goroutines_channels], idiom_item: context_concurrency, owner: robustness, applicability: concurrency-expected, equivalence_family: data-race}
+  # --- goroutines and channels ---------------------------------------------------------------
+  - {check_id: go.context.goroutine-not-joined, items: [goroutines_channels], idiom_item: context_concurrency, owner: robustness, applicability: concurrency-expected, context_evaluator: context-scan, equivalence_family: goroutine-lifecycle}
+  - {check_id: go.context.goroutine-in-loop, items: [goroutines_channels], idiom_item: context_concurrency, owner: robustness, applicability: concurrency-expected, context_evaluator: context-scan, equivalence_family: goroutine-lifecycle}
+  - {check_id: go.context.sleep-in-loop, items: [goroutines_channels], idiom_item: context_concurrency, owner: null, applicability: concurrency-expected, context_evaluator: context-scan, equivalence_family: blocking-in-loop}
+  # --- interfaces ----------------------------------------------------------------------------
+  - {check_id: go.context.empty-interface-parameter, items: [simple_interfaces], idiom_item: simple_interfaces_api, owner: null, applicability: interface-expected, context_evaluator: context-scan, equivalence_family: empty-interface}
+  # `sort-in-loop` is a style hint: unmapped, so it never reaches a score.
+  # --- standard library ----------------------------------------------------------------------
+  - {check_id: go.context.sprintf-in-loop, items: [standard_library], idiom_item: standard_library_composition, owner: null, applicability: stdlib-expected, context_evaluator: context-scan, equivalence_family: string-building}
+  - {check_id: go.context.accumulator-in-loop, items: [standard_library], idiom_item: standard_library_composition, owner: null, applicability: stdlib-expected, context_evaluator: context-scan, equivalence_family: string-building}
+  - {check_id: go.context.manual-string-search, items: [standard_library], idiom_item: standard_library_composition, owner: null, applicability: stdlib-expected, context_evaluator: context-scan, equivalence_family: manual-search}
+  # --- formatting, vet and staticcheck hygiene ----------------------------------------------
+  - {check_id: go.gofmt.unformatted, items: [formatting_vet_staticcheck], owner: null, applicability: hygiene-expected, equivalence_family: formatting}
+  - {check_prefix: go.vet., items: [formatting_vet_staticcheck], owner: null, applicability: item-opportunity}
+  - {check_prefix: go.staticcheck., items: [formatting_vet_staticcheck], owner: null, applicability: item-opportunity}
+  # --- security evidence (single composite owner; no diagnostic item) -------------------------
+  - {check_prefix: go.gosec., owner: security, applicability: always}
+  # --- module evidence (single composite owner; no diagnostic item) ---------------------------
+  - {check_prefix: go.dependency., owner: security, applicability: always}

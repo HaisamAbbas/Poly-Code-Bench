@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "c_task_oracle",
+  "oracle_version": "c-oracle-v1",
+  "case_timeout_seconds": 10,
+  "suite_timeout_seconds": 90,
+  "groups": [
+    {
+      "group_id": "behaviour",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["tests/behaviour.c"],
+      "cases": [
+        {"case_id": "behaviour.empty_input_returns_zero", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour.null_arguments_are_refused", "required": true, "case_kind": "edge"},
+        {"case_id": "behaviour.single_word_is_counted_once", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour.case_is_folded", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour.ranking_is_by_frequency", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour.ties_break_alphabetically", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour.non_letter_bytes_separate_words", "required": true, "case_kind": "property"},
+        {"case_id": "behaviour.limit_returns_the_ranked_prefix", "required": true, "case_kind": "property"},
+        {"case_id": "behaviour.normalise_replaces_non_letters", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour.rank_words_sorts_in_place", "required": true, "case_kind": "example"},
+        {"case_id": "behaviour.rank_words_refuses_empty", "required": true, "case_kind": "edge"}
+      ]
+    },
+    {
+      "group_id": "stress",
+      "required": false,
+      "classification": "quality_only",
+      "files": ["tests/stress.c"],
+      "cases": [
+        {"case_id": "stress.long_input_is_handled", "required": false, "case_kind": "robustness"},
+        {"case_id": "stress.repeated_runs_are_stable", "required": false, "case_kind": "property"},
+        {"case_id": "stress.many_repeats_do_not_overflow", "required": false, "case_kind": "robustness"},
+        {"case_id": "stress.all_distinct_words_survive", "required": false, "case_kind": "example"}
+      ]
+    }
+  ],
+  "hard_conditions": [
+    {"condition_id": "behaviour-group-complete", "group_id": "behaviour"}
+  ],
+  "robustness_scenarios": [
+    {
+      "scenario_id": "long-input",
+      "group_id": "stress",
+      "weight_bp": 4000,
+      "repetitions": 3,
+      "hard_acceptance": false
+    },
+    {
+      "scenario_id": "repeat-stability",
+      "group_id": "stress",
+      "weight_bp": 6000,
+      "repetitions": 3,
+      "hard_acceptance": false
+    }
+  ]
+}

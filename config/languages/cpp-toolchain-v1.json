@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "kind": "cpp_toolchain_lock",
+  "toolchain_version": "cpp-toolchain-v1",
+  "status": "pilot_parameters_unvalidated",
+  "effective_for_scoring": false,
+  "note": "The pinned C++ contract. A task may choose a standard, a compiler and a build profile from this document and nothing else; a recipe that names anything absent here is rejected at task validation. Release measurement and sanitizer instrumentation are separate build profiles, so an instrumented binary can never be timed as if it were release code.",
+  "apt_components_note": "libclang-rt-14-dev carries libclang_rt.asan/ubsan/tsan. Without it an instrumented build links against nothing and every sanitizer plan fails for the wrong reason, so the sanitizer runtimes are part of the pinned contract rather than an assumed consequence of installing clang.",
+  "base_image": "debian@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251",
+  "apt_components": {
+    "runtime": [
+      "clang=1:14.0-55.7~deb12u1",
+      "libclang-rt-14-dev=1:14.0.6-12",
+      "libstdc++-12-dev=12.2.0-14+deb12u1"
+    ],
+    "evaluator": [
+      "clang=1:14.0-55.7~deb12u1",
+      "clang-tidy=1:14.0-55.7~deb12u1",
+      "cppcheck=2.10-2",
+      "libclang-rt-14-dev=1:14.0.6-12",
+      "libstdc++-12-dev=12.2.0-14+deb12u1"
+    ],
+    "performance": [
+      "clang=1:14.0-55.7~deb12u1",
+      "libclang-rt-14-dev=1:14.0.6-12",
+      "libstdc++-12-dev=12.2.0-14+deb12u1"
+    ]
+  },
+  "compilers": {
+    "clang": {
+      "binary": "clang++",
+      "package": "clang",
+      "linker_driver": "clang++"
+    },
+    "gcc": {
+      "binary": "g++",
+      "package": "g++",
+      "linker_driver": "g++"
+    }
+  },
+  "available_compilers": ["clang"],
+  "standards": {
+    "c++17": {"flag": "-std=c++17"},
+    "c++20": {"flag": "-std=c++20"}
+  },
+  "default_standard": "c++20",
+  "build_profiles": {
+    "debug": {
+      "cxxflags": ["-g", "-O0", "-fno-omit-frame-pointer", "-fno-optimize-sibling-calls"],
+      "ldflags": [],
+      "sanitized": false,
+      "release": false
+    },
+    "release": {
+      "cxxflags": ["-O3", "-DNDEBUG", "-fno-omit-frame-pointer"],
+      "ldflags": [],
+      "sanitized": false,
+      "release": true
+    },
+    "sanitize_address_undefined": {
+      "cxxflags": [
+        "-g",
+        "-O1",
+        "-fno-omit-frame-pointer",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all"
+      ],
+      "ldflags": ["-fsanitize=address,undefined"],
+      "sanitized": true,
+      "release": false
+    },
+    "sanitize_thread": {
+      "cxxflags": ["-g", "-O1", "-fno-omit-frame-pointer", "-fsanitize=thread"],
+      "ldflags": ["-fsanitize=thread"],
+      "sanitized": true,
+      "release": false
+    }
+  },
+  "instrumentation": {
+    "address": {
+      "build_profile": "sanitize_address_undefined",
+      "detector": "asan",
+      "runtime": "asan",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:allocator_may_return_null=0:abort_on_error=0:log_path=stderr",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    "undefined": {
+      "build_profile": "sanitize_address_undefined",
+      "detector": "ubsan",
+      "runtime": "asan",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:allocator_may_return_null=0:abort_on_error=0:log_path=stderr",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    "thread": {
+      "build_profile": "sanitize_thread",
+      "detector": "tsan",
+      "runtime": "tsan",
+      "environment": {
+        "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1:report_signal_unsafe=0"
+      }
+    }
+  },
+  "available_instrumentation": ["address", "undefined", "thread"],
+  "incompatible_instrumentation": [
+    ["address", "thread"],
+    ["undefined", "thread"]
+  ],
+  "instrumentation_rule": "AddressSanitizer and ThreadSanitizer cannot share a translation unit or a process: a task that asks for both is rejected at validation, and a recipe that would measure sanitized code as release performance is rejected at plan construction.",
+  "analyzer_invocations": {
+    "clang_tidy": {
+      "binary": "clang-tidy",
+      "flags": ["--quiet", "--use-color=false"],
+      "checks_source": "rules/.clang-tidy",
+      "output": "text"
+    },
+    "cppcheck": {
+      "binary": "cppcheck",
+      "flags": [
+        "--xml",
+        "--xml-version=2",
+        "--enable=warning,style,performance,portability",
+        "--inline-suppr",
+        "--suppress=missingInclude",
+        "--suppress=unusedFunction",
+        "--inconclusive",
+        "--template=gcc"
+      ],
+      "checks_source": "rules/cppcheck-suppressions.txt",
+      "output": "xml"
+    }
+  },
+  "test_harness": {
+    "header": "pcb_test.hpp",
+    "protocol": "pcb-cpp-test-v1",
+    "case_line": "PCBCASE <id> <event>",
+    "start_line": "PCBCASE <id> start",
+    "events": ["start", "pass", "fail", "skip"],
+    "detail_suffix": "an optional trailing detail after the event is the case reason"
+  },
+  "sanitizer_report": {
+    "schema": "pcb-cpp-sanitizer-v1",
+    "detectors": ["asan", "ubsan", "tsan"],
+    "verdicts": ["clean", "candidate-defect", "unsupported", "failed"]
+  }
+}

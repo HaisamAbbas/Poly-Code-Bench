@@ -24,6 +24,8 @@ from polycodebench_plugins_api import (
     LanguageProfile,
     PluginModel,
     ProfileItem,
+    ProfileItemResult as ItemResult,
+    ProfileResult,
     RuleMapping,
 )
 from pydantic import Field
@@ -55,29 +57,6 @@ _CONFIDENCE_RANK = {
     Confidence.CONFIRMED: 4,
 }
 _SEVERITY_RANK = {None: 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
-
-
-class ItemResult(PluginModel):
-    kind: Literal["profile_item_result"] = "profile_item_result"
-    item_id: str
-    group: Literal["diagnostic", "idiom"]
-    weight_bp: int
-    opportunities: int = Field(ge=0)
-    unique_violations: int = Field(ge=0)
-    status: Literal["measured", "not_applicable", "missing"]
-    score_bp: int | None = None
-    issue_keys: tuple[str, ...] = ()
-    reasons: tuple[str, ...] = ()
-
-
-class ProfileResult(PluginModel):
-    kind: Literal["profile_result"] = "profile_result"
-    profile_version: str
-    diagnostic: tuple[ItemResult, ...]
-    idioms: tuple[ItemResult, ...]
-    diagnostic_score_bp: int | None
-    idiom_score_bp: int | None
-    complete: bool
 
 
 def _repo_root() -> Path:

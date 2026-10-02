@@ -1,0 +1,40 @@
+{
+  "kind": "go_task_oracle",
+  "schema_version": 1,
+  "oracle_version": "go-top-words-oracle-v1",
+  "case_timeout_seconds": 10,
+  "suite_timeout_seconds": 60,
+  "groups": [
+    {
+      "group_id": "behaviour",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["topwords/behaviour_test.go"],
+      "cases": [
+        {"case_id": "TestTiesBreakAlphabetically", "required": true, "case_kind": "example"},
+        {"case_id": "TestCaseAndSeparators", "required": true, "case_kind": "example"},
+        {"case_id": "TestKLargerThanDistinct", "required": true, "case_kind": "example"},
+        {"case_id": "TestEmptyInput", "required": true, "case_kind": "edge"},
+        {"case_id": "TestZeroK", "required": true, "case_kind": "edge"},
+        {"case_id": "TestNonASCIILettersAreSeparators", "required": true, "case_kind": "edge"},
+        {"case_id": "TestUppercaseRunsAreOrdinaryWords", "required": true, "case_kind": "edge"},
+        {"case_id": "TestCountsNeverIncreaseDownTheList", "required": true, "case_kind": "property"}
+      ]
+    },
+    {
+      "group_id": "stress",
+      "required": false,
+      "classification": "quality_only",
+      "files": ["topwords/stress_test.go"],
+      "cases": [
+        {"case_id": "TestLargeInputFinishesWithCorrectCounts", "required": true, "case_kind": "robustness"}
+      ]
+    }
+  ],
+  "hard_conditions": [
+    {"condition_id": "ordering-contract", "group_id": "behaviour"}
+  ],
+  "robustness_scenarios": [
+    {"scenario_id": "large-input", "group_id": "stress", "weight_bp": 10000, "repetitions": 3, "hard_acceptance": false}
+  ]
+}

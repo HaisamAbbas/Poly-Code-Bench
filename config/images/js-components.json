@@ -1,0 +1,84 @@
+{
+  "advisory_source": {
+    "database": "npm advisory database (GitHub Advisory Database feed)",
+    "endpoint": "/-/npm/v1/security/audits/quick",
+    "registry": "https://registry.npmjs.org",
+    "report_digest": "sha256:d27514aa174d79ee65516e6d5b145cecc90ba993c7a36abd734bd7f1451701a5",
+    "source": "npm audit endpoint",
+    "vulnerabilities": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "total": 0
+    }
+  },
+  "base_image": {
+    "digest": "sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5",
+    "reference": "node@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5"
+  },
+  "dependency_tree": {
+    "digest": "sha256:c7a3c34247aa37121c2e7d32d2cb51b45648ae6878a0977a914655c1e90385c7",
+    "installed_package_count": 126,
+    "package_count": 155
+  },
+  "images": {
+    "pcb-js-components-base:v1": {
+      "digest": "sha256:f556d98937ce1949ce5fb51d589d38be472800d10be58d281ffac4cbed15210d",
+      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "target": "base",
+      "tools": {
+        "eslint": "absent",
+        "node": "v22.23.2",
+        "npm": "10.9.8",
+        "tsc": "absent",
+        "vitest": "vitest/5.0.3 linux-x64 node-v22.23.2"
+      }
+    },
+    "pcb-js-components-lint:v1": {
+      "digest": "sha256:5c8504f6b8e530a95986faace2d1c14b983182d7ad035d0e4adfe8a8c40e2fc3",
+      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "target": "lint",
+      "tools": {
+        "eslint": "v10.11.0",
+        "node": "v22.23.2",
+        "npm": "10.9.8",
+        "tsc": "absent",
+        "vitest": "vitest/5.0.3 linux-x64 node-v22.23.2"
+      }
+    },
+    "pcb-js-components-typescript:v1": {
+      "digest": "sha256:584da340fde93d949b1727ad6383d5c4eb7623ea75d9166d10f16d58eb85d1f8",
+      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "target": "typescript",
+      "tools": {
+        "eslint": "v10.11.0",
+        "node": "v22.23.2",
+        "npm": "10.9.8",
+        "tsc": "Version 7.0.2",
+        "vitest": "vitest/5.0.3 linux-x64 node-v22.23.2"
+      }
+    },
+    "pcb-js-components:v1": {
+      "digest": "sha256:6c167d901b21679a9f864d64196c4a4d38a47abc1ba5854b7bfde06a1c42e91a",
+      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "target": "full",
+      "tools": {
+        "eslint": "v10.11.0",
+        "node": "v22.23.2",
+        "npm": "10.9.8",
+        "tsc": "Version 7.0.2",
+        "vitest": "vitest/5.0.3 linux-x64 node-v22.23.2"
+      }
+    }
+  },
+  "kind": "js_components_images",
+  "lock": {
+    "digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
+    "lockfile_version": 3,
+    "path": "infra/images/javascript/package-lock.json"
+  },
+  "note": "Prebuilt component images and the ONLY step in the JS/TS pipeline that uses a network. build_js_images.py builds the six recipe images from these with --network none. The base image carries no analyzers, which is what keeps the runtime and performance recipes genuinely distinct from the evaluator recipe.",
+  "schema_version": 1
+}

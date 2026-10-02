@@ -1,0 +1,197 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: conformance-cpp-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: cpp
+  secondary_languages: []
+  cluster_id: conformance-cpp-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - include/top_words.hpp
+  # The candidate's scored submission is the one compiled translation unit. The header is a required
+  # output because the declaration it carries is half the contract, but a submission may not change
+  # it, so it is not an allowed path.
+  - src/top_words.cpp
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-cpp-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-02T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-cpp-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 21 authored conformance fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  # The acceptance lane's image, as recorded in config/images/cpp-v1.json. It is the *runtime*
+  # recipe and not the sanitized one: a candidate's pass or fail can never depend on whether the
+  # run was instrumented.
+  image_digest: sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b
+  language_plugin_id: cpp
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  test_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  resource_class: local-development-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids:
+  - behaviour
+  hard_condition_ids:
+  - ordering-contract
+  required_outputs:
+  - include/top_words.hpp
+  - src/top_words.cpp
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  - efficiency
+  evidence_owners: {}
+  required_analyzers:
+  - clang_tidy
+  - cppcheck
+  - context
+  - asan
+  performance_policy_id: cpp-performance-v1
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: cpp-top-words-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 60
+visible_files:
+- visible/repo/include/top_words.hpp
+- visible/repo/src/top_words.cpp
+- visible/task.md
+hidden_files:
+- admission/alternative-sort/include/top_words.hpp
+- admission/alternative-sort/src/top_words.cpp
+- admission/exception-defective/include/top_words.hpp
+- admission/exception-defective/src/top_words.cpp
+- admission/exposure-rights.json
+- admission/faulty-ties/include/top_words.hpp
+- admission/faulty-ties/src/top_words.cpp
+- admission/leak-defective/include/top_words.hpp
+- admission/leak-defective/src/top_words.cpp
+- admission/ownership-defective/include/top_words.hpp
+- admission/ownership-defective/src/top_words.cpp
+- admission/quality-defective/include/top_words.hpp
+- admission/quality-defective/src/top_words.cpp
+- admission/race-defective/include/top_words.hpp
+- admission/race-defective/src/top_words.cpp
+- admission/timeout-case/include/top_words.hpp
+- admission/timeout-case/src/top_words.cpp
+- hidden/oracle.json
+- hidden/perf/workload.cpp
+- hidden/quality-plan.yaml
+- hidden/recipe.json
+- hidden/reference/include/top_words.hpp
+- hidden/reference/src/top_words.cpp
+- hidden/tests/behaviour.cpp
+- hidden/tests/stress.cpp
+fixtures:
+- name: reference
+  variant: reference
+  solution_path: hidden/reference/src/top_words.cpp
+  expectation: {}
+- name: faulty-ties
+  variant: faulty
+  solution_path: admission/faulty-ties/src/top_words.cpp
+  expectation:
+    failing_cases:
+    - behaviour::ties_break_alphabetically
+- name: alternative-sort
+  variant: alternative
+  solution_path: admission/alternative-sort/src/top_words.cpp
+  expectation: {}
+- name: quality-defective
+  variant: quality_defective
+  solution_path: admission/quality-defective/src/top_words.cpp
+  expectation:
+    # Equivalence families, not scanner rule names: this list is compared against the family
+    # component of each observation's issue_key, so naming a rule here would never match.
+    expected_issue_families:
+    - manual-ownership
+    - value-copy
+    - index-loop
+    - throwing-destructor
+- name: timeout-case
+  variant: timeout
+  solution_path: admission/timeout-case/src/top_words.cpp
+  expectation:
+    expected_failure: candidate_timeout
+# The remaining four are *quality* fixtures, not acceptance ones: they pass the behaviour contract
+# and are rejected only by an instrumented or crashing lane. They carry the same `faulty` variant as
+# faulty-ties because they all fail the task; what distinguishes them is which lane observes them.
+- name: ownership-defective
+  variant: faulty
+  solution_path: admission/ownership-defective/src/top_words.cpp
+  expectation:
+    # Family names are the profile's equivalence families, not the sanitizer's own wording: a
+    # double free and a use-after-free are one ownership defect reported at run time, so they
+    # share the `manual-ownership` family with the context scanner and cannot be counted twice.
+    expected_lane_findings:
+      asan:
+      - manual-ownership
+      - undefined-behaviour
+- name: leak-defective
+  variant: faulty
+  solution_path: admission/leak-defective/src/top_words.cpp
+  expectation:
+    expected_lane_findings:
+      asan:
+      - manual-ownership
+- name: race-defective
+  variant: faulty
+  solution_path: admission/race-defective/src/top_words.cpp
+  expectation:
+    expected_lane_findings:
+      tsan:
+      - data-race
+- name: exception-defective
+  variant: faulty
+  solution_path: admission/exception-defective/src/top_words.cpp
+  expectation:
+    expected_failure: candidate_crash

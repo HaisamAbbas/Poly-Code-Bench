@@ -1,0 +1,59 @@
+schema_version: 1
+kind: c_task_quality_plan
+c_standard: c17
+# The frozen warning policy (PCB-20-3). The stub baseline carries warnings, so `werror` is not legal
+# here and `warn` is: warnings are evidence attributed to the baseline, never a build failure. A task
+# whose baseline is clean can opt into `werror`; the model refuses the combination otherwise, so a
+# blanket -Werror cannot silently invalidate an admitted task.
+warning_policy:
+  mode: warn
+  warning_set: standard
+  baseline_warning_clean: false
+  baseline_warnings: 4
+  note: >-
+    visible/repo/src/topwords.c is a stub whose parameters are unused; those warnings are the
+    baseline's, not a candidate's.
+# Three-valued applicability per dynamic lane (PCB-20-2). `required` makes the lane mandatory;
+# `unsupported` records that the lane cannot judge this task at all, so an absent scan is not a
+# defect; `optional` runs when the task permits it but never gates.
+sanitizers:
+  - lane: address
+    applicability: required
+    groups: [behaviour, stress]
+  - lane: undefined
+    applicability: required
+    groups: [behaviour, stress]
+  - lane: valgrind
+    applicability: optional
+    groups: [stress]
+    reason: >-
+      memcheck is an order of magnitude slower than the sanitizers and overlaps them on this task's
+      paths; it is offered as a second opinion on the quality-only group, not on acceptance.
+opportunity_tags: [allocation, interface, const, failure-return, portability]
+opportunities:
+  memory_safety: 3
+  undefined_behavior: 2
+  performance_cache: 2
+  const_ownership: 2
+  portability: 1
+  error_checks: 3
+  ownership_api_contracts: 2
+  const_type_portability: 2
+  data_function_interfaces: 2
+required_analyzers: [clang_tidy, cppcheck, asan, ubsan]
+judge_items: [naming_readability, decomposition]
+# Measured performance runs in the `performance` recipe only (PCB-20-1). The workload is a separate
+# frozen overlay so it can never be mistaken for the candidate's own file, and the iteration plan's
+# image digest is the release image - `ImageIdentities.require_release_recipe` refuses to build the
+# plan at all if that image ever recorded instrumentation.
+performance:
+  workload_file: perf/workload.c
+  workloads:
+    - {workload_id: small, scale: 5000, weight_bp: 3000, input_seed: 20260901}
+    - {workload_id: medium, scale: 20000, weight_bp: 4000, input_seed: 20260901}
+    - {workload_id: large, scale: 80000, weight_bp: 3000, input_seed: 20260902}
+  warmup_iterations: 5
+  measured_iterations: 20
+  hard_timeout_seconds: 60
+# NOT authored: recipe_digest, scaffold_files - freeze_view computes them from the pinned recipe
+# table and the package's own frozen files.

@@ -1,0 +1,172 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: conformance-c-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: c
+  secondary_languages: []
+  cluster_id: conformance-c-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - src/topwords.c
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-c-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-01T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-c-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 20 authored conformance fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  # The acceptance lane's image. Frozen here and re-checked by the plugin: a C task's runtime digest
+  # is the *release* image, never the instrumented one, so a sanitizer can never change whether a
+  # candidate passes.
+  image_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  language_plugin_id: c
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  test_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  resource_class: local-development-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids:
+  - behaviour
+  hard_condition_ids:
+  - behaviour-group-complete
+  required_outputs:
+  - src/topwords.c
+  protected_paths:
+  - include/topwords.h
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  - efficiency
+  evidence_owners: {}
+  required_analyzers:
+  - clang_tidy
+  - cppcheck
+  - asan
+  - ubsan
+  performance_policy_id: c-performance-v1
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: c-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 60
+visible_files:
+- visible/repo/include/topwords.h
+- visible/repo/src/topwords.c
+- visible/task.md
+hidden_files:
+- admission/alternative-runs/src/topwords.c
+- admission/buffer-overflow/src/topwords.c
+- admission/compile-error/src/topwords.c
+- admission/exposure-rights.json
+- admission/faulty-ties/src/topwords.c
+- admission/quality-defective/src/topwords.c
+- admission/resource-leak/src/topwords.c
+- admission/timeout-case/src/topwords.c
+- hidden/oracle.json
+- hidden/quality-plan.yaml
+- hidden/perf/workload.c
+- hidden/reference/src/topwords.c
+- hidden/tests/behaviour.c
+- hidden/tests/stress.c
+fixtures:
+- name: reference
+  variant: reference
+  solution_path: hidden/reference/src/topwords.c
+  expectation: {}
+- name: faulty-ties
+  variant: faulty
+  solution_path: admission/faulty-ties/src/topwords.c
+  expectation:
+    failing_cases:
+    - behaviour.ties_break_alphabetically
+    - behaviour.rank_words_sorts_in_place
+- name: alternative-runs
+  variant: alternative
+  solution_path: admission/alternative-runs/src/topwords.c
+  expectation: {}
+- name: quality-defective
+  variant: quality_defective
+  solution_path: admission/quality-defective/src/topwords.c
+  expectation:
+    expected_issue_families:
+    - unchecked-return-value
+    - unbounded-copy
+- name: timeout-case
+  variant: timeout
+  solution_path: admission/timeout-case/src/topwords.c
+  expectation:
+    expected_failure: candidate_timeout
+- name: buffer-overflow
+  variant: faulty
+  solution_path: admission/buffer-overflow/src/topwords.c
+  expectation:
+    expected_lane_findings:
+      asan:
+      - bounds-violation
+- name: undefined-shift
+  variant: faulty
+  solution_path: admission/undefined-shift/src/topwords.c
+  expectation:
+    expected_lane_findings:
+      ubsan:
+      - shift-out-of-range
+- name: resource-leak
+  variant: faulty
+  solution_path: admission/resource-leak/src/topwords.c
+  expectation:
+    expected_lane_findings:
+      valgrind:
+      - resource-leak
+- name: compile-error
+  variant: faulty
+  solution_path: admission/compile-error/src/topwords.c
+  expectation:
+    expected_failure: build_error

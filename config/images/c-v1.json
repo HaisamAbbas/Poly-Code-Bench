@@ -1,0 +1,142 @@
+{
+  "analyzer_checks": {
+    "config_digest": "sha256:4e440a66f75d63b00f4a14f5c76edc455bd0094d929dba4452b499a3675049f4",
+    "enabled_checks": 87,
+    "selected_checks": 80,
+    "shipped_checks": 468
+  },
+  "base_image": {
+    "digest": "sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251",
+    "reference": "debian:bookworm-slim"
+  },
+  "build": {
+    "network": "default_at_build_only",
+    "note": "packages come from the pinned base image's apt snapshot at build time",
+    "offline_install": false,
+    "scored_runs_offline": true
+  },
+  "guest_digest": "sha256:016dfa7e18fa3f6f54ee7dd0e8791676506cfe1ba07ce2ff1143128717c13d2f",
+  "images": {
+    "evaluator": {
+      "analyzers": [
+        "clang-tidy",
+        "cppcheck",
+        "valgrind"
+      ],
+      "c_standard": "c17",
+      "cc": "Debian clang version 14.0.6",
+      "components": [
+        "clang",
+        "clang-tidy",
+        "cppcheck",
+        "valgrind"
+      ],
+      "digest": "sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b",
+      "dockerfile_digest": "sha256:9e94001aca84d1006ae71b673056e8176ed020d20abc12dc3c4e82a3c53a9cd1",
+      "expected_tools": [
+        "clang",
+        "clang-tidy",
+        "cppcheck",
+        "valgrind"
+      ],
+      "guest_and_rules_digest": "sha256:77216c4ea3cfd8741c860d56b14f56822b8360e8e5d929d906036de0d0db5ec6",
+      "instrumentation": "none",
+      "optimization": "-O0",
+      "recipe": "evaluator",
+      "recipe_digest": "sha256:b1dbbb9bf76f43abb3e98dc57183809eb32a65d71fa2f1df36c8192496479fe1",
+      "reference": "pcb-c-evaluator@sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b",
+      "tag": "pcb-c-evaluator:v1",
+      "tools": {
+        "asan-runtime": "absent",
+        "clang": "Debian clang version 14.0.6",
+        "clang-tidy": "Debian LLVM version 14.0.6",
+        "cppcheck": "Cppcheck 2.10",
+        "valgrind": "valgrind-3.19.0"
+      }
+    },
+    "instrumented": {
+      "analyzers": [],
+      "c_standard": "c17",
+      "cc": "Debian clang version 14.0.6",
+      "components": [
+        "clang"
+      ],
+      "digest": "sha256:66e38808ad11e27ca5195c03cc457ce0a2797833525ca6053781f1bb8f09d291",
+      "dockerfile_digest": "sha256:9e94001aca84d1006ae71b673056e8176ed020d20abc12dc3c4e82a3c53a9cd1",
+      "expected_tools": [
+        "clang"
+      ],
+      "guest_and_rules_digest": "sha256:77216c4ea3cfd8741c860d56b14f56822b8360e8e5d929d906036de0d0db5ec6",
+      "instrumentation": "address_undefined",
+      "optimization": "-O1",
+      "recipe": "instrumented",
+      "recipe_digest": "sha256:961397004cd920b5bcdf6cad8bbdcf9f1c4030a282362538df0cda607addcc6d",
+      "reference": "pcb-c-instrumented@sha256:66e38808ad11e27ca5195c03cc457ce0a2797833525ca6053781f1bb8f09d291",
+      "tag": "pcb-c-instrumented:v1",
+      "tools": {
+        "asan-runtime": "/usr/lib/llvm-14/lib/clang/14.0.6/lib/linux/libclang_rt.asan-x86_64.so",
+        "clang": "Debian clang version 14.0.6",
+        "clang-tidy": "absent",
+        "cppcheck": "absent",
+        "valgrind": "absent"
+      }
+    },
+    "performance": {
+      "analyzers": [],
+      "c_standard": "c17",
+      "cc": "Debian clang version 14.0.6",
+      "components": [
+        "clang"
+      ],
+      "digest": "sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1",
+      "dockerfile_digest": "sha256:9e94001aca84d1006ae71b673056e8176ed020d20abc12dc3c4e82a3c53a9cd1",
+      "expected_tools": [
+        "clang"
+      ],
+      "guest_and_rules_digest": "sha256:77216c4ea3cfd8741c860d56b14f56822b8360e8e5d929d906036de0d0db5ec6",
+      "instrumentation": "none",
+      "optimization": "-O2",
+      "recipe": "performance",
+      "recipe_digest": "sha256:a298483b97ce8e5689dd1f7bc69d4462601473720ff9db8d92503b81aea9ffa2",
+      "reference": "pcb-c-performance@sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1",
+      "tag": "pcb-c-performance:v1",
+      "tools": {
+        "asan-runtime": "absent",
+        "clang": "Debian clang version 14.0.6",
+        "clang-tidy": "absent",
+        "cppcheck": "absent",
+        "valgrind": "absent"
+      }
+    },
+    "runtime": {
+      "analyzers": [],
+      "c_standard": "c17",
+      "cc": "Debian clang version 14.0.6",
+      "components": [
+        "clang"
+      ],
+      "digest": "sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1",
+      "dockerfile_digest": "sha256:9e94001aca84d1006ae71b673056e8176ed020d20abc12dc3c4e82a3c53a9cd1",
+      "expected_tools": [
+        "clang"
+      ],
+      "guest_and_rules_digest": "sha256:77216c4ea3cfd8741c860d56b14f56822b8360e8e5d929d906036de0d0db5ec6",
+      "instrumentation": "none",
+      "optimization": "-O1",
+      "recipe": "runtime",
+      "recipe_digest": "sha256:337627a26d1d8d270c4ad4bd5c6e1290f0602e832c3ee24c966629b3040b0681",
+      "reference": "pcb-c-runtime@sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1",
+      "tag": "pcb-c-runtime:v1",
+      "tools": {
+        "asan-runtime": "absent",
+        "clang": "Debian clang version 14.0.6",
+        "clang-tidy": "absent",
+        "cppcheck": "absent",
+        "valgrind": "absent"
+      }
+    }
+  },
+  "kind": "c_images",
+  "rule_bundle_digest": "sha256:7f670d43b1943bd96085da846eed5c887b981962a76c1e372a381d50e20869e9",
+  "schema_version": 1
+}

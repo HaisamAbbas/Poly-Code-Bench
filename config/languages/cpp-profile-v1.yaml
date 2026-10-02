@@ -1,0 +1,104 @@
+schema_version: 1
+kind: cpp_profile
+profile_version: cpp-profile-v1
+status: pilot_parameters_unvalidated
+effective_for_scoring: false
+weights_source: config/languages/profiles-v1.yaml#profiles.cpp
+# C++ is scored on its own weights (profiles.cpp), never on the C ones. The two languages share a
+# toolchain but not a rubric: ownership is RAII rather than manual free/const, the value semantics
+# are copy/move rather than pointer discipline, and exceptions are part of the contract.
+#
+# Opportunity counts are frozen per task at authoring time (task quality plan). No opportunity
+# means not_applicable, never a perfect score. Syntax counts earn no bonus, and one canonical issue
+# is counted once however many tools report it.
+#
+# C++-specific rule: `new`/`delete`, a raw `T*` parameter, a pass-by-value container and
+# `std::move` are *tokens*, not findings. A mapping whose context_evaluator is `context-required`
+# (a check that fires on the bare token) is counted only when the context scanner independently
+# confirms a violation at the same site; otherwise it is demoted to needs_review. A non-owning raw
+# pointer is never a violation on its own. The scanner, not the token, decides.
+applicability_rules:
+  - {rule_id: always, description: Applies to every C++ task, opportunity_detector: task-declared}
+  - {rule_id: item-opportunity, description: Counts only for items with a frozen task opportunity, opportunity_detector: task-declared}
+  - {rule_id: ownership-expected, description: Counts only when the task contract has a resource-ownership opportunity, opportunity_detector: task-declared, requires_task_opportunity: raii_ownership}
+  - {rule_id: ownership-api-expected, description: Counts only when the task contract has an ownership API design opportunity, opportunity_detector: task-declared, requires_task_opportunity: ownership_raii_design}
+  - {rule_id: move-api-expected, description: Counts only when the task has a value/move API design opportunity, opportunity_detector: task-declared, requires_task_opportunity: value_move_api_semantics}
+  - {rule_id: move-expected, description: "Counts only when the task has a value-semantics opportunity (copies, moves or copy elision)", opportunity_detector: task-declared, requires_task_opportunity: moves_copies}
+  - {rule_id: stl-expected, description: Counts only when the task has an STL/container opportunity, opportunity_detector: task-declared, requires_task_opportunity: stl_use}
+  - {rule_id: stl-container-expected, description: Counts only when the task has a container-selection opportunity, opportunity_detector: task-declared, requires_task_opportunity: stl_container_choice}
+  - {rule_id: exception-expected, description: Counts only when the task has a throwing or exception-safety contract, opportunity_detector: task-declared, requires_task_opportunity: exception_safety}
+  - {rule_id: modern-expected, description: Counts only when the task has a modern-language-feature opportunity, opportunity_detector: task-declared, requires_task_opportunity: modern_features}
+  - {rule_id: modern-construct-expected, description: Counts only when the task has a modern construct/API opportunity, opportunity_detector: task-declared, requires_task_opportunity: modern_constructs}
+  - {rule_id: sanitizer-expected, description: Counts only when the task has an instrumented memory/UB opportunity, opportunity_detector: task-declared, requires_task_opportunity: undefined_behavior_memory_safety}
+  - {rule_id: performance-expected, description: Counts only when the task has a measured cost opportunity, opportunity_detector: task-declared, requires_task_opportunity: abstraction_performance}
+ownership:
+  canonical-security-issue: security
+  candidate-undefined-behaviour: robustness
+  resource-cleanup-failure: robustness
+  measured-runtime-regression: efficiency
+  language-api-design: idiomatic
+  diagnostic-only: null
+# First matching mapping wins; keep specific entries before prefixes.
+rule_mappings:
+  # --- ownership and RAII ----------------------------------------------------------------------
+  - {check_id: cpp.context.raw-owning-pointer, items: [raii_ownership], idiom_item: ownership_raii_design, owner: null, applicability: ownership-expected, context_evaluator: context-scan, equivalence_family: manual-ownership}
+  - {check_id: cpp.context.raw-delete-mismatch, items: [raii_ownership], owner: robustness, applicability: ownership-expected, context_evaluator: context-scan, equivalence_family: manual-ownership}
+  - {check_id: cpp.context.rule-of-five-missing, items: [raii_ownership], owner: null, applicability: ownership-expected, context_evaluator: context-scan, equivalence_family: special-member-functions}
+  - {check_id: cpp.context.raw-pointer-nonowning, items: [raii_ownership], owner: null, applicability: ownership-expected, context_evaluator: context-scan, equivalence_family: raw-pointer}
+  - {check_id: cpp.clang_tidy.cppcoreguidelines-owning-memory, items: [raii_ownership], idiom_item: ownership_raii_design, owner: null, applicability: ownership-expected, context_evaluator: context-required, equivalence_family: manual-ownership}
+  - {check_id: cpp.clang_tidy.bugprone-dangling-handle, items: [raii_ownership], owner: robustness, applicability: ownership-expected, equivalence_family: dangling-handle}
+  - {check_id: cpp.clang_tidy.bugprone-unused-raii, items: [raii_ownership], owner: null, applicability: ownership-expected, equivalence_family: unused-raii}
+  - {check_id: cpp.clang_tidy.cppcoreguidelines-special-member-functions, items: [raii_ownership], owner: null, applicability: ownership-expected, equivalence_family: special-member-functions}
+  # A leak and a use-after-free are the same underlying ownership fault seen by different tools.
+  - {check_id: cpp.asan.resource-leak, items: [raii_ownership], owner: robustness, applicability: sanitizer-expected, equivalence_family: manual-ownership}
+  # --- value semantics: copies and moves --------------------------------------------------------
+  # One family. clang-tidy's copy lints, cppcheck's passedByValue and the context scanner's
+  # redundant copy all report the same measured copy at the same site and collapse to one issue.
+  - {check_id: cpp.context.redundant-container-copy, items: [moves_copies], idiom_item: value_move_api_semantics, owner: null, applicability: move-expected, context_evaluator: context-scan, equivalence_family: value-copy}
+  - {check_id: cpp.clang_tidy.performance-unnecessary-value-param, items: [moves_copies], idiom_item: value_move_api_semantics, owner: null, applicability: move-expected, equivalence_family: value-copy}
+  - {check_id: cpp.clang_tidy.performance-unnecessary-copy-initialization, items: [moves_copies], owner: null, applicability: move-expected, equivalence_family: value-copy}
+  - {check_id: cpp.clang_tidy.performance-for-range-copy, items: [moves_copies], owner: null, applicability: move-expected, equivalence_family: value-copy}
+  - {check_id: cpp.clang_tidy.performance-move-const-arg, items: [moves_copies], owner: null, applicability: move-expected, equivalence_family: move-const-arg}
+  - {check_id: cpp.clang_tidy.performance-no-automatic-move, items: [moves_copies], owner: null, applicability: move-expected, context_evaluator: context-required, equivalence_family: value-copy}
+  - {check_id: cpp.clang_tidy.cppcoreguidelines-rvalue-reference-param-not-moved, items: [moves_copies], owner: null, applicability: move-expected, equivalence_family: value-copy}
+  - {check_id: cpp.cppcheck.passedbyvalue, items: [moves_copies], owner: null, applicability: move-expected, equivalence_family: value-copy}
+  - {check_id: cpp.context.pass-by-value-container, items: [moves_copies], owner: null, applicability: move-expected, context_evaluator: context-scan, equivalence_family: value-copy}
+  - {check_id: cpp.context.move-on-const, items: [moves_copies], owner: null, applicability: move-expected, context_evaluator: context-scan, equivalence_family: move-const-arg}
+  - {check_id: cpp.clang_tidy.bugprone-use-after-move, items: [moves_copies], owner: robustness, applicability: move-expected, equivalence_family: use-after-move}
+  # --- STL and containers -----------------------------------------------------------------------
+  - {check_id: cpp.context.index-loop-container, items: [stl_use], idiom_item: stl_container_choice, owner: null, applicability: stl-expected, context_evaluator: context-scan, equivalence_family: index-loop}
+  - {check_id: cpp.context.string-concat-loop, items: [stl_use], owner: efficiency, applicability: stl-expected, context_evaluator: context-scan, equivalence_family: string-format-loop}
+  - {check_id: cpp.clang_tidy.modernize-loop-convert, items: [stl_use], owner: null, applicability: stl-expected, equivalence_family: index-loop}
+  - {check_id: cpp.clang_tidy.readability-container-size-empty, items: [stl_use], owner: null, applicability: stl-expected, equivalence_family: container-size-empty}
+  - {check_id: cpp.clang_tidy.modernize-use-emplace, items: [stl_use], owner: null, applicability: stl-expected, equivalence_family: container-construction}
+  - {check_id: cpp.clang_tidy.performance-implicit-conversion-in-loop, items: [stl_use], owner: efficiency, applicability: stl-expected, equivalence_family: index-loop}
+  - {check_id: cpp.cppcheck.usestlalgorithm, items: [stl_use], owner: null, applicability: stl-expected, equivalence_family: index-loop}
+  - {check_id: cpp.cppcheck.usevectorpushback, items: [stl_use], owner: null, applicability: stl-expected, equivalence_family: container-construction}
+  # A measured runtime regression is the efficiency dimension's, once.
+  - {check_id: cpp.clang_tidy.performance-inefficient-algorithm, items: [abstraction_performance], owner: efficiency, applicability: performance-expected, equivalence_family: inefficient-algorithm}
+  - {check_id: cpp.cppcheck.constparameterreference, items: [abstraction_performance], owner: null, applicability: performance-expected, equivalence_family: const-parameter}
+  # --- exception safety ---------------------------------------------------------------------------
+  - {check_id: cpp.context.throw-in-destructor, items: [exception_safety], owner: robustness, applicability: exception-expected, context_evaluator: context-scan, equivalence_family: throwing-destructor}
+  - {check_id: cpp.clang_tidy.bugprone-exception-escape, items: [exception_safety], owner: robustness, applicability: exception-expected, equivalence_family: exception-escape}
+  - {check_id: cpp.clang_tidy.bugprone-fold-init-type, items: [exception_safety], owner: null, applicability: exception-expected, equivalence_family: fold-init-type}
+  # --- modern language features ---------------------------------------------------------------------
+  - {check_id: cpp.clang_tidy.modernize-use-override, items: [modern_features], owner: null, applicability: modern-expected, equivalence_family: override}
+  - {check_id: cpp.clang_tidy.modernize-use-equals-default, items: [modern_features], owner: null, applicability: modern-expected, equivalence_family: equals-default}
+  - {check_id: cpp.clang_tidy.modernize-use-nullptr, items: [modern_features], owner: null, applicability: modern-expected, equivalence_family: nullptr}
+  - {check_id: cpp.clang_tidy.modernize-avoid-c-arrays, items: [modern_features], owner: null, applicability: modern-expected, equivalence_family: c-array}
+  - {check_id: cpp.clang_tidy.modernize-return-braced-init-list, items: [modern_features], idiom_item: modern_constructs, owner: null, applicability: modern-expected, equivalence_family: braced-init-list}
+  - {check_id: cpp.clang_tidy.modernize-use-std-print, items: [modern_features], owner: null, applicability: modern-expected, equivalence_family: std-print}
+  - {check_id: cpp.cppcheck.useauthtype, items: [modern_features], owner: null, applicability: modern-expected, equivalence_family: typedef}
+  # --- instrumented memory and undefined behaviour ------------------------------------------------
+  # One family: ASan, UBSan, TSan and cppcheck's own uninitialised/null claims about the same
+  # defect collapse to a single robustness penalty rather than one per tool.
+  - {check_id: cpp.asan.candidate-defect, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: undefined-behaviour}
+  - {check_id: cpp.ubsan.candidate-defect, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: undefined-behaviour}
+  - {check_id: cpp.tsan.candidate-defect, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: data-race}
+  - {check_id: cpp.cppcheck.uninitvar, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: undefined-behaviour}
+  - {check_id: cpp.cppcheck.nullpointer, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: undefined-behaviour}
+  - {check_id: cpp.cppcheck.invalidfunctionarg, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: undefined-behaviour}
+  - {check_id: cpp.cppcheck.arrayindexoutofbounds, items: [undefined_behavior_memory_safety], owner: robustness, applicability: sanitizer-expected, equivalence_family: undefined-behaviour}
+  # --- selected hygiene (everything not claimed above) ---------------------------------------------
+  - {check_prefix: cpp.clang_tidy., items: [modern_features], owner: null, applicability: item-opportunity}
+  - {check_prefix: cpp.cppcheck., items: [abstraction_performance], owner: null, applicability: item-opportunity}

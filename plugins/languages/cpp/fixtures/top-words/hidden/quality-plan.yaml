@@ -1,0 +1,42 @@
+schema_version: 1
+kind: cpp_task_quality_plan
+# The task's own text handling is pure value semantics over the standard library: no allocation
+# escapes the call, so the ownership questions are about *not* reaching for `new`/`delete` at all
+# (raii_ownership, ownership_raii_design), about never copying a container that could be moved or
+# borrowed (moves_copies, value_move_api_semantics), and about container selection (stl_use,
+# stl_container_choice). The exception-safety and modern-feature counts are the C++-specific
+# expectations this contract makes: nothing may throw out of a destructor or escape a noexcept
+# boundary, and the returned vector is a value the caller owns. The performance workload is the
+# measured-cost opportunity, and the sanitizers are the memory-safety one.
+instrumentation: supported
+sanitizers: [address, undefined]
+opportunity_tags: [ownership, values, stl, exceptions, modern, performance, memory]
+opportunities:
+  raii_ownership: 2
+  ownership_raii_design: 2
+  moves_copies: 2
+  value_move_api_semantics: 2
+  stl_use: 3
+  stl_container_choice: 2
+  exception_safety: 1
+  modern_features: 2
+  modern_constructs: 1
+  abstraction_performance: 2
+  undefined_behavior_memory_safety: 2
+# `asan` is required and carries the address + undefined detectors: the hidden groups are compiled
+# with the pinned sanitize_address_undefined profile and run under the pinned runtime, so a leak or
+# an out-of-bounds access in a candidate is measured rather than argued about.
+required_analyzers: [clang_tidy, cppcheck, context, asan]
+dependency_inventory: []
+performance:
+  workload_file: perf/workload.cpp
+  workloads:
+    - {workload_id: small, scale: 2000, weight_bp: 3000, input_seed: 20260901}
+    - {workload_id: medium, scale: 20000, weight_bp: 5000, input_seed: 20260902}
+    - {workload_id: large, scale: 200000, weight_bp: 2000, input_seed: 20260903}
+  warmup_iterations: 5
+  measured_iterations: 20
+  hard_timeout_seconds: 60
+judge_items: [naming_readability, decomposition]
+# NOT authored: `recipe`. freeze_view reads hidden/recipe.json and carries it inside the frozen
+# task, so a plan can only ever build with the compiler, standard and profile the task admitted.

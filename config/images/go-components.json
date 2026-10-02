@@ -1,0 +1,30 @@
+{
+  "base": {
+    "digest": "sha256:2f3eeeff3b3f2d847b2f0c9844e6e02a1532f01caa192108e8e1a1c7d0b78b3c",
+    "dockerfile_digest": "sha256:e617394ead1383f962f415f1d031089ffbd513e9e960e9a36728e7f1190e34d0",
+    "tag": "pcb-go-components-base:v1",
+    "tools": {
+      "go": "go version go1.26.8 linux/amd64"
+    }
+  },
+  "base_image": {
+    "digest": "sha256:abe4f87f354c4f6d7ee3fb11b241c6b6c24a32ca50a2ebcc30493a2168e14048",
+    "reference": "golang@sha256:abe4f87f354c4f6d7ee3fb11b241c6b6c24a32ca50a2ebcc30493a2168e14048"
+  },
+  "evaluator": {
+    "analyzers": {
+      "gosec": "github.com/securego/gosec/v2/cmd/gosec@v2.29.0",
+      "staticcheck": "honnef.co/go/tools/cmd/staticcheck@v0.8.1"
+    },
+    "digest": "sha256:bc7c4b267e9271177448dd8a2b03e898ca171fab634d8a4a80fa673c0cd216ad",
+    "tag": "pcb-go-components:v1",
+    "tools": {
+      "go": "go version go1.26.8 linux/amd64",
+      "gosec": "absent",
+      "staticcheck": "absent"
+    }
+  },
+  "kind": "go_components_images",
+  "note": "Prebuilt component images; the only step that uses a network. build_go_images.py builds the three recipes from these with --network none. The base image carries no analyzers, which is what keeps the runtime and performance recipes genuinely distinct from the evaluator recipe.",
+  "schema_version": 1
+}

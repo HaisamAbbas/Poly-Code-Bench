@@ -1,0 +1,47 @@
+{
+  "images": {
+    "evaluator": {
+      "base_image": "debian@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251",
+      "digest": "sha256:bace972e417c29a80c92153988767cc4a6b21134bfd148844c2b23de0a316b65",
+      "dockerfile_digest": "sha256:4b5e4f4918e8fd2e2c09fb169840fca9032cf3021a325cf340573e2c5e19e3d8",
+      "packages": [
+        "clang=1:14.0-55.7~deb12u1",
+        "clang-tidy=1:14.0-55.7~deb12u1",
+        "cppcheck=2.10-2",
+        "libclang-rt-14-dev=1:14.0.6-12",
+        "libstdc++-12-dev=12.2.0-14+deb12u1"
+      ],
+      "packages_digest": "sha256:03e54163953c99273770b629456d39075bb5cc847824d8a2298ea32b42866a67",
+      "recipe": "evaluator",
+      "reference": "pcb-cpp-components-evaluator@sha256:bace972e417c29a80c92153988767cc4a6b21134bfd148844c2b23de0a316b65",
+      "tag": "pcb-cpp-components-evaluator:v1",
+      "tool_versions": {
+        "clang++": "Debian clang version 14.0.6",
+        "clang-tidy": "Debian LLVM version 14.0.6",
+        "cppcheck": "Cppcheck 2.10"
+      }
+    },
+    "runtime": {
+      "base_image": "debian@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251",
+      "digest": "sha256:8aabb7e13520508d6f8c2d427f0ca4281d89c3438e8054b82e4c183dc6a3cfc7",
+      "dockerfile_digest": "sha256:781b7b9629e09d343d336ce5745015b108d24727cfa06369f3994c39ba860ab7",
+      "packages": [
+        "clang=1:14.0-55.7~deb12u1",
+        "libclang-rt-14-dev=1:14.0.6-12",
+        "libstdc++-12-dev=12.2.0-14+deb12u1"
+      ],
+      "packages_digest": "sha256:8cd57b61be64600d76d2f606aac6c26661988596684d47876b856ea02c03d23b",
+      "recipe": "runtime",
+      "reference": "pcb-cpp-components-runtime@sha256:8aabb7e13520508d6f8c2d427f0ca4281d89c3438e8054b82e4c183dc6a3cfc7",
+      "tag": "pcb-cpp-components-runtime:v1",
+      "tool_versions": {
+        "clang++": "Debian clang version 14.0.6",
+        "clang-tidy": "absent",
+        "cppcheck": "absent"
+      }
+    }
+  },
+  "kind": "cpp_components",
+  "note": "Prebuilt component images. Built once with network by scripts/fetch_cpp_components.py; the three recipe images are built with --network none from them, so no scored run ever installs a package.",
+  "schema_version": 1
+}

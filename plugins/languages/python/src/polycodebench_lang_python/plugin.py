@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from typing import Literal
 
 from polycodebench_core.models import Candidate, Observation, ScoreDimension
@@ -16,6 +17,7 @@ from polycodebench_plugins_api import (
     FrozenTask,
     LanguageProfile,
     PerformancePlan,
+    PropertyEngineIdentity,
     SymbolIndex,
     TaskDraft,
     TestGroupPlan,
@@ -201,6 +203,43 @@ class PythonLanguagePlugin:
 
     def normalize(self, observations: list[Observation]) -> list[Observation]:
         return self._profile.normalize(observations)
+
+    @property
+    def language_profile(self) -> PythonProfile:
+        return self._profile
+
+    def property_engine(
+        self, task: FrozenTask, raw: Mapping[str, bytes]
+    ) -> PropertyEngineIdentity:
+        """Report the Hypothesis/pytest versions and deterministic example policy from the run."""
+        from polycodebench_lang_python.taskspec import oracle_from_mapping
+
+        oracle = oracle_from_mapping(task.inventory)
+        version: str | None = None
+        examples = oracle.hypothesis_examples
+        pytest_version: str | None = None
+        for data in raw.values():
+            for line in data.splitlines():
+                try:
+                    record = json.loads(line)
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    continue
+                if not isinstance(record, dict) or record.get("type") != "session_start":
+                    continue
+                pytest_version = record.get("pytest")
+                hypothesis = record.get("hypothesis")
+                if isinstance(hypothesis, dict):
+                    version = hypothesis.get("version")
+                    examples = int(hypothesis.get("max_examples", examples))
+                break
+            if pytest_version is not None:
+                break
+        return PropertyEngineIdentity(
+            engine="hypothesis" if version else "pytest",
+            engine_version=version or pytest_version or self._identities.runtime.tools.get("pytest"),
+            deterministic_policy="derandomized-fixed-example-budget",
+            examples_pinned=examples,
+        )
 
     @property
     def python_profile(self) -> PythonProfile:

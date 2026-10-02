@@ -1,0 +1,20 @@
+schema_version: 1
+kind: go_task_quality_plan
+# This task is not concurrent: nothing it asks for needs goroutines, channels or cancellation, so
+# the concurrency items have no frozen opportunity and the race detector is not applicable. That is
+# the honest answer for a single-threaded counting task, not a gap: a task with no concurrency
+# opportunity is never charged for not using channels, and no race run is produced.
+race: unsupported
+race_groups: []
+opportunity_tags: [string-counting, error-path]
+opportunities:
+  error_handling: 3
+  simple_interfaces: 1
+  standard_library: 2
+  formatting_vet_staticcheck: 3
+  simple_interfaces_api: 1
+  standard_library_composition: 2
+  error_api: 2
+required_analyzers: [gofmt, vet, staticcheck, gosec, context]
+dependency_inventory: []
+judge_items: [naming_readability, decomposition]

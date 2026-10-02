@@ -1,0 +1,37 @@
+{
+  "kind": "java_task_oracle",
+  "oracle_version": "java-top-words-v1",
+  "groups": [
+    {
+      "group_id": "behaviour",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["tests/demo/TopWordsTest.java"],
+      "cases": [
+        {"case_id": "demo.TopWordsTest#ordersByCountAndToken", "required": true, "case_kind": "example"},
+        {"case_id": "demo.TopWordsTest#handlesNullAndNonPositiveLimit", "required": true, "case_kind": "edge"}
+      ]
+    },
+    {
+      "group_id": "resource-probe",
+      "required": true,
+      "classification": "quality_only",
+      "files": ["tests/demo/ResourceProbeTest.java"],
+      "cases": [{"case_id": "demo.ResourceProbeTest#closesOwnedInput", "required": true, "case_kind": "robustness"}]
+    },
+    {
+      "group_id": "concurrency-probe",
+      "required": true,
+      "classification": "quality_only",
+      "files": ["tests/demo/ConcurrencyProbeTest.java"],
+      "cases": [{"case_id": "demo.ConcurrencyProbeTest#parallelCallsRemainIndependent", "required": true, "case_kind": "robustness"}]
+    }
+  ],
+  "hard_conditions": [{"condition_id": "ordering-contract", "group_id": "behaviour"}],
+  "robustness_scenarios": [
+    {"scenario_id": "resource-lifecycle", "group_id": "resource-probe", "weight_bp": 5000, "repetitions": 3},
+    {"scenario_id": "concurrent-stability", "group_id": "concurrency-probe", "weight_bp": 5000, "repetitions": 3}
+  ],
+  "case_timeout_seconds": 10,
+  "suite_timeout_seconds": 90
+}

@@ -17,3 +17,9 @@ pytest-cache-files-*/
 # Offline wheelhouses and protected task assets are local, never committed (Prompt 10)
 .wheelhouse/
 .protected/
+
+# Ad-hoc scratch used while building images; never source (Prompt 21)
+tmp_probe/
+tmp_*.java
+*seed.sh
+.cache_maven_pull.log

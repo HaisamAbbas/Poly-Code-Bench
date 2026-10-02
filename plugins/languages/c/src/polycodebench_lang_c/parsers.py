@@ -85,9 +85,18 @@ def build_document(raw: ArtifactReader, name: str) -> dict[str, Any]:
 
 
 def first_build_error(document: dict[str, Any]) -> str:
+    """The most specific explanation a build document can give.
+
+    A positioned diagnostic names the file and line. A link or archive failure usually has none - the
+    linker says ``ld: cannot find ...`` - so the driver's own ``fatal`` field is the evidence, and it
+    is quoted rather than replaced by a generic sentence.
+    """
     for entry in document.get("diagnostics", []):
         if entry.get("raw_severity") in {"error", "fatal error"} and entry.get("path"):
             return f"{entry['path']}:{entry['line']}: {entry['message']}"[:200]
+    fatal = document.get("fatal")
+    if fatal:
+        return str(fatal)[:200]
     return first_bare_error(json.dumps(document.get("diagnostics", [])))
 
 

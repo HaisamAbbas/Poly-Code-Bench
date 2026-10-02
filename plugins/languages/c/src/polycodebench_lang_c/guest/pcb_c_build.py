@@ -350,6 +350,9 @@ def main(argv):
     diagnostics.extend(link_diagnostics)
     diagnostics.extend(link_bare)
     if linked.returncode != 0:
+        # The linker's own words are the only evidence there is, and they do not always match the
+        # diagnostic grammar (`ld: cannot find ...`). Keeping the tail verbatim means a link failure
+        # can always be explained rather than reported as an unexplained build error.
         return _write(
             options,
             units=units,
@@ -359,7 +362,7 @@ def main(argv):
             linker=linker,
             flags_digest=flags_digest,
             complete=True,
-            fatal="link failed",
+            fatal="link failed: %s" % " ".join(link_text.split())[-300:],
         )
     run = None
     if options["execute"] is not None:

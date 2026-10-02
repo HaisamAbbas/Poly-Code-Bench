@@ -481,7 +481,9 @@ def _dynamic_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
     for lane in quality.active_lanes:
         files, overlay = _lane_groups(task, lane)
         analyzer = LANE_ANALYZER[lane.lane]
-        group = files[0].removesuffix(".c") if files else "lane"
+        # A flat name: the group file is `tests/stress.c`, and letting that path fragment into the
+        # binary name would ask the linker to create a directory nobody made.
+        group = files[0].rsplit("/", 1)[-1].removesuffix(".c") if files else "lane"
         if lane.lane in {"address", "undefined"}:
             recipe = _recipe_for(task, "instrumented", sanitizer=lane.lane)
             argv = _run(

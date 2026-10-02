@@ -26,8 +26,10 @@ target-version = "py312"
 # analysed by the product's own pipeline, not by the repository's lint gate.
 extend-exclude = [
   "plugins/languages/python/fixtures",
+  "plugins/languages/go/fixtures",
   "tests/fixtures",
   "plugins/languages/python/src/polycodebench_lang_python/guest",
+  "plugins/languages/cpp/fixtures",
 ]
 exclude = [
   "PolyCodeBench-Architecture-v1.md",
@@ -47,6 +49,10 @@ select = ["E", "F", "I", "UP", "B"]
 # Rust guest scripts ship as source into the sandbox images and are kept plain; editing them
 # changes the recorded guest digest, so lint style never justifies touching them.
 "plugins/languages/rust/src/polycodebench_lang_rust/guest/*.py" = ["UP031", "E501"]
+"plugins/languages/cpp/src/polycodebench_lang_cpp/guest/*.py" = ["UP031", "E501"]
+"plugins/languages/javascript/src/polycodebench_lang_javascript/guest/*.py" = ["UP031", "E501"]
+"plugins/languages/java/src/polycodebench_lang_java/guest/*.py" = ["UP031", "E501"]
+"plugins/languages/go/src/polycodebench_lang_go/guest/*.py" = ["UP031", "E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -73,4 +79,31 @@ ignore_errors = true
 # The Rust guest scripts (context scanner, Miri classifier, libtest parser) have the same
 # constraint: plain stdlib, copied verbatim into the pinned Rust images, POSIX-only at runtime.
 module = "polycodebench_lang_rust.guest.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# The JavaScript/TypeScript guest scripts (run wrapper, capture helper, context scanner, npm audit,
+# Vitest report converter) have the same constraint as the other languages' guest scripts: plain
+# stdlib, copied verbatim into the pinned Node images, POSIX-only at runtime. Editing them changes
+# the recorded guest digest, so lint style never justifies touching them.
+module = "polycodebench_lang_javascript.guest.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# The Go guest scripts (module audit, idiom scanner, test-event classifier, run wrapper) have the
+# same constraint as the Rust ones: plain stdlib, copied verbatim into the pinned Go images,
+# POSIX-only at runtime.
+module = "polycodebench_lang_go.guest.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# The C++ guest scripts (command runner, build/test/sanitize drivers, context scanner, sanitizer
+# classifier) carry the same constraint: plain stdlib, copied verbatim into the pinned C++ images,
+# POSIX-only at runtime.
+module = "polycodebench_lang_cpp.guest.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# Java guest scripts are plain stdlib and copied into the pinned Temurin images.
+module = "polycodebench_lang_java.guest.*"
 ignore_errors = true

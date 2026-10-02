@@ -1,0 +1,13 @@
+{
+  "blockers": [
+    "owner-approved rights record and permitted redistribution/transmission scope",
+    "public advisory identity, disclosure timestamp and immutable pre-fix/fix revisions",
+    "isolated, reproducible vulnerable behavior plus clean controls for Python and Rust",
+    "curator-reviewed hidden oracle, reproducer and source exposure policy"
+  ],
+  "evidence_tier": "none",
+  "kind": "track_a_source_requirement",
+  "source_family": "disclosed_security",
+  "status": "blocked",
+  "verified_external_examples": 0
+}

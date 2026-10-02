@@ -1,18 +1,43 @@
 schema_version: 1
 kind: language_plugin_allowlist
 plugins:
-  - plugin_id: python
-    entry_point: polycodebench_lang_python.plugin:PythonLanguagePlugin
-    api_version: 1
-    plugin_version: "0.1.0"
-    image_digests:
-      - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
-      - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
-  - plugin_id: rust
-    entry_point: polycodebench_lang_rust.plugin:RustLanguagePlugin
-    api_version: 1
-    plugin_version: "0.1.0"
-    image_digests:
-      - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
-      - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
-      - sha256:de4293082733f48aa17c59aad10041893efb086eb5e4e2ef9a2470795775b322
+- plugin_id: c
+  entry_point: polycodebench_lang_c.plugin:CLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b
+  - sha256:66e38808ad11e27ca5195c03cc457ce0a2797833525ca6053781f1bb8f09d291
+  - sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1
+  - sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1
+- plugin_id: cpp
+  entry_point: polycodebench_lang_cpp.plugin:CppLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:6d4220370dd351538b8a48c35db2e195d91dfd9557b13c068fed73d61b8ced71
+  - sha256:6d793711bf2e80acd4913326f5f1660c7b66a76877ebf0909907f29427c7419b
+  - sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b
+- plugin_id: go
+  entry_point: polycodebench_lang_go.plugin:GoLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118
+  - sha256:2b6763953a93e28e68461358c65bf604312b17bd1ae360119c49fd313efd2dd9
+  - sha256:9ef8a84009a970ad69e3f3ee30a40647ea2602505aef6d8933229f4d7800badf
+- plugin_id: python
+  entry_point: polycodebench_lang_python.plugin:PythonLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+  - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+- plugin_id: rust
+  entry_point: polycodebench_lang_rust.plugin:RustLanguagePlugin
+  api_version: 1
+  plugin_version: 0.1.0
+  image_digests:
+  - sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25
+  - sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69
+  - sha256:de4293082733f48aa17c59aad10041893efb086eb5e4e2ef9a2470795775b322

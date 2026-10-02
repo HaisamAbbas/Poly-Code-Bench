@@ -1,14 +1,22 @@
 schema_version: 1
-kind: scoring_policy
+kind: frozen_scoring_policy
 policy_id: polycodebench-code-pilot-v1
+# Score-schema version this policy targets. A scorer that implements a different version refuses
+# the policy instead of scoring with the wrong contract.
+score_schema_version: 1
 status: owner_approved_pending_calibration
 effective_for_scoring: false
+calibration_status: pending
+source: PolyCodeBench-Architecture-v1.md 8.3-8.7; PolyCodeBench-Technical-Implementation-Spec-v1.md 14.1-14.6
+evidence_ownership_policy_id: evidence-ownership-pilot-v1
 owner_approval: approved
 approved_by: project_owner
 approved_on: 2026-09-30
 approval_scope: freeze_as_pilot_baseline_only
-calibration_status: pending
-source: PolyCodeBench-Architecture-v1.md §8; PolyCodeBench-Technical-Implementation-Spec-v1.md §14
+# Fixed-point presentation with explicit half-even rounding [T4]. Nothing is rounded twice.
+rounding:
+  mode: half_even
+  places: 6
 code_composite:
   unit: basis_points
   weights:
@@ -26,6 +34,8 @@ security:
   penalties: {critical: 50, high: 25, medium: 10, low: 3}
   counting: unique_confirmed_issue_primary_owner_only
   advisory_snapshot_required: true
+# The measured-performance transform (Spec 13.4). Restated here so the scorer recomputes E from the
+# ratios instead of trusting a supplied number.
 efficiency:
   warmups: 5
   paired_measured_iterations: 20
@@ -44,13 +54,28 @@ code_quality:
     unnecessary_complexity: 1500
     repository_style_consistency: 1500
     minimal_relevant_scope: 1000
-  anchors: [0, 0.5, 1]
+  anchors: ["0.000000", "0.500000", "1.000000"]
+# Idiomatic strength is the orthogonal language rubric (Spec 18.4) plus the two residual idiom
+# judgements the judge rubric owns (Spec 15.1). The split below is a declared pilot parameter:
+# Spec 14.4 defines the dimension by the language rubric and Spec 15.1 keeps two residual idiom
+# items in the same dimension, so the scorer needs a frozen basis-point split rather than one
+# inferred per run. calibration_status: pending.
 idiomatic:
   scoring_source: config/languages/profiles-v1.yaml
+  # sha256 of the canonical bytes of profiles-v1.yaml; a profile edit is a new policy version.
+  profile_source_digest: sha256:55caf3f909dd063c377255539392e51cfbff2983ca961362fc77909d151842f6
+  language_rubric_weight_bp: 8000
+  residual_judge_weight_bp: 2000
+  residual_judge_items: {idiomatic_design: 1200, error_handling_clarity: 800}
   full_language_profiles_are_diagnostic_only: true
   scoring_items_require_single_primary_owner: true
+# Robustness is the frozen quality-only scenarios plus one declared residual judge item. A required
+# acceptance scenario belongs to correctness and is refused here (Spec 14.4).
 robustness:
   scoring_source: task_frozen_quality_only_scenarios
+  scenario_weight_bp: 8000
+  residual_judge_weight_bp: 2000
+  residual_judge_items: {residual_robustness_reasoning: 2000}
   duplicate_test_count_bonus: false
 judge:
   minimum_votes_per_applicable_item: 3

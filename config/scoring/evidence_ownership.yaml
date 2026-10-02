@@ -1,9 +1,11 @@
 schema_version: 1
-kind: evidence_ownership_policy
+kind: evidence_ownership
 policy_id: evidence-ownership-pilot-v1
 status: pilot_parameters_unvalidated
 effective_for_scoring: false
 invariant: each_canonical_issue_has_one_composite_owner
+# One family, one composite owner. Diagnostic profiles may reuse this evidence in the language view;
+# they may never deduct for it a second time (Architecture 8.7).
 rules:
   - family: canonical-security-issue
     owner: security
@@ -17,9 +19,18 @@ rules:
   - family: language-api-design
     owner: idiomatic
     allow_task_override_before_freeze: true
-diagnostic_reuse:
-  allowed: true
-  duplicate_composite_penalty: false
+# A baseline relation that is neither penalized nor blamed: shown as context, not a candidate fault.
+relations_without_penalty: [resolved, unchanged_out_of_scope]
+# Introduced, worsened and still-unfixed in declared repair scope are all candidate faults.
+relations_penalized: [introduced, worsened, unchanged_in_scope]
+# Several tools reporting one canonical issue collapse to one penalty; they are never added up.
+duplicate_issue_key_policy: collapse_to_canonical_issue
+# An unadjudicated high-impact claim is not deducted, but it does block completion (Spec 14.4).
+unreviewed_impact_requires_adjudication: true
+adjudication_blocking_severities: [critical, high]
+# Two consequences of one underlying issue are only allowed when they are independently measured and
+# the reason they are separate is written down here. Without an entry the scorer refuses the pair.
+distinct_consequences: []
 required_evidence:
   - canonical_issue_key
   - baseline_relation

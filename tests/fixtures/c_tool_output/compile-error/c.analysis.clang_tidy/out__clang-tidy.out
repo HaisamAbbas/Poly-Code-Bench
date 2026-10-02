@@ -1,0 +1,7 @@
+/workspace/work/src/topwords.c:19:1: error: unknown type name 'this' [clang-diagnostic-error]
+this is not C
+^
+/workspace/work/src/topwords.c:19:8: error: expected ';' after top level declarator [clang-diagnostic-error]
+this is not C
+       ^
+       ;

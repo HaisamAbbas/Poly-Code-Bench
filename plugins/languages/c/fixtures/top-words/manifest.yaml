@@ -10,7 +10,7 @@ task:
   cluster_id: conformance-c-top-words-cluster
   difficulty: introductory
   stratum_id: conformance-fixtures
-  output_contract_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  output_contract_digest: sha256:f9fd0eacf70f0b8e86fa0e477761fee894023ad584d715a3281ddb876fb406de
   methodology_label: independent
 output_contract:
   schema_version: 1
@@ -42,14 +42,11 @@ rights:
 runtime:
   schema_version: 1
   kind: task_runtime
-  # The acceptance lane's image. Frozen here and re-checked by the plugin: a C task's runtime digest
-  # is the *release* image, never the instrumented one, so a sanitizer can never change whether a
-  # candidate passes.
-  image_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  image_digest: sha256:9ad2d668d3acaef2c6f33cdbfdaf1770890ca604b545665f1104f3681127c74c
   language_plugin_id: c
   language_plugin_version: 0.1.0
-  build_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
-  test_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  build_recipe_digest: sha256:1045810db7ba0e27616b2c66c05b9255a4bc613f9681ef5aa0613214a376a1c5
+  test_recipe_digest: sha256:e297682d0ba8f2eef668bceadb8d23c691df60d66213153e237c9900aef6c496
   resource_class: local-development-small
 acceptance:
   schema_version: 1
@@ -110,9 +107,10 @@ hidden_files:
 - admission/quality-defective/src/topwords.c
 - admission/resource-leak/src/topwords.c
 - admission/timeout-case/src/topwords.c
+- admission/undefined-shift/src/topwords.c
 - hidden/oracle.json
-- hidden/quality-plan.yaml
 - hidden/perf/workload.c
+- hidden/quality-plan.yaml
 - hidden/reference/src/topwords.c
 - hidden/tests/behaviour.c
 - hidden/tests/stress.c
@@ -127,6 +125,7 @@ fixtures:
   expectation:
     failing_cases:
     - behaviour.ties_break_alphabetically
+    - behaviour.non_letter_bytes_separate_words
     - behaviour.rank_words_sorts_in_place
 - name: alternative-runs
   variant: alternative
@@ -145,23 +144,29 @@ fixtures:
   expectation:
     expected_failure: candidate_timeout
 - name: buffer-overflow
-  variant: faulty
+  variant: quality_defective
   solution_path: admission/buffer-overflow/src/topwords.c
   expectation:
+    expected_issue_families:
+    - bounds-violation
     expected_lane_findings:
       asan:
       - bounds-violation
 - name: undefined-shift
-  variant: faulty
+  variant: quality_defective
   solution_path: admission/undefined-shift/src/topwords.c
   expectation:
+    expected_issue_families:
+    - shift-out-of-range
     expected_lane_findings:
       ubsan:
       - shift-out-of-range
 - name: resource-leak
-  variant: faulty
+  variant: quality_defective
   solution_path: admission/resource-leak/src/topwords.c
   expectation:
+    expected_issue_families:
+    - resource-leak
     expected_lane_findings:
       valgrind:
       - resource-leak

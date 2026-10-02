@@ -1,8 +1,9 @@
 /*
- * top_words - functionally correct, with an executed heap out-of-bounds write.
+ * top_words - functionally correct, with an executed heap out-of-bounds read.
  *
  * The acceptance group passes (nothing here changes the ranking) and the *undefined* lane is clean,
- * but AddressSanitizer sees the write one element past the allocation on every call. That is the
+ * but AddressSanitizer and Valgrind see the read one element past the allocation whenever every word
+ * in the input is distinct. That is the
  * point of this variant: a static reviewer reading only the ranking logic would miss it, and the
  * instrumented lane finds it because the defect is on a path the tests execute.
  */
@@ -12,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SLACK 1
 
 static int compare_words(const void *left, const void *right)
 {
@@ -49,10 +49,26 @@ int rank_words(struct word_count *items, size_t count)
     return 0;
 }
 
+/* Number of words (maximal letter runs) in `text`: an upper bound on the distinct words. */
+static size_t word_total(const char *text)
+{
+    size_t total = 0U;
+    size_t position;
+
+    for (position = 0U; text[position] != '\0'; ++position) {
+        if (isalpha((unsigned char)text[position])
+            && (position == 0U || !isalpha((unsigned char)text[position - 1U]))) {
+            ++total;
+        }
+    }
+    return total;
+}
+
 size_t count_words(const char *text, struct word_count *out, size_t limit)
 {
     struct word_count *entries;
     size_t found = 0U;
+    size_t capacity;
     size_t cursor = 0U;
     size_t index;
     size_t length;
@@ -60,7 +76,11 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
     if (text == NULL || out == NULL || limit == 0U) {
         return 0U;
     }
-    entries = calloc(limit, sizeof *entries);
+    capacity = word_total(text);
+    if (capacity == 0U) {
+        return 0U;
+    }
+    entries = calloc(capacity, sizeof *entries);
     if (entries == NULL) {
         return 0U;
     }
@@ -87,23 +107,27 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
                 break;
             }
         }
-        if (index == found && found < limit) {
+        if (index == found && found < capacity) {
             memcpy(entries[found].word, scratch, length + 1U);
             entries[found].count = 1U;
             ++found;
         }
     }
+    if (found > 1U) {
+        qsort(entries, found, sizeof *entries, compare_words);
+    }
     /*
-     * DEFECT: one element past the allocation. Functionally invisible - the extra write is never read
-     * back - which is exactly why only an instrumented build sees it.
+     * DEFECT: `<=` copies one row more than was ranked. When every word is distinct, `found` equals
+     * `capacity`, so `entries[found]` is one element past the allocation. Functionally invisible -
+     * the extra row lands in `out` beyond the returned count, and only when the caller left room -
+     * which is exactly why only an instrumented build sees it.
      */
-    memset(entries + limit, 0, sizeof(struct word_count) * SLACK);
-    for (index = 0U; index < found; ++index) {
+    for (index = 0U; index <= found && index < limit; ++index) {
         out[index] = entries[index];
     }
     free(entries);
-    if (found > 1U) {
-        qsort(out, found, sizeof *out, compare_words);
+    if (found > limit) {
+        found = limit;
     }
     return found;
 }

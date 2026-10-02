@@ -1,0 +1,1 @@
+{"command":["cppcheck","--quiet","--inline-suppr"],"duration_ms":173,"exit_code":0,"note":null,"schema":"pcb-c-run-v1","timed_out":false,"truncated":[]}

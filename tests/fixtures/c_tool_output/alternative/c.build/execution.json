@@ -1,0 +1,14 @@
+{
+ "schema_version": 1,
+ "kind": "execution_record",
+ "plan_id": "c.build",
+ "exit_code": 0,
+ "timed_out": false,
+ "duration_ms": 1702,
+ "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_tail": "",
+ "stderr_tail": "",
+ "isolation_tier": "development",
+ "sandbox_id": "1ccddd44-9d6c-4d62-89b4-3a47371fb694"
+}

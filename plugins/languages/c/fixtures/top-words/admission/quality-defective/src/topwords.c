@@ -50,11 +50,27 @@ int rank_words(struct word_count *items, size_t count)
     return 0;
 }
 
+/* Number of words (maximal letter runs) in `text`: an upper bound on the distinct words. */
+static size_t word_total(const char *text)
+{
+    size_t total = 0U;
+    size_t position;
+
+    for (position = 0U; text[position] != '\0'; ++position) {
+        if (isalpha((unsigned char)text[position])
+            && (position == 0U || !isalpha((unsigned char)text[position - 1U]))) {
+            ++total;
+        }
+    }
+    return total;
+}
+
 size_t count_words(const char *text, struct word_count *out, size_t limit)
 {
     struct word_count *entries;
     char scratch[64];
     size_t found = 0;
+    size_t capacity;
     size_t cursor = 0;
     size_t index;
     size_t length;
@@ -66,8 +82,9 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
         limit = MAGIC_LIMIT;
     }
     /* DEFECT: the allocation result is never checked. */
-    entries = malloc(sizeof(struct word_count) * (limit + 1));
-    memset(entries, 0, sizeof(struct word_count) * (limit + 1));
+    capacity = word_total(text) + 1;
+    entries = malloc(sizeof(struct word_count) * capacity);
+    memset(entries, 0, sizeof(struct word_count) * capacity);
 
     while (text[cursor] != '\0') {
         length = 0;
@@ -91,19 +108,22 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
                 break;
             }
         }
-        if (index == found && found < limit) {
+        if (index == found && found < capacity) {
             strcpy(entries[found].word, scratch);
             entries[found].count = 1;
             found = found + 1;
         }
     }
+    if (found > 1) {
+        qsort(entries, found, sizeof(struct word_count), compare_words);
+    }
+    if (found > limit) {
+        found = limit;
+    }
     for (index = 0; index < found; index = index + 1) {
         out[index] = entries[index];
     }
     free(entries);
-    if (found > 1) {
-        qsort(out, found, sizeof(struct word_count), compare_words);
-    }
     /* DEFECT: a library return value is ignored. */
     (void)printf("");
     return found;

@@ -9,10 +9,12 @@ warning_policy:
   mode: warn
   warning_set: standard
   baseline_warning_clean: false
-  baseline_warnings: 4
+  # Measured, not estimated: `c_task_tool.py admit` compiles the baseline in the release image under
+  # this warning set and fails the `baseline-warning-debt` check if the count differs (D-20-06).
+  baseline_warnings: 8
   note: >-
-    visible/repo/src/topwords.c is a stub whose parameters are unused; those warnings are the
-    baseline's, not a candidate's.
+    visible/repo/src/topwords.c is a stub whose eight parameters are unused (-Wunused-parameter);
+    those warnings are the baseline's, not a candidate's.
 # Three-valued applicability per dynamic lane (PCB-20-2). `required` makes the lane mandatory;
 # `unsupported` records that the lane cannot judge this task at all, so an absent scan is not a
 # defect; `optional` runs when the task permits it but never gates.

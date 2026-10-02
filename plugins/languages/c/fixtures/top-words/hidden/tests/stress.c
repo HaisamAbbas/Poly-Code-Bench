@@ -50,10 +50,15 @@ static void case_many_repeats_do_not_overflow(void)
 {
     struct word_count out[1];
     size_t repeat;
+    /* Each call starts from nothing, so the count is 3 every time. What this exercises is that
+     * repeated invocation leaves no state behind - a static buffer that grows, an index that is not
+     * reset, a freed allocation that is reused - which is the class of defect that only appears under
+     * repetition. */
     for (repeat = 0U; repeat < STRESS_REPEATS; ++repeat) {
-        (void)count_words("alpha alpha alpha", out, 1U);
+        memset(&out[0], 0, sizeof out[0]);
+        PCB_CHECK_INT(count_words("alpha alpha alpha", out, 1U), 1, "one distinct word");
+        PCB_CHECK_INT(out[0].count, 3, "state does not accumulate across calls");
     }
-    PCB_CHECK_INT(out[0].count, STRESS_REPEATS, "every repetition was counted");
 }
 
 static void case_all_distinct_words_survive(void)

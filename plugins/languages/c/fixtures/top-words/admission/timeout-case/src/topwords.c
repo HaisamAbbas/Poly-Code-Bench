@@ -86,14 +86,21 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
             continue;
         }
         /*
-         * DEFECT: `continue` here re-enters the outer scan at the same position whenever a word is a
-         * duplicate, so a text with any repetition never terminates.
+         * DEFECT: on a repeated word the scan *restarts from the beginning* instead of continuing.
+         * Progress is made on the count but none on the position, so any text containing a repeated
+         * word - which is to say, any real text - never terminates. This is the classic "retry
+         * without advancing" bug, and it is why the variant has to be run against a deadline: read on
+         * paper, the loop looks like it makes progress.
          */
         for (index = 0U; index < found; ++index) {
             if (strcmp(entries[index].word, scratch) == 0) {
                 entries[index].count = entries[index].count + 1U;
-                continue;
+                cursor = 0U;
+                break;
             }
+        }
+        if (index < found) {
+            continue;
         }
         if (index == found && found < limit) {
             memcpy(entries[found].word, scratch, length + 1U);

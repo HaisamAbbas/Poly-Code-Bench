@@ -52,6 +52,21 @@ int rank_words(struct word_count *items, size_t count)
     return 0;
 }
 
+/* Number of words (maximal letter runs) in `text`: an upper bound on the distinct words. */
+static size_t word_total(const char *text)
+{
+    size_t total = 0U;
+    size_t position;
+
+    for (position = 0U; text[position] != '\0'; ++position) {
+        if (is_word_byte((unsigned char)text[position])
+            && (position == 0U || !is_word_byte((unsigned char)text[position - 1U]))) {
+            ++total;
+        }
+    }
+    return total;
+}
+
 size_t count_words(const char *text, struct word_count *out, size_t limit)
 {
     struct word_count *entries;
@@ -64,8 +79,12 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
     if (text == NULL || out == NULL || limit == 0U) {
         return 0U;
     }
-    /* One extra row so the overflow branch is a real branch rather than an impossible one. */
-    capacity = limit + 1U;
+    /* Every distinct word is kept until ranking: the answer is the ranked prefix of *all* words, so
+     * a word first seen late but most frequent must still be counted. */
+    capacity = word_total(text);
+    if (capacity == 0U) {
+        return 0U;
+    }
     entries = calloc(capacity, sizeof *entries);
     if (entries == NULL) {
         return 0U;
@@ -93,14 +112,15 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
             }
         }
         if (index == used) {
-            if (used == capacity) {
-                /* Full: stop collecting. Ranking still covers everything found so far. */
-                break;
-            }
+            /* `capacity` counts every word, so a new distinct word always has a row. */
             memcpy(entries[used].word, scratch, length + 1U);
             entries[used].count = 1U;
             ++used;
         }
+    }
+    /* Rank everything first, then keep the prefix. */
+    if (used > 1U) {
+        qsort(entries, used, sizeof *entries, compare_entries);
     }
     if (used > limit) {
         used = limit;
@@ -109,8 +129,5 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
         out[index] = entries[index];
     }
     free(entries);
-    if (used > 1U) {
-        qsort(out, used, sizeof *out, compare_entries);
-    }
     return used;
 }

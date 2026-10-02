@@ -33,6 +33,9 @@ _SUMMARY = re.compile(
     r"Active|C-\w+)\b",
     re.IGNORECASE,
 )
+#: ``Checking src/topwords.c...`` - cppcheck's own statement that it read a file. The only evidence a
+#: cppcheck scan gives that it looked at anything at all.
+CHECKING = re.compile(r"^\s*(?:Checking|1/(\d+)) files?\s+(checked|skipped)\s+\((\d+)%\)")
 _SEVERITY_MAP = {
     "critical": "critical",
     "fatal error": "high",
@@ -119,6 +122,22 @@ def parse_diagnostics(
                 kind=kind,
             )
         )
+    return tuple(found)
+
+
+def checked_files(text: str) -> tuple[str, ...]:
+    """Files cppcheck states it examined.
+
+    cppcheck 2.10 prints one ``Checking <path>...`` line per input and, on input it cannot parse,
+    prints *nothing* and still exits 0. A scan over uncompilable code is therefore indistinguishable from
+    a clean one unless the progress lines are kept - which is why the frozen argument vector does not
+    pass ``--quiet`` and why this function exists.
+    """
+    found: list[str] = []
+    for raw in text.splitlines():
+        match = re.match(r"^\s*Checking\s+(?P<path>\S+?)\s*\.{0,3}\s*$", raw)
+        if match:
+            found.append(match.group("path"))
     return tuple(found)
 
 

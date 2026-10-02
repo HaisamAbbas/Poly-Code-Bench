@@ -14,6 +14,12 @@
 #     would advertise coverage the plugin does not have.
 #   * Portable C. The frozen target is C17 with no extensions, so `cert-*-cpp`, `osx.*` and
 #     `webkit.*` checkers are out: they would report on a platform this benchmark does not run.
+#   * No check that fires on the reference. A check the frozen reference implementation trips is a
+#     check that will charge a correct solution for doing the only thing C allows it to do. The
+#     reference is the task's own quality ceiling, so a rule the reference cannot satisfy is a rule
+#     that measures the wrong thing. `bugprone-easily-swappable-parameters` was removed for exactly
+#     this reason: it fires on every `const void *left, const void *right` comparator, and a qsort
+#     comparator is not a swapped-argument bug.
 #
 # Grouping matters for scoring, not just for output: `profile.py` reads this file to derive the stable
 # check ids an analyzer can declare before a scan has run.
@@ -26,7 +32,6 @@ bugprone:
   - branch-clone
   - dangling-handle
   - dynamic-static-initializers
-  - easily-swappable-parameters
   - fold-init-type
   - infinite-loop
   - integer-division

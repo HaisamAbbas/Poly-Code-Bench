@@ -1,0 +1,2 @@
+work/src/topwords.c:69:9: style: 'continue' is redundant since it is the last statement in a loop. [redundantContinue]
+work/src/topwords.c:56:12: style: The scope of the variable 'length' can be reduced. [variableScope]

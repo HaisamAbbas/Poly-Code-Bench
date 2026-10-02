@@ -39,7 +39,7 @@ RUN set -eu; \
     # separation a file-level fact: a `-fsanitize=address` link in the runtime or performance image
     # fails outright, so an instrumented build cannot be produced outside the recipe that declares it.
     if [ "${RECIPE}" = "instrumented" ]; then \
-        apt-get install -y --no-install-recommends libclang-rt-14-dev; \
+        apt-get install -y --no-install-recommends libclang-rt-14-dev llvm-14; \
     fi; \
     rm -rf /var/lib/apt/lists/*
 
@@ -63,7 +63,12 @@ RUN set -eu; \
     printf '{"schema":"pcb-c-guest-env-v1","recipe":"%s"}\n' "${RECIPE}" > /opt/pcb/recipe.json
 
 ENV PCB_RECIPE=${RECIPE} \
-    LC_ALL=C
+    LC_ALL=C \
+    # The sanitizers need a symbolizer to turn an address into a source line. Without one they still
+    # report the defect, but the frames carry no position - which would make the finding real but
+    # unlocatable, and an unlocatable finding cannot be charged to a file or counted once.
+    ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-14 \
+    UBSAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-14
 
 COPY pcb /opt/pcb
 

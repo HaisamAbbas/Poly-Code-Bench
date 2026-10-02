@@ -49,6 +49,9 @@ rule_mappings:
   - {check_id: c.asan.stack-overflow, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: stack-overflow}
   - {check_id: c.asan.memory-error, items: [memory_safety], owner: robustness, applicability: memory-opportunity, equivalence_family: memory-error}
   - {check_id: c.asan.definition-mismatch, items: [undefined_behavior], owner: robustness, applicability: always, equivalence_family: definition-mismatch}
+  # ASan's leak check (LeakSanitizer). Same family as Valgrind's definitely-lost record, so one leak
+  # seen by both lanes is one issue.
+  - {check_id: c.asan.resource-leak, items: [memory_safety], owner: robustness, applicability: allocation-opportunity, equivalence_family: resource-leak}
   # UndefinedBehaviorSanitizer families.
   - {check_id: c.ubsan.signed-overflow, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: signed-overflow}
   - {check_id: c.ubsan.shift-out-of-range, items: [undefined_behavior], owner: robustness, applicability: ub-opportunity, equivalence_family: shift-out-of-range}

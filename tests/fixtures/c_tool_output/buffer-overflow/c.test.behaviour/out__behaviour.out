@@ -1,0 +1,7 @@
+Fatal glibc error: malloc assertion failure in sysmalloc: (old_top == initial_top (av) && old_size == 0) || ((unsigned long) (old_size) >= MINSIZE && prev_inuse (old_top) && ((unsigned long) old_end & (pagesize - 1)) == 0)
+{"v":1,"kind":"group_start","group":"behaviour","declared":11}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.empty_input_returns_zero"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.empty_input_returns_zero","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.null_arguments_are_refused"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.null_arguments_are_refused","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.single_word_is_counted_once"}

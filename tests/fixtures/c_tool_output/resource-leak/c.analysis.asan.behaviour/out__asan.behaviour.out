@@ -1,0 +1,85 @@
+
+=================================================================
+==26==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cc898b in case_empty_input_returns_zero /workspace/work/tests/behaviour.c:22:5
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cc8f73 in case_single_word_is_counted_once /workspace/work/tests/behaviour.c:37:19
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cc92c3 in case_case_is_folded /workspace/work/tests/behaviour.c:46:19
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cc961b in case_ranking_is_by_frequency /workspace/work/tests/behaviour.c:55:19
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cc9a2f in case_ties_break_alphabetically /workspace/work/tests/behaviour.c:65:19
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cc9e1f in case_non_letter_bytes_separate_words /workspace/work/tests/behaviour.c:75:19
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 144 byte(s) in 1 object(s) allocated from:
+    #0 0x5efcd6c8d358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: abe500c5a716d375a178f65579458aa9583e6f38)
+    #1 0x5efcd6cc816d in count_words /workspace/work/src/topwords.c:66:15
+    #2 0x5efcd6cca1e4 in case_limit_returns_the_ranked_prefix /workspace/work/tests/behaviour.c:86:19
+    #3 0x5efcd6ccb5ea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5efcd6cc87e5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x798c73689249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+SUMMARY: AddressSanitizer: 1872 byte(s) leaked in 7 allocation(s).
+{"v":1,"kind":"group_start","group":"behaviour","declared":11}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.empty_input_returns_zero"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.empty_input_returns_zero","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.null_arguments_are_refused"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.null_arguments_are_refused","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.single_word_is_counted_once"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.single_word_is_counted_once","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.case_is_folded"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.case_is_folded","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.ranking_is_by_frequency"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.ranking_is_by_frequency","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.ties_break_alphabetically"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.ties_break_alphabetically","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.non_letter_bytes_separate_words"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.non_letter_bytes_separate_words","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.limit_returns_the_ranked_prefix"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.limit_returns_the_ranked_prefix","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.normalise_replaces_non_letters"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.normalise_replaces_non_letters","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.rank_words_sorts_in_place"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.rank_words_sorts_in_place","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.rank_words_refuses_empty"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.rank_words_refuses_empty","outcome":"pass","reason":""}
+{"v":1,"kind":"session_finish","group":"behaviour","declared":11,"observed":11,"passed":11,"failed":0}

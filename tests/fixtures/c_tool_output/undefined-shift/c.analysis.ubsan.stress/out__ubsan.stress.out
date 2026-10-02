@@ -1,0 +1,12 @@
+work/src/topwords.c:73:15: runtime error: shift exponent 512 is too large for 32-bit type 'unsigned int'
+    #0 0x5e6755c8e760 in count_words /workspace/work/src/topwords.c:73:15
+    #1 0x5e6755c8e7fa in case_long_input_is_handled /workspace/work/tests/stress.c:30:5
+    #2 0x5e6755c8f0bf in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #3 0x5e6755c8e792 in main /workspace/work/tests/stress.c:82:12
+    #4 0x74ea3472d249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+    #5 0x74ea3472d304 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x27304) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+    #6 0x5e6755c65420 in _start (/workspace/build/ubsan-stress+0x5420) (BuildId: 8fbeb0e39bddbc3398f5a237c4fdee5985d75042)
+
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior work/src/topwords.c:73:15 in 
+{"v":1,"kind":"group_start","group":"stress","declared":4}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.long_input_is_handled"}

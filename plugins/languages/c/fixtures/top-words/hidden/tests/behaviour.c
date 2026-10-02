@@ -13,7 +13,8 @@
 
 PCB_GROUP("behaviour")
 
-static const char *TOP_THREE[3] = { "beta", "alpha", "gamma" };
+/* Three distinct words, each occurring once: every count ties, so the ordering is alphabetical. */
+static const char *ALPHABETICAL[3] = { "alpha", "beta", "gamma" };
 
 static void case_empty_input_returns_zero(void)
 {
@@ -63,9 +64,9 @@ static void case_ties_break_alphabetically(void)
     struct word_count out[4];
     size_t used = count_words("gamma beta alpha", out, 4U);
     PCB_CHECK_INT(used, 3, "three distinct words");
-    PCB_CHECK_STR(out[0].word, TOP_THREE[0], "beta first");
-    PCB_CHECK_STR(out[1].word, TOP_THREE[1], "alpha second");
-    PCB_CHECK_STR(out[2].word, TOP_THREE[2], "gamma third");
+    PCB_CHECK_STR(out[0].word, ALPHABETICAL[0], "alpha first");
+    PCB_CHECK_STR(out[1].word, ALPHABETICAL[1], "beta second");
+    PCB_CHECK_STR(out[2].word, ALPHABETICAL[2], "gamma third");
 }
 
 static void case_non_letter_bytes_separate_words(void)
@@ -88,12 +89,42 @@ static void case_limit_returns_the_ranked_prefix(void)
     PCB_CHECK_STR(out[1].word, "b", "second most frequent is kept");
 }
 
+static void case_limit_ranks_words_first_seen_late(void)
+{
+    struct word_count out[4];
+    /* The most frequent word is seen last, after more distinct words than fit: the ranked prefix is
+     * over every word, not over the first `limit` words encountered. */
+    size_t used = count_words("b a a", out, 1U);
+    PCB_CHECK_INT(used, 1, "limit respected");
+    PCB_CHECK_STR(out[0].word, "a", "the later, more frequent word wins");
+    PCB_CHECK_INT(out[0].count, 2, "both occurrences counted");
+    used = count_words("a b c c c", out, 1U);
+    PCB_CHECK_INT(used, 1, "limit respected");
+    PCB_CHECK_STR(out[0].word, "c", "a word past the first limit+1 distinct words still wins");
+    PCB_CHECK_INT(out[0].count, 3, "all three occurrences counted");
+}
+
+static void case_trailing_separators_add_no_word(void)
+{
+    struct word_count out[4];
+    /* Each text has a unique most frequent word, so the tie-break plays no part in the verdict. */
+    size_t used = count_words("hello hello world.", out, 4U);
+    PCB_CHECK_INT(used, 2, "a trailing separator is not an empty word");
+    PCB_CHECK_STR(out[0].word, "hello", "most frequent first");
+    PCB_CHECK_INT(out[0].count, 2, "hello occurs twice");
+    used = count_words("x y y z!", out, 4U);
+    PCB_CHECK_INT(used, 3, "one-letter words, then a separator");
+    PCB_CHECK_STR(out[0].word, "y", "most frequent first");
+    PCB_CHECK_INT(out[0].count, 2, "y occurs twice");
+}
+
 static void case_normalise_replaces_non_letters(void)
 {
     char scratch[TOPWORDS_MAX_WORD];
+    /* Every byte the contract does not call a letter becomes a space, digits included. */
     size_t written = normalise_word("Ab-12 Cd!", scratch, sizeof scratch);
-    PCB_CHECK_INT(written, 8, "every byte is replaced or kept");
-    PCB_CHECK_STR(scratch, "ab 12 cd ", "letters lowercased, others spaced");
+    PCB_CHECK_INT(written, 9, "every byte is replaced or kept");
+    PCB_CHECK_STR(scratch, "ab    cd ", "letters lowercased, everything else spaced");
 }
 
 static void case_rank_words_sorts_in_place(void)
@@ -128,6 +159,8 @@ static const struct pcb_ctest_case pcb_cases[] = {
     PCB_CASE("behaviour.ties_break_alphabetically", case_ties_break_alphabetically),
     PCB_CASE("behaviour.non_letter_bytes_separate_words", case_non_letter_bytes_separate_words),
     PCB_CASE("behaviour.limit_returns_the_ranked_prefix", case_limit_returns_the_ranked_prefix),
+    PCB_CASE("behaviour.limit_ranks_words_first_seen_late", case_limit_ranks_words_first_seen_late),
+    PCB_CASE("behaviour.trailing_separators_add_no_word", case_trailing_separators_add_no_word),
     PCB_CASE("behaviour.normalise_replaces_non_letters", case_normalise_replaces_non_letters),
     PCB_CASE("behaviour.rank_words_sorts_in_place", case_rank_words_sorts_in_place),
     PCB_CASE("behaviour.rank_words_refuses_empty", case_rank_words_refuses_empty),

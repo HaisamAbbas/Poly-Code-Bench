@@ -1,0 +1,14 @@
+{
+ "schema_version": 1,
+ "kind": "execution_record",
+ "plan_id": "c.analysis.asan.stress",
+ "exit_code": 0,
+ "timed_out": false,
+ "duration_ms": 3937,
+ "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_tail": "",
+ "stderr_tail": "",
+ "isolation_tier": "development",
+ "sandbox_id": "f1a3d100-4f32-4e7c-a2b9-ea6d0f66401d"
+}

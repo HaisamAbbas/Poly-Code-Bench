@@ -66,14 +66,24 @@ _WARNING_SETS = {
     ),
 }
 _OPTIMIZATION = {
-    "runtime": ("-O1",),
-    "evaluator": ("-O0",),
-    "instrumented": ("-O1",),
-    "performance": ("-O2", "-DNDEBUG"),
+    # DWARF 4 everywhere: debug info adds no code, so it cannot affect a measurement, and Valgrind
+    # 3.19 cannot decode the DWARF 5 clang 14 emits by default - it aborts and produces no memcheck
+    # output at all. One decoder reading every binary the evaluator builds is what makes a memory
+    # finding locatable.
+    "runtime": ("-O1", "-gdwarf-4"),
+    "evaluator": ("-O0", "-gdwarf-4"),
+    "instrumented": ("-O1", "-gdwarf-4"),
+    "performance": ("-O2", "-gdwarf-4", "-DNDEBUG"),
 }
+#: Mirrors ``recipe.SANITIZER_FLAGS``; ``tests/test_c_plugin.py`` asserts the two agree. The address
+#: lane is non-PIE because Clang 14's ASan dies before ``main`` on a high-entropy PIE load (D-20-01).
 _SANITIZER_FLAGS = {
-    "address": ("-fsanitize=address", "-fno-omit-frame-pointer"),
+    "address": ("-fsanitize=address", "-fno-omit-frame-pointer", "-fno-pie"),
     "undefined": ("-fsanitize=undefined", "-fno-sanitize-recover=undefined"),
+}
+_SANITIZER_LINK_FLAGS = {
+    "address": ("-no-pie",),
+    "undefined": (),
 }
 _RECIPES = tuple(_OPTIMIZATION)
 #: Where the pinned harness and rules bundle live. Always on the include path: the hidden test groups
@@ -158,6 +168,7 @@ def compile_flags(options):
 
 def link_flags(options):
     flags = list(_SANITIZER_FLAGS.get(options["sanitizer"], ()))
+    flags.extend(_SANITIZER_LINK_FLAGS.get(options["sanitizer"], ()))
     if options["sanitizer"] is None:
         # Full RELRO and immediate binding: the release lane links a hardened binary, and the
         # flag difference is part of what the performance image records.
@@ -401,10 +412,10 @@ def _execute(options):
     else:
         command = [options["binary"]]
     environment = dict(os.environ)
+    # The sanitizer is *linked into* the binary by the frozen flags, so nothing is preloaded here.
+    # Preloading a second copy is exactly the "incompatible ASan runtimes" abort, and it would turn a
+    # working lane into a crash that reads like a finding.
     if options["sanitizer"] == "address":
-        # AddressSanitizer must come first in the initial library list or the runtime is not loaded
-        # and the "clean" result would be about nothing.
-        environment["LD_PRELOAD"] = _asan_runtime()
         environment["ASAN_OPTIONS"] = "abort_on_error=0:exitcode=1:detect_leaks=1"
     elif options["sanitizer"] == "undefined":
         environment["UBSAN_OPTIONS"] = "print_stacktrace=1:halt_on_error=0"
@@ -428,7 +439,10 @@ def _execute(options):
     sys.stdout.flush()
     sys.stderr.flush()
     return {
-        "exit_code": returned.returncode,
+        # The supervisor's own convention: a process killed by a signal is reported as 128+signal, not
+        # as a negative returncode. Recording it the same way means a parser has one rule for "the
+        # binary died" rather than two that disagree about the same crash.
+        "exit_code": 128 + (-returned.returncode) if returned.returncode < 0 else returned.returncode,
         "timed_out": False,
         "mode": options["execute"],
         "stdout_digest": "sha256:"
@@ -439,8 +453,9 @@ def _execute(options):
 def _asan_runtime():
     """Absolute path of the AddressSanitizer runtime, resolved once per guest.
 
-    clang ships the runtime next to the driver; an empty value means "let the linked binary use its
-    own", which is the normal case because the flags were linked in.
+    Kept as a diagnostic rather than a preload: if a build claims to be instrumented and the runtime
+    is not installed, the link fails and this is the name to look for in the image record. Preloading
+    a second copy is what produces the "incompatible ASan runtimes" abort.
     """
     try:
         completed = subprocess.run(

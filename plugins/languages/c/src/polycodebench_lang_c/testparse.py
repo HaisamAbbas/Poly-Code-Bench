@@ -59,6 +59,29 @@ def _run_record(raw: ArtifactReader, name: str) -> dict[str, Any] | None:
         return None
 
 
+def _build_record(raw: ArtifactReader, name: str) -> dict[str, Any] | None:
+    """The build driver's normalized document, when the plan declared one."""
+    try:
+        return json.loads(raw.read(f"out/{name}.build.json").decode("utf-8", errors="replace"))
+    except (FileNotFoundError, ValueError):
+        return None
+
+
+def _program_exit(raw: ArtifactReader, name: str, run: dict[str, Any]) -> tuple[int | None, bool]:
+    """The *test binary's* exit status and timeout flag.
+
+    This matters more in C than anywhere else. A C test group is one process: the compile-and-link
+    driver links it and then runs it, so the status the supervisor sees belongs to the driver, which
+    exits 0 as soon as the link succeeds. A binary that segfaults, aborts on heap corruption, or is
+    killed at the deadline is invisible in that status. The driver records what the binary itself
+    returned, and that is the evidence a candidate-fault classification has to use.
+    """
+    build = _build_record(raw, name)
+    if build and isinstance(build.get("run"), dict):
+        return build["run"].get("exit_code"), bool(build["run"].get("timed_out"))
+    return run.get("exit_code"), bool(run.get("timed_out"))
+
+
 def parse_group_report(
     group: TestGroupPlan,
     inventory: InventoryGroup,
@@ -89,11 +112,12 @@ def parse_group_report(
     text = raw.read(f"out/{name}.out").decode("utf-8", errors="replace") if f"out/{name}.out" in set(raw.list()) else ""
     merge = raw.read(f"out/{name}.err").decode("utf-8", errors="replace") if f"out/{name}.err" in set(raw.list()) else ""
     combined = text + ("\n" + merge if merge else "")
-    timed_out = bool(run.get("timed_out")) or status == "timed_out"
+    program_exit, program_timed_out = _program_exit(raw, name, run)
+    timed_out = bool(program_timed_out) or status == "timed_out"
 
     report = load_guest("pcb_c_test_report")
     document = report.summarize(
-        text, run.get("exit_code"), timed_out, name, merge or None
+        text, program_exit, timed_out, name, merge or None
     )
     known = {case.case_id for case in inventory.cases}
     required = {case.case_id: case.required for case in inventory.cases}
@@ -130,8 +154,11 @@ def parse_group_report(
             "the group exceeded its deadline",
             in_flight_case=in_flight,
         )
-    if run.get("exit_code") is not None and int(run["exit_code"]) > 128:
-        signal = int(run["exit_code"]) - 128
+    if program_exit is not None and int(program_exit) > 128:
+        signal = int(program_exit) - 128
+        # A binary killed by a signal is the candidate's fault, not the harness's: the harness had
+        # already linked and started it. Reading this from the *driver's* status would miss it
+        # entirely, because the driver exits 0 as soon as the link succeeds.
         return ordered, control(
             _SIGNAL_EXIT,
             f"the test binary was terminated by signal {signal}",
@@ -139,7 +166,19 @@ def parse_group_report(
         )
     candidate_sites, harness_sites = candidate_error_sites(combined, candidate_paths or set())
     if document["declared_cases"] is None:
-        # Nothing ran at all. Whatever the build or the link reported is the only evidence there is.
+        # The binary produced no harness stream at all. A crash has already been caught above; what is
+        # left is either a build that never linked or a harness that could not start.
+        build = _build_record(raw, name)
+        if build is not None and not build.get("linked", False):
+            # The compile driver recorded why, and that is a candidate-attributable error rather than
+            # an unexplained absence of evidence.
+            return ordered, control(
+                "finished",
+                "",
+                candidate_collection_errors=tuple(candidate_sites)
+                or (f"{build.get('fatal') or 'the target did not link'}",),
+                harness_collection_errors=tuple(harness_sites),
+            )
         if candidate_sites:
             return ordered, control(
                 "finished",
@@ -147,7 +186,10 @@ def parse_group_report(
                 candidate_collection_errors=tuple(candidate_sites),
                 harness_collection_errors=() if candidate_sites else tuple(harness_sites),
             )
-        return ordered, control("harness_failure", "no case records and no harness summary")
+        return ordered, control(
+            "harness_failure",
+            f"the binary produced no harness stream and exited {program_exit}",
+        )
     if not document["complete"]:
         return ordered, control(
             "harness_failure",

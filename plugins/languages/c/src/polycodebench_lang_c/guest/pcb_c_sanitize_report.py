@@ -43,6 +43,14 @@ _FRAME = re.compile(
     r"(?P<file>[^\s:()]+):(?P<line>\d+)(?::(?P<column>\d+))?",
     re.MULTILINE,
 )
+#: Valgrind's own stack format, which is not the sanitizer's: `at 0x1094FD: count_words (f.c:100)`
+#: for the frame that did it and `by 0x...: caller (f.c:30)` for the one above.
+_VALGRIND_FRAME = re.compile(
+    r"^\s*==(?P<pid>\d+)==\s+(?P<role>at|by)\s+0x[0-9A-Fa-f]+:"
+    r"(?:\s+(?:in\s+)?(?P<symbol>[\w:~<>.]+))?"
+    r"(?:\s+\((?P<file>[^):]+):(?P<line>\d+)(?::(?P<column>\d+))?\))?",
+    re.MULTILINE,
+)
 #: A frame inside the candidate tree. Everything above the first libc frame is harness code.
 _HARNESS_MARKERS = ("pcb_ctest", "/usr/lib/", "interceptor.c", "sanitizer_common")
 _ASAN_KINDS = {
@@ -63,36 +71,6 @@ _ASAN_KINDS = {
     "negative-size-param": ("high", "bounds-violation"),
     "container-overflow": ("medium", "bounds-violation"),
     "odr-violation": ("low", "definition-mismatch"),
-}
-_UBSAN_KINDS = {
-    "shift-exponent": ("high", "shift-out-of-range"),
-    "shift-base": ("medium", "shift-out-of-range"),
-    "signed-integer-overflow": ("high", "signed-overflow"),
-    "integer-overflow": ("high", "signed-overflow"),
-    "division-by-zero": ("high", "division-by-zero"),
-    "null": ("high", "null-pointer-dereference"),
-    "pointer-overflow": ("medium", "pointer-arithmetic"),
-    "misaligned-address": ("medium", "misaligned-access"),
-    "invalid-load": ("high", "invalid-access"),
-    "store-to-const": ("medium", "invalid-access"),
-    "member-access-within-misaligned-address": ("medium", "misaligned-access"),
-    "vptr": ("high", "invalid-access"),
-    "function": ("high", "invalid-access"),
-}
-_UBSAN_CANONICAL = {
-    "shift-exponent": "shift-exponent-too-large",
-    "shift-base": "shift-exponent-too-large",
-    "signed-integer-overflow": "signed-integer-overflow",
-    "integer-overflow": "signed-integer-overflow",
-    "division-by-zero": "division-by-zero",
-    "null": "null-pointer-dereference",
-    "misaligned-address": "misaligned-access",
-    "member-access-within-misaligned-address": "misaligned-access",
-    "invalid-load": "invalid-memory-access",
-    "store-to-const": "invalid-memory-access",
-    "function": "invalid-memory-access",
-    "vptr": "invalid-memory-access",
-    "pointer-overflow": "pointer-arithmetic-out-of-bounds",
 }
 _VALGRIND_KINDS = {
     "Invalid read": ("high", "bounds-violation"),
@@ -139,25 +117,79 @@ def _candidates(text):
     return None
 
 
+def _valgrind_site(text):
+    """Valgrind's own frame walk: ``at`` is the site that did it, then ``by`` frames outward.
+
+    A leak record names only the *allocation* site, and Valgrind writes it as ``at`` too, so the same
+    walk works for both. The first frame outside the harness wins, for the same reason the sanitizer
+    walk does.
+    """
+    for match in _VALGRIND_FRAME.finditer(text):
+        file = match.group("file")
+        if not file or any(marker in file for marker in _HARNESS_MARKERS):
+            continue
+        return {
+            "file": file,
+            "line": int(match.group("line") or 1),
+            "column": int(match.group("column")) if match.group("column") else None,
+            "symbol": match.group("symbol"),
+        }
+    return None
+
+
+#: One LeakSanitizer record. Only *direct* leaks are findings: an indirect leak is memory reachable
+#: only from a directly leaked block, so it is a consequence of the same defect, not a second one.
+_LSAN_RECORD = re.compile(r"^Direct leak of (?P<bytes>\d+) byte\(s\) in \d+ object\(s\)", re.MULTILINE)
+
+
+def _leak_findings(block):
+    records = list(_LSAN_RECORD.finditer(block))
+    findings = []
+    for index, record in enumerate(records):
+        end = records[index + 1].start() if index + 1 < len(records) else len(block)
+        site = _candidates(block[record.start() : end])
+        findings.append(
+            {
+                "tool": "LeakSanitizer",
+                "kind": "direct-leak",
+                "family": "resource-leak",
+                "detail_family": "resource-leak",
+                "severity": "medium",
+                "summary": "%s bytes directly leaked" % record.group("bytes"),
+                "file": site["file"] if site else None,
+                "line": site["line"] if site else 0,
+                "column": site["column"] if site else None,
+                "symbol": site["symbol"] if site else None,
+            }
+        )
+    return findings
+
+
 def _asan_findings(text):
     findings = []
     banners = list(_REPORT_BANNER.finditer(text))
     for index, banner in enumerate(banners):
-        if banner.group("sanitizer") not in {"AddressSanitizer", "UndefinedBehaviorSanitizer"}:
-            continue
+        sanitizer = banner.group("sanitizer")
         end = banners[index + 1].start() if index + 1 < len(banners) else len(text)
         block = text[banner.start() : end]
+        if sanitizer == "LeakSanitizer":
+            # ASan's leak check reports under its own banner. Ignoring it would read a leaking
+            # candidate's address lane as clean.
+            findings.extend(_leak_findings(block))
+            continue
+        if sanitizer not in {"AddressSanitizer", "UndefinedBehaviorSanitizer"}:
+            continue
         summary = banner.group("summary").strip()
-        sanitizer = banner.group("sanitizer")
         kind = _kind_from_summary(summary)
         if sanitizer == "AddressSanitizer":
             severity, family = _ASAN_KINDS.get(kind, ("high", "memory-error"))
             canonical = family
         else:
             runtime = _RUNTIME_ERROR.search(block)
-            sub = runtime.group("message").strip() if runtime else ""
-            canonical = _UBSAN_CANONICAL.get(sub.split(":")[0].strip(), "undefined-behaviour")
-            severity, family = _UBSAN_KINDS.get(sub.split(":")[0].strip(), ("high", "undefined-behaviour"))
+            canonical = _ubsan_family(runtime.group("message") if runtime else "")
+            severity, family = _UBSAN_SEVERITY.get(canonical, "high"), canonical
+        # Sanitizer stacks are `#N 0x... in symbol file:line:col`; Valgrind's `at`/`by` walk does not
+        # match them, and an unlocated finding cannot be keyed or charged to a line.
         site = _candidates(block)
         findings.append(
             {
@@ -183,19 +215,48 @@ def _kind_from_summary(summary):
     return summary.split(" on ")[0][:80]
 
 
+#: UBSan prints a sentence, not a check name (``shift exponent 512 is too large for 32-bit type``), so
+#: the family is read from the sentence. Names are the profile's ``c.ubsan.*`` families; the order
+#: matters where one message could match two patterns.
+_UBSAN_MESSAGES = (
+    (re.compile(r"^(?:shift exponent|left shift of|shift base)"), "shift-out-of-range"),
+    (re.compile(r"^(?:signed integer overflow|negation of)"), "signed-overflow"),
+    (re.compile(r"^division (?:by zero|of)"), "division-by-zero"),
+    (re.compile(r"null pointer"), "null-pointer-dereference"),
+    (re.compile(r"misaligned address"), "misaligned-access"),
+    (
+        re.compile(r"^(?:pointer index expression|applying (?:non-)?zero offset|.*pointer overflow)"),
+        "pointer-arithmetic-out-of-bounds",
+    ),
+    (re.compile(r"^(?:load of value|index -?\d+ out of bounds)"), "invalid-memory-access"),
+)
+_UBSAN_SEVERITY = {
+    "shift-out-of-range": "medium",
+    "misaligned-access": "medium",
+    "pointer-arithmetic-out-of-bounds": "medium",
+}
+
+
+def _ubsan_family(message):
+    text = message.strip()
+    for pattern, family in _UBSAN_MESSAGES:
+        if pattern.search(text):
+            return family
+    return "undefined-behaviour"
+
+
 def _ubsan_findings(text):
     findings = []
     for match in _RUNTIME_ERROR.finditer(text):
         raw = match.group("message").strip()
-        key = raw.split(":")[0].strip()
-        severity, family = _UBSAN_KINDS.get(key, ("high", "undefined-behaviour"))
+        family = _ubsan_family(raw)
         findings.append(
             {
                 "tool": "UndefinedBehaviorSanitizer",
-                "kind": key,
-                "family": _UBSAN_CANONICAL.get(key, "undefined-behaviour"),
+                "kind": family,
+                "family": family,
                 "detail_family": family,
-                "severity": severity,
+                "severity": _UBSAN_SEVERITY.get(family, "high"),
                 "summary": raw[:300],
                 "file": match.group("file"),
                 "line": int(match.group("line")),
@@ -218,7 +279,7 @@ def _valgrind_findings(text):
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         block = text[match.start() : end]
         severity, family = _VALGRIND_KINDS.get(match.group("kind"), ("medium", "memory-error"))
-        site = _candidates(block)
+        site = _valgrind_site(block)
         findings.append(
             {
                 "tool": "valgrind-memcheck",
@@ -235,12 +296,19 @@ def _valgrind_findings(text):
         )
     # Valgrind's "definitely lost" blocks are leaks, which are a distinct consequence family from a
     # bounds violation; they are recorded rather than folded into the same count.
+    # memcheck writes `288 bytes in 1 blocks are definitely lost in loss record 1 of 5`, with
+    # thousands separators (`4,608 bytes`); a pattern without either reads every leak as no leak.
     for match in re.finditer(
-        r"==(?P<pid>\d+)==\s+(?P<bytes>\d+) bytes definitely lost in loss record \d+", text
+        r"==(?P<pid>\d+)==\s+(?P<bytes>[\d,]+) bytes in [\d,]+ blocks are definitely lost "
+        r"in loss record [\d,]+",
+        text,
     ):
-        end = text.find("\n==", match.end())
-        block = text[match.end() : end if end > 0 else len(text)]
-        site = _candidates(block)
+        # Every memcheck line starts with `==pid==`, so the record's stack runs to the bare
+        # `==pid==` separator line, not to the next `==`; stopping there left every leak unlocated.
+        separator = re.compile(r"^==%s==\s*$" % match.group("pid"), re.MULTILINE)
+        ended = separator.search(text, match.end())
+        block = text[match.end() : ended.start() if ended else len(text)]
+        site = _valgrind_site(block)
         findings.append(
             {
                 "tool": "valgrind-memcheck",
@@ -248,7 +316,7 @@ def _valgrind_findings(text):
                 "family": "resource-leak",
                 "detail_family": "resource-leak",
                 "severity": "medium",
-                "summary": "%s bytes definitely lost" % match.group("bytes"),
+                "summary": "%s bytes definitely lost" % match.group("bytes").replace(",", ""),
                 "file": site["file"] if site else None,
                 "line": site["line"] if site else 0,
                 "column": site["column"] if site else None,

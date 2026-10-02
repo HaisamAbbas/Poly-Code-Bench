@@ -65,19 +65,38 @@ NON_BLOCKING_WARNINGS = frozenset({"-Wunused-parameter"})
 
 #: Sanitizer flags, by the analyzer that owns them. Address and undefined are separate lanes so a
 #: memory error is never also reported as undefined behaviour and double-penalised.
+#:
+#: The address lane builds a non-PIE executable. Clang 14's ASan runtime cannot place its shadow
+#: memory when the kernel randomizes a PIE load address with high entropy (``vm.mmap_rnd_bits=32``,
+#: the WSL2 6.x default): about one run in four dies of SIGSEGV before ``main``, with no report. That
+#: death says nothing about the candidate. Disabling ASLR instead would need ``personality()``, which
+#: the sandbox's seccomp profile denies. A fixed load address changes where the code lives, not what
+#: ASan checks (D-20-01).
 SANITIZER_FLAGS: dict[str, tuple[str, ...]] = {
-    "address": ("-fsanitize=address", "-fno-omit-frame-pointer"),
+    "address": ("-fsanitize=address", "-fno-omit-frame-pointer", "-fno-pie"),
     "undefined": ("-fsanitize=undefined", "-fno-sanitize-recover=undefined"),
+}
+#: Link-only flags. ``-no-pie`` is a linker-driver flag; passed to a ``-c`` compile it would be an
+#: "argument unused" warning recorded against the candidate.
+SANITIZER_LINK_FLAGS: dict[str, tuple[str, ...]] = {
+    "address": ("-no-pie",),
+    "undefined": (),
 }
 SANITIZER_NAMES = tuple(SANITIZER_FLAGS)
 
 #: Optimization per recipe, baked by the image so a timing is not whatever the manifest said.
+#:
+#: ``-gdwarf-4`` is in every recipe, for two reasons. Debug info adds DWARF and no code, so it cannot
+#: affect a measurement; and Valgrind 3.19 cannot read the DWARF 5 that clang 14 emits by default - it
+#: aborts with "unhandled dwarf2 abbrev form code" and produces *no* memcheck output at all. Freezing
+#: the debug format benchmark-wide means one decoder can read every binary the evaluator builds, which
+#: is what lets a memory-safety finding be charged to a source line instead of arriving unlocated.
 RECIPE_OPTIMIZATION: dict[Recipe, tuple[str, ...]] = {
-    "runtime": ("-O1",),
-    "evaluator": ("-O0",),
-    "instrumented": ("-O1",),
+    "runtime": ("-O1", "-gdwarf-4"),
+    "evaluator": ("-O0", "-gdwarf-4"),
+    "instrumented": ("-O1", "-gdwarf-4"),
     # Measurements run at -O2 with no instrumentation and no debug helpers.
-    "performance": ("-O2", "-DNDEBUG"),
+    "performance": ("-O2", "-gdwarf-4", "-DNDEBUG"),
 }
 #: Optimization levels an instrumented lane may use. An instrumented binary is a correctness
 #: instrument, never a speed instrument.
@@ -142,7 +161,9 @@ class BuildRecipe:
         Sanitizer flags must be repeated at link time or the runtime is never pulled in; that is a
         linker error for the built binary rather than a silent no-op, so it is stated here explicitly.
         """
-        return (*self.sanitizer_flags, *(("-Wl,-z,now",) if not self.sanitizer else ()))
+        if self.sanitizer is None:
+            return ("-Wl,-z,now",)
+        return (*self.sanitizer_flags, *SANITIZER_LINK_FLAGS[self.sanitizer])
 
     def flags_digest(self) -> str:
         return str(
@@ -235,6 +256,9 @@ def recipe_document() -> dict[str, object]:
         "supported_standards": list(SUPPORTED_STANDARDS),
         "warning_sets": {name: list(flags) for name, flags in WARNING_SETS.items()},
         "sanitizer_flags": {name: list(flags) for name, flags in SANITIZER_FLAGS.items()},
+        "sanitizer_link_flags": {
+            name: list(flags) for name, flags in SANITIZER_LINK_FLAGS.items()
+        },
         "non_blocking_warnings": sorted(NON_BLOCKING_WARNINGS),
         "clang_tidy_config": clang_tidy_config_text(),
         "cppcheck_arguments": list(cppcheck_arguments()),
@@ -345,9 +369,15 @@ def clang_tidy_arguments() -> tuple[str, ...]:
 
 
 def cppcheck_arguments() -> tuple[str, ...]:
-    """The frozen cppcheck argument vector (no shell string, no ``--enable=all``)."""
+    """The frozen cppcheck argument vector (no shell string, no ``--enable=all``).
+
+    ``--quiet`` is deliberately *not* used. Quiet suppresses cppcheck's ``Checking <file>...`` progress
+    lines, and those lines are the only evidence that cppcheck actually read a file: on input it cannot
+    parse, cppcheck 2.10 prints nothing at all and exits 0, which would make a scan of uncompilable code
+    look identical to a clean one. The parser reads the progress lines and reports a scan that never
+    covered a file as missing (Technical Spec 12.3).
+    """
     return (
-        "--quiet",
         "--inline-suppr",
         f"--enable={','.join(CPPCHECK_CATEGORIES)}",
         f"--std={DEFAULT_STANDARD}",

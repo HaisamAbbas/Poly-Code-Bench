@@ -111,8 +111,15 @@ def _run(name: str, deadline: int, *command: str, merge: bool = False) -> tuple[
 
 
 def _captured(name: str, stdout_format: Literal["json", "jsonl", "text"]) -> tuple[PlanOutput, ...]:
+    """The three files every plan produces.
+
+    ``.out`` is the *report*: it is required, because a plan whose output did not arrive is missing
+    evidence and has to be reported as missing rather than read as a clean scan. ``.err`` is
+    supplementary - with ``--merge`` the sanitizers' own text lands in ``.out`` - so its absence is not
+    a failure.
+    """
     return (
-        PlanOutput(path=f"out/{name}.out", format=stdout_format, required=False, max_bytes=4 * MIB),
+        PlanOutput(path=f"out/{name}.out", format=stdout_format, required=True, max_bytes=4 * MIB),
         PlanOutput(path=f"out/{name}.err", format="text", required=False, max_bytes=4 * MIB),
         PlanOutput(path=f"out/{name}.run.json", format="json"),
     )
@@ -352,12 +359,24 @@ def _analysis(
     extra_inputs: tuple[PlanInput, ...] = (),
     ownership: Mapping[str, ScoreDimension | None] | None = None,
     merge: bool = False,
+    plan_id: str | None = None,
 ) -> AnalysisPlan:
     task = context.task
     quality = quality_from_mapping(task.quality)
+    plan_outputs = outputs
+    if not any(
+        output.required and not output.path.endswith((".run.json", ".build.json"))
+        for output in outputs
+    ):
+        report = next((output for output in outputs if output.path.endswith(".out")), None)
+        if report is not None:
+            plan_outputs = tuple(
+                item.model_copy(update={"required": True}) if item is report else item
+                for item in outputs
+            )
     fields = _base(
         ids,
-        plan_id=f"c.analysis.{analyzer}",
+        plan_id=plan_id or f"c.analysis.{analyzer}",
         argv=argv,
         tool=ids.tool(tool, recipe=recipe, flags_digest=flags_digest),
         parser_id=f"c-{analyzer.replace('_', '-')}",
@@ -366,7 +385,7 @@ def _analysis(
             *_scaffold_inputs(quality.scaffold_files),
             *extra_inputs,
         ),
-        outputs=outputs,
+        outputs=plan_outputs,
         scope=tuple(context.candidate_paths),
         timeout=timeout,
         semantics=semantics,
@@ -448,8 +467,10 @@ def _static_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analys
     return plan
 
 
-def _lane_groups(task: FrozenTask, lane: SanitizerPolicy) -> tuple[tuple[str, ...], tuple[PlanInput, ...]]:
-    """The oracle group files a lane interprets, and their overlay inputs.
+def _lane_groups(
+    task: FrozenTask, lane: SanitizerPolicy
+) -> list[tuple[str, tuple[str, ...], tuple[PlanInput, ...]]]:
+    """One entry per oracle group the lane interprets: its id, its files and their overlay inputs.
 
     A lane is declared against specific groups, not against the whole suite: memcheck over the
     acceptance group would measure the harness as much as the candidate, and would multiply an
@@ -457,116 +478,136 @@ def _lane_groups(task: FrozenTask, lane: SanitizerPolicy) -> tuple[tuple[str, ..
     """
     oracle = oracle_from_mapping(task.inventory)
     wanted = set(lane.groups)
-    files = tuple(dict.fromkeys(f for g in oracle.groups if g.group_id in wanted for f in g.files))
-    return files, tuple(PlanInput(path=f"work/{f}", role="overlay") for f in files)
+    entries: list[tuple[str, tuple[str, ...], tuple[PlanInput, ...]]] = []
+    for group in oracle.groups:
+        if group.group_id not in wanted:
+            continue
+        files = tuple(dict.fromkeys(group.files))
+        entries.append(
+            (
+                group.group_id,
+                files,
+                tuple(PlanInput(path=f"work/{f}", role="overlay") for f in files),
+            )
+        )
+    if not entries:
+        # A lane that names no existing group would silently produce no evidence. One empty entry keeps
+        # the lane visible as a plan that fails, which is a better answer than a lane that vanishes.
+        entries.append(("", (), ()))
+    return entries
 
 
 def _dynamic_plans(ids: ImageIdentities, context: AnalysisContext) -> list[AnalysisPlan]:
-    """Sanitizer and Valgrind lanes, each in a recipe that can honestly claim what it ran.
+    """Sanitizer and Valgrind lanes: one plan per (lane, oracle group), each in its own recipe.
+
+    One plan per group rather than one per lane is forced by C, and the forcing is informative: every
+    oracle group file carries its own ``main``, so a lane that named two groups could only be run as
+    two programs. Building them separately is also what makes the evidence better - each group gets its
+    own sanitizer report, so a defect in the acceptance group and a defect in the quality-only group
+    are separate findings instead of whichever one aborted first.
+
+    The *analyzer id* is the tool (``asan``, ``ubsan``, ``valgrind``) so it matches the frozen
+    ``required_analyzers`` list; the *lane* is the capability being judged, and it is what the report
+    document is keyed by. Conflating the two would make it impossible to require memcheck without also
+    demanding a sanitizer that cannot judge the task.
 
     The sanitizer lanes build *and* run in the ``instrumented`` image, so the flags and the runtime
     cannot disagree. Valgrind builds in ``runtime`` and runs under memcheck: Valgrind is an observer,
     not a compiler flag, so instrumenting the binary as well would only add cost without adding
     coverage. Neither image is ever reachable from a performance plan.
-
-    The *analyzer id* is the tool (``asan``, ``ubsan``, ``valgrind``) so it matches the frozen
-    ``required_analyzers`` list; the *lane* is the capability being judged, and it is what the
-    report document is keyed by. Conflating the two would make it impossible to require memcheck
-    without also demanding a sanitizer that cannot judge the task.
     """
     task = context.task
     quality = quality_from_mapping(task.quality)
     timeout = oracle_from_mapping(task.inventory).suite_timeout_seconds
     plan: list[AnalysisPlan] = []
     for lane in quality.active_lanes:
-        files, overlay = _lane_groups(task, lane)
         analyzer = LANE_ANALYZER[lane.lane]
-        # A flat name: the group file is `tests/stress.c`, and letting that path fragment into the
-        # binary name would ask the linker to create a directory nobody made.
-        group = files[0].rsplit("/", 1)[-1].removesuffix(".c") if files else "lane"
-        if lane.lane in {"address", "undefined"}:
-            recipe = _recipe_for(task, "instrumented", sanitizer=lane.lane)
-            argv = _run(
-                analyzer,
-                timeout,
-                *_build_argv(
-                    recipe,
-                    name=analyzer,
-                    binary=f"{BUILD_DIR}/{analyzer}-{group}",
-                    sources=(
-                        *(f"work/{p}" for p in task.required_outputs if p.endswith(".c")),
-                        *(f"work/{f}" for f in files),
-                        f"{GUEST_ROOT}/rules/pcb_ctest.c",
+        for group_id, files, overlay in _lane_groups(task, lane):
+            if lane.lane in {"address", "undefined"}:
+                recipe = _recipe_for(task, "instrumented", sanitizer=lane.lane)
+                argv = _run(
+                    f"{analyzer}.{group_id}",
+                    timeout,
+                    *_build_argv(
+                        recipe,
+                        name=f"{analyzer}.{group_id}",
+                        binary=f"{BUILD_DIR}/{analyzer}-{group_id}",
+                        sources=(
+                            *(f"work/{p}" for p in task.required_outputs if p.endswith(".c")),
+                            *(f"work/{f}" for f in files),
+                            f"{GUEST_ROOT}/rules/pcb_ctest.c",
+                        ),
+                        execute="plain",
+                        deadline=timeout - 10,
                     ),
-                    execute="plain",
-                    deadline=timeout - 10,
-                ),
-                merge=True,
-            )
-            plan.append(
-                _analysis(
-                    ids,
-                    context,
-                    analyzer=analyzer,
-                    tool="clang",
-                    recipe="instrumented",
-                    argv=argv,
-                    outputs=(
-                        PlanOutput(path=f"out/{analyzer}.build.json", format="json"),
-                        *_captured(analyzer, "text"),
-                    ),
-                    semantics=ExitSemantics(
-                        success=(BUILD_OK,), findings=(1, *BUILD_FINDINGS), error=TOOL_ERRORS
-                    ),
-                    output_schema=f"pcb-c-sanitizer-report-v1.{lane.lane}",
-                    flags_digest=recipe.flags_digest(),
-                    timeout=timeout,
-                    extra_inputs=overlay,
-                    ownership={"candidate-undefined-behaviour": ScoreDimension.ROBUSTNESS},
+                    merge=True,
                 )
-            )
-        elif lane.lane == "valgrind":
-            recipe = _recipe_for(task, "runtime")
-            argv = _run(
-                analyzer,
-                timeout,
-                *_build_argv(
-                    recipe,
-                    name=analyzer,
-                    binary=f"{BUILD_DIR}/{analyzer}-{group}",
-                    sources=(
-                        *(f"work/{p}" for p in task.required_outputs if p.endswith(".c")),
-                        *(f"work/{f}" for f in files),
-                        f"{GUEST_ROOT}/rules/pcb_ctest.c",
-                    ),
-                    execute="valgrind",
-                    deadline=timeout - 10,
-                ),
-                merge=True,
-            )
-            plan.append(
-                _analysis(
-                    ids,
-                    context,
-                    analyzer=analyzer,
-                    tool="valgrind",
-                    recipe="evaluator",
-                    argv=argv,
-                    outputs=(
-                        PlanOutput(path=f"out/{analyzer}.build.json", format="json"),
-                        *_captured(analyzer, "text"),
-                    ),
-                    semantics=ExitSemantics(
-                        success=(BUILD_OK,),
-                        findings=(1, VALGRIND_FINDINGS, *BUILD_FINDINGS),
-                        error=TOOL_ERRORS,
-                    ),
-                    output_schema="pcb-c-sanitizer-report-v1.valgrind",
-                    flags_digest=recipe.flags_digest(),
-                    timeout=timeout,
-                    extra_inputs=overlay,
+                plan.append(
+                    _analysis(
+                        ids,
+                        context,
+                        analyzer=analyzer,
+                        plan_id=f"c.analysis.{analyzer}.{group_id}",
+                        tool="clang",
+                        recipe="instrumented",
+                        argv=argv,
+                        outputs=(
+                            PlanOutput(path=f"out/{analyzer}.{group_id}.build.json", format="json"),
+                            *_captured(f"{analyzer}.{group_id}", "text"),
+                        ),
+                        semantics=ExitSemantics(
+                            success=(BUILD_OK,), findings=(1, *BUILD_FINDINGS), error=TOOL_ERRORS
+                        ),
+                        output_schema=f"pcb-c-sanitizer-report-v1.{lane.lane}",
+                        flags_digest=recipe.flags_digest(),
+                        timeout=timeout,
+                        extra_inputs=overlay,
+                        ownership={"candidate-undefined-behaviour": ScoreDimension.ROBUSTNESS},
+                    )
                 )
-            )
+            elif lane.lane == "valgrind":
+                recipe = _recipe_for(task, "runtime")
+                argv = _run(
+                    f"{analyzer}.{group_id}",
+                    timeout,
+                    *_build_argv(
+                        recipe,
+                        name=f"{analyzer}.{group_id}",
+                        binary=f"{BUILD_DIR}/{analyzer}-{group_id}",
+                        sources=(
+                            *(f"work/{p}" for p in task.required_outputs if p.endswith(".c")),
+                            *(f"work/{f}" for f in files),
+                            f"{GUEST_ROOT}/rules/pcb_ctest.c",
+                        ),
+                        execute="valgrind",
+                        deadline=timeout - 10,
+                    ),
+                    merge=True,
+                )
+                plan.append(
+                    _analysis(
+                        ids,
+                        context,
+                        analyzer=analyzer,
+                        plan_id=f"c.analysis.{analyzer}.{group_id}",
+                        tool="valgrind",
+                        recipe="evaluator",
+                        argv=argv,
+                        outputs=(
+                            PlanOutput(path=f"out/{analyzer}.{group_id}.build.json", format="json"),
+                            *_captured(f"{analyzer}.{group_id}", "text"),
+                        ),
+                        semantics=ExitSemantics(
+                            success=(BUILD_OK,),
+                            findings=(1, VALGRIND_FINDINGS, *BUILD_FINDINGS),
+                            error=TOOL_ERRORS,
+                        ),
+                        output_schema="pcb-c-sanitizer-report-v1.valgrind",
+                        flags_digest=recipe.flags_digest(),
+                        timeout=timeout,
+                        extra_inputs=overlay,
+                    )
+                )
     return plan
 
 

@@ -1,0 +1,100 @@
+/workspace/work/src/topwords.c:134:5: warning: Potential leak of memory pointed to by 'runs' [clang-analyzer-unix.Malloc]
+    free(seen);
+    ^
+/workspace/work/src/topwords.c:81:9: note: Assuming 'text' is not equal to NULL
+    if (text == NULL || out == NULL || limit == 0U) {
+        ^~~~~~~~~~~~
+/workspace/work/src/topwords.c:81:9: note: Left side of '||' is false
+/workspace/work/src/topwords.c:81:25: note: Assuming 'out' is not equal to NULL
+    if (text == NULL || out == NULL || limit == 0U) {
+                        ^~~~~~~~~~~
+/workspace/work/src/topwords.c:81:9: note: Left side of '||' is false
+    if (text == NULL || out == NULL || limit == 0U) {
+        ^
+/workspace/work/src/topwords.c:81:40: note: Assuming 'limit' is not equal to 0
+    if (text == NULL || out == NULL || limit == 0U) {
+                                       ^~~~~~~~~~~
+/workspace/work/src/topwords.c:81:5: note: Taking false branch
+    if (text == NULL || out == NULL || limit == 0U) {
+    ^
+/workspace/work/src/topwords.c:86:23: note: Assuming the condition is true
+    for (cursor = 0U; text[cursor] != '\0'; ++cursor) {
+                      ^~~~~~~~~~~~~~~~~~~~
+/workspace/work/src/topwords.c:86:5: note: Loop condition is true.  Entering loop body
+    for (cursor = 0U; text[cursor] != '\0'; ++cursor) {
+    ^
+/workspace/work/src/topwords.c:88:14: note: Assuming the condition is true
+        if ((byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z')) {
+             ^~~~~~~~~~~
+/workspace/work/src/topwords.c:88:14: note: Left side of '&&' is true
+/workspace/work/src/topwords.c:88:29: note: Assuming the condition is true
+        if ((byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z')) {
+                            ^~~~~~~~~~~
+/workspace/work/src/topwords.c:88:42: note: Left side of '||' is true
+        if ((byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z')) {
+                                         ^
+/workspace/work/src/topwords.c:86:23: note: Assuming the condition is false
+    for (cursor = 0U; text[cursor] != '\0'; ++cursor) {
+                      ^~~~~~~~~~~~~~~~~~~~
+/workspace/work/src/topwords.c:86:5: note: Loop condition is false. Execution continues on line 92
+    for (cursor = 0U; text[cursor] != '\0'; ++cursor) {
+    ^
+/workspace/work/src/topwords.c:92:9: note: 'total' is not equal to 0
+    if (total == 0U) {
+        ^~~~~
+/workspace/work/src/topwords.c:92:5: note: Taking false branch
+    if (total == 0U) {
+    ^
+/workspace/work/src/topwords.c:96:12: note: Memory is allocated
+    runs = calloc(limit, sizeof *runs);
+           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/work/src/topwords.c:97:9: note: Assuming 'seen' is not equal to NULL
+    if (seen == NULL || runs == NULL) {
+        ^~~~~~~~~~~~
+/workspace/work/src/topwords.c:97:9: note: Left side of '||' is false
+/workspace/work/src/topwords.c:97:25: note: Assuming 'runs' is not equal to NULL
+    if (seen == NULL || runs == NULL) {
+                        ^~~~~~~~~~~~
+/workspace/work/src/topwords.c:97:5: note: Taking false branch
+    if (seen == NULL || runs == NULL) {
+    ^
+/workspace/work/src/topwords.c:104:5: note: Loop condition is true.  Entering loop body
+    while (text[cursor] != '\0') {
+    ^
+/workspace/work/src/topwords.c:106:16: note: Left side of '&&' is true
+        while (text[cursor] != '\0' && !isalpha((unsigned char)text[cursor])) {
+               ^
+/workspace/work/src/topwords.c:106:9: note: Loop condition is true.  Entering loop body
+        while (text[cursor] != '\0' && !isalpha((unsigned char)text[cursor])) {
+        ^
+/workspace/work/src/topwords.c:106:37: note: Left side of '&&' is false
+        while (text[cursor] != '\0' && !isalpha((unsigned char)text[cursor])) {
+                                    ^
+/workspace/work/src/topwords.c:109:9: note: Loop condition is false. Execution continues on line 116
+        while (isalpha((unsigned char)text[cursor])) {
+        ^
+/workspace/work/src/topwords.c:104:5: note: Loop condition is false. Execution continues on line 120
+    while (text[cursor] != '\0') {
+    ^
+/workspace/work/src/topwords.c:121:12: note: 'consumed' is < 'recorded'
+    while (consumed < recorded && emitted < limit) {
+           ^~~~~~~~
+/workspace/work/src/topwords.c:121:12: note: Left side of '&&' is true
+/workspace/work/src/topwords.c:121:35: note: 'emitted' is < 'limit'
+    while (consumed < recorded && emitted < limit) {
+                                  ^~~~~~~
+/workspace/work/src/topwords.c:121:5: note: Loop condition is true.  Entering loop body
+    while (consumed < recorded && emitted < limit) {
+    ^
+/workspace/work/src/topwords.c:123:42: note: Left side of '&&' is false
+        while (consumed + run < recorded && strcmp(seen[consumed + run].word, seen[consumed].word) == 0) {
+                                         ^
+/workspace/work/src/topwords.c:121:12: note: 'consumed' is >= 'recorded'
+    while (consumed < recorded && emitted < limit) {
+           ^~~~~~~~
+/workspace/work/src/topwords.c:121:32: note: Left side of '&&' is false
+    while (consumed < recorded && emitted < limit) {
+                               ^
+/workspace/work/src/topwords.c:134:5: note: Potential leak of memory pointed to by 'runs'
+    free(seen);
+    ^

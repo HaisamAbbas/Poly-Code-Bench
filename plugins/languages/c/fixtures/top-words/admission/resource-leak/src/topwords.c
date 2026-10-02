@@ -52,10 +52,26 @@ int rank_words(struct word_count *items, size_t count)
     return 0;
 }
 
+/* Number of words (maximal letter runs) in `text`: an upper bound on the distinct words. */
+static size_t word_total(const char *text)
+{
+    size_t total = 0U;
+    size_t position;
+
+    for (position = 0U; text[position] != '\0'; ++position) {
+        if (isalpha((unsigned char)text[position])
+            && (position == 0U || !isalpha((unsigned char)text[position - 1U]))) {
+            ++total;
+        }
+    }
+    return total;
+}
+
 size_t count_words(const char *text, struct word_count *out, size_t limit)
 {
     struct word_count *entries;
     size_t found = 0U;
+    size_t capacity;
     size_t cursor = 0U;
     size_t index;
     size_t length;
@@ -63,7 +79,11 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
     if (text == NULL || out == NULL || limit == 0U) {
         return 0U;
     }
-    entries = calloc(limit, sizeof *entries);
+    capacity = word_total(text);
+    if (capacity == 0U) {
+        return 0U;
+    }
+    entries = calloc(capacity, sizeof *entries);
     if (entries == NULL) {
         return 0U;
     }
@@ -90,11 +110,17 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
                 break;
             }
         }
-        if (index == found && found < limit) {
+        if (index == found && found < capacity) {
             memcpy(entries[found].word, scratch, length + 1U);
             entries[found].count = 1U;
             ++found;
         }
+    }
+    if (found > 1U) {
+        qsort(entries, found, sizeof *entries, compare_words);
+    }
+    if (found > limit) {
+        found = limit;
     }
     for (index = 0U; index < found; ++index) {
         out[index] = entries[index];
@@ -103,8 +129,5 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
      * DEFECT: `entries` is never freed. The retained allocation is exactly one per distinct word the
      * input contains, so a Valgrind "definitely lost" record and an ASan leak report name this site.
      */
-    if (found > 1U) {
-        qsort(out, found, sizeof *out, compare_words);
-    }
     return found;
 }

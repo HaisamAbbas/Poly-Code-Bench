@@ -1,0 +1,14 @@
+{
+ "schema_version": 1,
+ "kind": "execution_record",
+ "plan_id": "c.analysis.clang_tidy",
+ "exit_code": 0,
+ "timed_out": false,
+ "duration_ms": 2171,
+ "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_tail": "",
+ "stderr_tail": "",
+ "isolation_tier": "development",
+ "sandbox_id": "799e734d-f812-48e1-8987-92280bbf85d1"
+}

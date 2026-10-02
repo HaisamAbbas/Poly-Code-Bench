@@ -1,0 +1,56 @@
+=================================================================
+==26==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x612000000160 at pc 0x59a155e6d79c bp 0x7ffd793add30 sp 0x7ffd793ad500
+WRITE of size 72 at 0x612000000160 thread T0
+    #0 0x59a155e6d79b in __asan_memset (/workspace/build/asan-behaviour+0xa579b) (BuildId: 9e842fcf5b26016d465bf76e5b400468ed266a5d)
+    #1 0x59a155ea96ba in count_words /workspace/work/src/topwords.c:100:5
+    #2 0x59a155ea9a6b in case_empty_input_returns_zero /workspace/work/tests/behaviour.c:22:5
+    #3 0x59a155eac6ca in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x59a155ea98c5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x71f8c0318249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+    #6 0x71f8c0318304 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x27304) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+    #7 0x59a155deb320 in _start (/workspace/build/asan-behaviour+0x23320) (BuildId: 9e842fcf5b26016d465bf76e5b400468ed266a5d)
+
+0x612000000160 is located 0 bytes to the right of 288-byte region [0x612000000040,0x612000000160)
+allocated by thread T0 here:
+    #0 0x59a155e6e358 in __interceptor_calloc (/workspace/build/asan-behaviour+0xa6358) (BuildId: 9e842fcf5b26016d465bf76e5b400468ed266a5d)
+    #1 0x59a155ea9227 in count_words /workspace/work/src/topwords.c:63:15
+    #2 0x59a155ea9a6b in case_empty_input_returns_zero /workspace/work/tests/behaviour.c:22:5
+    #3 0x59a155eac6ca in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x59a155ea98c5 in main /workspace/work/tests/behaviour.c:142:12
+    #5 0x71f8c0318249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow (/workspace/build/asan-behaviour+0xa579b) (BuildId: 9e842fcf5b26016d465bf76e5b400468ed266a5d) in __asan_memset
+Shadow bytes around the buggy address:
+  0x0c247fff7fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c247fff7fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c247fff7ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c247fff8000: fa fa fa fa fa fa fa fa 00 00 00 00 00 00 00 00
+  0x0c247fff8010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0c247fff8020: 00 00 00 00 00 00 00 00 00 00 00 00[fa]fa fa fa
+  0x0c247fff8030: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c247fff8040: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c247fff8050: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c247fff8060: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c247fff8070: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==26==ABORTING
+{"v":1,"kind":"group_start","group":"behaviour","declared":11}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.empty_input_returns_zero"}

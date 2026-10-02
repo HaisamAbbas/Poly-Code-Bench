@@ -1,0 +1,30 @@
+PCB-FAIL behaviour.c:67: alpha first (got gamma, want alpha)
+PCB-FAIL behaviour.c:69: gamma third (got alpha, want gamma)
+PCB-FAIL behaviour.c:77: first word (got ef, want ab)
+PCB-FAIL behaviour.c:79: third word (got ab, want ef)
+PCB-FAIL behaviour.c:112: highest count first (got bee, want ant)
+PCB-FAIL behaviour.c:113: tie broken alphabetically (got ant, want bee)
+{"v":1,"kind":"group_start","group":"behaviour","declared":11}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.empty_input_returns_zero"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.empty_input_returns_zero","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.null_arguments_are_refused"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.null_arguments_are_refused","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.single_word_is_counted_once"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.single_word_is_counted_once","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.case_is_folded"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.case_is_folded","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.ranking_is_by_frequency"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.ranking_is_by_frequency","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.ties_break_alphabetically"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.ties_break_alphabetically","outcome":"fail","reason":"behaviour.c:69: gamma third (got alpha, want gamma)"}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.non_letter_bytes_separate_words"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.non_letter_bytes_separate_words","outcome":"fail","reason":"behaviour.c:79: third word (got ab, want ef)"}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.limit_returns_the_ranked_prefix"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.limit_returns_the_ranked_prefix","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.normalise_replaces_non_letters"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.normalise_replaces_non_letters","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.rank_words_sorts_in_place"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.rank_words_sorts_in_place","outcome":"fail","reason":"behaviour.c:113: tie broken alphabetically (got ant, want bee)"}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.rank_words_refuses_empty"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.rank_words_refuses_empty","outcome":"pass","reason":""}
+{"v":1,"kind":"session_finish","group":"behaviour","declared":11,"observed":11,"passed":8,"failed":3}

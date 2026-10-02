@@ -1,0 +1,44 @@
+# PolyCodeBench cppcheck suppression reasons (Prompt 20, PCB-20-3).
+#
+# cppcheck's own suppressions list accepts `id:pattern` lines and nothing else - not even a `#`
+# comment. So the *rules* live in cppcheck-suppressions.txt and the *reasons* live here, and the build
+# script checks that the two files agree on every entry. That is the property that matters: a
+# suppression cannot be added without someone writing down why the finding is not evidence, and a
+# reason cannot be written for a suppression that is not there.
+#
+# This file is digested into the image identity, so changing a reason changes the recorded evaluator.
+schema_version: 1
+kind: c_cppcheck_suppression_reasons
+suppressions:
+  - id: memleak
+    pattern: "*.c"
+    reason: >-
+      A may-leak pattern match cannot separate a real leak from an intentional handoff through a
+      returned pointer without an escape analysis. The address lane measures leaks on executed paths
+      with detect_leaks=1, which is stronger evidence than the pattern.
+  - id: resourceLeak
+    pattern: "*.c"
+    reason: >-
+      Same as memleak: an open resource is measured on executed paths by the address lane rather than
+      matched from source.
+  - id: uninitvar
+    pattern: "*.c"
+    reason: >-
+      cppcheck's flow analysis cannot see a whole-program initialisation, so it reports reads that are
+      in fact initialised. The undefined lane and Valgrind memcheck both measure uninitialised reads
+      on executed paths.
+  - id: uninitdata
+    pattern: "*.c"
+    reason: >-
+      Same as uninitvar: Valgrind memcheck measures uninitialised memory on executed paths.
+  - id: style
+    pattern: "*.c"
+    reason: >-
+      Line length, whitespace and comment style are not quality dimensions in this benchmark. The
+      finding is still present in the plan's captured output; it is only kept out of the scored item
+      counts.
+  - id: readability
+    pattern: "*.c"
+    reason: >-
+      Same as style: not a scored quality dimension, so counting it would add noise to a dimension the
+      scorer weights.

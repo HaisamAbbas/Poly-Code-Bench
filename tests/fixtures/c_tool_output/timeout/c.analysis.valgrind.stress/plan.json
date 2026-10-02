@@ -1,0 +1,165 @@
+{
+ "schema_version": 1,
+ "kind": "analysis_plan",
+ "plan_id": "c.analysis.valgrind.stress",
+ "image": "pcb-c-evaluator@sha256:cee0a0fb01ac94de278fd1ec98a881f6968c8c2853ab5a81b5ca4b357ecafec5",
+ "image_digest": "sha256:cee0a0fb01ac94de278fd1ec98a881f6968c8c2853ab5a81b5ca4b357ecafec5",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_run.py",
+  "--name",
+  "out/valgrind.stress",
+  "--deadline",
+  "27",
+  "--cleanup",
+  "/workspace/build",
+  "--merge",
+  "--",
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_build.py",
+  "--out",
+  "out/valgrind.stress.build.json",
+  "--build-dir",
+  "/workspace/build",
+  "--binary",
+  "/workspace/build/valgrind-stress",
+  "--std",
+  "c17",
+  "--warning-set",
+  "standard",
+  "--recipe",
+  "runtime",
+  "--include",
+  "work/include",
+  "--execute",
+  "valgrind",
+  "--run-deadline",
+  "20",
+  "--source",
+  "work/src/topwords.c",
+  "--source",
+  "work/tests/stress.c",
+  "--source",
+  "/opt/pcb/rules/pcb_ctest.c"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "LC_ALL": "C"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/topwords.c",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/include/topwords.h",
+   "role": "config",
+   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/tests/stress.c",
+   "role": "overlay",
+   "digest": null
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/valgrind.stress.build.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304,
+   "empty_is_clean": false
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/valgrind.stress.out",
+   "format": "text",
+   "required": true,
+   "max_bytes": 4194304,
+   "empty_is_clean": false
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/valgrind.stress.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304,
+   "empty_is_clean": false
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/valgrind.stress.run.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304,
+   "empty_is_clean": false
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 30,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   1,
+   42,
+   1,
+   2
+  ],
+  "error": [
+   3,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "valgrind",
+  "version": "valgrind-3.19.0",
+  "image_digest": "sha256:cee0a0fb01ac94de278fd1ec98a881f6968c8c2853ab5a81b5ca4b357ecafec5",
+  "lock_digest": "sha256:4b00134077a27979c8b15ce8e3180b94c32dd18ca2a75f24e70fabfec7a5d6b9",
+  "rule_bundle_digest": "sha256:a8676ea6ad959719cbe380542961a238c678720607e2fc2311772f1106b65675",
+  "advisory_snapshot_digest": null,
+  "advisory_snapshot_state": "not_applicable",
+  "parser_version": "pcb-c-parsers-1"
+ },
+ "scope": [
+  "src/topwords.c"
+ ],
+ "parser_id": "c-valgrind",
+ "analyzer_id": "valgrind",
+ "language_id": "c",
+ "candidate_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+ "required": false,
+ "output_schema": "pcb-c-sanitizer-report-v1.valgrind",
+ "evidence_ownership": {},
+ "baseline_reusable": true
+}

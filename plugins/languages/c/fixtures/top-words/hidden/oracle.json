@@ -19,6 +19,8 @@
         {"case_id": "behaviour.ties_break_alphabetically", "required": true, "case_kind": "example"},
         {"case_id": "behaviour.non_letter_bytes_separate_words", "required": true, "case_kind": "property"},
         {"case_id": "behaviour.limit_returns_the_ranked_prefix", "required": true, "case_kind": "property"},
+        {"case_id": "behaviour.limit_ranks_words_first_seen_late", "required": true, "case_kind": "property"},
+        {"case_id": "behaviour.trailing_separators_add_no_word", "required": true, "case_kind": "edge"},
         {"case_id": "behaviour.normalise_replaces_non_letters", "required": true, "case_kind": "example"},
         {"case_id": "behaviour.rank_words_sorts_in_place", "required": true, "case_kind": "example"},
         {"case_id": "behaviour.rank_words_refuses_empty", "required": true, "case_kind": "edge"}

@@ -201,20 +201,26 @@ class CProfile:
         observations: Sequence[Observation],
         required_tools: Sequence[str],
     ) -> ProfileResult:
-        scans = {
-            obs.check_id: obs
-            for obs in observations
-            if obs.check_id.startswith("c.") and obs.check_id.endswith(".scan")
-        }
+        scans: dict[str, list[Observation]] = {}
+        for obs in observations:
+            if obs.check_id.startswith("c.") and obs.check_id.endswith(".scan"):
+                scans.setdefault(obs.check_id, []).append(obs)
         failed_tools: dict[str, str] = {}
         for tool in required_tools:
-            scan = scans.get(f"c.{tool}.scan")
-            if scan is None or scan.status == MeasurementStatus.MISSING:
-                failed_tools[tool] = f"required scan incomplete: {tool}"
-            elif scan.status == MeasurementStatus.NOT_APPLICABLE:
-                failed_tools[tool] = f"required scan unsupported: {tool}"
-            elif scan.status != MeasurementStatus.MEASURED:
-                failed_tools[tool] = f"required scan incomplete: {tool}"
+            reports = scans.get(f"c.{tool}.scan", [])
+            if not reports:
+                failed_tools[tool] = f"required scan produced no evidence: {tool}"
+                continue
+            # A C dynamic lane emits one scan per oracle group. Every one of them has to have run: a
+            # lane that judged the acceptance group and never reached the quality group has measured
+            # less than the task asked for, and averaging that away would be the wrong kind of kind.
+            for report in reports:
+                if report.status == MeasurementStatus.MISSING:
+                    failed_tools[tool] = f"required scan incomplete: {tool}"
+                elif report.status == MeasurementStatus.NOT_APPLICABLE:
+                    failed_tools[tool] = f"required scan unsupported: {tool}"
+                elif report.status != MeasurementStatus.MEASURED:
+                    failed_tools[tool] = f"required scan incomplete: {tool}"
         feeders = self._feeders()
         violations: dict[str, dict[str, set[str]]] = {"diagnostic": {}, "idiom": {}}
         for obs in observations:

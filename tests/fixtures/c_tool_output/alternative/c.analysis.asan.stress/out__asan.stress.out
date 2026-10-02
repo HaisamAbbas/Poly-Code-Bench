@@ -1,0 +1,55 @@
+
+=================================================================
+==26==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 144000 byte(s) in 2000 object(s) allocated from:
+    #0 0x5a219a522358 in __interceptor_calloc (/workspace/build/asan-stress+0xa4358) (BuildId: c3fdbb90c331018c6307d2c1a23aa9bdf5574d3d)
+    #1 0x5a219a55d15a in count_words /workspace/work/src/topwords.c:96:12
+    #2 0x5a219a55e1c0 in case_many_repeats_do_not_overflow /workspace/work/tests/stress.c:59:9
+    #3 0x5a219a55ecea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5a219a55d7d5 in main /workspace/work/tests/stress.c:82:12
+    #5 0x7855aae57249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 4608 byte(s) in 1 object(s) allocated from:
+    #0 0x5a219a522358 in __interceptor_calloc (/workspace/build/asan-stress+0xa4358) (BuildId: c3fdbb90c331018c6307d2c1a23aa9bdf5574d3d)
+    #1 0x5a219a55d15a in count_words /workspace/work/src/topwords.c:96:12
+    #2 0x5a219a55e43d in case_all_distinct_words_survive /workspace/work/tests/stress.c:67:25
+    #3 0x5a219a55ecea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5a219a55d7d5 in main /workspace/work/tests/stress.c:82:12
+    #5 0x7855aae57249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5a219a522358 in __interceptor_calloc (/workspace/build/asan-stress+0xa4358) (BuildId: c3fdbb90c331018c6307d2c1a23aa9bdf5574d3d)
+    #1 0x5a219a55d15a in count_words /workspace/work/src/topwords.c:96:12
+    #2 0x5a219a55dd48 in case_repeated_runs_are_stable /workspace/work/tests/stress.c:40:25
+    #3 0x5a219a55ecea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5a219a55d7d5 in main /workspace/work/tests/stress.c:82:12
+    #5 0x7855aae57249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5a219a522358 in __interceptor_calloc (/workspace/build/asan-stress+0xa4358) (BuildId: c3fdbb90c331018c6307d2c1a23aa9bdf5574d3d)
+    #1 0x5a219a55d15a in count_words /workspace/work/src/topwords.c:96:12
+    #2 0x5a219a55dd60 in case_repeated_runs_are_stable /workspace/work/tests/stress.c:41:26
+    #3 0x5a219a55ecea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5a219a55d7d5 in main /workspace/work/tests/stress.c:82:12
+    #5 0x7855aae57249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+Direct leak of 288 byte(s) in 1 object(s) allocated from:
+    #0 0x5a219a522358 in __interceptor_calloc (/workspace/build/asan-stress+0xa4358) (BuildId: c3fdbb90c331018c6307d2c1a23aa9bdf5574d3d)
+    #1 0x5a219a55d15a in count_words /workspace/work/src/topwords.c:96:12
+    #2 0x5a219a55d9f2 in case_long_input_is_handled /workspace/work/tests/stress.c:30:5
+    #3 0x5a219a55ecea in pcb_ctest_run /opt/pcb/rules/pcb_ctest.c:60:9
+    #4 0x5a219a55d7d5 in main /workspace/work/tests/stress.c:82:12
+    #5 0x7855aae57249  (/lib/x86_64-linux-gnu/libc.so.6+0x27249) (BuildId: 93ac61ec5a8eb1396f9fbd350e3169a558528a40)
+
+SUMMARY: AddressSanitizer: 149472 byte(s) leaked in 2004 allocation(s).
+{"v":1,"kind":"group_start","group":"stress","declared":4}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.long_input_is_handled"}
+{"v":1,"kind":"case","group":"stress","case":"stress.long_input_is_handled","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.repeated_runs_are_stable"}
+{"v":1,"kind":"case","group":"stress","case":"stress.repeated_runs_are_stable","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.many_repeats_do_not_overflow"}
+{"v":1,"kind":"case","group":"stress","case":"stress.many_repeats_do_not_overflow","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.all_distinct_words_survive"}
+{"v":1,"kind":"case","group":"stress","case":"stress.all_distinct_words_survive","outcome":"pass","reason":""}
+{"v":1,"kind":"session_finish","group":"stress","declared":4,"observed":4,"passed":4,"failed":0}

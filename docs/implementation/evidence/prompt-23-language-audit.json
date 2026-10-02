@@ -87,7 +87,7 @@
     }
   },
   "local_audit": {
-    "tests": "143 passed in the combined language/Java/C++ contracts; 7 passed in the follow-up JavaScript/TypeScript missing-task guard",
+    "tests": "143 passed in the combined language/Java/C++ contracts; C plugin 29 passed; C++ profile/lock tests 78 passed; 7 passed in the follow-up JS/TS missing-task guard",
     "covers": [
       "plugin entry points, profiles, administrative image identity and allowlist digest consistency",
       "C/C++ manifest and typed plan construction",

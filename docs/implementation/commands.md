@@ -462,9 +462,14 @@ uv run python scripts/java_task_tool.py seal plugins/languages/java/fixtures/top
 uv run python scripts/java_task_tool.py validate plugins/languages/java/fixtures/top-words
 uv run python scripts/java_task_tool.py admit plugins/languages/java/fixtures/top-words --report docs/implementation/evidence/prompt-23-java-admission.json
 uv run pytest -q tests/test_language_extension_audit.py tests/test_cpp_build_images.py tests/test_java_build_images.py tests/test_java_guest.py tests/test_java_plugin.py tests/test_java_taskspec.py tests/test_java_testparse.py tests/test_go_plugin.py tests/test_cpp_plugin.py tests/test_python_plugin.py tests/test_rust_plugin.py
+uv run pytest -q tests/test_c_plugin.py
+uv run pytest -q tests/test_cpp_profile.py tests/test_cpp_locks.py
+uv run pytest -q tests/test_language_extension_audit.py
 uv run ruff check scripts/build_cpp_images.py scripts/build_java_images.py scripts/fetch_java_components.py scripts/java_task_tool.py plugins/languages/java/src tests/test_cpp_build_images.py tests/test_java_build_images.py tests/test_java_guest.py tests/test_java_plugin.py tests/test_java_taskspec.py tests/test_java_testparse.py tests/test_language_extension_audit.py
+uv run ruff check scripts/go_conformance.py tests/test_language_extension_audit.py
 uv run mypy plugins/languages/java/src/polycodebench_lang_java
 uv run python scripts/build_java_images.py --check
+uv run python scripts/go_conformance.py --report docs/implementation/evidence/prompt-22-go-conformance.json
 ```
 
 The complete task admission is deliberately rerun after any fixture byte changes because the report

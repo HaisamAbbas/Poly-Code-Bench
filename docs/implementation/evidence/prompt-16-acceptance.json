@@ -1,0 +1,30 @@
+{
+  "prompt": "16",
+  "date": "2026-10-02",
+  "status": "done",
+  "fixture_kind": "synthetic_internal",
+  "claim": "Implementation acceptance only; these are not model benchmark results.",
+  "tests": {
+    "command": ".venv/Scripts/python.exe -m pytest tests/test_publication_aggregation.py tests/test_publication_reporting.py tests/test_publication_releases.py tests/test_releases.py tests/test_uncertainty.py -q -p no:cacheprovider --tb=short",
+    "result": "23 passed"
+  },
+  "checks": {
+    "ruff": "passed",
+    "mypy": "passed for 5 publication source files using workspace MYPYPATH",
+    "schemas": "9 current",
+    "package_boundaries": "passed",
+    "release_cli_help": "passed",
+    "ledger_source_consistency": "passed"
+  },
+  "e2e_subcases": {
+    "E2E-28": "fixed cohort, unknown cutoff, incomplete language/task coverage and no silent renormalization; synthetic local tests",
+    "E2E-29": "fixed-seed replay, repeated correlated cluster draws, actual metric resampling, paired differences and replicate evidence; synthetic local tests",
+    "E2E-30": "approval invalidation, competing pointer generation, immutable correction, safe projection and Ed25519 verification; local SQLite tests"
+  },
+  "full_scenarios": {
+    "E2E-28": "pending public comparison API in Prompt 29",
+    "E2E-29": "real scorecard pilot evidence pending Prompt 17",
+    "E2E-30": "authorized production publication target/rehearsal pending deployment scope"
+  },
+  "external_publication": "none"
+}

@@ -1,0 +1,520 @@
+{
+  "claims_model_benchmark_results": false,
+  "evidence_tier": "development_sandbox",
+  "fixture_status": "authored_internal_only",
+  "injection_log_visibility": "hidden; only its digest is recorded here",
+  "kind": "prompt18_source_reproduction_evidence",
+  "languages": {
+    "python": {
+      "authored_history": {
+        "assets": [
+          {
+            "asset_id": "internal-path-prefix-python-visible-pre-fix",
+            "digest": "sha256:b3d0ae391ee9483d7a4388908408a58a7e551779c6946934d5ecfb8a6cf2068b",
+            "kind": "source_asset",
+            "role": "visible_source",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "internal-path-prefix-python-reproducer",
+            "digest": "sha256:9911bfda2eabe9205b57721bed1d54b9048450a7bc14c2103745136294cc2569",
+            "kind": "source_asset",
+            "role": "reproducer",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "internal-path-prefix-python-reference-fix",
+            "digest": "sha256:6fdc429df517b11279faa720c8eca5114aab4a89401a4ff650c86a8bd9ccc073",
+            "kind": "source_asset",
+            "role": "hidden_oracle",
+            "schema_version": 1,
+            "visibility": "hidden"
+          }
+        ],
+        "authorship_record_id": "polycodebench-internal-authorship-v1",
+        "behavior_change_proof": null,
+        "build_proof": null,
+        "changed_span": null,
+        "clean_control_id": "python-path-component-clean-v1",
+        "duplicate_mutation": false,
+        "equivalent_to_existing": false,
+        "evidence_tier": "authored_internal",
+        "evidence_verified": true,
+        "first_public_at": null,
+        "fix_revision": "sha256:6fdc429df517b11279faa720c8eca5114aab4a89401a4ff650c86a8bd9ccc073",
+        "isolated_reproducer": false,
+        "issue_or_advisory": "internal-path-prefix-python",
+        "kind": "task_source_provenance",
+        "language": "python",
+        "mutation_operator": null,
+        "mutation_seed": null,
+        "mutation_version": null,
+        "pre_fix_revision": "sha256:b3d0ae391ee9483d7a4388908408a58a7e551779c6946934d5ecfb8a6cf2068b",
+        "reference_repair_proof": null,
+        "repository": "internal://track-a/python/path-prefix",
+        "reproduced": true,
+        "rights_record_id": "internal-authored-rights-v1",
+        "rights_verified": true,
+        "schema_version": 1,
+        "source_family": "authored_history",
+        "unintended_or_nonbuilding": false
+      },
+      "executions": {
+        "mutated_defect_reproduces_failure": {
+          "digest": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+          "record": {
+            "duration_ms": 1407,
+            "exit_code": 1,
+            "isolation_tier": "development",
+            "kind": "execution_record",
+            "plan_id": "tracka.python.mutation-from-reference",
+            "sandbox_id": "804efe38-d57c-407e-9f7f-bcb779a90ee7",
+            "schema_version": 1,
+            "stderr_digest": "sha256:53484fb665048b745f790429fd8fc0da76145cf684630e497be562fcca175082",
+            "stderr_tail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/workspace/work/test_path_guard.py\", line 7, in test_sibling_prefix_is_outside_root\n    assert not is_within(\"/srv/data\", \"/srv/data-secret/key\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+            "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_tail": "",
+            "timed_out": false
+          }
+        },
+        "pre_fix_reproduces_failure": {
+          "digest": "sha256:d3ca3f39a17f6926d4ede8bcf1ae566f14e0f3521c1dba1ef60d8ad864156255",
+          "record": {
+            "duration_ms": 1203,
+            "exit_code": 1,
+            "isolation_tier": "development",
+            "kind": "execution_record",
+            "plan_id": "tracka.python.history-pre-fix",
+            "sandbox_id": "d341b8cb-5bd4-43be-bc66-068fe46cdd00",
+            "schema_version": 1,
+            "stderr_digest": "sha256:53484fb665048b745f790429fd8fc0da76145cf684630e497be562fcca175082",
+            "stderr_tail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/workspace/work/test_path_guard.py\", line 7, in test_sibling_prefix_is_outside_root\n    assert not is_within(\"/srv/data\", \"/srv/data-secret/key\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+            "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_tail": "",
+            "timed_out": false
+          }
+        },
+        "reference_fix_passes": {
+          "digest": "sha256:78be638d5975a5e7ca9de873f227275342838aebd4e15ed44fd279f21e69afe3",
+          "record": {
+            "duration_ms": 1219,
+            "exit_code": 0,
+            "isolation_tier": "development",
+            "kind": "execution_record",
+            "plan_id": "tracka.python.history-reference-fix",
+            "sandbox_id": "ec583ea2-0fc6-4947-a797-c39bb9da67ed",
+            "schema_version": 1,
+            "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_tail": "",
+            "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_tail": "",
+            "timed_out": false
+          }
+        }
+      },
+      "injected": {
+        "assets": [
+          {
+            "asset_id": "track-a-python-path-prefix-injected-visible-injected-source",
+            "digest": "sha256:d0e2697545dd125f9848975b30945990a794b9bcadf7fe09f712b292afa48130",
+            "kind": "source_asset",
+            "role": "visible_source",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-python-path-prefix-injected-reproducer",
+            "digest": "sha256:9911bfda2eabe9205b57721bed1d54b9048450a7bc14c2103745136294cc2569",
+            "kind": "source_asset",
+            "role": "reproducer",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-python-path-prefix-injected-hidden-reference",
+            "digest": "sha256:6fdc429df517b11279faa720c8eca5114aab4a89401a4ff650c86a8bd9ccc073",
+            "kind": "source_asset",
+            "role": "hidden_oracle",
+            "schema_version": 1,
+            "visibility": "hidden"
+          },
+          {
+            "asset_id": "track-a-python-path-prefix-injected-operator-log",
+            "digest": "sha256:4db08669311779a84a4d72c01f31e4b0a3454453d0b7b7638d990a763ee02621",
+            "kind": "source_asset",
+            "role": "injection_log",
+            "schema_version": 1,
+            "visibility": "hidden"
+          }
+        ],
+        "authorship_record_id": "polycodebench-internal-authorship-v1",
+        "behavior_change_proof": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+        "build_proof": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+        "changed_span": null,
+        "clean_control_id": "python-path-component-clean-v1",
+        "duplicate_mutation": false,
+        "equivalent_to_existing": false,
+        "evidence_tier": "synthetic_internal",
+        "evidence_verified": true,
+        "first_public_at": null,
+        "fix_revision": null,
+        "isolated_reproducer": false,
+        "issue_or_advisory": null,
+        "kind": "task_source_provenance",
+        "language": "python",
+        "mutation_operator": null,
+        "mutation_seed": null,
+        "mutation_version": null,
+        "pre_fix_revision": null,
+        "reference_repair_proof": null,
+        "repository": null,
+        "reproduced": false,
+        "rights_record_id": "internal-authored-rights-v1",
+        "rights_verified": true,
+        "schema_version": 1,
+        "source_family": "injected",
+        "unintended_or_nonbuilding": false
+      },
+      "mutation": {
+        "assets": [
+          {
+            "asset_id": "track-a-python-path-prefix-mutated-visible-mutant",
+            "digest": "sha256:d0e2697545dd125f9848975b30945990a794b9bcadf7fe09f712b292afa48130",
+            "kind": "source_asset",
+            "role": "visible_source",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-python-path-prefix-mutated-reproducer",
+            "digest": "sha256:9911bfda2eabe9205b57721bed1d54b9048450a7bc14c2103745136294cc2569",
+            "kind": "source_asset",
+            "role": "reproducer",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-python-path-prefix-mutated-reference-repair",
+            "digest": "sha256:6fdc429df517b11279faa720c8eca5114aab4a89401a4ff650c86a8bd9ccc073",
+            "kind": "source_asset",
+            "role": "hidden_oracle",
+            "schema_version": 1,
+            "visibility": "hidden"
+          },
+          {
+            "asset_id": "track-a-python-path-prefix-mutated-mutation-log",
+            "digest": "sha256:4db08669311779a84a4d72c01f31e4b0a3454453d0b7b7638d990a763ee02621",
+            "kind": "source_asset",
+            "role": "injection_log",
+            "schema_version": 1,
+            "visibility": "hidden"
+          }
+        ],
+        "authorship_record_id": "polycodebench-internal-authorship-v1",
+        "behavior_change_proof": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+        "build_proof": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+        "changed_span": [
+          "path_guard.py",
+          9,
+          9
+        ],
+        "clean_control_id": "python-path-component-clean-v1",
+        "duplicate_mutation": false,
+        "equivalent_to_existing": false,
+        "evidence_tier": "synthetic_internal",
+        "evidence_verified": true,
+        "first_public_at": null,
+        "fix_revision": null,
+        "isolated_reproducer": false,
+        "issue_or_advisory": null,
+        "kind": "task_source_provenance",
+        "language": "python",
+        "mutation_operator": "path-prefix-mutation",
+        "mutation_seed": 1801,
+        "mutation_version": "1",
+        "pre_fix_revision": null,
+        "reference_repair_proof": "sha256:78be638d5975a5e7ca9de873f227275342838aebd4e15ed44fd279f21e69afe3",
+        "repository": null,
+        "reproduced": false,
+        "rights_record_id": "internal-authored-rights-v1",
+        "rights_verified": true,
+        "schema_version": 1,
+        "source_family": "mutation",
+        "unintended_or_nonbuilding": false
+      },
+      "mutation_record": {
+        "behavior_change_proof": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+        "build_proof": "sha256:670fc97142e68dd232eb57f4bc8a2c41510da38c9a28d0b483935995da4156fa",
+        "changed_end_line": 9,
+        "changed_path": "path_guard.py",
+        "changed_start_line": 9,
+        "kind": "mutation_record",
+        "mutated_digest": "sha256:df17c34d73e1d65a11b050a9bb76d731cb03d4c6f04842cebdc3ec43ef34fd36",
+        "operator": "path-prefix-mutation",
+        "operator_version": "1",
+        "reference_repair_proof": "sha256:78be638d5975a5e7ca9de873f227275342838aebd4e15ed44fd279f21e69afe3",
+        "schema_version": 1,
+        "seed": 1801,
+        "source_digest": "sha256:24fd04cbe8318298efeca7aa259c541f4b6ffbf715087926a0315a2f5e07753d"
+      }
+    },
+    "rust": {
+      "authored_history": {
+        "assets": [
+          {
+            "asset_id": "internal-path-prefix-rust-visible-pre-fix",
+            "digest": "sha256:b020cc8248e688169f8a5c11db0af4d95e6ee4db77e781828bba7ffe824d88c4",
+            "kind": "source_asset",
+            "role": "visible_source",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "internal-path-prefix-rust-reproducer",
+            "digest": "sha256:b020cc8248e688169f8a5c11db0af4d95e6ee4db77e781828bba7ffe824d88c4",
+            "kind": "source_asset",
+            "role": "reproducer",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "internal-path-prefix-rust-reference-fix",
+            "digest": "sha256:5deec0e9e81a71e5031fb01f45d9f3b8f4815128a6ff3c31c12828d09fb3fb89",
+            "kind": "source_asset",
+            "role": "hidden_oracle",
+            "schema_version": 1,
+            "visibility": "hidden"
+          }
+        ],
+        "authorship_record_id": "polycodebench-internal-authorship-v1",
+        "behavior_change_proof": null,
+        "build_proof": null,
+        "changed_span": null,
+        "clean_control_id": "rust-path-component-clean-v1",
+        "duplicate_mutation": false,
+        "equivalent_to_existing": false,
+        "evidence_tier": "authored_internal",
+        "evidence_verified": true,
+        "first_public_at": null,
+        "fix_revision": "sha256:5deec0e9e81a71e5031fb01f45d9f3b8f4815128a6ff3c31c12828d09fb3fb89",
+        "isolated_reproducer": false,
+        "issue_or_advisory": "internal-path-prefix-rust",
+        "kind": "task_source_provenance",
+        "language": "rust",
+        "mutation_operator": null,
+        "mutation_seed": null,
+        "mutation_version": null,
+        "pre_fix_revision": "sha256:b020cc8248e688169f8a5c11db0af4d95e6ee4db77e781828bba7ffe824d88c4",
+        "reference_repair_proof": null,
+        "repository": "internal://track-a/rust/path-prefix",
+        "reproduced": true,
+        "rights_record_id": "internal-authored-rights-v1",
+        "rights_verified": true,
+        "schema_version": 1,
+        "source_family": "authored_history",
+        "unintended_or_nonbuilding": false
+      },
+      "executions": {
+        "mutated_defect_reproduces_failure": {
+          "digest": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+          "record": {
+            "duration_ms": 1452,
+            "exit_code": 101,
+            "isolation_tier": "development",
+            "kind": "execution_record",
+            "plan_id": "tracka.rust.reproducer-set",
+            "sandbox_id": "c67663cb-1115-4aaa-84c2-68ff6618346d",
+            "schema_version": 1,
+            "stderr_digest": "sha256:bec2b799efa1581fda8a544d08caec1e2db1bccc6d7fff4ac90341b7238e8657",
+            "stderr_tail": "error[E0277]: the trait bound `&Cow<'_, str>: Pattern` is not satisfied\n --> src/lib.rs:6:45\n  |\n6 |     candidate.to_string_lossy().starts_with(&root.to_string_lossy())\n  |                                 ----------- ^^^^^^^^^^^^^^^^^^^^^^^ the trait `Fn(char)` is not implemented for `Cow<'_, str>`, which is required by `&Cow<'_, str>: Pattern`\n  |                                 |\n  |                                 required by a bound introduced by this call\n  |\n  = note: required for `&Cow<'_, str>` to implement `FnOnce(char)`\n  = note: required for `&Cow<'_, str>` to implement `Pattern`\nnote: required by a bound in `core::str::<impl str>::starts_with`\n --> /rustc/90b35a6239c3d8bdabc530a6a0816f7ff89a0aaf/library/core/src/str/mod.rs:1164:5\nhelp: consider dereferencing here\n  |\n6 |     candidate.to_string_lossy().starts_with(&*root.to_string_lossy())\n  |                                              +\n\nFor more information about this error, try `rustc --explain E0277`.\nerror: could not compile `pcb_track_a_mutation_from_reference` (lib) due to 1 previous error\n",
+            "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_tail": "",
+            "timed_out": false
+          }
+        },
+        "pre_fix_reproduces_failure": {
+          "digest": "sha256:4245be3f16ece447254fdf8c1e16152f6b7956be18dab88347aff72a9a56a9b4",
+          "record": {
+            "duration_ms": 1467,
+            "exit_code": 101,
+            "isolation_tier": "development",
+            "kind": "execution_record",
+            "plan_id": "tracka.rust.reproducer-set",
+            "sandbox_id": "c67663cb-1115-4aaa-84c2-68ff6618346d",
+            "schema_version": 1,
+            "stderr_digest": "sha256:b2291fe6a1f3d438d0726a79d2c136945eed63e340924150d9b6ddd3a06cf142",
+            "stderr_tail": "error[E0277]: the trait bound `&Cow<'_, str>: Pattern` is not satisfied\n --> src/lib.rs:8:22\n  |\n8 |         .starts_with(&root.to_string_lossy())\n  |          ----------- ^^^^^^^^^^^^^^^^^^^^^^^ the trait `Fn(char)` is not implemented for `Cow<'_, str>`, which is required by `&Cow<'_, str>: Pattern`\n  |          |\n  |          required by a bound introduced by this call\n  |\n  = note: required for `&Cow<'_, str>` to implement `FnOnce(char)`\n  = note: required for `&Cow<'_, str>` to implement `Pattern`\nnote: required by a bound in `core::str::<impl str>::starts_with`\n --> /rustc/90b35a6239c3d8bdabc530a6a0816f7ff89a0aaf/library/core/src/str/mod.rs:1164:5\nhelp: consider dereferencing here\n  |\n8 |         .starts_with(&*root.to_string_lossy())\n  |                       +\n\nFor more information about this error, try `rustc --explain E0277`.\nerror: could not compile `pcb_track_a_history_pre_fix` (lib) due to 1 previous error\n",
+            "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_tail": "",
+            "timed_out": false
+          }
+        },
+        "reference_fix_passes": {
+          "digest": "sha256:d635a7c5773d84d42e9aca684a7f8b9ff6151888d1c1da84a179bbf6b3b883f3",
+          "record": {
+            "duration_ms": 2890,
+            "exit_code": 0,
+            "isolation_tier": "development",
+            "kind": "execution_record",
+            "plan_id": "tracka.rust.reproducer-set",
+            "sandbox_id": "c67663cb-1115-4aaa-84c2-68ff6618346d",
+            "schema_version": 1,
+            "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_tail": "",
+            "stdout_digest": "sha256:b5632030bc9ded9e8b1e556400bc4f975032d56dd30300982736fe3ed86cba80",
+            "stdout_tail": "\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+            "timed_out": false
+          }
+        }
+      },
+      "injected": {
+        "assets": [
+          {
+            "asset_id": "track-a-rust-path-prefix-injected-visible-injected-source",
+            "digest": "sha256:3880e754e33f3ed0f2c18124a47b74d01478f2f3670a11b097b9fac5727ad250",
+            "kind": "source_asset",
+            "role": "visible_source",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-rust-path-prefix-injected-reproducer",
+            "digest": "sha256:b020cc8248e688169f8a5c11db0af4d95e6ee4db77e781828bba7ffe824d88c4",
+            "kind": "source_asset",
+            "role": "reproducer",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-rust-path-prefix-injected-hidden-reference",
+            "digest": "sha256:5deec0e9e81a71e5031fb01f45d9f3b8f4815128a6ff3c31c12828d09fb3fb89",
+            "kind": "source_asset",
+            "role": "hidden_oracle",
+            "schema_version": 1,
+            "visibility": "hidden"
+          },
+          {
+            "asset_id": "track-a-rust-path-prefix-injected-operator-log",
+            "digest": "sha256:af6e8ce391332796a7836b16a03a200bdf0728c0dda0f4d7e2c654296b62039d",
+            "kind": "source_asset",
+            "role": "injection_log",
+            "schema_version": 1,
+            "visibility": "hidden"
+          }
+        ],
+        "authorship_record_id": "polycodebench-internal-authorship-v1",
+        "behavior_change_proof": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+        "build_proof": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+        "changed_span": null,
+        "clean_control_id": "rust-path-component-clean-v1",
+        "duplicate_mutation": false,
+        "equivalent_to_existing": false,
+        "evidence_tier": "synthetic_internal",
+        "evidence_verified": true,
+        "first_public_at": null,
+        "fix_revision": null,
+        "isolated_reproducer": false,
+        "issue_or_advisory": null,
+        "kind": "task_source_provenance",
+        "language": "rust",
+        "mutation_operator": null,
+        "mutation_seed": null,
+        "mutation_version": null,
+        "pre_fix_revision": null,
+        "reference_repair_proof": null,
+        "repository": null,
+        "reproduced": false,
+        "rights_record_id": "internal-authored-rights-v1",
+        "rights_verified": true,
+        "schema_version": 1,
+        "source_family": "injected",
+        "unintended_or_nonbuilding": false
+      },
+      "mutation": {
+        "assets": [
+          {
+            "asset_id": "track-a-rust-path-prefix-mutated-visible-mutant",
+            "digest": "sha256:3880e754e33f3ed0f2c18124a47b74d01478f2f3670a11b097b9fac5727ad250",
+            "kind": "source_asset",
+            "role": "visible_source",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-rust-path-prefix-mutated-reproducer",
+            "digest": "sha256:b020cc8248e688169f8a5c11db0af4d95e6ee4db77e781828bba7ffe824d88c4",
+            "kind": "source_asset",
+            "role": "reproducer",
+            "schema_version": 1,
+            "visibility": "private"
+          },
+          {
+            "asset_id": "track-a-rust-path-prefix-mutated-reference-repair",
+            "digest": "sha256:5deec0e9e81a71e5031fb01f45d9f3b8f4815128a6ff3c31c12828d09fb3fb89",
+            "kind": "source_asset",
+            "role": "hidden_oracle",
+            "schema_version": 1,
+            "visibility": "hidden"
+          },
+          {
+            "asset_id": "track-a-rust-path-prefix-mutated-mutation-log",
+            "digest": "sha256:af6e8ce391332796a7836b16a03a200bdf0728c0dda0f4d7e2c654296b62039d",
+            "kind": "source_asset",
+            "role": "injection_log",
+            "schema_version": 1,
+            "visibility": "hidden"
+          }
+        ],
+        "authorship_record_id": "polycodebench-internal-authorship-v1",
+        "behavior_change_proof": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+        "build_proof": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+        "changed_span": [
+          "src/lib.rs",
+          6,
+          6
+        ],
+        "clean_control_id": "rust-path-component-clean-v1",
+        "duplicate_mutation": false,
+        "equivalent_to_existing": false,
+        "evidence_tier": "synthetic_internal",
+        "evidence_verified": true,
+        "first_public_at": null,
+        "fix_revision": null,
+        "isolated_reproducer": false,
+        "issue_or_advisory": null,
+        "kind": "task_source_provenance",
+        "language": "rust",
+        "mutation_operator": "path-prefix-mutation",
+        "mutation_seed": 1802,
+        "mutation_version": "1",
+        "pre_fix_revision": null,
+        "reference_repair_proof": "sha256:d635a7c5773d84d42e9aca684a7f8b9ff6151888d1c1da84a179bbf6b3b883f3",
+        "repository": null,
+        "reproduced": false,
+        "rights_record_id": "internal-authored-rights-v1",
+        "rights_verified": true,
+        "schema_version": 1,
+        "source_family": "mutation",
+        "unintended_or_nonbuilding": false
+      },
+      "mutation_record": {
+        "behavior_change_proof": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+        "build_proof": "sha256:8c78dc3ff465d41969c5668759c6259a02c3eb953ad003f6a2cc008ed12cf64c",
+        "changed_end_line": 6,
+        "changed_path": "src/lib.rs",
+        "changed_start_line": 6,
+        "kind": "mutation_record",
+        "mutated_digest": "sha256:c76bf590d13dcdae6a654a66fb4229c82f2da128a6b677d4086f437765e6cf59",
+        "operator": "path-prefix-mutation",
+        "operator_version": "1",
+        "reference_repair_proof": "sha256:d635a7c5773d84d42e9aca684a7f8b9ff6151888d1c1da84a179bbf6b3b883f3",
+        "schema_version": 1,
+        "seed": 1802,
+        "source_digest": "sha256:cdd7733f085811ab581783071cd852c88651e131e864305a8102a45221cd7ddc"
+      }
+    }
+  },
+  "schema_version": 1
+}

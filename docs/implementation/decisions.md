@@ -1,5 +1,96 @@
 # Decisions and specification discrepancies
 
+## Prompt 18 — Track A
+
+Recorded in full in [`decisions/D-18-01-track-a-evidence-boundary.md`](decisions/D-18-01-track-a-evidence-boundary.md).
+Prompt 18 was authorized independently while the accepted-pilot prerequisite stays blocked;
+authored internal Python/Rust evidence is not model benchmark data, and disclosed-security sources
+remain fail-closed pending rights, advisory, reproduction and curator evidence.
+
+## Prompt 15 - deterministic scoring and replay
+
+Recorded in full in [`decisions/prompt-15.md`](decisions/prompt-15.md). Index:
+
+- **D-15-01 -** purity is enforced by a static import scan and a runtime import tripwire in a clean replay process, not promised; the recorded timestamp and scorer digest are inputs, and `scorecard_id` is derived from the score's content.
+- **D-15-02 -** the composite sums exact rational weights (as T 14.3 and its 14.6 worked example require) while the integer `effective_weight_bps` on the frozen `ScoreItem` contract is the rounded presentation; both are recorded.
+- **D-15-03 -** a failed correctness gate zeroes correctness as well, because the composite is `30g + g × quality`.
+- **D-15-04 -** missing required evidence blocks completion with `total_score = null`; an applicability disagreement with the frozen task plan is refused instead.
+- **D-15-05 -** the efficiency dimension value is WP-13's output, re-derived and cross-checked against its ratios by the scorer; a disagreement is refused.
+- **Discrepancy (T 14.4 vs T 15.1):** the idiomatic and robustness dimensions have no room for their residual judge items inside the language rubric's own 10000 basis points. Resolved with a frozen, explicitly pilot-status policy split (`8000`/`2000`), renormalising the language rubric within its block exactly as A 8.7 describes, with the scorer computing the expected weights so no producer can redefine them. Alternative rejected: folding judge items into a rubric item, which would let a judge silently move a language weight.
+- **D-15-06 -** a duplicate report moves the evidence-manifest digest but not the score; `score_identity()` digests only the awarded numbers, and the manifest digest is order-insensitive because every repeated collection is a set.
+- **D-15-07 -** `policy_digest` is recorded on the scorecard and on every explanation row rather than added to the frozen public `ScoreItem` schema.
+- **D-15-08 -** archives keep every field, including the non-semantic identity fields canonical bytes drop, because scoring needs them as inputs; the digest recorded is the manifest's own content digest.
+- **D-15-09 -** `check_boundaries.py` now allows `scoring -> plugins_api`, because T 14.1 names `FrozenTask` (a plugins-api type) as a scorer input.
+- **D-15-10 -** `py.typed` added to `polycodebench-core` and `polycodebench-plugins-api`, which removed the `import-untyped` suppression class and surfaced two real typing defects that were fixed without behaviour change.
+
+## Prompt 14 independent review of this prompt's own work
+
+An independent adversarial review of the new judge modules was run before hand-off (no file was
+modified by the reviewer). It reproduced its findings by executing the code. Nine were release
+blockers or materially wrong behaviour and are fixed; each now has a regression test.
+
+- **R-01 — A stored result failed its own digest check.** `report_digest` is the document's own
+  digest but took part in the canonical bytes the digest was computed over, so `pcb-judge show` /
+  `result` recomputed a different digest than the registered one for every stored result. Fixed by
+  declaring `report_digest` in `canonical_excluded_fields`, exactly as `packet_id` already is for a
+  packet. Test: `test_a_stored_result_reproduces_its_own_registered_digest`.
+- **R-02 — A reviewer's decision could rewrite another candidate's score.** `latest_decision`
+  matched only on `item_id`. Decisions are now scoped by `decisions_for_packet` to the packet id,
+  packet digest, rubric digest and panel digest. Test:
+  `test_a_decision_on_one_packet_never_rewrites_another_packet`.
+- **R-03 — Supersession ran backwards.** `supersedes_id` names the decision a decision replaces,
+  so the *referenced* row is the superseded one; the lookup had it the other way round and could
+  return the decision that had been replaced. Test: `test_the_newest_decision_is_the_one_that_supersedes`.
+- **R-04 — Contract maxima were not enforced by the validator.** An over-long rationale, note or
+  fact subject, or too many uncertainty flags or citations, raised an uncaught pydantic error
+  instead of a named rejection, which would have lost the delivery. The validator now enforces every
+  bound, and the runner additionally records any unanticipated contract violation as an invalid
+  delivery with its reason. Test: `test_over_long_or_over_large_votes_are_named_rejections_not_crashes`.
+- **R-05 — Replaying a panel half-wrote its ledger.** `record_delivery` now returns the existing
+  row for a repeated (packet, vote, delivery) triple, so a resumed run completes instead of
+  failing on a uniqueness violation.
+- **R-06 — The seeded 10% audit sample was computed and thrown away.** `audit_selected(packet,
+  panel)` derives the decision from the panel's frozen audit seed and the packet digest, and the CLI
+  now passes it into both `run` and the recompute path. Test:
+  `test_the_seeded_audit_sample_is_deterministic_and_panel_defined`.
+- **R-07 — Disjointness and packet identity were asserted, not checked.** `measure_calibration`
+  now takes the scored packet digests: without them the report says `not_demonstrated`, with an
+  overlap it reports `blocked`/`violated`, and a comparison is only made when the result carries
+  that packet's own id and digest. Tests: `test_disjointness_is_only_claimed_when_it_was_checked`,
+  `test_calibration_comparisons_require_the_result_of_the_same_packet`.
+- **R-08 — Basis points carried a percentage.** `exact_agreement_bp` and `audit_rate_bp` now hold
+  integer counts of basis points (0..10000), matching `score_bp`, `credit_bp`, `weight_bp` and
+  `promotion_target_bp` elsewhere in the repository; the promotion comparison no longer scales twice.
+- **R-09 — Smaller defects with the same character, fixed the same way:** an adjudication may no
+  longer be recorded under a different rubric or panel; a human label off the anchor grid is refused
+  at import instead of raising a `KeyError` mid-metric; a repeated vote index counts once, so a
+  two-vote panel can never average; an item mean must sit inside the anchor range; the review queue
+  lists only the newest result per packet, so an adjudicated packet stops filling it; recomputed
+  deliveries keep their artefact links; a vote whose stored document is missing is an error, not a
+  silent skip; a result without a frozen digest is refused at the repository boundary; `run` needs
+  the run-plan permission and `result` needs restricted-evidence read.
+
+One finding was partly mitigated and is recorded as a residual limitation rather than a fix:
+candidate-controlled text is escaped before it reaches the prompt, so a candidate can no longer close
+an `<evidence>` element or forge an item section (test:
+`test_candidate_text_cannot_forge_packet_structure`), but semantic prompt injection inside a comment
+is still possible in principle. The mitigation and the trigger that exposes a followed instruction
+(`untrusted_comment_only`) are the defences; the guarantee is not that a hostile comment is
+harmless, only that it carries no authority and leaves evidence behind.
+
+## Prompt 14 decisions and recorded dependencies
+
+- **D-14-01 — Identity is withheld structurally, then proven:** `JudgePacket` has no candidate identity, provider, rank, cost or expected-score field, and judges receive no tools (`JudgePanel.tools == ()`, `load_judge_protocol()` refuses a protocol with tools or a tool-call budget). `assert_no_identity_leak` then checks the packet's own field names against a forbidden-token list and scans the rendered text for the concrete identity strings a caller withheld. Span *content* is deliberately not scanned for field-like words, because candidate code legitimately contains its own JSON and a rule that fires on it is a rule no reviewer would honour.
+- **D-14-02 — A comment citation is review evidence, not a schema error:** Technical Spec 15.1 makes an *unverifiable* reference a schema error, and a comment anchor is verifiable — it exists in the packet. It is outside every item's evidence scope, so a vote justified only by candidate comments records `untrusted_comment_only` and goes to review with all votes intact. Rejecting such a vote outright would hide exactly the manipulation attempt the clause exists to expose.
+- **D-14-03 — Disagreement counts anchor *steps*, not distinct values:** T 15.3 triggers on a max–min spread of 1 and A 8.8 on "two anchor levels". With anchors `{0, 0.5, 1}` both mean the full range, so `spread_levels()` divides the spread by the 0.5 anchor step. A `1 / 0.5 / 1` panel is one step apart and stays `ready`, which is the E2E-21 expectation; counting distinct values would have made it `needs_review`.
+- **D-14-04 — The replacement delivery re-asks the same question:** the schema-repair instruction is a fixed prefix applied to the rendered user message after validation fails. The packet, schema, evidence and recorded seed are unchanged, so "the same input" holds in the sense the gateway can verify (the request differs only by the frozen instruction) and a repair cannot smuggle new evidence.
+- **D-14-05 — Judge output is capped by the resolved model configuration:** the panel declares its ceiling and the runner sends `min(panel ceiling, configuration ceiling)`. A request never asks for more than the configuration declared; a judge that cannot answer inside its own ceiling returns an invalid vote rather than a silently enlarged request.
+- **D-14-06 — Stored judge records keep their timestamps:** `canonical_document_bytes` drops non-semantic fields so content digests ignore recording detail, which would strip `created_at` from a stored vote. `judge_record_bytes()` serializes a record in full under the same envelope; a packet's `digest()` still excludes its own self-referential `packet_id`, so reading a packet back means parsing the bytes and recomputing the digest.
+- **D-14-07 — Packet and adjudication identities are content-derived and local:** `derived_judge_id()` lives with the judge contracts and a packet id covers the rubric, panel, language, role, task statement, constraints, items, span material and comments, so an id can never be reused for different evidence. An adjudication row's primary key is its decision's content identity, which makes a replayed decision the same immutable row and makes `judge_item_result.adjudication_id` verifiable. A separate shared helper was deliberately not used: the concurrent Prompt 13 work had just moved `identity.derived_entity_id`, and judge identity must not depend on another package's id helper.
+- **D-14-08 — Calibration without labels reports `blocked`, never `measured`:** `CalibrationReport` refuses to carry an agreement figure, a promotion verdict or a bias direction while the status is blocked, and requires the missing inputs to be named. The selection is seeded, stratified, drawn without replacement and disjoint from scored packet digests; a candidate set that overlaps a scored packet is refused. Metric arithmetic is exercised with FIXTURE labels and labelled as such — it is evidence about the calculator, not about human agreement.
+- **Recorded external dependencies (not implemented here):** no approved judge endpoint, credentials, price snapshot or model configuration exists (`judge-panel-v1` therefore reports `provisioned: false` and `pcb-judge run` exits 4 with `JUDGE_PANEL_UNAVAILABLE`); no qualified reviewer roster and no human labels exist. These block the T 15.3 calibration gate and keep `effective_for_scoring: false`; the ticket ledger records them per ticket.
+- **Shared workspace note:** a concurrent Prompt 13 session was active in this working tree. New workspace members without boundary-map entries made `scripts/check_boundaries.py` fail (`KeyError: 'lang_c'`), and their in-flight plugin/contract edits made 47 parser and policy tests fail independently of this prompt. `scripts/check_judge_boundaries.py` reproduces the same rule for the judge files only. A repository-wide `ruff format` was run once while scoping arguments and reformatted several of those in-flight files; the change is formatting-only and idempotent.
+
 ## Prompt 07 review corrections
 
 - **D-07-06 — Concurrent state and result authority:** short scope transactions serialize DAG mutations; nonblocking fairness locks and fresh counts enforce concurrent campaign/provider caps. An unused conditional branch receives `branch_not_selected`, while failed/unknown prerequisites cannot supply successful inputs. A completion key includes the complete observed outcome as well as the verified artifact. The new result document is durable evidence; legacy completions without it require explicit reconciliation before replay.
@@ -115,6 +206,72 @@ Cloud account/region, OIDC identities, provider/judge endpoint credentials, expl
 - **D-10-04 - Tool caches are not task content.** `python_task_tool.py` refuses to seal or admit a package containing `.mypy_cache`, `.ruff_cache`, `.pytest_cache`, `.hypothesis`, `__pycache__` or `.cache`. A cached analysis directory under `hidden/reference/` becomes part of the candidate file set through `variant_files`, which both breaks the `solution.py`-only output contract and would leak the reference's analysis state. This was a real authoring failure (`archive-path-guard`, `output-contract-reference`); the guard exists so the slip cannot return silently.
 - **D-10-06 - A scan that cannot prove itself is `missing`, never clean.** A required analyzer that crashes, is killed, is absent (exit 127), has an invalid config (exit 2), times out, exits with findings but emits no report, or exits without findings while reporting them, produces one `python.<tool>.scan` observation with status `missing` and zero findings. Profile items fed by that scan become `missing` and the weighted aggregate is withheld. Bandit is the sharp case: it exits 1 both for a finding and for an uncaught crash, so the exit code alone can never be read as a clean result.
 - **D-10-07 - Executable admission is not quality admission.** A green suite-admission report means the variants really ran and the oracles really discriminate. It explicitly does not mean performance baselines, judge anchors, scoring replay, production isolation, curator approval or rights confirmation exist. Every report carries `quality_admission: pending` and the committed inventory carries `fully_admitted: 0` and `frozen: 0`.
+## Prompt 13 — Performance measurement (PCB-13)
+
+- **D-13-01 — The reserved guest is a separate `PlanRunner` entry point, not a new executor.**
+  A normal plan run creates and destroys one guest per plan, which is wrong for measurement: the
+  paired algorithm needs candidate and reference on the *same physical worker* for the whole
+  measurement window, with each iteration as a fresh process inside it. `PlanRunner.reserved_guest()`
+  was added for that, reusing the same `materialize_inputs` digest checks, the same in-guest
+  deadline wrapper and the same supervisor-owned execution records. There is still exactly one
+  component that talks to the sandbox provider.
+- **D-13-02 — Both sides are staged in one guest under separate roots (`cand/`, `ref/`).**
+  Re-rooting the candidate-role inputs is the only difference between the two plans;
+  `side_invariants()` digests image, flags, resources, exit semantics, tool identity, trusted
+  inputs and environment, and the runner refuses to measure if the two sides' invariant digests
+  differ. That digest equality is the evidence for Technical Spec 13.1/13.2's "same worker, same
+  runtime, same workload" instead of an assertion in prose.
+- **D-13-03 — The speed lane is a denylist over argv, environment keys, image and tool.**
+  Instrumentation is usually switched on somewhere other than a compiler flag - `COVERAGE=1`,
+  `RUSTFLAGS=-Cinstrument-coverage`, a Miri recipe. The check therefore matches bare stems
+  (`coverage`, `sanitize`, `miri`, `profil`, `pprof`, `valgrind`, `instrument`) across argv,
+  *environment keys and values*, the image reference and the tool identity, and reports
+  `where:token` so a reviewer sees which field tripped it. A clean plan is still accepted: the
+  refusal is specific, never blanket.
+- **D-13-04 — Hardware identity comes from the guest, and is re-checked before every score.**
+  The reserved guest reports its own CPU model, machine, logical CPUs, kernel, cgroup memory limit
+  and cgroup peak with a bounded python one-liner, so no image rebuild is needed. When the caller
+  supplies a recorded baseline, any drift in CPU model/machine/CPU count/kernel aborts the
+  measurement rather than producing a number on a different machine.
+- **D-13-05 — Shared CI hardware is an explicit blocked gate, not a caveat.** `hardware_gate`
+  is `satisfied` only when the worker is declared dedicated; otherwise it is
+  `blocked_shared_ci` with the reason that ordinary shared timings cannot establish a production
+  comparison. Development-sandbox numbers are still recorded and are still useful as *regression*
+  evidence, but they cannot support a ranked efficiency claim.
+- **D-13-06 — The canary runs on the trusted reference at the largest declared scale.** A canary
+  must itself be stable. At the smallest declared scale a real run took ~20 ms and its own
+  relative MAD reached 0.34, which invalidated every block for the wrong reason (host jitter and
+  process start-up noise, not drift). Running the canary at the largest scale made it a genuine
+  stability signal. The canary measures the *reference* only: it detects contention and throttling,
+  and never candidate behaviour.
+- **D-13-07 — An unusable frozen canary baseline is an invalid block, not a re-baseline.**
+  When the caller supplies no baseline, the first block's median is recorded and labelled
+  `measured_first_run`; when one is supplied and the median falls outside ±10% or the relative MAD
+  exceeds 5%, the whole block is invalid - including every iteration taken under it. The block is
+  still measured and retained as evidence; it just cannot be selected.
+- **D-13-08 — Every block's iterations are retained; only the selected block is aggregated.**
+  The first *valid* block by time order is selected, never the faster one. In the recorded E2E-19
+  run, block 1's canary was faster (21.5 ms vs 32.8 ms median) but noisy, so block 0 was selected.
+  Invalidated blocks keep their iterations - a rejected-but-fast candidate is exactly the evidence
+  a reviewer needs to see - but `efficiency` reads only the selected block.
+- **D-13-09 — Censoring is a bound, and insufficiency is not a score.** A timed-out iteration has
+  no duration. The timeout gives a lower bound on the candidate's time; if that bound already
+  reaches the breakpoint the time component is zero and labelled censored, otherwise the plan does
+  not contain enough information for the transform and the lane reports `incomplete` rather than
+  inventing a duration or awarding partial credit. `efficiency_score()` refuses to produce a value
+  when either component is missing, so an incomplete measurement can never read as 0 or as 100.
+- **D-13-10 — Empirical scale growth is a diagnostic, never a complexity claim.** Each workload
+  row reports the observed time and input-size ratio against the lane's smallest scale. The label
+  in the contract is `scale_growth`, and no code path turns it into a Big-O assertion.
+- **D-13-11 — Prompt 13 does not touch the pinned guest images.** The iteration driver already
+  writes a per-iteration JSON record with `elapsed_ns` and `peak_rss_kb`, so Prompt 13 reads it
+  back with a typed guest command rather than changing the image and re-digesting every sealed
+  manifest. The honest limitation: the per-iteration memory metric is the guest process peak RSS
+  (`guest_process_peak_rss_ru_maxrss_kb`), valid because the Python workload runs in-process; the
+  container-wide cgroup peak is recorded alongside as corroboration, and a workload that forks
+  children would need the cgroup metric per iteration. That upgrade changes image digests and is
+  left as an explicit follow-up rather than done silently.
+
 ## Prompt 12 — Independent grading and normalized evidence
 
 - **D-12-01 — The evaluator is a graph, not an admission variant.** `SuiteAdmission` (Prompt 10/11)
@@ -214,3 +371,144 @@ Cloud account/region, OIDC identities, provider/judge endpoint credentials, expl
 - **D-09-10 - Evidence boundary:** every model response in these tests is a scripted FIXTURE; the sandbox is local Docker (development isolation); the database and artifact store are real. E2E-13 and E2E-14 passed at that level. Live model behaviour, provider tool-call conventions and the two-model pilot remain Prompt 17, and production isolation remains the owner-deferred Prompt 06 gate.
 - **D-09-11 - Independent review:** an adversarial review of this prompt is recorded in `docs/implementation/reports/prompt-09.md` with each finding's disposition.
 - **D-09-12 - Open limitation: run `budget_profile` is not bound to the protocol budget:** each frozen protocol embeds its own `solve_budget` (mirroring `config/budgets/pilot-v1.yaml`, proposed and not authorized for live spend), and the session enforces that embedded budget. `DatabaseAssignmentLoader` does not read the run configuration's `budget_profile` or compare it with the protocol budget, so a run naming one profile could execute under a different protocol's limits without error. Not fixed in Prompt 09 because the profile-to-protocol mapping is undecided. Required before live spend (Prompt 17): load the budget profiles, fail closed when the named profile is missing or differs from the protocol budget, and pin the check with a regression test.
+# D-16-01 - Local reviewed release boundary
+
+Prompt 16 uses transactional SQLite for local release state and compare-and-swap board pointers.
+The publisher accepts allowlisted aggregate projections, requires validator receipts bound to the
+exact source and projection, and signs canonical manifest bytes with Ed25519. Signing keys stay
+outside workers. The CLI is for trusted local administration; role flags are not remote
+authentication. Public deployment is deferred to the authorized deployment prompt. Synthetic
+fixtures are labeled internal/exploratory and cannot support benchmark claims. The optional
+full-product editorial index is disabled.
+
+# D-17-01 - Fixed bounded pilot plan and dispatch gate
+
+The exploratory plan uses `single-shot-v1`, three planned samples per task/model, master seed
+`17017`, and a maximum of three provider deliveries per logical attempt; all attempts are retained
+and best-answer selection is disabled. Both language rosters contain 12 executable-admitted
+clusters, but none is rights-cleared, quality-admitted, curator-frozen, registered to the hidden
+lane, or admitted on a production worker. The two candidate identities/prices, active hard spend
+limit, distinct calibrated judge, production services, and run-start entrypoint are unresolved, so
+all 144 logical attempts remain held before dispatch. The plan and preflight evidence contain no
+provider outputs or benchmark claims.
+
+# D-17-02 - No invented run command
+
+`pcb-model plan` only calculates compatibility and a bounded cost plan. The repository has no
+operator run-start CLI or HTTP route; `RunCreationService` is an internal use case and requires
+already frozen database identities. Do not report a fabricated `pcb run` invocation as executable.
+The planning invocation is documented in `reports/prompt-17.md`; a supported authenticated run
+entrypoint is a concrete software prerequisite to resuming this pilot.
+
+
+# D-23-01 ? C++ executable name and typed tool identity
+
+The C++ executable remains `clang++`, but the shared `ToolIdentity.name` is a `Slug` and cannot contain `+`. Plans now use the stable identity slug `clang-plus-plus`; identity resolution maps it to the exact `clang++` key in the C++ image record. Command argv continues to invoke `clang++`. This keeps executable semantics intact while satisfying the typed contract.
+
+# D-23-02 ? Fail closed on incomplete language identities
+
+A language capability/profile entry is not evidence of an admitted image or task. Java remains outside the production allowlist until its runtime/evaluator/performance images are built, probed and admitted. JavaScript and TypeScript have separate source plugin entrypoints and shared plan/output/grading code, but remain outside the production allowlist until their complete image identities and task packs are admitted. The audit reports these gaps instead of promoting source code or a profile label into a supported capability.
+
+# D-21-01 ? The shared evaluator asks for `language_profile`, not a per-language attribute
+
+`evaluator.py` resolved a language profile by duck-typing `python_profile` then `rust_profile`.
+Every other plugin publishes `language_profile` under the shared `LanguageProfileEvaluator`
+protocol, so for C, C++, Go and Java the lookup silently returned `None`: findings were still
+recorded and reached the scorer, but no profile item was ever scored, so a language's whole
+quality section read as empty rather than unevaluated. The evaluator now reads the protocol
+attribute. Python and Rust also publish `language_profile`, so their behaviour is unchanged; their
+existing per-language accessors are left in place as aliases.
+
+This is a scoring-interpretation change for any language other than Python and Rust, so it is
+recorded here rather than treated as a refactor. It raises scores for those languages from
+"unscored" to "scored"; it does not change any published score that was already computed.
+
+# D-21-02 ? An analyzer that printed nothing is missing evidence, not a clean scan
+
+`scan_observation` already distinguished `findings=None` (`MISSING`) from `findings=0`
+(`MEASURED`). The C++ clang-tidy parser reported `findings=0` whenever its output was not in the
+one stream it read, so a candidate that merely made clang-tidy unreadable scored full marks on
+every clang-tidy-fed item -- the exact inversion the PCB-21-2 DoD forbids. The parser now reads
+both captured streams and raises when a successful run yielded no readable diagnostic, which the
+existing `_guard` converts to `MISSING`. The counterpart assertion for the context scanner
+(`complete: false` -> raise) is the in-repo convention this follows.
+
+# D-21-03 ? Instrumented fixtures declare lane expectations
+
+Four C++ and four C fixtures declared `expected_lane_findings`, and one each declared
+`candidate_crash`/`build_error`, but the shared `FixtureExpectation` schema rejected them, so those
+manifests could not validate. Rather than delete the declarations or special-case C++, the schema
+gained the two outcomes an instrumented language genuinely has, and `SuiteAdmission` now analyzes
+any fixture that declares lane findings and checks them. C++ lane declarations name the profile's
+equivalence families (`manual-ownership`, `undefined-behaviour`, `data-race`), not sanitizer
+wording, because those are the keys observations actually carry.
+
+# D-22-01 ? The Go build cache lives in the workspace, not in the image
+
+The recorded Go admission failed every one of its six variants with
+`build:build harness error (tool_error)`. The cause was not the task code: the plans set
+`GOCACHE=/opt/pcb/cache/go-build` and the sandbox runs each guest with `--read-only` as an
+unprivileged uid that owns only `/workspace` and `/tmp`. `go build` therefore failed before
+compiling anything, with
+
+    failed to initialize build cache at /opt/pcb/cache/go-build: mkdir ...: read-only file system
+
+Exit 2 is in the plan's declared `TOOL_ERRORS`, so the supervisor read the run as a *harness* error
+rather than a candidate failure, and `parse_build` returned `incomplete` for all six variants. The
+asymmetry in the failed report is the proof: `go.gofmt.scan` and `go.context.scan` were `measured`
+while `go.vet`, `go.staticcheck` and `go.gosec` were `missing` — those three load packages through
+the build cache, and the first two do not.
+
+`GOCACHE`, `GOMODCACHE`, `GOPATH` and `GOTMPDIR` now point under the workspace tmpfs, which is
+writable, sized from the plan's own disk budget and discarded with the container. `GOTMPDIR` is
+included because the default compile work directory is `/tmp`, which the sandbox caps at 16 MiB; a
+build that fills it dies with `ENOSPC`, which is indistinguishable from a candidate build error.
+The guest runner creates the four directories, because Go creates three of them itself but
+*requires* `GOTMPDIR` to exist.
+
+This is a defect in the environment the plans assumed, not in the exit contract: a tool that
+cannot start is a tool error, and that classification was correct.
+
+# D-22-02 ? Instrumentation is a per-recipe contract, not an image capability
+
+The Go build's distinctness gate failed while `require_distinct` demanded that the *performance*
+image be unable to run `go test -race`. It can: the race detector ships inside the pinned
+`golang` base, so every recipe has it. Demanding a missing feature would mean shipping a different
+toolchain to obtain a property the scoring rule actually cares about.
+
+The C/C++ plugins already solve this (D-20-x): sanitizer runtimes ship with clang, so
+`ImageIdentities.require_release_recipe` refuses any measurement plan whose recipe does not record
+`instrumentation: none`. Go now records the same three fields — `instrumentation` and
+`accepts_instrumented_plans` per recipe, declared in `infra/images/go/recipes.yaml` — and both
+guards are wired in: `performance_plan` calls `require_release_recipe("performance")` and the race
+plan calls `require_instrumented("runtime")`. The build-side gate checks the *declaration*, and
+separately refuses to declare a recipe instrumentable if that image cannot run `-race`.
+
+The second guard is the one that stops a false clean: a race plan aimed at a recipe with no
+detector would report `clean` for a race that was never looked for.
+
+# D-22-03 ? A plugin declares where its hidden overlays live
+
+Go's hidden suite is at `hidden/topwords/*_test.go`, not `hidden/tests/`, because a Go test file
+must be compiled as part of the package it exercises and may use unexported identifiers. The
+shared `SuiteAdmission` hardcoded `("hidden/tests/", "hidden/perf/")`, so Go's test plans raised
+`PlanInputError: missing overlay input 'work/topwords/behaviour_test.go'` for every variant.
+
+Rather than add a `if language == "go"` branch to the engine, this follows the existing
+`overlay_prefix`/`candidate_suffixes` extension points: the engine reads `overlay_roots` and
+`overlay_suffixes` off the plugin, defaulting to today's Python layout. Go declares
+`overlay_roots = ("hidden/topwords/", "hidden/perf/")` and `overlay_suffixes = ("_test.go",)` — the
+suffix matters because that directory also holds nothing else, and a package directory may hold
+non-test files a task author adds later.
+
+# D-22-04 ? The image build refreshes the allowlist
+
+`assert_plan_allowed` rejects any plan naming an image that is not in
+`config/plugins/allowlist-v1.yaml`, so a build that updates only `config/images/go-v1.json` leaves
+every Go plan unrunnable. Every other language builder rewrites that file; Go's did not, which is
+how the Go allowlist kept naming three digests that no longer existed.
+
+`build_go_images.write_allowlist` now parses the document and replaces only the Go entry's digest
+list. It deliberately does not patch the file with a regex: a regex-based version of this edit
+silently deleted the C and C++ entries during development, which is the exact class of failure the
+function exists to prevent.

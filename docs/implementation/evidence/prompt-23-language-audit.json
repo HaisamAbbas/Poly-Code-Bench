@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "prompt": "23",
+  "date": "2026-10-02",
+  "status": "partial",
+  "evidence_tier": "local_fixture_and_historic_container_evidence",
+  "fixture_results_are_model_benchmark_results": false,
+  "language_manifest_task_counts": {
+    "python": 1,
+    "rust": 1,
+    "javascript": 0,
+    "typescript": 0,
+    "c": 1,
+    "cpp": 1,
+    "go": 1,
+    "java": 1
+  },
+  "fixture_variant_counts": {
+    "python": 6,
+    "rust": 5,
+    "javascript": 0,
+    "typescript": 0,
+    "c": 9,
+    "cpp": 9,
+    "go": 6,
+    "java": 8
+  },
+  "historic_real_container_e2e15": {
+    "python": {
+      "passed": 14,
+      "total": 14,
+      "evidence": "docs/implementation/evidence/prompt-10-conformance.json"
+    },
+    "rust": {
+      "passed": 16,
+      "total": 16,
+      "evidence": "docs/implementation/evidence/prompt-11-conformance.json"
+    }
+  },
+  "local_audit": {
+    "test": "tests/test_language_extension_audit.py",
+    "covers": [
+      "registered plugin/profile identity checks for implemented plugins",
+      "C/C++ task manifest validation and build/test/analyzer plan generation",
+      "shared solve output extraction and path traversal rejection for all eight language identifiers",
+      "synthetic scoring and replay through the common contract for Python, Rust, C, C++, Go and Java",
+      "separate JavaScript and TypeScript profile applicability",
+      "JS/TS source plugin class and declared entrypoint protocol checks; no allowlist/image/task admission claim"
+    ],
+    "java_task_variants": [
+      "reference",
+      "faulty",
+      "alternative",
+      "null-unsafe",
+      "resource-leak",
+      "concurrency-defect",
+      "security-defective",
+      "timeout"
+    ]
+  },
+  "integration_defects_fixed": [
+    "Go plan assembly was absent; restored typed build/test/analyzer plan construction with language identity.",
+    "Go commands ran outside the module root; added safe relative --cwd support. Existing Go image guest identity is now stale and requires rebuild/admission.",
+    "C++ clang++ violated the Slug identity type; mapped executable identity to clang-plus-plus while retaining clang++ argv.",
+    "C++ sanitizer exit code 2 overlapped unsupported and infrastructure error categories; findings now carry the candidate-result classification without that overlap."
+  ],
+  "missing_or_stale": {
+    "docker_daemon_available": false,
+    "java_images_built_or_admitted": false,
+    "javascript_plugin_and_task_manifest": false,
+    "typescript_plugin_and_task_manifest": false,
+    "fresh_c_cpp_go_image_admission": false,
+    "go_saved_guest_digest_matches_current_source": false,
+    "cppcheck_version_known": false,
+    "gosec_version_reproducibly_pinned": false,
+    "fresh_rust_advisory_snapshot": false,
+    "javascript_plugin_source_exists": true,
+    "typescript_plugin_source_exists": true,
+    "javascript_typescript_production_allowlist_entries": false,
+    "javascript_typescript_task_manifests": true
+  },
+  "tests": {
+    "language_suite": "161 passed; 1 Windows subprocess test failed before process creation due WinError 1455 paging-file exhaustion; isolated rerun of that test passed; 1 Linux-only guest test skipped.",
+    "shared_solve_score_replay": "79 passed; 4 standard-agent Docker tests skipped.",
+    "targeted_mypy": "19 source files passed.",
+    "java_recipe_static_check": "passed",
+    "dependency_lock_check": "passed"
+  },
+  "gates": {
+    "E2E-15": "partial",
+    "E2E-35": "partial",
+    "phase_2_pilot": {
+      "status": "blocked",
+      "expected_attempts": 144,
+      "completed_attempts": 0,
+      "model_failed_attempts": 0,
+      "infrastructure_blocked_before_dispatch": 144,
+      "provider_deliveries": 0
+    },
+    "phase_4": "blocked"
+  }
+}

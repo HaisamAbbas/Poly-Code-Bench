@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "kind": "suite_admission_report",
+  "profile_id": "admission-v1",
+  "task_id": "conformance-go-top-words",
+  "task_version": 1,
+  "package_digest": "sha256:f1711c23760958d978e8751d1e67eac2fa41926443999458a2c274346890a07d",
+  "plugin_id": "go",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118",
+    "sha256:9ef8a84009a970ad69e3f3ee30a40647ea2602505aef6d8933229f4d7800badf"
+  ],
+  "checks": [
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "disclosure-scan",
+      "status": "pass",
+      "detail": "no hidden bytes/paths/digests or credentials in visible bundle"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "rights-and-provenance",
+      "status": "pass",
+      "detail": "status=authored_fixture; license=CC0-1.0"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "safe-paths-and-snapshot",
+      "status": "pass",
+      "detail": "contained regular files, no links, no git metadata"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "strict-schema",
+      "status": "pass",
+      "detail": "manifest validated by the safe importer"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "visible-hidden-separation",
+      "status": "pass",
+      "detail": "physically separate archives; disclosure scan ran"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "plugin-task-validation",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-reference",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-faulty-ties",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-alternative-heaps",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-quality-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-timeout-case",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-race-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "reference-acceptance",
+      "status": "fail",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "five-reference-repetitions",
+      "status": "fail",
+      "detail": "five identical outcome inventories required"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "known-fault-rejection",
+      "status": "fail",
+      "detail": "faulty variants must fail their declared cases"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "alternative-solution-acceptance",
+      "status": "fail",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "timeout-variants-rejected",
+      "status": "pass",
+      "detail": "timeouts are candidate failures, not harness errors"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-defect-detected",
+      "status": "fail",
+      "detail": "quality-defective variants pass the functional gate yet show their intended defect"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "instrumented-lane-defect-detected",
+      "status": "pass",
+      "detail": "every declared lane reported its families"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "crash-and-build-fixtures-rejected",
+      "status": "pass",
+      "detail": "a crashing or unbuildable solution is a candidate failure, not a harness error"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-analyzer-compatibility",
+      "status": "fail",
+      "detail": "scans: [('go.context.scan', 'measured'), ('go.gofmt.scan', 'measured'), ('go.gosec.scan', 'missing'), ('go.staticcheck.scan', 'missing'), ('go.vet.scan', 'measured')]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "performance-workload-smoke",
+      "status": "pass",
+      "detail": "no performance workload declared"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-opportunity-coverage",
+      "status": "pass",
+      "detail": "dimensions: code_quality,correctness,idiomatic,robustness"
+    }
+  ],
+  "runs": [
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "reference",
+      "variant": "reference",
+      "repetitions": 5,
+      "gates": [
+        "fail",
+        "fail",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776",
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776",
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776"
+      ],
+      "analyzer_scans": [
+        "go.context.scan=measured",
+        "go.gofmt.scan=measured",
+        "go.gosec.scan=missing",
+        "go.staticcheck.scan=missing",
+        "go.vet.scan=measured"
+      ],
+      "issue_families": [
+        "formatting"
+      ],
+      "durations_ms": [
+        59532,
+        58000,
+        53546,
+        55592,
+        56764,
+        57281,
+        60094,
+        60046
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "faulty-ties",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        60296,
+        59483,
+        57828,
+        55640
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "alternative-heaps",
+      "variant": "alternative",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "build:topwords/topwords.go:69:16: cannot index best (variable of type *ranking)"
+      ],
+      "outcome_digests": [],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        26468
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "quality-defective",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776"
+      ],
+      "analyzer_scans": [
+        "go.context.scan=measured",
+        "go.gofmt.scan=measured",
+        "go.gosec.scan=missing",
+        "go.staticcheck.scan=missing",
+        "go.vet.scan=measured"
+      ],
+      "issue_families": [
+        "error-chain",
+        "error-sentinel",
+        "formatting",
+        "goroutine-lifecycle",
+        "ignored-error",
+        "string-building"
+      ],
+      "durations_ms": [
+        56750,
+        59891,
+        48639,
+        43812
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "timeout-case",
+      "variant": "timeout",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:TestTiesBreakAlphabetically"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        59828,
+        57280,
+        56592,
+        58827
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "race-defective",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [
+        "go.context.scan=measured",
+        "go.gofmt.scan=measured",
+        "go.gosec.scan=missing",
+        "go.staticcheck.scan=missing",
+        "go.vet.scan=measured"
+      ],
+      "issue_families": [
+        "formatting",
+        "string-building"
+      ],
+      "durations_ms": [
+        60452,
+        61703,
+        60516,
+        61016
+      ]
+    }
+  ],
+  "executable_admission_passed": false,
+  "pending_gates": [
+    "generic-evaluator-stage-integration (Prompt 12)",
+    "performance-baseline-canary-and-paired-measurement (Prompt 13)",
+    "judge-anchors-and-human-calibration (Prompt 14)",
+    "deterministic-scoring-replay-and-golden-calculations (Prompt 15)",
+    "production-worker-execution-tier (Prompt 06 owner-deferred)",
+    "curator-approval-and-task-freeze",
+    "owner-rights-confirmation"
+  ],
+  "quality_admission": "pending",
+  "report_digest": "sha256:52f6fb63362120593883067695bdd4af4b0b3e20655d48e271e777d27d170b27"
+}

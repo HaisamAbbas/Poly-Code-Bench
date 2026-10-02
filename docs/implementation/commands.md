@@ -339,3 +339,127 @@ Database and object-store commands ran against the local PostgreSQL 17.6 and Sea
 | `mypy --disable-error-code=import-untyped packages/plugins-api/src packages/evaluation/src plugins/languages/python/src plugins/languages/rust/src` | No new errors in the Prompt 12 modules; remaining notes are the repo's pre-existing `import-untyped`/`unused-ignore` items in other files. |
 | `python scripts/check_boundaries.py`; `python docs/implementation/verify_prompt00.py` | PASS (ledger counts unchanged: 14 REQ, 24 WP, 43 E2E, 35 prompts, 142 tickets). |
 | Production worker tier, sealed hidden lane, curator/owner rights, paid providers | NOT RUN: out of scope for this prompt; none was taken. |
+
+## Prompt 16 — Aggregation and local reviewed publication
+
+| Command / check | Result |
+|---|---|
+| `.venv\Scripts\python.exe -m pytest tests/test_publication_aggregation.py tests/test_publication_reporting.py tests/test_publication_releases.py tests/test_releases.py tests/test_uncertainty.py -q -p no:cacheprovider --tb=short` | PASS: 23 synthetic/internal acceptance tests; see `evidence/prompt-16-acceptance.json`. |
+| `.venv\Scripts\python.exe -m ruff format --check ...` and `.venv\Scripts\python.exe -m ruff check ...` for Prompt 16 files | PASS. |
+| `$env:MYPYPATH='packages/core/src;packages/scoring/src;packages/publication/src'; .venv\Scripts\python.exe -m mypy packages/publication/src/polycodebench_publication` | PASS: 5 source files. |
+| `.venv\Scripts\python.exe scripts/export_publication_schemas.py --check` | PASS: 9 current schemas. |
+| `.venv\Scripts\python.exe scripts/check_boundaries.py`; `.venv\Scripts\python.exe scripts/pcb.py release --help`; `.venv\Scripts\python.exe docs/implementation/verify_prompt00.py`; `git diff --check` | PASS. |
+| `uv build --package polycodebench-publication --offline --out-dir .cache/prompt16-dist` | PASS: source distribution and wheel built. |
+| `uv lock; uv sync --all-packages --locked` | PASS after adding pinned Ed25519 signing dependency. |
+| Public API, real benchmark result publication, cloud/production target | NOT RUN; no target or authorized reviewed benchmark release was provided. |
+
+
+## Prompt 17 preflight
+
+| Command / check | Result |
+|---|---|
+| `.venv\Scripts\python.exe scripts/python_pilot_inventory.py --protected .protected/taskpacks/python-pilot --reports .protected/reports --output taskpacks/python-pilot/inventory.yaml` | PASS: 12 packages, 12 executable-admission-passed; 0 fully admitted/frozen. |
+| `.venv\Scripts\python.exe scripts/rust_pilot_inventory.py --protected .protected/taskpacks/rust-pilot --reports .protected/reports --output taskpacks/rust-pilot/inventory.yaml` | PASS: 12 packages, 12 executable-admission-passed; 0 fully admitted/frozen. |
+| `.venv\Scripts\python.exe -m pytest tests/test_solve_core.py tests/test_solve_sessions.py tests/test_solve_families.py tests/test_model_gateway_units.py -q -p no:cacheprovider --tb=short` | PASS: 144 passed, 25 skipped; database/Docker integration cases skipped because `PCB_TEST_DATABASE_URL` is absent. |
+| `$env:PCB_TEST_DOCKER='1'; .venv\Scripts\python.exe -m pytest tests/test_solve_sessions.py tests/test_solve_families.py -q -p no:cacheprovider --tb=short` | Exit 0: 1 passed, 25 skipped because `PCB_TEST_DATABASE_URL` is absent; a Windows WMI `0x8007000e` diagnostic appeared during import. Not integrated pilot evidence. |
+| `.venv\Scripts\python.exe -m pytest tests/test_solve_core.py -q -p no:cacheprovider --tb=short` | PASS: 70 passed. |
+| `.venv\Scripts\pcb-solve.exe protocols --directory config/protocols` | PASS: both single-shot and standard-agent protocol definitions and digests listed. |
+| `.venv\Scripts\pcb-model.exe plan --help`; `.venv\Scripts\python.exe scripts/pcb.py --help` | PASS: model command is plan/check/registration/account tooling; operator `pcb` exposes task/taskset only, with no run-start command. |
+| E2E-31 live two-model pilot | BLOCKED before dispatch: 144 expected, 0 completed, 0 model-failed, 144 infrastructure/pre-dispatch-blocked. No provider delivery, cloud action or public publication occurred. |
+| Exact bounded planning invocation once resolved model configs exist | `.venv\Scripts\pcb-model.exe plan --config <resolved-model-config.json> --protocol docs/implementation/plans/single-shot-v1.json --tasks 24 --samples 3 --max-deliveries 3` (run once per model config; planning only, not dispatch). |
+| Exact bounded dispatch invocation | UNAVAILABLE: no run-start CLI or HTTP route exists in this checkout. Do not substitute the planning invocation for execution. |
+
+## Prompt 13 completion (PCB-13-1 to PCB-13-4)
+
+| Command | Result |
+|---|---|
+| `pytest tests/test_efficiency.py tests/test_performance_plan.py` | PASS: 16 tests. Golden efficiency values (ratio 2 / memory 1.5 → 61.666667; ratio 1 / ratio 1 → 100.000000; ratio 1 / memory 2 → 70.000000), censored-timeout bounds, refusals for a missing component, side-invariant equality, speed-lane refusals (argv, environment key), hardware-class and reference-digest binding. |
+| `PCB_TEST_DOCKER=1 pytest tests/test_performance_docker.py` | PASS: 4 tests in 620s, real containers in the pinned Python image. E2E-19 paired measurement on one reserved worker (24 retained iterations over 3 weighted scales, 9 same-input pairs, separate build timings, efficiency 100.000000 for a candidate identical to its reference), E2E-20 canary drift, instrumented-lane refusal before any guest is created, and the wrong-but-fast rejection. |
+| `pytest tests/test_efficiency.py` after the scale-growth fix | PASS: 9 tests. |
+| `ruff check` / `ruff format --check` on `packages/evaluation/src/polycodebench_evaluation/{performance,perfcontracts,efficiency,plan_runner}.py` and `tests/test_{efficiency,performance_plan,performance_docker}.py` | PASS. Scoped deliberately: a directory-wide `ruff --fix` also reordered imports in a concurrent session's untracked `judge_inputs.py`. |
+| `python docs/implementation/verify_prompt00.py` | PASS (ledger counts unchanged). |
+| Dedicated/homogeneous hardware, production worker, paid providers | NOT RUN: unavailable on this host; recorded as a blocked gate rather than worked around. Shared-CI timings are labelled `blocked_shared_ci` in every measurement manifest. |
+
+Measured artifacts are written to `.cache/performance/*.json` by the test and copied to
+`docs/implementation/evidence/prompt-13-*.json` for the ledger.
+
+## Prompt 15 completion (PCB-15-1 to PCB-15-4)
+
+All commands were run on this Windows host with `.venv\Scripts\python.exe` (Python 3.12.10),
+`local_fixture` tier, no network, no paid provider and no task execution by the scorer.
+
+| Command | Result |
+|---|---|
+| `.venv/Scripts/python.exe -m pytest tests/test_scoring_golden.py tests/test_scoring_properties.py tests/test_scoring_policy.py tests/test_scoring_replay.py -q -p no:cacheprovider` | PASS: 66 passed in 13.86s. This is the whole Prompt 15 scope: E2E-23 golden fixtures, the ?24.1 scoring properties, the policy/profile/ownership configurations and E2E-24 clean-process replay. |
+| `.venv/Scripts/python.exe -m pytest tests -q -p no:cacheprovider --ignore=tests/test_analyzer_contracts.py --ignore=tests/test_judge_cli.py --ignore=tests/test_judging_core.py --ignore=tests/test_judging_postgres.py --ignore=tests/test_judge_inputs.py --ignore=tests/test_python_plugin.py --ignore=tests/test_python_parsers.py --ignore=tests/test_rust_parsers.py --ignore=tests/test_publication_cli.py` | PASS: 488 passed, 147 skipped. The ignored modules are in-flight Prompt 13/14/16 work plus three modules confirmed failing on this tree with the Prompt 15 changes stashed; none is caused by this prompt. |
+| `.venv/Scripts/python.exe -m mypy --strict packages/core/src packages/plugins-api/src packages/scoring/src packages/configuration/src` | PASS: no issues in 41 source files. Adding `py.typed` to core and plugins-api removed the `--disable-error-code=import-untyped` suppression the earlier prompts needed and surfaced two real typing defects in Prompt 14's `judge_contracts.py`/`judge_calibration.py`, fixed without behaviour change. |
+| `.venv/Scripts/ruff.exe check packages/scoring tests/scoring_support.py tests/test_scoring_golden.py tests/test_scoring_properties.py tests/test_scoring_policy.py tests/test_scoring_replay.py scripts/hash_scoring_profile_source.py scripts/check_boundaries.py` | PASS. (A repository-wide `ruff check .` still reports 71 findings, all in the in-flight Prompt 14/16 modules and `tmp_probe/`; one pre-existing `UP012` remains in `judge_calibration.py`.) |
+| `.venv/Scripts/ruff.exe format --check` on the same paths | PASS: 18 files already formatted. |
+| `.venv/Scripts/python.exe scripts/check_boundaries.py` | PASS. `scoring -> plugins_api` is now declared in `ALLOWED`, because T ?14.1 names `FrozenTask` (a plugins-api type) as a scorer input. |
+| `.venv/Scripts/python.exe scripts/hash_scoring_profile_source.py` | PASS: `config/scoring/pilot-v1.yaml` records the real sha256 of `config/languages/profiles-v1.yaml` (`sha256:55caf3f9...842f6`). `--write` recomputes it, so a profile edit cannot silently pass for an unchanged scoring input. |
+| `.venv/Scripts/python.exe docs/implementation/verify_prompt00.py` | PASS: 14 REQ, 24 WP, 43 E2E, Prompts 00-34, 142 PCB tickets, owners/evidence, progress and source hashes. |
+| `uv lock --offline` then `uv sync --locked --offline --all-packages` | PASS. The lock gained `polycodebench-plugins-api` and `PyYAML==6.0.3` for the scoring package; no new distribution was fetched. |
+| `uv run --locked --offline --package polycodebench-scoring pcb-score --help` | PASS: registers the `score` and `replay` subcommands. |
+| `uv run --locked --offline --package polycodebench-scoring pcb-score score --policy .cache/scorer-cli-demo/policy.json --ownership ... --task ... --evidence ... --language-profile ... --output ... --explain` | PASS: printed the six-dimension chain and `total: 84.000000` with the full arithmetic (`3000bp*100.000000/10000 + 2000bp*75.000000/10000 + 1500bp*61.666667/10000 + 1500bp*85.000000/10000 + 1000bp*90.000000/10000 + 1000bp*80.000000/10000`). Security 75.000000 is the duplicate-high-finding fixture; efficiency 61.666667 is the time-ratio-2/memory-ratio-1.5 fixture. |
+| `uv run --locked --offline --package polycodebench-scoring pcb-score replay ... --archived-outcome .cache/scorer-cli-demo/outcome.json` | PASS: `{"outcome_digest": "sha256:4f8b9eabcb03963fb7b93dc5321f54b80605d0ba980a90d22960e3a031d32133", "replayed": true}`. |
+| `uv build --all-packages --offline --out-dir .cache/prompt15-build` | PASS: every workspace package built, including `polycodebench-scoring`. |
+| Production worker tier, sealed hidden lane, live model/judge endpoints, human calibration | NOT RUN: unconfigured and unauthorized on this host. `config/scoring/pilot-v1.yaml` therefore stays `effective_for_scoring: false` / `calibration_status: pending`, and E2E-24's live-pilot replay variant stays with Prompt 17. |
+
+Detailed evidence: `docs/implementation/evidence/prompt-15-scoring.json`. Decisions:
+`docs/implementation/decisions/prompt-15.md`.
+
+
+## Prompt 18 Track A checks (2026-10-02)
+
+| Command / check | Result |
+|---|---|
+| `.venv\Scripts\pytest.exe tests/test_track_a.py tests/test_track_a_publication.py -q -p no:cacheprovider --tb=short` | PASS: 14 unit/CLI/release-draft integration tests. E2E-32/33 use synthetic internal findings/oracles; the publication test creates a local draft and verifies it remains unpublished. |
+| `$env:PCB_TEST_DOCKER='1'; $env:PCB_WRITE_EVIDENCE='1'; .\.venv\Scripts\pytest.exe tests/test_track_a.py tests/test_track_a_docker.py -q -p no:cacheprovider --tb=short` | PASS: 13 tests in 102.56s, including authored Python/Rust pre-fix and mutation reproduction, passing references, and E2E-34 bad-patch grading in the development sandbox. The command ran before adding one CLI-only unit case; its two Docker paths are unchanged and retained evidence is under `docs/implementation/evidence/prompt-18-*.json`. |
+| `.venv\Scripts\pytest.exe tests/test_publication_aggregation.py tests/test_publication_reporting.py tests/test_publication_releases.py tests/test_releases.py tests/test_uncertainty.py tests/test_publication_cli.py -q -p no:cacheprovider --tb=short` | PASS: 26 publication/aggregation regression tests. Unsafe projections are refused on draft creation and update. |
+| `.venv\Scripts\ruff.exe format` / `ruff.exe check` on Track A evaluation, publication adapter/CLI/release store and related tests | PASS. |
+| Mypy with workspace `MYPYPATH` on Track A evaluation and CLI (2 files), then publication Track A adapter/release CLI/store (3 files) | PASS: no issues. |
+| `uv run --locked --package polycodebench-evaluation pcb-track-a --help`; `... pcb-track-a source-requirements`; `uv run --locked --package polycodebench-publication pcb-release track-a-draft --help` | PASS: real entrypoints resolve. The source command reports zero verified external security examples and `status: blocked`, as intended. |
+| `uv lock --check` | PASS: lock remains consistent. |
+| `uv sync --locked --all-packages --group dev` | BLOCKED by the in-flight JavaScript package: `polycodebench-lang-javascript` lacks `src/polycodebench_lang_javascript/__init__.py`; `uv run --package` installs each required Track A entrypoint independently. |
+| `python scripts/check_boundaries.py` | BLOCKED by the shared checker raising `KeyError: 'lang_c'` for an existing language package whose owner is absent from its `ALLOWED` table; Track A's own strict mypy and package entrypoint checks pass. |
+
+No model provider, human calibration, production worker, external source download or public release was used.
+
+## Prompt 14 completion (PCB-14-1 to PCB-14-4)
+
+Judge responses in every command below are FIXTURES replayed through the real gateway; the
+database, object store, ledger and adjudication records are real. No judge model endpoint and no
+human calibration label exists in this workspace, so `pcb-judge run` is refused by design.
+
+| Command actually run | Result |
+|---|---|
+| `docker compose up -d`; `createdb pcb_prompt14_test`; `provision_roles.sql`; `grant_permissions.sql` (admin, `ON_ERROR_STOP=1`) | PASS: local PostgreSQL 17.6 on 55432 and SeaweedFS 4.48 on 8333; role groups and scoped grants applied before migration. |
+| `alembic -c packages/persistence/alembic.ini upgrade head` then `check` on an empty `pcb_prompt14_test` | PASS: twelve revisions applied ending at `b9e04c7a1f38` (judge execution records); "No new upgrade operations detected" (no model/schema drift). The migration refuses to run if `judge_packet` already holds rows. |
+| `pytest tests/test_judging_core.py` | PASS: 56 offline tests (frozen rubric/panel, packet blinding, 16 adversarial judge responses, three-vote averaging, recovery bound, disagreement triggers, adjudication and supersession, cohort versioning, calibration selection/metrics/blocked paths, plus eleven regression tests from the independent review). |
+| `pytest tests/test_judging_postgres.py` with `PCB_TEST_DATABASE_URL`, `PCB_OBJECT_STORE_ENDPOINT` and local development credentials | PASS: 10 tests on real PostgreSQL/SeaweedFS through the real `ModelGateway` (endpoint approval, capability validation, cost reservation, settlement, three-turn ledger). E2E-21 mean `0.833333`; E2E-22 six retained deliveries, `infra_blocked` with two valid votes; reviewer override appends a result and preserves all votes; judge rows reject UPDATE/DELETE. |
+| `PCB_TEST_EVIDENCE_DIR=docs/implementation/evidence pytest tests/test_judging_postgres.py` | PASS: wrote `prompt-14-e2e-21.json` and `prompt-14-e2e-22.json` (secret-free; judge response text never recorded). |
+| `pytest tests/test_judge_cli.py` | PASS: 10 tests \u2014 rubric, blocked panel, packet build, vote validation accept/reject, blocked calibration report written to disk, unqualified label refused, missing database configuration refused, adjudication permission enforced, `result` refused without restricted-evidence read. |
+| `pytest tests/test_judge_inputs.py` | PASS: 7 tests building packet input from a real `EvaluationEvidence` manifest produced by the Prompt 12 evaluator; gate results, candidate digest and baseline debt are excluded, candidate comments arrive as untrusted data. |
+| `python -m polycodebench_orchestration.judge.cli calibration --packets <placeholder set> --report docs/implementation/evidence/prompt-14-calibration.json --notes ...` | PASS with exit code 4 (blocked): `status: blocked`, `exact_agreement_bp: null`, `promotion_target_met: null`, `disjointness: not_demonstrated`, missing inputs named. |
+| `ruff check` / `ruff format --check` on the 19 Prompt 14 files | PASS: lint clean, all formatted. |
+| `mypy` (strict) on the 12 new/changed Prompt 14 source files | PASS: no issues. Scoped to source, as every other prompt's command in this ledger does; including the test files surfaces environment errors of the same kind in the concurrently modified test files (`polycodebench_plugins_api` has no editable path in the shared venv after the parallel session re-synced it, so those imports are `import-untyped`). |
+| `python scripts/check_judge_boundaries.py` | PASS: judge files respect core\u2192services\u2192persistence\u2192orchestration/evaluation boundaries. The repository-wide `scripts/check_boundaries.py` cannot run while the concurrent Prompt 13 session has plugin members without map entries (`KeyError: 'lang_c'`). |
+| `python docs/implementation/verify_prompt00.py` | PASS: 14 REQ, 24 WP, 43 E2E, Prompts 00\u201334, 142 PCB tickets with owners and evidence. |
+| `pytest tests/test_judging_core.py tests/test_judging_postgres.py tests/test_judge_cli.py tests/test_judge_inputs.py` | PASS: 83 tests (56 offline, 10 PostgreSQL/object-store/gateway, 10 CLI, 7 evaluation handoff). |
+| Live judge endpoint, real judge model, qualified human calibration labels, hosted CI | NOT RUN: no endpoint, credentials, price snapshot, reviewer roster or labels exist; nothing was fabricated or substituted. |
+| Full-workspace `pytest` | NOT CLEAN, and not because of this prompt: the shared working tree contains a concurrent Prompt 13 session whose untracked `tests/test_analyzer_contracts.py` imports a helper that no longer exists in its own `identity.py`, which blocks whole-suite collection until that session finishes. An earlier scoped run reported 666 passed / 50 failed, with every failure in concurrently modified Prompt 13 files. |
+
+
+## Prompt 23 ? Java and language coverage audit
+
+Run local Java recipe validation and focused contracts:
+
+```powershell
+uv run python scripts/build_java_images.py --check
+uv run pytest -q tests/test_language_extension_audit.py tests/test_java_taskspec.py tests/test_java_plugin.py tests/test_java_guest.py
+uv run pytest -q tests/test_solve_core.py tests/test_solve_families.py tests/test_scoring_replay.py
+uv run python scripts/export_contract_schemas.py --check
+uv run python scripts/check_boundaries.py
+```
+
+When Docker is available, build and test the Java and Go images with `uv run python scripts/fetch_java_components.py`, `uv run python scripts/build_java_images.py`, and `uv run python scripts/build_go_images.py`. Java still needs a Docker conformance/admission test module; Go must be re-admitted because the current guest digest differs from the saved manifest. Then run the E2E-15/E2E-35 matrix.

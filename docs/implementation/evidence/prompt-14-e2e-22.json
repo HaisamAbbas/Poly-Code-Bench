@@ -1,0 +1,123 @@
+{
+  "claim": "invalid output is retained and replaced within a fixed bound; fewer than three valid votes cannot produce a ready result; candidate comments have no authority",
+  "deliveries": [
+    {
+      "delivery_index": 0,
+      "invalid_reason": "not_json",
+      "repair_instruction_id": null,
+      "status": "invalid",
+      "vote_index": 0
+    },
+    {
+      "delivery_index": 1,
+      "invalid_reason": null,
+      "repair_instruction_id": "schema-repair-v1",
+      "status": "valid",
+      "vote_index": 0
+    },
+    {
+      "delivery_index": 0,
+      "invalid_reason": "missing_item",
+      "repair_instruction_id": null,
+      "status": "invalid",
+      "vote_index": 1
+    },
+    {
+      "delivery_index": 1,
+      "invalid_reason": "anchor_not_in_set",
+      "repair_instruction_id": "schema-repair-v1",
+      "status": "invalid",
+      "vote_index": 1
+    },
+    {
+      "delivery_index": 2,
+      "invalid_reason": "extra_instruction_action",
+      "repair_instruction_id": "schema-repair-v1",
+      "status": "invalid",
+      "vote_index": 1
+    },
+    {
+      "delivery_index": 0,
+      "invalid_reason": null,
+      "repair_instruction_id": null,
+      "status": "valid",
+      "vote_index": 2
+    }
+  ],
+  "item_outcomes": [
+    {
+      "item_id": "decomposition",
+      "mean_score": null,
+      "required_votes": 3,
+      "status": "infra_blocked",
+      "triggers": [
+        "invalid_vote_recovery_exhausted",
+        "missing_required_vote",
+        "untrusted_comment_only"
+      ],
+      "vote_count": 2
+    },
+    {
+      "item_id": "minimal_relevant_scope",
+      "mean_score": null,
+      "required_votes": 3,
+      "status": "infra_blocked",
+      "triggers": [
+        "invalid_vote_recovery_exhausted",
+        "missing_required_vote",
+        "untrusted_comment_only"
+      ],
+      "vote_count": 2
+    }
+  ],
+  "judge_tier": "FIXTURE judge responses through the real gateway",
+  "packet": {
+    "cohort_id": "01144c0a-3429-4dee-ac74-778e5ef2bf4f",
+    "evidence_anchors": [
+      "sp-9fb57c1509ebece7",
+      "sp-bc4b032fd9f4708f"
+    ],
+    "excluded_evidence": [
+      "expected_score",
+      "correctness_gate",
+      "measured_rank",
+      "hidden_test_results"
+    ],
+    "items": [
+      "decomposition",
+      "minimal_relevant_scope"
+    ],
+    "language": "python",
+    "packet_digest": "sha256:26575ff42b2487a0541bb2ce8c54261b092ca383acddd27b498be60676fc80cf",
+    "packet_id": "d4957492-ca2e-47ec-a7c5-d2776197b6cb",
+    "packet_role": "scored",
+    "panel": "judge-panel-v1@1",
+    "panel_digest": "sha256:715fef37adbeb86d3d1e417df1556a517846c9616be30beea70bdce2d73ad395",
+    "rubric": "judge-rubric-v1@1",
+    "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+    "tools": [],
+    "untrusted_comments": [
+      {
+        "anchor_id": "cmt-036598897251c4ae",
+        "in_any_item_scope": false,
+        "instruction_attempt": true,
+        "path": "solution.py"
+      }
+    ],
+    "withheld_fields": [
+      "candidate_identity",
+      "provider",
+      "rank",
+      "cost",
+      "expected_score"
+    ]
+  },
+  "repair_instruction_contains_no_score": true,
+  "result_status": "infra_blocked",
+  "scenario": "E2E-22",
+  "untrusted_comment_count": 1,
+  "valid_vote_indexes": [
+    0,
+    2
+  ]
+}

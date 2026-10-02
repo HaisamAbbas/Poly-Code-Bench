@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_17_preflight_evidence",
+  "date": "2026-10-02",
+  "status": "blocked",
+  "scope": "internal_exploratory_python_rust_pilot",
+  "claim": "Preflight and local validation only. No live model benchmark result, provider delivery, production worker run, scorecard, or publication is represented.",
+  "attempt_counts": {
+    "expected": 144,
+    "completed": 0,
+    "model_failed": 0,
+    "infrastructure_blocked_before_dispatch": 144,
+    "provider_deliveries": 0,
+    "maximum_provider_deliveries_if_resumed": 432
+  },
+  "task_roster": {
+    "python": {
+      "tasks": 12,
+      "independent_clusters": 12,
+      "executable_admission_passed": 12,
+      "fully_admitted": 0,
+      "frozen": 0,
+      "rights_confirmed": 0,
+      "inventory": "taskpacks/python-pilot/inventory.yaml"
+    },
+    "rust": {
+      "tasks": 12,
+      "independent_clusters": 12,
+      "executable_admission_passed": 12,
+      "fully_admitted": 0,
+      "frozen": 0,
+      "rights_confirmed": 0,
+      "inventory": "taskpacks/rust-pilot/inventory.yaml"
+    },
+    "inventory_digests": {
+      "python": "sha256:0c19f5935fcffd36597a76c7680f5b3276056133cb502760e19cd693e08355f8",
+      "rust": "sha256:041c9f3f5e721f131427408437504f615917db6f22ab92c2ba5593b3ffabbfc7"
+    }
+  },
+  "run_plan": "docs/implementation/plans/prompt-17-run-plan.json",
+  "planned_protocol": {
+    "id": "single-shot-v1",
+    "sha256": "sha256:e4f798af6c903d3c6dfdf7ab44c79aaa30a079b865834ad1cee42a17c29ff2df",
+    "samples_per_task_per_model": 3,
+    "master_seed": "17017",
+    "best_answer_selection": false,
+    "standard_agent_acceptance_protocol": "standard-agent-v1"
+  },
+  "model_slots": [
+    {"slot": "candidate_a", "model_identity": null, "config_id": null, "capabilities_resolved": false, "price_snapshot_id": null},
+    {"slot": "candidate_b", "model_identity": null, "config_id": null, "capabilities_resolved": false, "price_snapshot_id": null}
+  ],
+  "budget": {
+    "profile": "single-shot-small-v1",
+    "status": "proposed_not_authorized",
+    "effective_for_live_calls": false,
+    "hard_limit_micro_usd": null,
+    "price_snapshot_available": false,
+    "base_input_tokens_upper_bound": 4608000,
+    "base_output_tokens_upper_bound": 1152000,
+    "maximum_deliveries_input_tokens_upper_bound": 13824000,
+    "maximum_deliveries_output_tokens_upper_bound": 3456000
+  },
+  "judge": {
+    "panel_id": "judge-panel-v1",
+    "distinct_from_candidates_required": true,
+    "effective_for_scoring": false,
+    "judge_config_id": null,
+    "calibration_status": "pending",
+    "votes_per_packet": 3
+  },
+  "local_validation": {
+    "solve_and_gateway_tests": "144 passed, 25 skipped; database/Docker integrated cases skipped because PCB_TEST_DATABASE_URL is absent",
+    "docker_opt_in_solve_tests": "1 passed, 25 skipped; database-backed cases skipped because PCB_TEST_DATABASE_URL is absent",
+    "solve_core_repeat": "70 passed",
+    "protocol_inventory": "single-shot-v1 and standard-agent-v1 listed with digests",
+    "run_cli_inventory": "scripts/pcb.py exposes task/taskset only; no run-start CLI or HTTP route exists",
+    "no_live_calls": true,
+    "no_secret_values_read": true
+  },
+  "blockers": [
+    "12 Python and 12 Rust packages still require owner rights confirmation, quality admission, curator freeze, production-worker admission and hidden-lane registration",
+    "two real model identities/configurations, endpoint authorization, resolved capabilities, and provider price snapshots are absent",
+    "no owner-authorized hard spend limit is active",
+    "common distinct judge endpoint/configuration and human calibration evidence are absent; scoring is inactive",
+    "production database, object-store endpoint, worker image, supervisor identity, and authorized production execution target are not configured",
+    "the checkout has no run-start CLI or HTTP route, so no executable bounded dispatch command can be truthfully supplied"
+  ],
+  "external_actions": {
+    "provider_calls": 0,
+    "cloud_calls": 0,
+    "public_publication": 0
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_14_judging_integration",
+  "prompt": 14,
+  "work_package": "WP-14",
+  "tickets": {
+    "PCB-14-1": "passed",
+    "PCB-14-2": "passed",
+    "PCB-14-3": "passed",
+    "PCB-14-4": "blocked_external_inputs"
+  },
+  "evidence_labels": {
+    "database_and_object_store": "real (local PostgreSQL 17.6 and SeaweedFS 4.48)",
+    "gateway_budget_and_settlement": "real (the same ModelGateway, endpoint approval and ledger the solve path uses)",
+    "judge_model": "FIXTURE scripted transport; no real judge model was contacted",
+    "human_calibration_labels": "absent; reported as blocked rather than invented",
+    "execution_tier": "development sandbox for task evidence; judge packet policy is frozen but inactive"
+  },
+  "artifacts": {
+    "rubric": "config/judging/rubric-v1.yaml",
+    "panel": "config/judging/panel-v1.yaml",
+    "calibration_policy": "config/judging/calibration-v1.yaml",
+    "adversarial_fixtures": "tests/fixtures/judging/cases.json",
+    "packet_contract": "packages/core/src/polycodebench_core/judge_contracts.py",
+    "calibration_contract": "packages/core/src/polycodebench_core/judge_calibration.py",
+    "prompts_and_schema": "packages/core/src/polycodebench_core/judge_prompts.py",
+    "use_cases": [
+      "packages/services/src/polycodebench_services/judging.py",
+      "packages/services/src/polycodebench_services/judging_calibration.py"
+    ],
+    "persistence": [
+      "packages/persistence/src/polycodebench_persistence/judging.py",
+      "packages/persistence/src/polycodebench_persistence/migrations/versions/b9e04c7a1f38_judge_execution_records.py"
+    ],
+    "judge_gateway_and_cli": "packages/orchestration/src/polycodebench_orchestration/judge/",
+    "evidence_adapter": "packages/evaluation/src/polycodebench_evaluation/judge_inputs.py",
+    "tests": [
+      "tests/test_judging_core.py",
+      "tests/test_judging_postgres.py",
+      "tests/test_judge_cli.py",
+      "tests/test_judge_inputs.py"
+    ]
+  },
+  "tests": {
+    "offline_contracts_and_adversarial_cases": 45,
+    "postgres_object_store_and_gateway": 10,
+    "cli_surface": 9,
+    "evaluation_handoff": 7,
+    "total_prompt_14": 71,
+    "e2e_21": "passed: mean 0.833333, three distinct recorded seeds, no tools in any request, ledger balanced",
+    "e2e_22": "passed: six deliveries retained with named reasons, two valid votes blocked readiness, comment citations flagged"
+  },
+  "frozen_identities": {
+    "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+    "panel_digest_unprovisioned": "sha256:a0162e6e654a66c45e50d17ac8ed5ecba1b643cd22944a819da33753a4ad36c7",
+    "panel_status": "judge-panel-v1 v1, effective_for_scoring false, calibration pending"
+  },
+  "gates": {
+    "judge_endpoint_and_credentials": "absent; JUDGE_PANEL_UNAVAILABLE is the recorded state",
+    "pilot_candidate_model_configs": "absent; distinctness is enforced against whatever the cohort declares",
+    "human_reviewer_roster": "absent; no qualified labeler exists to import",
+    "human_labels_30_per_language": "absent",
+    "human_audit_of_10_percent": "not run"
+  },
+  "no_paid_or_remote_product_actions": true
+}

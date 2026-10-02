@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_evidence",
+  "prompt": "21",
+  "title": "Prompt 21 - Add C++ support",
+  "recorded_at": "2026-10-02",
+  "scope": "PCB-21-1..4: C++ plugin, pinned recipes, analyzer/sanitizer evidence, ownership semantics, admission fixtures.",
+  "evidence_class": "local fixture and contract checks (no Docker image build, no task admission, no model execution)",
+  "commands_run": [
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_cpp_plugin.py tests/test_cpp_profile.py tests/test_cpp_locks.py -q -p no:randomly",
+      "environment": "Windows, repo venv, no Docker",
+      "result": "PASS",
+      "detail": "128 passed. Includes the two new regression tests that pin the analyzer-omission defect."
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_cpp_plugin.py tests/test_cpp_profile.py tests/test_cpp_locks.py tests/test_evaluator.py tests/test_language_extension_audit.py tests/test_core_contracts.py -q -p no:randomly",
+      "environment": "Windows, repo venv, no Docker",
+      "result": "PARTIAL",
+      "detail": "148 passed, 1 failed. The failure is test_language_extension_audit::test_recorded_language_entry_points_load_and_declare_their_own_profile, caused by config/plugins/allowlist-v1.yaml having been rewritten externally at 21:37:31 to contain only c and cpp entries. Not caused by this prompt's changes."
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m ruff check packages/evaluation/.../evaluator.py packages/evaluation/.../suite_admission.py packages/services/.../task_packages.py plugins/languages/cpp/src/polycodebench_lang_cpp/",
+      "result": "PASS",
+      "detail": "All checks passed."
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m mypy <the three changed package files>",
+      "result": "PRE-EXISTING FAILURES",
+      "detail": "3 errors in evaluator.py (lines 666/667/670), identical to the 3 errors present before this prompt's edit (previously reported at 661/662/665). Confirmed by stashing the change and re-running."
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests/ -q -p no:randomly --ignore=tests/test_analyzer_contracts.py",
+      "result": "FAIL (pre-existing)",
+      "detail": "46 failed, 820 passed, 166 skipped. All 46 failures are in tests/test_python_parsers.py (22) and tests/test_rust_parsers.py (24), all ValidationError on PlanOutput.empty_is_clean and ToolIdentity.advisory_snapshot_state, fields the externally-modified plugins-api models no longer declare. tests/test_analyzer_contracts.py (externally created 21:19:37) additionally imports a non-existent polycodebench_core.identity.derived_entity_id and blocks collection."
+    }
+  ],
+  "defects_fixed": [
+    {
+      "id": "PCB-21-2-a",
+      "ticket": "PCB-21-2",
+      "title": "An unreadable clang-tidy run scored as a clean scan",
+      "mechanism": "parsers._clang_tidy read only out/clang_tidy.err and reported findings=0 whenever its output was not there or not matchable. findings=0 is MeasurementStatus.MEASURED, not MISSING, so every clang-tidy-fed profile item scored full marks. A candidate whose source merely broke the analyzer outranked one that was genuinely clean.",
+      "fix": "Read both captured streams; raise ValueError when a successful run produced no readable diagnostic, which the existing _guard converts to _missing (MISSING).",
+      "files": ["plugins/languages/cpp/src/polycodebench_lang_cpp/parsers.py"],
+      "regression_test": "tests/test_cpp_profile.py::test_an_analyzer_that_printed_nothing_is_missing_not_clean",
+      "pre_fix_behaviour": "FAILED with MeasurementStatus.MEASURED (observed by reverting the fix and re-running)",
+      "post_fix_behaviour": "PASS"
+    },
+    {
+      "id": "PCB-21-2-b",
+      "ticket": "PCB-21-2",
+      "title": "clang-tidy diagnostics on stdout were silently dropped",
+      "mechanism": "Only one of the two captured streams was parsed; a build writing diagnostics to stdout produced zero findings and still reported a clean scan.",
+      "fix": "Concatenate out/clang_tidy.out and out/clang_tidy.err, matching the C plugin's convention.",
+      "files": ["plugins/languages/cpp/src/polycodebench_lang_cpp/parsers.py"],
+      "regression_test": "tests/test_cpp_profile.py::test_clang_tidy_findings_are_found_whichever_stream_carries_them",
+      "pre_fix_behaviour": "FAILED (0 findings for the stdout-carried diagnostic)",
+      "post_fix_behaviour": "PASS"
+    },
+    {
+      "id": "PCB-21-2-c",
+      "ticket": "PCB-21-2",
+      "title": "UBSan reports not at offset 0 were never recorded",
+      "mechanism": "_UBSAN_LINE lacked re.MULTILINE, so `^` could only match at the start of the text; finditer over a whole sanitizer report returned nothing and the run was classified clean.",
+      "fix": "Add re.MULTILINE and anchor the path group to the line start so it cannot absorb preceding text.",
+      "files": ["plugins/languages/cpp/src/polycodebench_lang_cpp/guest/pcb_sanitizer_report.py"],
+      "verification": "diagnostic_locations() on a report with a preamble line returns [('undefined-behaviour', 'src/top_words.cpp', 12, 5)]; before the fix it returned []"
+    },
+    {
+      "id": "PCB-21-2-d",
+      "ticket": "PCB-21-2",
+      "title": "Indented clang diagnostics were unparseable",
+      "mechanism": "_DIAGNOSTIC matched only at column 0, so an indented or prefixed diagnostic line was dropped and read as a clean run.",
+      "fix": "Allow leading whitespace; over-matching is contained by the caller's in-scope file filter.",
+      "files": ["plugins/languages/cpp/src/polycodebench_lang_cpp/testparse.py"]
+    },
+    {
+      "id": "PCB-21-SHARED",
+      "ticket": "PCB-21-4",
+      "title": "C++ quality profile was never scored by the shared evaluator",
+      "mechanism": "evaluator.py resolved the profile via getattr(plugin, 'python_profile', None) or getattr(plugin, 'rust_profile', None). Every other plugin publishes language_profile under the shared LanguageProfileEvaluator protocol, so for C, C++, Go and Java the profile was None: findings reached the scorer but no profile item was ever scored.",
+      "fix": "Read the protocol attribute language_profile. All six plugins publish it; Python and Rust retain their existing per-language accessors as aliases.",
+      "files": ["packages/evaluation/src/polycodebench_evaluation/evaluator.py"],
+      "regression_evidence": "tests/test_cpp_plugin.py, tests/test_python_plugin.py, tests/test_rust_plugin.py, tests/test_evaluator.py, tests/test_language_extension_audit.py: 148 passed after the change"
+    },
+    {
+      "id": "PCB-21-4-a",
+      "ticket": "PCB-21-4",
+      "title": "Four C++ (and four C) fixtures could not validate against the shared schema",
+      "mechanism": "FixtureExpectation rejected expected_lane_findings and expected_failure values candidate_crash/build_error, so the ownership-defective, leak-defective, race-defective and exception-defective C++ fixtures (and four C fixtures) declared expectations the manifest loader refused.",
+      "fix": "Extend the shared schema with the two outcomes an instrumented language genuinely has. All six languages' fixture manifests now validate.",
+      "files": ["packages/services/src/polycodebench_services/task_packages.py"]
+    },
+    {
+      "id": "PCB-21-4-b",
+      "ticket": "PCB-21-4",
+      "title": "Fixtures declaring lane findings were never analyzed",
+      "mechanism": "SuiteAdmission analyzed only fixtures whose variant was reference or quality_defective. The ownership/leak/race fixtures are variant faulty, so no analyzer ever ran on them and their declared expectations could not have been checked.",
+      "fix": "Analyze any fixture that declares expected_lane_findings; add gates instrumented-lane-defect-detected and crash-and-build-fixtures-rejected.",
+      "files": ["packages/evaluation/src/polycodebench_evaluation/suite_admission.py"],
+      "verification_status": "implemented and lint/type clean; the gates are NOT executed in this prompt because task admission requires Docker images that were not built here"
+    },
+    {
+      "id": "PCB-21-4-d",
+      "ticket": "PCB-21-4",
+      "title": "quality-defective declared scanner rule names where the gate compares families",
+      "mechanism": "expected_issue_families is compared by SuiteAdmission._families() against the family component of each observation's issue_key (cc.<family>.<hash>). The manifest listed scanner rule names (raw-owning-pointer, pass-by-value-container, redundant-container-copy, index-loop-container, throw-in-destructor), so the pre-existing quality-defect-detected gate could never have matched them and the fixture would have failed on names rather than on behaviour.",
+      "fix": "Declare the four real equivalence families: manual-ownership, value-copy, index-loop, throwing-destructor. The five rule names collapse to four families because pass-by-value-container and redundant-container-copy share value-copy, which is exactly the single-penalty behaviour PCB-21-3 requires.",
+      "files": ["plugins/languages/cpp/fixtures/top-words/manifest.yaml"],
+      "verification": "Ran the real context scanner over admission/quality-defective/src/top_words.cpp: the violation families are exactly {index-loop, manual-ownership, throwing-destructor, value-copy}, matching the declaration."
+    },
+    {
+      "id": "PCB-21-4-c",
+      "ticket": "PCB-21-4",
+      "title": "C++ lane declarations named families no observation can carry",
+      "mechanism": "The manifest declared asan: [double-free, heap-use-after-free] and asan: [resource-leak], but the profile resolves those checks to the equivalence families manual-ownership and undefined-behaviour. Had the new gate run, every lane fixture would have failed on names rather than on behaviour.",
+      "fix": "Declare the profile's real equivalence families.",
+      "files": ["plugins/languages/cpp/fixtures/top-words/manifest.yaml"],
+      "verification": "profile.resolve('cpp.asan.resource-leak').equivalence_family == 'manual-ownership'; cpp.asan.candidate-defect -> 'undefined-behaviour'; cpp.tsan.candidate-defect -> 'data-race'"
+    }
+  ],
+  "verified_by_inspection_not_defect": [
+    {
+      "ticket": "PCB-21-1",
+      "finding": "Release and sanitizer profiles are separated by construction: the sanitizer lane resolves through lock.profile_for() and the performance lane through lock.release_profile(), and every compile lane resolves flags through the single cxxflags() choke point.",
+      "evidence": "The serialized performance plan contains no '-fsanitize' token; warmup_iterations=5 and measured_iterations=20 are frozen and do not vary per candidate."
+    },
+    {
+      "ticket": "PCB-21-1",
+      "finding": "Incompatible instrumentation is rejected at the lock, and the release and sanitizer profiles are disjoint.",
+      "evidence": "lock.check_sanitizers(('address','thread')) and (('undefined','thread')) both raise LockError; ('address','undefined') is accepted because they share one build profile. lock.release_profile().cxxflags == ('-O3','-DNDEBUG','-fno-omit-frame-pointer'); lock.profile_for(('address',)).cxxflags == ('-g','-O1','-fno-omit-frame-pointer','-fsanitize=address,undefined','-fno-sanitize-recover=all')."
+    },
+    {
+      "ticket": "PCB-21-3",
+      "finding": "A non-owning raw pointer produces no finding at all.",
+      "evidence": "Running the real context scanner over `void f(const std::string*); int g(const char*);` yields no raw-pointer finding; raw_pointer_nonowning emits verdict=benign_in_context, which parsers maps to NOT_APPLICABLE and observations nulls out."
+    },
+    {
+      "ticket": "PCB-21-1",
+      "finding": "The single-sanitizer-plan `break` in analysis_plans is correct, not a defect: ASan and ThreadSanitizer are declared incompatible and cannot share a process, so at most one instrumented lane may be built for a task.",
+      "evidence": "config/languages/cpp-toolchain-v1.json incompatible_instrumentation lists [address, thread] and [undefined, thread]; taskspec.SANITIZER_REQUIREMENTS maps asan -> (address, undefined) because they share one build profile and runtime."
+    },
+    {
+      "ticket": "PCB-21-2",
+      "finding": "UBSan needs no separate parser entry: it shares the asan build profile and runtime, and cpp.ubsan.candidate-defect shares the undefined-behaviour equivalence family with cpp.asan.candidate-defect, so it collapses to one issue. A 'ubsan' key in PARSERS would have been unreachable dead code because 'ubsan' is not in KNOWN_ANALYZERS.",
+      "evidence": "taskspec.KNOWN_ANALYZERS = (clang_tidy, cppcheck, context, asan, tsan)"
+    },
+    {
+      "ticket": "PCB-21-3",
+      "finding": "No double-penalty defect found. One construct reported by several tools collapses to one scored issue through equivalence families, and a non-owning raw pointer is not a failure.",
+      "evidence": "tests/test_cpp_profile.py: a non-owning const T* / const char* produces no finding; a duplicated report of one rule at one site cannot change a score; several benign non-owning-pointer findings leave the score at 10000."
+    }
+  ],
+  "not_run": [
+    "Docker image build for the C++ component/recipe images (scripts/fetch_cpp_components.py and the C++ image build step).",
+    "Real-container E2E-15 task admission and E2E-35 execution for C++; the two new admission gates are therefore unexecuted in-container.",
+    "A C++ recorded-output corpus under tests/fixtures/ (the C++ tests exercise the parser directly instead); this was not required by the four tickets and is recorded as a follow-up.",
+    "Mypy/ruff over the whole repository: only the changed files were checked."
+  ],
+  "environment_notes": [
+    "The working tree was modified by another process during this session (plugins-api contracts at 21:16:51, tests/ files at 21:19:37, config/plugins/allowlist-v1.yaml at 21:37:31). All failures attributed to those files are pre-existing or external and were verified as such rather than fixed here.",
+    "Docker reported server 29.7.2, but no image build was attempted: the C++ component images are built with network by a fetch step that was not authorized or run in this prompt."
+  ]
+}

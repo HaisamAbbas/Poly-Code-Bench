@@ -32,7 +32,7 @@ for line in (DOCS / "e2e-matrix.md").read_text(encoding="utf-8").splitlines():
     if line.startswith("| E2E-"):
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         assert cells[3] and re.search(r"\b\d{2}\b", cells[3]), line
-        assert cells[4] and cells[5] in {"not_run", "passed", "failed", "blocked"}, line
+        assert cells[4] and cells[5] in {"not_run", "passed", "failed", "blocked", "partial"}, line
 
 progress = json.loads((DOCS / "progress.json").read_text(encoding="utf-8"))
 assert len(progress["prompt_statuses"]) == 35
@@ -40,15 +40,27 @@ last_completed = int(progress["last_completed_prompt"])
 active = int(progress["active_prompt"])
 assert progress["prompt_statuses"][f"{last_completed:02d}"] == "done"
 assert active > last_completed
-assert all(
-    progress["prompt_statuses"][f"{number:02d}"] == "partial"
+intervening = {
+    number: progress["prompt_statuses"][f"{number:02d}"]
     for number in range(last_completed + 1, active)
-), "an explicitly resumed later prompt may skip only prompts persisted as partial"
+}
+blocked_intervening = [number for number, status in intervening.items() if status == "blocked"]
+assert all(status in {"partial", "blocked"} for status in intervening.values()), (
+    "an explicitly resumed later prompt may skip only prompts persisted as partial or blocked"
+)
+if blocked_intervening:
+    exception = progress.get("independent_prompt_authorization", {})
+    assert (
+        exception.get("active_prompt") == f"{active:02d}"
+        and exception.get("authorized_by_user") is True
+        and set(exception.get("blocked_prompts", [])) == {f"{number:02d}" for number in blocked_intervening}
+    ), "blocked predecessors require an explicit independent-prompt authorization record"
 assert progress["prompt_statuses"][f"{active:02d}"] in {
     "not_started",
     "in_progress",
     "partial",
     "done",
+    "blocked",
 }
 assert all(progress["prompt_statuses"][f"{i:02d}"] == "not_started" for i in range(active + 1, 35))
 assert progress["evidence_summary"]["requirements_registered"] == 14

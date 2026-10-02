@@ -1,0 +1,442 @@
+{
+  "candidate_digest": "sha256:0f4e14fb54ed849ad3a2543514504f74d1adb9603ff9657f3bb4c27edd18851a",
+  "candidate_kind": "authored_fixture",
+  "claims_model_benchmark_results": false,
+  "detection": {
+    "duplicate_count": 0,
+    "edge_digests": [
+      "sha256:aae7d294571161f06775def832dc0ab622751b8739f00aec08e2d880f72ed2d8"
+    ],
+    "explanation": "100",
+    "f1": "1",
+    "false_negative": 0,
+    "false_positive": 0,
+    "kind": "detection_result",
+    "localization": "100",
+    "matched_pairs": [
+      [
+        "good-detection",
+        "top-words-missing-results"
+      ]
+    ],
+    "precision": "1",
+    "reasons": [],
+    "recall": "1",
+    "schema_version": 1,
+    "severity": "100",
+    "status": "complete",
+    "true_positive": 1,
+    "unresolved_findings": 0
+  },
+  "evaluation": {
+    "allowed_paths_ok": true,
+    "analyzers": [],
+    "baseline_digest": "sha256:0f4e14fb54ed849ad3a2543514504f74d1adb9603ff9657f3bb4c27edd18851a",
+    "build_detail": "all files compile",
+    "build_verdict": "pass",
+    "candidate_digest": "sha256:e363d9301a0c3b09bc6a690e9ceaf3fd4372706abe124b00ff0daae206c43e74",
+    "cases": [
+      {
+        "case_id": "tests/test_acceptance.py::test_accepts_one_shot_iterator",
+        "duration_ms": 1,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:3064fafdebdf5faf73d1a5dac872295513ed96cefb2aea353ad4fdd5042f60f3",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_acceptance.py::test_case_and_separators",
+        "duration_ms": 1,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:37e79fd5930a5acbc816ba0fc491f7917b2124c43c795ab82bae17da5770e005",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_acceptance.py::test_empty_input",
+        "duration_ms": 10,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:9c0866222d330083814ac3231690b29edd2f65fb9058da5661be3ae10664e6a8",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_acceptance.py::test_k_larger_than_distinct",
+        "duration_ms": 1,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:a0cf5a06f6fce2439a6c0aae94ee1f7db5ebdc5053e32e6a21ce52e633b11912",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_acceptance.py::test_non_ascii_letters_are_separators",
+        "duration_ms": 1,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:a9e552f6a04e2587bc8682168660965f623b6587a2400595f345279e72b41537",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_acceptance.py::test_ties_break_alphabetically",
+        "duration_ms": 14,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:e5824428081497b92af104d72f7acea1967d647e1f8ddf76875cb9bb51536f17",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_acceptance.py::test_zero_and_negative_k",
+        "duration_ms": 5,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:4bfd0874a9d2b2db19f2bf325f4e858345d97080843f7ba6fa1074c9b57d6b73",
+        "group_id": "behaviour",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_properties.py::test_matches_independent_model",
+        "duration_ms": 8014,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:4b4f3cf2d67b379f2e8aa8307780cde6592cc30d188fc5359b6934d1e0804ecd",
+        "group_id": "properties",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "case_timeout",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_properties.py::test_result_shape",
+        "duration_ms": 2436,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:d5eee79c08ad3e1d63a353f6f0a1088e2d307a103471728e22893525c70ce81e",
+        "group_id": "properties",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised",
+        "duration_ms": 1,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:4c7d9f8710d272d04800d96e523b74ab00123d2056eb46935d16454bb119a1c5",
+        "group_id": "streaming-memory",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 0,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised",
+        "duration_ms": 4,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:4c7d9f8710d272d04800d96e523b74ab00123d2056eb46935d16454bb119a1c5",
+        "group_id": "streaming-memory",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 1,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "case_id": "tests/test_robustness.py::test_large_stream_is_not_materialised",
+        "duration_ms": 1,
+        "execution_identity": "pytest-9.0.2@sha256:beb3dd62e10b",
+        "expected_outcome_digest": "sha256:4c7d9f8710d272d04800d96e523b74ab00123d2056eb46935d16454bb119a1c5",
+        "group_id": "streaming-memory",
+        "input_seed": null,
+        "kind": "case_evidence",
+        "outcome": "fail",
+        "reason": "AssertionError",
+        "repetition": 2,
+        "required": true,
+        "schema_version": 1,
+        "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "config_digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "diagnostic_score_bp": null,
+    "disallowed_paths": [],
+    "evaluation_id": "297e85ea-2d5a-409d-981c-6cc884507977",
+    "execution_note": "candidate digest verified; candidate bytes never mint overlays/config/inventory; fresh guest per plan; exit semantics supervised; tool self-report is read-only",
+    "execution_tier": "development_sandbox",
+    "failed_cases": [
+      "tests/test_acceptance.py::test_accepts_one_shot_iterator",
+      "tests/test_acceptance.py::test_case_and_separators",
+      "tests/test_acceptance.py::test_empty_input",
+      "tests/test_acceptance.py::test_k_larger_than_distinct",
+      "tests/test_acceptance.py::test_non_ascii_letters_are_separators",
+      "tests/test_acceptance.py::test_ties_break_alphabetically",
+      "tests/test_acceptance.py::test_zero_and_negative_k",
+      "tests/test_properties.py::test_matches_independent_model",
+      "tests/test_properties.py::test_result_shape",
+      "tests/test_robustness.py::test_large_stream_is_not_materialised"
+    ],
+    "gate": "fail",
+    "gate_reasons": [
+      "fail:tests/test_acceptance.py::test_ties_break_alphabetically:AssertionError",
+      "fail:tests/test_acceptance.py::test_case_and_separators:AssertionError",
+      "fail:tests/test_acceptance.py::test_k_larger_than_distinct:AssertionError",
+      "fail:tests/test_acceptance.py::test_empty_input:AssertionError",
+      "fail:tests/test_acceptance.py::test_zero_and_negative_k:AssertionError",
+      "fail:tests/test_acceptance.py::test_accepts_one_shot_iterator:AssertionError",
+      "fail:tests/test_acceptance.py::test_non_ascii_letters_are_separators:AssertionError",
+      "fail:tests/test_properties.py::test_matches_independent_model:case_timeout",
+      "fail:tests/test_properties.py::test_result_shape:AssertionError"
+    ],
+    "group_verdicts": [
+      {
+        "group_id": "behaviour",
+        "kind": "group_verdict_evidence",
+        "reasons": [
+          "fail:tests/test_acceptance.py::test_ties_break_alphabetically:AssertionError",
+          "fail:tests/test_acceptance.py::test_case_and_separators:AssertionError",
+          "fail:tests/test_acceptance.py::test_k_larger_than_distinct:AssertionError",
+          "fail:tests/test_acceptance.py::test_empty_input:AssertionError",
+          "fail:tests/test_acceptance.py::test_zero_and_negative_k:AssertionError",
+          "fail:tests/test_acceptance.py::test_accepts_one_shot_iterator:AssertionError",
+          "fail:tests/test_acceptance.py::test_non_ascii_letters_are_separators:AssertionError"
+        ],
+        "required": true,
+        "schema_version": 1,
+        "verdict": "fail"
+      },
+      {
+        "group_id": "properties",
+        "kind": "group_verdict_evidence",
+        "reasons": [
+          "fail:tests/test_properties.py::test_matches_independent_model:case_timeout",
+          "fail:tests/test_properties.py::test_result_shape:AssertionError"
+        ],
+        "required": true,
+        "schema_version": 1,
+        "verdict": "fail"
+      }
+    ],
+    "idiom_score_bp": null,
+    "incomplete": [
+      "quality_work_gated_off:correctness_gate_not_pass",
+      "required_scan_not_measured:context",
+      "required_scan_not_measured:bandit",
+      "required_scan_not_measured:ruff"
+    ],
+    "inventory_digest": "sha256:fbb7c7a3c7715fd2a2d302ba2a3cd2d83d37b20de3361d461192e8f3365bdaac",
+    "issues": [],
+    "kind": "evaluation_evidence",
+    "native_metrics": {},
+    "overlay_digest": "sha256:bca469d416727b465902a77c4b83f10d8752581934fd2d663a4150852a4377c9",
+    "plugin_id": "python",
+    "profile_complete": false,
+    "profile_items": [],
+    "property_evidence": {
+      "case_timeout_seconds": 8,
+      "cases": 2,
+      "deterministic_policy": "hypothesis-derandomized",
+      "engine": "hypothesis",
+      "engine_version": "6.150.2",
+      "examples_pinned": 60,
+      "kind": "property_evidence",
+      "schema_version": 1,
+      "seeds": [],
+      "suite_timeout_seconds": 25
+    },
+    "raw_artifacts": [
+      {
+        "digest": "sha256:28f8e52922de2bb92f78d9e21a6cfedee08ead0e9cbef498e062d6cee6927baf",
+        "format": "json",
+        "kind": "raw_artifact_ref",
+        "path": "out/build.json",
+        "schema_version": 1,
+        "size_bytes": 115,
+        "stage": "build"
+      },
+      {
+        "digest": "sha256:a74175e90b8aed3ceae257a288d026c85b04521f958abded2bbcfb1d2f473ede",
+        "format": "jsonl",
+        "kind": "raw_artifact_ref",
+        "path": "out/streaming-memory.jsonl",
+        "schema_version": 1,
+        "size_bytes": 1404,
+        "stage": "test:streaming-memory:r0"
+      },
+      {
+        "digest": "sha256:b03eb640192e6ada5fa999e47cf509207fa2136328ad4f688ddef8e0e25a78b7",
+        "format": "jsonl",
+        "kind": "raw_artifact_ref",
+        "path": "out/behaviour.jsonl",
+        "schema_version": 1,
+        "size_bytes": 7067,
+        "stage": "test:behaviour:r0"
+      },
+      {
+        "digest": "sha256:49c84e6cee3d991bedf50c13c3729477007b4b91f732c61d378aea1291d10384",
+        "format": "jsonl",
+        "kind": "raw_artifact_ref",
+        "path": "out/properties.jsonl",
+        "schema_version": 1,
+        "size_bytes": 4105,
+        "stage": "test:properties:r0"
+      },
+      {
+        "digest": "sha256:4a67706745643a86a5e6b982ca9122b4bfea9a48735bc48a7c62ab120a72329e",
+        "format": "jsonl",
+        "kind": "raw_artifact_ref",
+        "path": "out/streaming-memory.jsonl",
+        "schema_version": 1,
+        "size_bytes": 1403,
+        "stage": "test:streaming-memory:r2"
+      },
+      {
+        "digest": "sha256:6756ee278e9807c2594d2990c8c0928cc4a86ba8602ffc8b3130f62a1511262a",
+        "format": "jsonl",
+        "kind": "raw_artifact_ref",
+        "path": "out/streaming-memory.jsonl",
+        "schema_version": 1,
+        "size_bytes": 1403,
+        "stage": "test:streaming-memory:r1"
+      }
+    ],
+    "report_digest": "sha256:e4e7fdffe455befa957cb9265d0b4db128395c408de4a34818a7c425fd662bc5",
+    "resolutions": [],
+    "reviews": [
+      {
+        "detail": "missing, crashed or unsupported required scan; never 'clean'",
+        "issue_key": "python.context.scan",
+        "kind": "review_item",
+        "reason": "unsupported_required_scan",
+        "schema_version": 1
+      },
+      {
+        "detail": "missing, crashed or unsupported required scan; never 'clean'",
+        "issue_key": "python.bandit.scan",
+        "kind": "review_item",
+        "reason": "unsupported_required_scan",
+        "schema_version": 1
+      },
+      {
+        "detail": "missing, crashed or unsupported required scan; never 'clean'",
+        "issue_key": "python.ruff.scan",
+        "kind": "review_item",
+        "reason": "unsupported_required_scan",
+        "schema_version": 1
+      }
+    ],
+    "robustness_score_bp": 0,
+    "scenarios": [
+      {
+        "credit_bp": 0,
+        "gate_effect": "quality_weight_only",
+        "group_id": "streaming-memory",
+        "hard_acceptance": false,
+        "kind": "scenario_evidence",
+        "passed_repetitions": 0,
+        "repetition_verdicts": [
+          "fail",
+          "fail",
+          "fail"
+        ],
+        "repetitions": 3,
+        "scenario_id": "stream-not-materialised",
+        "schema_version": 1,
+        "status": "failed",
+        "weight_bp": 10000
+      }
+    ],
+    "schema_version": 1,
+    "task_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "task_id": "conformance-top-words",
+    "task_version": 1
+  },
+  "evidence_tier": "development_sandbox",
+  "final_patch_digest": "sha256:65e02b5da03c369c0c3c08c3b43c67d3402cc07c00aa2101014739a79dc9189c",
+  "kind": "prompt18_e2e34_internal_integration_evidence",
+  "repair": {
+    "composite_score_bp": 0,
+    "evaluation_digest": "sha256:858e266655e7080c0bf387887c42326697d71e0a479f44bb57fc084584adbe18",
+    "evaluation_id": "297e85ea-2d5a-409d-981c-6cc884507977",
+    "gate": "fail",
+    "kind": "repair_result",
+    "patch_digest": "sha256:65e02b5da03c369c0c3c08c3b43c67d3402cc07c00aa2101014739a79dc9189c",
+    "patched_source_digest": "sha256:e363d9301a0c3b09bc6a690e9ceaf3fd4372706abe124b00ff0daae206c43e74",
+    "reasons": [],
+    "repair_required": true,
+    "schema_version": 1,
+    "status": "evaluated"
+  },
+  "schema_version": 1
+}

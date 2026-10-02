@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_15_acceptance",
+  "prompt": 15,
+  "work_package": "WP-15",
+  "title": "Deterministic scoring and replay",
+  "recorded_on": "2026-10-02",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "win32",
+    "execution_tier": "local_fixture",
+    "network": "not used",
+    "paid_providers": "none called",
+    "task_execution": "none performed by the scorer"
+  },
+  "tickets": {
+    "PCB-15-1": {
+      "status": "implemented",
+      "verification": "passed",
+      "paths": [
+        "packages/scoring/src/polycodebench_scoring/manifest.py",
+        "packages/scoring/src/polycodebench_scoring/scorer.py"
+      ],
+      "evidence": [
+        "tests/test_scoring_golden.py::test_failed_correctness_is_zero_whatever_the_quality_values",
+        "tests/test_scoring_golden.py::test_required_analyzer_missing_on_passing_code_publishes_nothing",
+        "tests/test_scoring_golden.py::test_unknown_gate_is_incomplete_not_zero",
+        "tests/test_scoring_properties.py::test_unknown_evidence_cannot_increase_a_score",
+        "tests/test_scoring_properties.py::test_a_missing_item_evidence_blocks_publication",
+        "tests/test_scoring_properties.py::test_an_unreviewed_high_claim_blocks_rather_than_deducts"
+      ],
+      "notes": "A failed gate zeroes every item including correctness (30g + g*quality). Missing required evidence yields status needs_review with total_score null, never 0 and never 100."
+    },
+    "PCB-15-2": {
+      "status": "implemented",
+      "verification": "passed",
+      "paths": [
+        "packages/scoring/src/polycodebench_scoring/arithmetic.py",
+        "packages/scoring/src/polycodebench_scoring/policy.py",
+        "packages/scoring/src/polycodebench_scoring/ownership.py",
+        "packages/scoring/src/polycodebench_scoring/explain.py",
+        "config/scoring/pilot-v1.yaml"
+      ],
+      "evidence": [
+        "tests/test_scoring_golden.py (all nine golden cases)",
+        "tests/test_scoring_policy.py::test_full_applicability_redistributes_nothing",
+        "tests/test_scoring_policy.py::test_redistribution_keeps_the_relative_base_weights_and_spans_10000",
+        "tests/test_scoring_properties.py::test_diagnostic_profile_items_carry_no_composite_weight",
+        "tests/test_scoring_properties.py::test_an_issue_owned_by_another_dimension_does_not_lower_security"
+      ],
+      "notes": "Exact Fraction weights drive the composite; integer basis points are the rounded presentation. Nominal and effective weights plus per-item contributions are recorded for every row of the explanation."
+    },
+    "PCB-15-3": {
+      "status": "implemented",
+      "verification": "passed",
+      "paths": [
+        "packages/scoring/src/polycodebench_scoring/ownership.py",
+        "packages/scoring/src/polycodebench_scoring/manifest.py",
+        "packages/scoring/src/polycodebench_scoring/scorer.py",
+        "config/scoring/evidence_ownership.yaml"
+      ],
+      "evidence": [
+        "tests/test_scoring_properties.py::test_adding_an_identical_duplicate_issue_cannot_change_a_score",
+        "tests/test_scoring_properties.py::test_reordered_equivalent_evidence_yields_identical_output",
+        "tests/test_scoring_properties.py::test_reordered_items_within_a_dimension_yield_identical_output",
+        "tests/test_scoring_properties.py::test_duplicate_issue_ownership_across_dimensions_is_rejected",
+        "tests/test_scoring_properties.py::test_two_penalty_kinds_without_a_policy_justification_are_rejected"
+      ],
+      "notes": "The evidence manifest digest is order-insensitive because every repeated collection is a set. scorecard_id is derived from the score's own content, so it needs no clock, sequence or random source."
+    },
+    "PCB-15-4": {
+      "status": "implemented",
+      "verification": "passed",
+      "paths": [
+        "packages/scoring/src/polycodebench_scoring/replay.py",
+        "packages/scoring/src/polycodebench_scoring/loader.py",
+        "packages/scoring/src/polycodebench_scoring/cli.py",
+        "packages/scoring/pyproject.toml"
+      ],
+      "evidence": [
+        "tests/test_scoring_replay.py::test_a_clean_process_reproduces_the_canonical_scorecard",
+        "tests/test_scoring_replay.py::test_the_replay_command_reproduces_the_archived_bytes",
+        "tests/test_scoring_replay.py::test_scorer_reads_no_clock_and_no_environment",
+        "tests/test_scoring_replay.py::test_the_scorer_source_imports_nothing_that_could_execute_or_call_out",
+        "tests/test_scoring_replay.py::test_a_policy_digest_change_is_refused_not_rescored"
+      ],
+      "notes": "pcb-score score and pcb-score replay verified through uv against an on-disk archive in a fresh interpreter with a runtime import tripwire installed."
+    }
+  },
+  "golden_fixtures": {
+    "source": "PolyCodeBench-Technical-Implementation-Spec-v1.md 14.6",
+    "results": {
+      "gate_pass_all_quality_100": {
+        "expected": "100.000000",
+        "observed": "100.000000",
+        "passed": true
+      },
+      "S90_E80_Q85_I90_R80": {
+        "expected": "89.750000",
+        "observed": "89.750000",
+        "passed": true
+      },
+      "same_with_efficiency_predeclared_na": {
+        "expected": "90.772727",
+        "observed": "90.772727",
+        "passed": true
+      },
+      "two_tools_one_confirmed_high_security_issue": {
+        "expected": "75.000000",
+        "observed": "75.000000",
+        "passed": true
+      },
+      "time_ratio_2_memory_ratio_1_5": {
+        "expected": "61.666667",
+        "observed": "61.666667",
+        "passed": true
+      },
+      "gate_fails_any_quality_values": {
+        "expected": "0.000000",
+        "observed": "0.000000",
+        "passed": true
+      },
+      "required_analyzer_missing_on_passing_code": {
+        "expected": "no publishable composite",
+        "observed": "status needs_review, total_score null, gate pass",
+        "passed": true
+      }
+    }
+  },
+  "properties": {
+    "bounded_0_100": "tests/test_scoring_properties.py::test_score_is_bounded_for_every_quality_level",
+    "monotonic_at_fixed_applicability": "tests/test_scoring_properties.py::test_raising_an_item_never_lowers_the_score_at_fixed_applicability",
+    "more_penalties_never_raise": "tests/test_scoring_properties.py::test_more_penalties_never_raise_the_score",
+    "duplicate_issue_no_score_change": "tests/test_scoring_properties.py::test_adding_an_identical_duplicate_issue_cannot_change_a_score",
+    "reordering_identical_output": "tests/test_scoring_properties.py::test_reordered_equivalent_evidence_yields_identical_output",
+    "unknown_evidence_no_increase": "tests/test_scoring_properties.py::test_unknown_evidence_cannot_increase_a_score",
+    "na_preserved_and_renormalised": "tests/test_scoring_properties.py::test_not_applicable_items_are_preserved_and_renormalised",
+    "applicability_frozen_per_task": "tests/test_scoring_properties.py::test_applicability_never_changes_per_candidate",
+    "hard_acceptance_not_deducted_twice": "tests/test_scoring_properties.py::test_a_required_acceptance_scenario_cannot_be_deducted_twice"
+  },
+  "e2e": {
+    "E2E-23": {
+      "status": "passed",
+      "environment": "local_fixture",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_scoring_golden.py tests/test_scoring_properties.py -q -p no:cacheprovider",
+      "assertions": "All seven 14.6 golden results, N/A items, duplicate-ownership refusal and required-missing-evidence blocking.",
+      "live_variant_required": false
+    },
+    "E2E-24": {
+      "status": "partial: the clean-process variant passed; the live-pilot and restored-environment variants stay with Prompt 17 and Prompt 33",
+      "environment": "local_fixture",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_scoring_replay.py -q -p no:cacheprovider",
+      "assertions": "A fresh interpreter through pcb-score reproduced the archived canonical scorecard; a runtime import tripwire proved no provider, network or higher-layer import was reached; the scorecard's only timestamp is the caller's recorded_at.",
+      "live_variant_required": true,
+      "live_variant_status": "pending_with_prompt_17"
+    }
+  },
+  "commands": [
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_scoring_golden.py tests/test_scoring_properties.py tests/test_scoring_policy.py tests/test_scoring_replay.py -q -p no:cacheprovider",
+      "result": "PASS: 66 passed"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest tests -q -p no:cacheprovider (excluding the in-flight Prompt 13/14/16 modules and the three modules failing on the same tree without Prompt 15)",
+      "result": "PASS: 488 passed, 147 skipped"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m mypy --strict packages/core/src packages/plugins-api/src packages/scoring/src packages/configuration/src",
+      "result": "PASS: no issues in 41 source files"
+    },
+    {
+      "command": ".venv/Scripts/ruff.exe check packages/scoring tests/scoring_support.py tests/test_scoring_*.py scripts/hash_scoring_profile_source.py",
+      "result": "PASS"
+    },
+    {
+      "command": ".venv/Scripts/ruff.exe format --check (same paths)",
+      "result": "PASS: 18 files already formatted"
+    },
+    {
+      "command": ".venv/Scripts/python.exe scripts/check_boundaries.py",
+      "result": "PASS"
+    },
+    {
+      "command": ".venv/Scripts/python.exe scripts/hash_scoring_profile_source.py",
+      "result": "PASS: policy records the real digest of config/languages/profiles-v1.yaml"
+    },
+    {
+      "command": ".venv/Scripts/python.exe docs/implementation/verify_prompt00.py",
+      "result": "PASS: 14 REQ, 24 WP, 43 E2E, 142 PCB tickets"
+    },
+    {
+      "command": "uv lock --offline; uv sync --locked --offline --all-packages",
+      "result": "PASS: lock updated for the scoring package's plugins-api and PyYAML dependencies"
+    },
+    {
+      "command": "uv run --locked --offline --package polycodebench-scoring pcb-score score ... --explain",
+      "result": "PASS: printed the six-dimension contribution chain, total 84.000000 for the archived synthetic manifest"
+    },
+    {
+      "command": "uv run --locked --offline --package polycodebench-scoring pcb-score replay ... --archived-outcome ...",
+      "result": "PASS: {\"outcome_digest\": \"sha256:4f8b9eabcb03963fb7b93dc5321f54b80605d0ba980a90d22960e3a031d32133\", \"replayed\": true}"
+    },
+    {
+      "command": "uv build --all-packages --offline --out-dir .cache/prompt15-build",
+      "result": "PASS: every workspace package built, including polycodebench-scoring"
+    }
+  ],
+  "not_run": [
+    {
+      "item": "Production worker tier, sealed hidden lane and live model/judge evidence",
+      "reason": "Out of scope for Prompt 15 and unconfigured on this host: no authorized provider endpoint, no production-isolated worker, no curator rights confirmation. E2E-24's live-pilot replay variant stays with Prompt 17."
+    },
+    {
+      "item": "Judge/human calibration",
+      "reason": "Prompt 14 owns calibration labels and agreement evidence. The scorer consumes ItemOutcome-shaped evidence only; it never calls a judge. The policy records calibration_status: pending and effective_for_scoring: false."
+    }
+  ],
+  "pre_existing_failures_not_caused_by_this_prompt": [
+    "tests/test_python_plugin.py, tests/test_python_parsers.py, tests/test_rust_parsers.py: confirmed failing on the same tree with the Prompt 15 changes stashed (parallel Prompt 12/13/14 work in flight).",
+    "tests/test_analyzer_contracts.py, tests/test_judge_cli.py, tests/test_judging_core.py, tests/test_judging_postgres.py, tests/test_judge_inputs.py: Prompt 14 modules; test_analyzer_contracts.py imports derived_entity_id from polycodebench_core.identity, which does not exist yet in that in-flight state.",
+    "tests/test_publication_cli.py: Prompt 16 module, unrelated to scoring."
+  ]
+}

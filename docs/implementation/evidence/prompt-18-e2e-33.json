@@ -1,0 +1,33 @@
+{
+  "claims_model_benchmark_results": false,
+  "equally_rematched_entries": [
+    {
+      "entry_id": "model-a",
+      "f1": "0.6666666666666666666666666667",
+      "false_negative": 1,
+      "true_positive": 1
+    },
+    {
+      "entry_id": "model-b",
+      "f1": "0.6666666666666666666666666667",
+      "false_negative": 1,
+      "true_positive": 1
+    }
+  ],
+  "evidence_tier": "synthetic_internal_fixture",
+  "kind": "prompt18_e2e33_internal_fixture_evidence",
+  "new_oracle_digest": "sha256:c07a3b2c0458101318312c95f52772c7d6e7eb83e295064d58fa2d6c754be0fe",
+  "old_oracle_digest": "sha256:1fb872d5e2b5f3920a5e40b5d69939dbc6f5887ad40aefb5138d1718dc4328bc",
+  "rematch_plan": {
+    "evaluation_ids": [
+      "model-a/sample-0",
+      "model-b/sample-0"
+    ],
+    "required_rematches": [
+      "model-a/sample-0",
+      "model-b/sample-0"
+    ]
+  },
+  "rematch_result_digest": "sha256:f3b094ee7b384f665564413f76ab23c6f487febfa5500f5de53623f01d456c13",
+  "schema_version": 1
+}

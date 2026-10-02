@@ -1,0 +1,142 @@
+{
+  "claim": "three logical votes 1 / 0.5 / 1 average to 0.833333 with every vote retained",
+  "deliveries": [
+    {
+      "delivery_index": 0,
+      "invalid_reason": null,
+      "repair_instruction_id": null,
+      "seed_recorded": "1880690420",
+      "seed_supported": true,
+      "status": "valid",
+      "vote_index": 0
+    },
+    {
+      "delivery_index": 0,
+      "invalid_reason": null,
+      "repair_instruction_id": null,
+      "seed_recorded": "1907136375",
+      "seed_supported": true,
+      "status": "valid",
+      "vote_index": 1
+    },
+    {
+      "delivery_index": 0,
+      "invalid_reason": null,
+      "repair_instruction_id": null,
+      "seed_recorded": "606912018",
+      "seed_supported": true,
+      "status": "valid",
+      "vote_index": 2
+    }
+  ],
+  "distinct_seeds": true,
+  "judge_requests": [
+    {
+      "max_completion_tokens": 1000,
+      "response_schema": "judge_vote_v1",
+      "temperature": 0.0,
+      "tools_present": false
+    },
+    {
+      "max_completion_tokens": 1000,
+      "response_schema": "judge_vote_v1",
+      "temperature": 0.0,
+      "tools_present": false
+    },
+    {
+      "max_completion_tokens": 1000,
+      "response_schema": "judge_vote_v1",
+      "temperature": 0.0,
+      "tools_present": false
+    }
+  ],
+  "judge_tier": "FIXTURE judge responses through the real gateway",
+  "ledger": {
+    "balanced": true,
+    "money": {
+      "limit": 1000000000,
+      "reserved_open": 0,
+      "spent_confirmed": 2430,
+      "uncertain_committed": 0
+    },
+    "turns": {
+      "limit": 64,
+      "reserved_open": 0,
+      "spent_confirmed": 3,
+      "uncertain_committed": 0
+    }
+  },
+  "mean_scores": {
+    "decomposition": "0.833333",
+    "minimal_relevant_scope": "0.833333"
+  },
+  "note": "judge responses are scripted fixtures; no real judge model was contacted",
+  "packet": {
+    "cohort_id": "ad42ad7a-b23b-4a00-ac8f-5a00973f22cc",
+    "evidence_anchors": [
+      "sp-9fb57c1509ebece7",
+      "sp-bc4b032fd9f4708f"
+    ],
+    "excluded_evidence": [
+      "expected_score",
+      "correctness_gate",
+      "measured_rank",
+      "hidden_test_results"
+    ],
+    "items": [
+      "decomposition",
+      "minimal_relevant_scope"
+    ],
+    "language": "python",
+    "packet_digest": "sha256:7fc63f18d03e447f2b2ec900964ae3f8fc8f62e2a6b3e891e5f9d8901331a63d",
+    "packet_id": "ac678ba6-84f3-4e5c-95f7-b9ee95139774",
+    "packet_role": "scored",
+    "panel": "judge-panel-v1@1",
+    "panel_digest": "sha256:a78a8069bc141cd5d4ce126589b844fd206dae45f46fb4c31f0a469042db9e1c",
+    "rubric": "judge-rubric-v1@1",
+    "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+    "tools": [],
+    "untrusted_comments": [],
+    "withheld_fields": [
+      "candidate_identity",
+      "provider",
+      "rank",
+      "cost",
+      "expected_score"
+    ]
+  },
+  "panel": {
+    "candidate_models_excluded": [
+      "11111111-1111-4111-8111-111111111111",
+      "33333333-3333-4333-8333-333333333333"
+    ],
+    "judge_revision": "fixture-judge-rev-1",
+    "max_deliveries_per_vote": 3,
+    "repair_instruction_id": "schema-repair-v1",
+    "votes_required": 3
+  },
+  "report_digest": "sha256:85183528fa465604b8579b60ed4f62dff7d852966c849f91fe46601aad2b4b37",
+  "result_status": "ready",
+  "scenario": "E2E-21",
+  "spreads": {
+    "decomposition": "0.500000",
+    "minimal_relevant_scope": "0.500000"
+  },
+  "valid_vote_indexes": [
+    0,
+    1,
+    2
+  ],
+  "vote_scores": {
+    "decomposition": [
+      "1.000000",
+      "0.500000",
+      "1.000000"
+    ],
+    "minimal_relevant_scope": [
+      "1.000000",
+      "0.500000",
+      "1.000000"
+    ]
+  }
+}

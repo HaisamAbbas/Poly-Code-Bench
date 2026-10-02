@@ -1,0 +1,53 @@
+{
+  "base_digest": "sha256:4497b7ea9de0498e71c292aff9da401189db5812e3a7cf8057999baa5a5fa50e",
+  "claims_model_benchmark_results": false,
+  "duplicate_of": [
+    [
+      "duplicate",
+      "tp"
+    ]
+  ],
+  "evidence_tier": "synthetic_internal_fixture",
+  "kind": "prompt18_e2e32_internal_fixture_evidence",
+  "oracle_bug_ids": [
+    "B-1",
+    "B-2"
+  ],
+  "patch": "--- a/main.py\n+++ b/main.py\n@@ -2 +2 @@\n-    return str(path).startswith(str(root))\n+    return path_is_within(root, path)\n",
+  "reported_finding_ids": [
+    "tp",
+    "duplicate",
+    "false"
+  ],
+  "result": {
+    "duplicate_count": 1,
+    "edge_digests": [
+      "sha256:55f96c93900f65d7e7ec8807913aa687f8cd223f0d3cce36b43b3a0fb3741754"
+    ],
+    "explanation": "50",
+    "f1": "0.5",
+    "false_negative": 1,
+    "false_positive": 1,
+    "kind": "detection_result",
+    "localization": "50",
+    "matched_pairs": [
+      [
+        "tp",
+        "B-1"
+      ]
+    ],
+    "precision": "0.5",
+    "reasons": [],
+    "recall": "0.5",
+    "schema_version": 1,
+    "severity": "50",
+    "status": "complete",
+    "true_positive": 1,
+    "unresolved_findings": 0
+  },
+  "reviewed_false_positive_ids": [
+    "false"
+  ],
+  "schema_version": 1,
+  "task_id": "synthetic-track-a-known-fp-fn-duplicate-v1"
+}

@@ -561,440 +561,424 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-19, E2E-20.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
+- Verification: `not_run` (not independently verified during Prompt 17).
+- Required verification scope: E2E-19, plus the dedicated/homogeneous-hardware gate which is recorded as blocked on this host.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/perfcontracts.py`, `tests/test_performance_plan.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
 - Acceptance criteria: — Implement PerformancePlan validation, exclusive capacity/hardware matching, reference identity and output verification. DoD: candidate/reference use the same physical worker/allocation class, frozen workload/flags and equivalent runtime; instrumented builds cannot enter the speed lane.
 
 ## PCB-13-2 - Prompt 13: — Implement performance measurement
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-19, E2E-20.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
+- Verification: `not_run` (not independently verified during Prompt 17).
+- Required verification scope: E2E-19.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/performance.py`, `tests/test_performance_docker.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
 - Acceptance criteria: — Implement randomized paired order, specified warmup/iteration counts, cold/steady-state modes and whole-process-tree memory recording. DoD: every iteration and input/environment identity is preserved, with compile time separately reported.
 
 ## PCB-13-3 - Prompt 13: — Implement performance measurement
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-19, E2E-20.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
+- Verification: `not_run` (not independently verified during Prompt 17).
+- Required verification scope: E2E-20.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/efficiency.py`, `tests/test_efficiency.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
 - Acceptance criteria: — Implement canaries, frozen stability thresholds, bounded block retries and first-valid-block selection. DoD: noise invalidates the affected block consistently; the fastest rerun is never cherry-picked.
 
 ## PCB-13-4 - Prompt 13: — Implement performance measurement
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
+- Verification: `not_run` (not independently verified during Prompt 17).
 - Required verification scope: E2E-19, E2E-20.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/performance.py`, `tests/test_performance_plan.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
 - Acceptance criteria: — Implement workload aggregation, ratio floors, weighted geometric means, variance and censored-timeout handling. DoD: a lower bound is not reported as an exact duration; the documented efficiency transform has golden checks and does not claim proof of Big-O.
 
 ## PCB-14-1 - Prompt 14: — Implement judging, review and calibration
 
 - Owner prompt: `14`.
 - Dependencies: gateway/evidence ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (anonymized evidence packets, a frozen rubric/panel pair and a strict vote contract; `packages/core/src/polycodebench_core/judge_contracts.py`, `judge_prompts.py`, `packages/evaluation/src/polycodebench_evaluation/judge_inputs.py`, `config/judging/{rubric,panel}-v1.yaml`).
+- Verification: `passed` for every locally verifiable DoD (offline contract suite plus PostgreSQL/SeaweedFS evidence); live judge access is blocked, see PCB-14-4.
 - Required verification scope: E2E-21, E2E-22.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_judging_core.py` (56 offline tests incl. 16 adversarial fixtures and 11 regressions from the independent review), `tests/test_judge_inputs.py` (7, built from a real `EvaluationEvidence` manifest), `docs/implementation/evidence/prompt-14-e2e-21.json`; the packet type has no identity/provider/rank/cost field, `assert_no_identity_leak` rejects a withheld value copied into evidence text, `load_judge_protocol()` refuses any protocol with tools, and comment anchors (`cmt-`) are never inside an item's evidence scope while instruction attempts are detected and recorded.
 - Acceptance criteria: — Build anonymized evidence packets and fixed, versioned rubric/panel definitions. DoD: candidate identity/rank/cost are withheld, citations must exist, judge has no execution tools, and candidate comments are untrusted data.
 
 ## PCB-14-2 - Prompt 14: — Implement judging, review and calibration
 
 - Owner prompt: `14`.
 - Dependencies: gateway/evidence ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/orchestration/src/polycodebench_orchestration/judge/runner.py` and `packages/services/src/polycodebench_services/judging.py`: three logical votes, schema validation, at most two replacement deliveries per vote, exact-decimal averaging).
+- Verification: `passed` on real PostgreSQL 17.6, SeaweedFS 4.48 and the real model gateway with fixture judge responses (E2E-21, E2E-22 plus recovery-bound and zero-score cases).
 - Required verification scope: E2E-21, E2E-22.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_judging_postgres.py` (10 tests) and `docs/implementation/evidence/prompt-14-e2e-21.json`/`prompt-14-e2e-22.json`; migration `b9e04c7a1f38` adds `judge_delivery` so every delivery is retained, `judge_item_result.mean_score` is NULL for an incomplete panel, votes of 0.000000 are stored without a replacement delivery, and `(1 + 0.5 + 1) / 3` is recorded as exactly `0.833333`.
 - Acceptance criteria: — Implement three logical votes, schema validation, fixed bounded invalid-vote recovery and averaging. DoD: every delivery is retained; fewer than three valid required votes cannot produce a ready result; low scores are not discarded as retries.
 
 ## PCB-14-3 - Prompt 14: — Implement judging, review and calibration
 
 - Owner prompt: `14`.
 - Dependencies: gateway/evidence ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (disagreement triggers, permission-checked reviewer access, validated decisions and immutable supersession; `packages/services/src/polycodebench_services/judging.py`, `packages/persistence/src/polycodebench_persistence/judging.py`, `pcb-judge show|adjudicate|review-queue`).
+- Verification: `passed` for triggers, adjudication validation, supersession and cohort versioning (offline plus a stored reviewer override against PostgreSQL); a live human reviewer is an external input, see PCB-14-4.
 - Required verification scope: E2E-21, E2E-22.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_judging_core.py::test_anchor_spread_and_conflicting_facts_trigger_review`, `::test_vote_citing_only_a_candidate_comment_is_recorded_as_unsupported`, `::test_adjudication_supersedes_an_item_score_without_deleting_votes`, `::test_panel_change_requires_a_new_cohort_version`, `tests/test_judging_postgres.py::test_reviewer_override_appends_a_result_and_preserves_the_votes`; an override requires a declared anchor, existing packet anchors, a substantive reason and the retained vote indexes, and a second result row is appended while the three votes and the earlier result stay.
 - Acceptance criteria: — Implement disagreement triggers, reviewer access/decisions and immutable supersession. DoD: overrides cite evidence/anchors/reason and preserve original votes; changing the panel requires a new evaluation/cohort version.
 
 ## PCB-14-4 - Prompt 14: — Implement judging, review and calibration
 
 - Owner prompt: `14`.
 - Dependencies: gateway/evidence ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-21, E2E-22.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` for the workflow (seeded disjoint selection, label import with qualification checks, agreement/confusion/bias reporting, seeded 10% audit selection, blocked reporting when inputs are absent; `packages/core/src/polycodebench_core/judge_calibration.py`, `packages/services/src/polycodebench_services/judging_calibration.py`, `config/judging/calibration-v1.yaml`, `pcb-judge calibration`). The *inputs* are absent: no approved judge endpoint, no qualified human reviewer and no labels exist in this workspace.
+- Verification: `blocked` for the human-evidence gate; the metrics, validation and blocked paths are `passed` offline and the label/audit records persist on real PostgreSQL.
+- Required verification scope: E2E-21, E2E-22, plus the T §15.3 calibration gate.
+- Evidence: `docs/implementation/evidence/prompt-14-calibration.json` (`status: blocked`, `exact_agreement_bp: null`, `promotion_target_met: null`, named `missing_inputs`), `tests/test_judging_core.py` (selection, blocked and metric-arithmetic cases with FIXTURE labels), `tests/test_judging_postgres.py::test_calibration_labels_are_persisted_and_stored_judge_results_are_replayable`. **Required external inputs:** an approved judge endpoint and model configuration distinct from both pilot candidates, a registered reviewer roster, and at least 30 disjoint labelled packets per pilot language including adversarial comments and stylistic alternatives.
 - Acceptance criteria: — Implement calibration import/evaluation/reporting and build the disjoint labeled-packet workflow specified in T §15.3. DoD: actual qualified human labels, agreement/confusion metrics and audit selection are recorded; absent labels or judge access remain blocked instead of becoming invented reviews.
 
 ## PCB-15-1 - Prompt 15: — Implement deterministic scoring and replay
 
 - Owner prompt: `15`.
 - Dependencies: typed validated evidence and applicable evaluator outputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` — `ValidatedEvidenceManifest` carries the gate verdict, required-analyzer completeness records, canonical issues, rubric items and the efficiency measurement; `score_evaluation` validates evidence completeness first, then applies pass/fail/unknown/N/A semantics and the correctness gate.
+- Verification: `passed`.
 - Required verification scope: E2E-23, E2E-24.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-15-scoring.json`; `pytest tests/test_scoring_golden.py tests/test_scoring_properties.py -q -p no:cacheprovider` (33 passed).
 - Acceptance criteria: — Implement evidence completeness, pass/fail/unknown/N/A semantics and correctness gating. DoD: failed code has zero applicable quality contributions; missing required evidence cannot become either a zero failure or a perfect score.
+- Notes: A failed gate zeroes every item including correctness, because the composite is `30g + g × quality`. Missing required evidence, a missing analyzer, an unresolved item or an unadjudicated high-impact claim yields `status=needs_review` with `total_score=null`; a failed correctness gate yields the publishable `0.000000`.
 
 ## PCB-15-2 - Prompt 15: — Implement deterministic scoring and replay
 
 - Owner prompt: `15`.
 - Dependencies: typed validated evidence and applicable evaluator outputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` — exact `Fraction` effective weights with a largest-remainder integer presentation, the documented security penalty table, the §13.4 efficiency transform re-derived from the measured ratios, weighted code-quality/idiom/robustness rubrics and a full explanation document.
+- Verification: `passed`.
 - Required verification scope: E2E-23, E2E-24.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-15-scoring.json`; `pytest tests/test_scoring_golden.py tests/test_scoring_policy.py -q -p no:cacheprovider` (28 passed).
 - Acceptance criteria: — Implement exact decimal composites, applicability redistribution, security penalties, quality/idiom/robustness rubrics and efficiency inputs. DoD: nominal/effective weights and item contributions explain every result; diagnostic language profiles do not double-count composite penalties.
+- Notes: The composite is computed from exact rational weights; the integer basis points on `ScoreItem` are the rounded presentation, so both are recorded and the exact one is what sums to the total. Diagnostic profile items carry `composite_weight_bp: Literal[0]`, so they cannot contribute by construction.
 
 ## PCB-15-3 - Prompt 15: — Implement deterministic scoring and replay
 
 - Owner prompt: `15`.
 - Dependencies: typed validated evidence and applicable evaluator outputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` — `EvidenceOwnership` resolves each canonical family to one composite owner, collapses duplicate issue keys, refuses contradictory owners and undeclared distinct consequences; the manifest digest is order-insensitive; `scorecard_id` is derived from the score's own content.
+- Verification: `passed`.
 - Required verification scope: E2E-23, E2E-24.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-15-scoring.json`; `pytest tests/test_scoring_properties.py tests/test_scoring_replay.py -q -p no:cacheprovider` (28 passed).
 - Acceptance criteria: — Enforce canonical issue/evidence ownership, immutable scorecard identity and traceable contribution chains. DoD: reordered equivalent evidence yields identical output and duplicate findings cannot change a score.
+- Notes: A duplicate report is retained as evidence, so it moves the scorecard digest while leaving `score_identity` and every contribution unchanged. That is the honest split between "the evidence changed" and "the score did not".
 
 ## PCB-15-4 - Prompt 15: — Implement deterministic scoring and replay
 
 - Owner prompt: `15`.
 - Dependencies: typed validated evidence and applicable evaluator outputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` — `replay_scorecard`/`replay_outcome`, a file-boundary loader, the `pcb-score score|replay` CLI and explicit score-schema and policy-digest version handling.
+- Verification: `passed`.
 - Required verification scope: E2E-23, E2E-24.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-15-scoring.json`; `pytest tests/test_scoring_replay.py -q -p no:cacheprovider` (9 passed); `uv run --locked --offline --package polycodebench-scoring pcb-score replay ... --archived-outcome ...` returned `{"replayed": true}`.
 - Acceptance criteria: — Implement clean-process score replay and score/schema version handling through the CLI/API. DoD: archived validated evidence reproduces the same canonical scorecard without requesting another candidate or judge.
+- Notes: Replay ran in a fresh interpreter with a runtime import tripwire over provider clients, network stacks and higher layers, so "no provider calls and no task execution" is verified rather than asserted. A changed policy digest is refused as a policy change rather than silently rescored.
 
 ## PCB-16-1 - Prompt 16: — Implement aggregation and release publication
 
 - Owner prompt: `16`.
 - Dependencies: completed scorecards ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/publication/src/polycodebench_publication/aggregation.py`, `reporting.py`).
+- Verification: `passed` (synthetic/internal aggregation, missing-coverage, common-cohort and report tests; see `docs/implementation/reports/prompt-16.md`).
 - Required verification scope: E2E-28–30.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_publication_aggregation.py`, `tests/test_publication_reporting.py`; evidence is synthetic/internal and is not a model benchmark result.
 - Acceptance criteria: — Implement metric definitions, fixed cohort identity, sample/task/stratum/language aggregation, failure denominators and coverage. DoD: missing languages/tasks are not silently renormalized; conditional-on-pass metrics are separately labeled; filters use a common eligible cohort.
 
 ## PCB-16-2 - Prompt 16: — Implement aggregation and release publication
 
 - Owner prompt: `16`.
 - Dependencies: completed scorecards ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/publication/src/polycodebench_publication/aggregation.py`).
+- Verification: `passed` (fixed-seed clustered bootstrap, paired comparison, sparse coverage and replay tests; see `docs/implementation/reports/prompt-16.md`).
 - Required verification scope: E2E-28–30.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_uncertainty.py`, `tests/test_publication_aggregation.py`; synthetic/internal fixtures only.
 - Acceptance criteria: — Implement fixed-seed clustered/hierarchical bootstrap and paired comparisons. DoD: correlated variants remain in their cluster, uncertainty is recomputed for the actual metric, replicate/seed/method evidence exists, and unstable/insufficient samples are labeled.
 
 ## PCB-16-3 - Prompt 16: — Implement aggregation and release publication
 
 - Owner prompt: `16`.
 - Dependencies: completed scorecards ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/publication/src/polycodebench_publication/releases.py`).
+- Verification: `passed` (approval invalidation, correction immutability and pointer concurrency acceptance tests; see `docs/implementation/reports/prompt-16.md`).
 - Required verification scope: E2E-28–30.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_publication_releases.py`, `tests/test_releases.py`; local SQLite synthetic release fixtures.
 - Acceptance criteria: — Implement draft/validate/review/approve/publish/withdraw states and versioned corrections. DoD: approval binds exact content; a change invalidates approval; published historical results never mutate in place.
 
 ## PCB-16-4 - Prompt 16: — Implement aggregation and release publication
 
 - Owner prompt: `16`.
 - Dependencies: completed scorecards ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/publication/src/polycodebench_publication/releases.py`, `cli.py`, `scripts/export_publication_schemas.py`).
+- Verification: `passed` (safe projection, signature verification, pointer race and schema export checks; see `docs/implementation/reports/prompt-16.md`).
 - Required verification scope: E2E-28–30.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `tests/test_publication_releases.py`, `tests/test_releases.py`; `python scripts/export_publication_schemas.py --check`. No external publication performed.
 - Acceptance criteria: — Implement allowlisted projections, manifest signing and atomic current-pointer updates. DoD: incomplete/unsafe projections cannot publish, pointer races conflict, and private evidence is never made public through a bulk export.
 
 ## PCB-17-1 - Prompt 17: — Run and verify the real Python/Rust pilot
 
 - Owner prompt: `17`.
 - Dependencies: WP-05–16 integrated and required live/human inputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `in_progress` (12 Python and 12 Rust clusters have protected bundles and executable-admission evidence; quality admission, owner rights, curator freeze and hidden-lane registration remain pending).
+- Verification: `blocked` (no fully admitted/frozen task set; see `docs/implementation/plans/prompt-17-run-plan.json`).
 - Required verification scope: E2E-31 and integrated earlier variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: refreshed `taskpacks/{python,rust}-pilot/inventory.yaml`; each reports 12/12 executable-admitted, 0 fully admitted, 0 frozen. Protected bundle digests are listed in the bounded plan.
 - Acceptance criteria: — Complete and freeze at least 12 independent Python clusters and 12 independent Rust clusters with validated reference/faulty/alternative solutions, required quality opportunities, rights, hidden bundles and admission evidence. DoD: no placeholder tasks or unresolved required analyzers enter the pilot.
 
 ## PCB-17-2 - Prompt 17: — Run and verify the real Python/Rust pilot
 
 - Owner prompt: `17`.
 - Dependencies: WP-05–16 integrated and required live/human inputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `in_progress` (pre-registered 144-attempt single-shot plan; exact provider models, endpoint capabilities, prices, active budget, judge panel and launch route unresolved).
+- Verification: `blocked` (run plan cannot resolve actual model configurations or authorized cost bounds).
 - Required verification scope: E2E-31 and integrated earlier variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/plans/prompt-17-run-plan.json`; protocol-only `pcb-model plan` is available after resolved model configs, but there is no runnable run-start CLI or HTTP route in this checkout.
 - Acceptance criteria: — Freeze two distinct real model identities/configurations, one compatible protocol, three planned samples per task and a common distinct judge panel. Produce exact run plans, resolved capabilities/prices, resource needs, active budgets and exposure policy. DoD: the plan accounts for 24 × 2 × 3 = 144 attempts; outstanding credentials/authorization/human calibration are concrete blockers, not guessed values.
 
 ## PCB-17-3 - Prompt 17: — Run and verify the real Python/Rust pilot
 
 - Owner prompt: `17`.
 - Dependencies: WP-05–16 integrated and required live/human inputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `not_started` (no provider attempt was dispatched).
+- Verification: `blocked` (provider, spend, production worker and authenticated run-start path are not ready).
 - Required verification scope: E2E-31 and integrated earlier variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: zero provider deliveries; all 144 planned logical attempts held before dispatch. No live output was substituted.
 - Acceptance criteria: — Execute the bounded pilot using existing authorization or obtain only the missing concrete authorization after preparation. DoD: all attempts have genuine provider/sandbox/evidence lineage; model failures count; infrastructure failures follow the specified retry/missingness policy; no best-answer selection.
 
 ## PCB-17-4 - Prompt 17: — Run and verify the real Python/Rust pilot
 
 - Owner prompt: `17`.
 - Dependencies: WP-05–16 integrated and required live/human inputs ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `not_started` (no actual scorecards or pilot report can be generated before dispatch and scoring approval).
+- Verification: `blocked` (actual-run evidence is absent by design while preflight gates fail).
 - Required verification scope: E2E-31 and integrated earlier variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: preflight only; no benchmark result, aggregate release, or replay is claimed. See `docs/implementation/reports/prompt-17.md`.
 - Acceptance criteria: — Produce the internal exploratory release/report and replay sampled plus required scorecards. DoD: dimensions, coverage, cost/latency, intervals/limitations, tool/judge versions, failure/exclusion ledger and evidence links agree with the actual runs.
 
 ## PCB-18-1 - Prompt 18: — Implement Track A bug hunting and repair
 
 - Owner prompt: `18`.
-- Dependencies: accepted pilot ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Dependencies: accepted Prompt 17 pilot remains blocked; independent Prompt 18 implementation was explicitly authorized and does not waive the phase prerequisite.
+- Implementation: implemented (typed historical/disclosed/authored/injected/mutation provenance, reproducible Python/Rust internal source builders, hidden-log/oracle visibility gates, clean-control binding, and rejection of unproven/equivalent mutations).
+- Verification: passed for the authorized authored-internal scope; public disclosed-security admission remains explicitly blocked by the recorded source requirement.
 - Required verification scope: E2E-32–34.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/track_a.py`; `tests/test_track_a.py`; `tests/test_track_a_docker.py::test_authored_pre_fix_injected_and_reference_repair_run_in_python_and_rust`; `docs/implementation/evidence/prompt-18-source-reproduction.json`; `config/track-a-public-security-source-requirement.json`.
 - Acceptance criteria: — Implement historical/pre-fix, disclosed-security and mutation task-source workflows with reproducible defects, provenance, immutable oracles, clean controls and rejected equivalent mutations. DoD: Python/Rust historical and injected tasks run, publicly disclosed security coverage has verified examples or a clearly blocked source requirement, and no hidden injection log enters visible assets.
-
 ## PCB-18-2 - Prompt 18: — Implement Track A bug hunting and repair
 
 - Owner prompt: `18`.
-- Dependencies: accepted pilot ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Dependencies: accepted Prompt 17 pilot remains blocked; independent Prompt 18 implementation was explicitly authorized and does not waive the phase prerequisite.
+- Implementation: implemented (base-digest-bound structured finding parsing/span validation, duplicate handling, reviewer-only causal proposals, fixed-point explanation evidence, and deterministic one-to-one maximum-weight matching).
+- Verification: passed (E2E-32 semantics and pending novel findings covered by focused tests).
 - Required verification scope: E2E-32–34.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/track_a.py`; `tests/test_track_a.py::test_e2e_32_duplicate_tp_does_not_change_tp_fp_fn_or_micro_scores`; `docs/implementation/evidence/prompt-18-e2e-32.json`.
 - Acceptance criteria: — Implement findings parsing/span validation, causal matching, semantic duplicates and one-to-one accepted matches. DoD: file coincidence is insufficient; TP/FP/FN and localization use the specified rules; unresolved genuinely novel findings are not automatic false positives.
-
 ## PCB-18-3 - Prompt 18: — Implement Track A bug hunting and repair
 
 - Owner prompt: `18`.
-- Dependencies: accepted pilot ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Dependencies: accepted Prompt 17 pilot remains blocked; independent Prompt 18 implementation was explicitly authorized and does not waive the phase prerequisite.
+- Implementation: implemented (append-only hash-chained reviewer events, immutable ground-truth revisions, reviewer/rationale/evidence-bound accepted edges, and complete-cohort rematching).
+- Verification: passed (E2E-33 confirms novel findings stay pending, successor oracle digest changes, every affected evaluation rematches, and an incomplete rematch is rejected).
 - Required verification scope: E2E-32–34.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/track_a.py`; `tests/test_track_a.py::test_e2e_33_oracle_revision_requires_cohort_wide_rematching`; `docs/implementation/evidence/prompt-18-e2e-33.json`.
 - Acceptance criteria: — Implement root-cause/severity rubrics, human adjudication, ground-truth version updates and cohort-wide rematching. DoD: accepted new bugs update all affected results consistently; original decisions/votes remain auditable.
-
 ## PCB-18-4 - Prompt 18: — Implement Track A bug hunting and repair
 
 - Owner prompt: `18`.
-- Dependencies: accepted pilot ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Dependencies: accepted Prompt 17 pilot remains blocked; independent Prompt 18 implementation was explicitly authorized and does not waive the phase prerequisite.
+- Implementation: implemented (fresh-base allowlisted combined-patch application through the existing patch helper, independent Evaluator execution, failed repair score zero with detection retained, no clean-control repair bonus, explicit model-failure zero credit, missing-attempt coverage loss, and fixed source/language-balanced aggregation).
+- Verification: passed for internal acceptance scope (E2E-34 semantic fixture and actual development-sandbox evaluation of an authored incorrect final patch).
 - Required verification scope: E2E-32–34.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/track_a.py`; `tests/test_track_a.py::test_e2e_34_failed_repair_is_separate_and_clean_control_has_no_repair_score`, `::test_model_failure_counts_as_zero_credit_while_other_entry_pending_is_ignored`; `tests/test_track_a_docker.py::test_e2e_34_combined_patch_uses_fresh_candidate_and_independent_evaluator`; `docs/implementation/evidence/prompt-18-e2e-34.json`.
 - Acceptance criteria: — Implement final combined-patch grading and Track A aggregates, including source/language balance and clean-control handling. DoD: good detection with bad patch retains detection but gets repair zero; no-op clean controls do not earn empty repair credit; multilingual headline follows equal-language aggregation.
-
 ## PCB-19-1 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
+- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
 - Acceptance criteria: — Build pinned Node/package-manager/runtime/test images with offline dependencies and locked recipes. DoD: dependency/advisory snapshots and test-runner identity are recorded and no online installation occurs during scored execution.
 
 ## PCB-19-2 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
+- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
 - Acceptance criteria: — Implement build/test/symbol/analysis plans, ESLint, applicable security/dependency checks and strict TypeScript checks where the task requires them. DoD: JavaScript is not penalized for lacking TypeScript types; task-specific strictness passes the reference.
 
 ## PCB-19-3 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
+- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
 - Acceptance criteria: — Implement async/error/concurrency/typing/idiom applicability and ownership mappings. DoD: floating promises and real async errors have evidence, unused concurrency opportunities are N/A, and stylistic modern syntax is not an automatic bonus.
 
 ## PCB-19-4 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
+- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
 - Acceptance criteria: — Admit runnable JS/TS fixture tasks and run the shared language/evaluation conformance suite. DoD: valid, wrong, alternative-valid, security/async/type-defective and timeout fixtures produce the intended evidence through real entrypoints.
 
 ## PCB-20-1 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
+- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Build pinned compiler/standard/dependency recipes and separate release/instrumented images. DoD: flags and hardware identities are frozen; sanitizer/Valgrind timing never masquerades as release performance.
 
 ## PCB-20-2 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
+- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Implement compilation, tests, clang-tidy/cppcheck and applicable ASan/UBSan/Valgrind plans/parsers. DoD: build errors, sanitizer findings, unsupported checks and infrastructure failures are classified distinctly.
 
 ## PCB-20-3 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
+- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Implement ownership/error-checking/portability/UB/memory profile mappings. DoD: baseline warning debt and task-specific warning policy are respected; blanket -Werror does not silently invalidate otherwise admitted legacy tasks.
 
 ## PCB-20-4 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
+- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Admit real conformance fixtures for correct/alternative code, wrong output, bounds/UB/resource defects and timeouts. DoD: instrumentation detects intended executed defects while reports acknowledge coverage limits; no blanket claim of proven memory safety.
 
 ## PCB-21-1 - Prompt 21: — Add C++ support
 
 - Owner prompt: `21`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: implemented (pinned lock `config/languages/cpp-toolchain-v1.json` declares compilers, `c++17`/`c++20` standards, four build profiles and the incompatible-instrumentation list; every compile lane resolves flags through the single `cxxflags()` choke point; the sanitizer lane uses `lock.profile_for()` and the release lane `lock.release_profile()`).
+- Verification: passed (local). `tests/test_cpp_locks.py` and `tests/test_cpp_plugin.py` (128 passed) cover incompatible-pair rejection, release-profile refusal and `address`+`thread` refusal. Release/performance separation was additionally checked directly: the performance plan's serialized argv contains no `-fsanitize` token.
+- Required verification scope: E2E-15, E2E-35 (Docker image build/admission not run in this prompt).
+- Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp.json`.
 - Acceptance criteria: — Implement pinned task-specific C++ standard/compiler/build/test recipes with separate performance and sanitizer profiles. DoD: incompatible instrumentation combinations are rejected and reference/alternative builds use the same contract.
 
 ## PCB-21-2 - Prompt 21: — Add C++ support
 
 - Owner prompt: `21`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: implemented. Closed the DoD hole where a clang-tidy run that printed nothing this parser could read was reported as `findings=0`, i.e. `MEASURED`, scoring every clang-tidy-fed item full marks: `parsers._clang_tidy` now reads both captured streams and raises when a successful run produced no readable diagnostics, which `_guard` converts to `MISSING`. Also anchored the clang diagnostic regex (`testparse.py`), added `re.MULTILINE` to the UBSan report pattern so a report found mid-stream is no longer dropped, and corrected the UBSan path group so it cannot swallow preceding text.
+- Verification: passed (local). `tests/test_cpp_profile.py::test_an_analyzer_that_printed_nothing_is_missing_not_clean` and `::test_clang_tidy_findings_are_found_whichever_stream_carries_them` were confirmed to fail against the pre-fix parser (`measured` instead of `missing`; zero findings on a stdout-only diagnostic) and to pass after it.
+- Required verification scope: E2E-15, E2E-35 (Docker image build/admission not run in this prompt).
+- Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp.json`.
 - Acceptance criteria: — Integrate selected clang-tidy/cppcheck rules and applicable ASan/UBSan/TSan checks with normalized output. DoD: actual findings/crashes/unsupported paths retain their correct semantics; no analyzer omission silently raises scores.
 
 ## PCB-21-3 - Prompt 21: — Add C++ support
 
 - Owner prompt: `21`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: implemented (no defect found in this prompt). Ownership, copy/move and modern-feature applicability are enforced through equivalence families in `config/languages/cpp-profile-v1.yaml`, so one construct reported by several tools collapses to one scored issue: clang-tidy's copy lints, cppcheck's `passedbyvalue` and the context scanner's `redundant-container-copy` all resolve to the `value-copy` family, and a leak seen by ASan shares `manual-ownership` with the scanner's `raw-owning-pointer`. `CppProfile.normalize` additionally drops duplicate reports of one `issue_key` and demotes token-only lints to `needs_review` so they cost nothing.
+- Verification: passed (local). `tests/test_cpp_profile.py` asserts a non-owning `const T*`/`const char*` produces no finding at all, that a duplicated report of one rule at one site cannot change a score, and that several benign non-owning-pointer findings leave the score at 10000.
+- Required verification scope: E2E-15, E2E-35 (Docker image build/admission not run in this prompt).
+- Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp.json`.
 - Acceptance criteria: — Implement RAII/ownership, STL/container, move/value-semantics and modern-feature applicability with single composite ownership. DoD: nonowning raw pointers or justified legacy patterns are not automatically failures; measured copies and API choices are not blindly double-penalized.
 
 ## PCB-21-4 - Prompt 21: — Add C++ support
 
 - Owner prompt: `21`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: implemented. The shared `FixtureExpectation` schema now admits the two instrumented-language outcomes it previously rejected outright (`expected_lane_findings`, `expected_failure: candidate_crash`/`build_error`), which had made four C++ fixtures and four C fixtures unvalidatable. `SuiteAdmission` now analyzes any fixture that *declares* lane findings -- previously only `reference` and `quality_defective` were analyzed, so those fixtures were never executed by any analyzer -- and adds two gates: `instrumented-lane-defect-detected` and `crash-and-build-fixtures-rejected`. Corrected the C++ manifest's lane families to the profile's real equivalence families (`manual-ownership`, `undefined-behaviour`, `data-race`) rather than sanitizer wording that no observation ever carries.
+- Verification: passed (local). All nine C++ fixtures and all six languages' fixture manifests validate against the schema; `tests/test_cpp_plugin.py` (128 passed) exercises the plans and profile the lane expectations gate consumes.
+- Required verification scope: E2E-15, E2E-35 (Docker image build/admission not run in this prompt; the new admission gates are therefore unexecuted in-container).
+- Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp.json`.
 - Acceptance criteria: — Admit runnable fixtures for valid alternatives, ownership/exception/resource/concurrency defects and timeouts. DoD: shared extension checks pass and expected evidence reaches the ordinary scorer/replay path.
 
 ## PCB-22-1 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
-- Acceptance criteria: — Build pinned Go/module/vendor/test and release recipes with offline execution. DoD: runtime/dependency/flag identity is reproducible and language registration is data-driven.
+- Implementation: implemented (pinned golang 1.26.8 base with distinct runtime/evaluator/performance recipes, an offline components build, a per-recipe instrumentation declaration, and a build step that refreshes the allowlist).- Verification: passed (images re-probed from the real artifacts after rebuild; manifest resealed; allowlist digests match config/images/go-v1.json for all five languages).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Build pinned Go/module/vendor/test and release recipes with offline execution. DoD: runtime/dependency/flag identity is reproducible and language registration is data-driven.
 
 ## PCB-22-2 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
-- Acceptance criteria: — Integrate go test, gofmt checking, vet, staticcheck, gosec and applicable race-enabled runs. DoD: race/instrumented results cannot enter performance measurements; checker crashes cannot look like clean output.
+- Implementation: implemented (go test, gofmt, go vet, staticcheck, gosec and race-enabled runs; the race lane is refused for the measurement recipe and the measurement recipe is refused instrumented plans).- Verification: passed (84 Go unit/contract tests plus the real-sandbox conformance run; the admission report records the executed scan inventory per variant).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Integrate go test, gofmt checking, vet, staticcheck, gosec and applicable race-enabled runs. DoD: race/instrumented results cannot enter performance measurements; checker crashes cannot look like clean output.
 
 ## PCB-22-3 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
-- Acceptance criteria: — Implement error/interface/stdlib/context/concurrency diagnostic and orthogonal idiom mappings. DoD: nonconcurrent tasks mark concurrency N/A and lifecycle/cancellation findings have concrete contract/evidence ownership.
+- Implementation: implemented (error/interface/stdlib/context/concurrency diagnostic families plus orthogonal idiom items, gated on frozen task opportunities).- Verification: passed (tests/test_go_profile.py asserts non-applicable concurrency for a nonconcurrent task and a concrete robustness owner for every lifecycle/cancellation check).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Implement error/interface/stdlib/context/concurrency diagnostic and orthogonal idiom mappings. DoD: nonconcurrent tasks mark concurrency N/A and lifecycle/cancellation findings have concrete contract/evidence ownership.
 
 ## PCB-22-4 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-15, E2E-35.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
-- Acceptance criteria: — Admit fixtures exercising valid/alternative code, ignored errors, cancellation/lifecycle faults, wrong answers and limits. DoD: scenarios detect their intended behavior under a frozen repetition policy and clean fixtures are not falsely penalized.
+- Implementation: implemented (six fixture variants: reference, alternative-heaps, faulty-ties, quality-defective, race-defective and timeout-case).- Verification: passed (conformance cases cover valid, alternative, wrong, quality-defective, timeout and analyzer crash/timeout outcomes).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Admit fixtures exercising valid/alternative code, ignored errors, cancellation/lifecycle faults, wrong answers and limits. DoD: scenarios detect their intended behavior under a frozen repetition policy and clean fixtures are not falsely penalized.
 
 ## PCB-23-1 - Prompt 23: — Add Java and close language coverage
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (pinned Temurin/Maven/JUnit and analyzer recipes plus a fixed cold/steady-state policy are implemented; built image identities are absent).
+- Verification: partial (static recipe/policy check passed; Docker build/probe/admission is blocked).
 - Required verification scope: E2E-15, E2E-35 for all required languages.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `scripts/build_java_images.py --check` and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Build pinned JDK/Maven-or-Gradle/JUnit recipes, offline dependencies and frozen JIT/performance policy. DoD: declared cold/steady-state modes and warmup do not adapt to favor individual candidates.
 
 ## PCB-23-2 - Prompt 23: — Add Java and close language coverage
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (SpotBugs, PMD, Checkstyle, dependency analysis and task-specific probes use shared plan/output contracts; image behavior is unverified).
+- Verification: partial (local parser/plan contracts pass; analyzer runtime and baseline deltas have not been exercised in a built Java image).
 - Required verification scope: E2E-15, E2E-35 for all required languages.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See Java plugin tests and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Integrate SpotBugs, PMD, Checkstyle, dependency analysis and task-specific security/resource/concurrency probes. DoD: analyzer coverage, failure semantics and baseline deltas use shared contracts.
 
 ## PCB-23-3 - Prompt 23: — Add Java and close language coverage
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (Java profile and eight reference/faulty/alternative/null/resource/concurrency/security/timeout fixtures are implemented).
+- Verification: passed for local task/profile contract tests; no image admission claimed.
 - Required verification scope: E2E-15, E2E-35 for all required languages.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `tests/test_java_taskspec.py`, `tests/test_java_plugin.py`, `tests/test_java_guest.py` and `docs/implementation/evidence/prompt-23-language-audit.json`.
 - Acceptance criteria: — Implement Java profiles and admit valid/alternative/null/resource/concurrency/security/wrong-output fixtures. DoD: streams/records/SOLID terminology do not earn automatic points; behavioral and contextual evidence determines results.
 
 ## PCB-23-4 - Prompt 23: — Add Java and close language coverage
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: partial (local extension contract audit added; JS/TS plugin paths are absent and other languages lack complete fresh container evidence).
+- Verification: partial (E2E-15 and E2E-35 remain partial).
 - Required verification scope: E2E-15, E2E-35 for all required languages.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: See `tests/test_language_extension_audit.py`, `docs/implementation/reports/language-coverage.md`, and `docs/implementation/evidence/prompt-23-language-audit.json`.
 - Acceptance criteria: — Audit Python, Rust, JS, TS, C, C++, Go and Java end to end through plugin registration, task admission, solve output contracts, grading, scoring, replay and capability metadata. DoD: every required language has actual conformance evidence, separate JS/TS semantics, and no missing core path hidden by a capability label.
 
 ## PCB-24-1 - Prompt 24: — Implement repository repair benchmark adapters

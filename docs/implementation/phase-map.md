@@ -6,9 +6,9 @@
 |---|---|---|---|
 | Phase 0 — Baseline and execution plan | 00 | Repository gap analysis, execution contract, ticket/evidence ledger | Every requirement, work package and test has a known owner/status; existing work preserved. |
 | Phase 1 — Methodology and foundations | 01–05 | Reproducible workspace, schemas, database, artifact storage, task registry and admission policy | Inputs can be validated/frozen with trustworthy provenance; foundational contracts verified. |
-| Phase 2 — Python/Rust harness and pilot | 06–17 | Isolated execution, durable jobs, models/tools, language plugins, quality evaluation, scoring, internal pilot | Two real model configurations complete the specified 144-attempt exploratory pilot with evidence and replay, or exact blockers remain explicit. |
-| Phase 3 — Track A | 18 | Bug-source construction, detection/adjudication, patch evaluation | Known/false/novel/duplicate findings and repair failures are handled correctly. |
-| Phase 4 — Remaining languages | 19–23 | JS, TS, C, C++, Go and Java plugins and admitted tasks | Every required language passes the same extension contract without core rewrites. |
+| Phase 2 — Python/Rust harness and pilot | 06–17 | Isolated execution, durable jobs, models/tools, language plugins, quality evaluation, scoring, internal pilot | **BLOCKED** - Prompt 17 preflight defines 144 attempts; 0 dispatched, 0 completed, 0 model-failed, 144 infrastructure/preflight-blocked. Production isolation, rights/freeze, calibration, spend and resolved provider inputs remain outstanding. |
+| Phase 3 - Track A | 18 | Bug-source construction, detection/adjudication, patch evaluation | **BLOCKED** - Prompt 18 implementation and E2E-32 to 34 internal acceptance passed independently; Phase 2 accepted-pilot prerequisite from Prompt 17 remains blocked, so the aggregate phase exit gate is not satisfied. |
+| Phase 4 ? Remaining languages | 19?23 | JS, TS, C, C++, Go and Java plugins, tools, images, profiles, admitted tasks | **BLOCKED** ? Prompt 23 local audit is partial; JS/TS image-backed task execution is absent, Java has no built images, Go identity is stale, and fresh C/C++/Go admissions are missing. E2E-15/35 remain partial. |
 | Phase 5 — Remaining Track B suites | 24–28 | Repository repair, realistic tasks, self-repair, Q&A and prediction | Each family preserves its protocol/native metric and uses only applicable scoring. |
 | Phase 6 — Public product | 29–32 | Public API, all seven pages, evidence views and reviewed model submission | Actual published data drives complete public workflows; private data stays restricted. |
 | Phase 7 — Operational hardening | 33 | Production-shaped infrastructure, restoration, monitoring and runbooks | Staging deploy/recovery/isolation/withdrawal rehearsals have real evidence. |
@@ -86,18 +86,18 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 09 | Prompt 09 | — Implement single-shot and agent execution | WP-09 | Single-shot and standard agent with durable tools/checkpoints | done (fixture model and development sandbox; live model evidence Prompt 17) |
 | 10 | Prompt 10 | — Implement Python support | WP-10 | Python plugin, pinned toolchain, task fixtures and profiles | done (development sandbox: 12/12 clusters executable-admission passed; quality admission pending Prompts 12–15) |
 | 11 | Prompt 11 | — Implement Rust support | WP-11 | Rust plugin, pinned toolchain, task fixtures and profiles | done (development sandbox: 12/12 clusters executable-admission passed; quality admission pending Prompts 12–15) |
-| 12 | Prompt 12 | — Implement independent grading and normalized evidence | WP-12 | Independent grading, analyzer evidence and robustness pipeline | not_started |
-| 13 | Prompt 13 | — Implement performance measurement | WP-13 | Paired runtime/memory measurements and stability policy | not_started |
-| 14 | Prompt 14 | — Implement judging, review and calibration | WP-14 | Three-vote judge pipeline, reviewer flow and calibration evidence | not_started |
-| 15 | Prompt 15 | — Implement deterministic scoring and replay | WP-15 | Pure scoring, gating, language profiles and deterministic replay | not_started |
-| 16 | Prompt 16 | — Implement aggregation and release publication | WP-16 | Aggregates, intervals, immutable releases and reviewed publication | not_started |
-| 17 | Prompt 17 | — Run and verify the real Python/Rust pilot | WP-17 | Real two-model Python/Rust pilot and internal report | not_started |
-| 18 | Prompt 18 | — Implement Track A bug hunting and repair | WP-18 | Complete Track A workflow | not_started |
-| 19 | Prompt 19 | — Add JavaScript and TypeScript support | WP-19, part 1 | Separate JavaScript and TypeScript support | not_started |
-| 20 | Prompt 20 | — Add C support | WP-19, part 2 | C support | not_started |
-| 21 | Prompt 21 | — Add C++ support | WP-19, part 3 | C++ support | not_started |
-| 22 | Prompt 22 | — Add Go support | WP-19, part 4 | Go support | not_started |
-| 23 | Prompt 23 | — Add Java and close language coverage | WP-19, part 5 | Java support and complete language coverage audit | not_started |
+| 12 | Prompt 12 | — Implement independent grading and normalized evidence | WP-12 | Independent grading, analyzer evidence and robustness pipeline | done (development sandbox; production and admission gates pending) |
+| 13 | Prompt 13 | — Implement performance measurement | WP-13 | Paired runtime/memory measurements and stability policy | in_progress (parallel implementation) |
+| 14 | Prompt 14 | — Implement judging, review and calibration | WP-14 | Three-vote judge pipeline, reviewer flow and calibration evidence | in_progress (parallel implementation) |
+| 15 | Prompt 15 | - Implement deterministic scoring and replay | WP-15 | Pure scoring, gating, language profiles and deterministic replay | done (pure scorer, gating, ownership, explanation and clean-process replay implemented and verified on fixtures; the live-pilot replay variant stays with Prompt 17 and `effective_for_scoring` stays false until calibration) |
+| 16 | Prompt 16 | — Implement aggregation and release publication | WP-16 | Aggregates, intervals, immutable releases and reviewed publication | done (synthetic/internal implementation and tests; external publication is not authorized) |
+| 17 | Prompt 17 | — Run and verify the real Python/Rust pilot | WP-17 | Real two-model Python/Rust pilot and internal report | blocked (preflight complete; no live dispatch authorized/possible) |
+| 18 | Prompt 18 | - Implement Track A bug hunting and repair | WP-18 | Complete Track A workflow | implemented independently (internal evidence passed; Phase 3 aggregate gate blocked by Prompt 17) |
+| 19 | Prompt 19 | — Add JavaScript and TypeScript support | WP-19, part 1 | Separate JavaScript and TypeScript support | partial (JS/TS source plugins and entrypoints exist; no allowlist entries, task packs or complete images) |
+| 20 | Prompt 20 | — Add C support | WP-19, part 2 | C support | partial (local C plugin/plans/fixtures exist; fresh image admission unverified) |
+| 21 | Prompt 21 | — Add C++ support | WP-19, part 3 | C++ support | partial (local C++ plugin/plans/fixtures exist; fresh image admission unverified) |
+| 22 | Prompt 22 | — Add Go support | WP-19, part 4 | Go support | implemented (plugin, pinned recipes, profiles, task pack and real-sandbox admission pass; the prior `tool_error` was a build cache in the read-only image layer, now fixed) |
+| 23 | Prompt 23 | — Add Java and close language coverage | WP-19, part 5 | Java support and complete language coverage audit | partial (Java implementation and local audit done; Java images and complete language conformance remain blocked) |
 | 24 | Prompt 24 | — Implement repository repair benchmark adapters | WP-20, part 1 | SWE-style/native repository repair adapter | not_started |
 | 25 | Prompt 25 | — Implement realistic repository tasks | WP-20, part 2 | Independently curated realistic repository tasks | not_started |
 | 26 | Prompt 26 | — Implement self-repair | WP-20, part 3 | Fixed-budget self-repair protocol | not_started |
@@ -109,3 +109,6 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 32 | Prompt 32 | — Implement reviewed model submissions and close the public product phase | WP-22, part 3; WP-23 | Seventh page plus model-submission approval workflow | not_started |
 | 33 | Prompt 33 | — Harden deployment and rehearse operations | WP-24 | Production IaC, operational drills and runbooks | not_started |
 | 34 | Prompt 34 | — Perform the final integrated audit and repair pass | All WP-01–24 | Final integrated audit and verified repair pass | not_started |
+
+- Prompt 23: PARTIAL. Java recipes, profiles, task fixtures and local shared-contract audit are implemented; current image identity and complete eight-language conformance remain blocked. See `reports/prompt-23.md`, `reports/language-coverage.md` and the Phase 4 gate report.
+- Phase 4 aggregate gate: BLOCKED. E2E-15 and E2E-35 remain partial until JS/TS identities, task packs and Docker execution are admitted and the required Docker-backed image/admission evidence is current.

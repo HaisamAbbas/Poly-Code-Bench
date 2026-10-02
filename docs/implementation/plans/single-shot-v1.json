@@ -1,0 +1,30 @@
+{
+  "budget": {
+    "active_solve_seconds": 180,
+    "input_tokens": 32000,
+    "kind": "solve_budget",
+    "model_turns": 1,
+    "output_tokens": 8000,
+    "per_command_seconds": null,
+    "schema_version": 1,
+    "tool_calls": 0
+  },
+  "context": {
+    "kind": "context_policy",
+    "max_input_context_tokens": 32000,
+    "retain_recent_turns": 8,
+    "schema_version": 1,
+    "summarizer": "none",
+    "token_counter": "utf8_bytes_div4_v1"
+  },
+  "freeze_on_budget_exhaustion": false,
+  "kind": "solve_protocol",
+  "mode": "single_shot",
+  "prompt_policy": "pcb-solve-v1",
+  "protocol_id": "single-shot-v1",
+  "public_test_feedback": false,
+  "schema_version": 1,
+  "single_shot_extraction": "json_envelope",
+  "tools": [],
+  "version": 1
+}

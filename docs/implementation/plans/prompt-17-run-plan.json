@@ -1,0 +1,1226 @@
+{
+  "attempt_counts": {
+    "completed": 0,
+    "expected": 144,
+    "infrastructure_blocked_before_dispatch": 144,
+    "model_failed": 0
+  },
+  "blockers": [
+    "PCB_DATABASE_URL is not configured",
+    "PCB_OBJECT_STORE_ENDPOINT is not configured",
+    "PCB_PRODUCTION_WORKER_IMAGE is not configured",
+    "PCB_SUPERVISOR_IDENTITY is not configured",
+    "common distinct judge panel is unprovisioned and uncalibrated",
+    "no owner-authorized active hard spend limit or price snapshot",
+    "no pcb-run operator CLI exists; run creation is a service/API use case only",
+    "python/archive-path-guard: owner rights confirmation pending",
+    "python/build-scheduler: owner rights confirmation pending",
+    "python/event-window-stats: owner rights confirmation pending",
+    "python/expr-evaluator: owner rights confirmation pending",
+    "python/interval-calendar: owner rights confirmation pending",
+    "python/ledger-stream: owner rights confirmation pending",
+    "python/query-filter-sql: owner rights confirmation pending",
+    "python/rate-limiter: owner rights confirmation pending",
+    "python/retry-policy: owner rights confirmation pending",
+    "python/safe-template: owner rights confirmation pending",
+    "python/ttl-cache: owner rights confirmation pending",
+    "python/version-ranges: owner rights confirmation pending",
+    "python: quality admission/curator freeze is incomplete",
+    "rust/bounded-channel: owner rights confirmation pending",
+    "rust/csv-records: owner rights confirmation pending",
+    "rust/expr-evaluator: owner rights confirmation pending",
+    "rust/interval-merge: owner rights confirmation pending",
+    "rust/lru-cache: owner rights confirmation pending",
+    "rust/path-sandbox: owner rights confirmation pending",
+    "rust/pipeline-traits: owner rights confirmation pending",
+    "rust/ring-buffer-unsafe: owner rights confirmation pending",
+    "rust/semver-ranges: owner rights confirmation pending",
+    "rust/sliding-window-stats: owner rights confirmation pending",
+    "rust/text-wrap: owner rights confirmation pending",
+    "rust/token-bucket: owner rights confirmation pending",
+    "rust: quality admission/curator freeze is incomplete",
+    "scoring policy remains inactive pending calibration and admission",
+    "two distinct real model configurations and resolved capabilities/prices are missing"
+  ],
+  "budget": {
+    "base_input_tokens_upper_bound": 4608000,
+    "base_output_tokens_upper_bound": 1152000,
+    "effective_for_live_calls": false,
+    "guest_cpu_count_per_concurrent_attempt": 2,
+    "guest_memory_mib_per_concurrent_attempt": 2048,
+    "hard_limit_micro_usd": null,
+    "including_maximum_provider_deliveries_input_tokens_upper_bound": 13824000,
+    "including_maximum_provider_deliveries_output_tokens_upper_bound": 3456000,
+    "max_parallelism": null,
+    "price_snapshot_required": true,
+    "profile_id": "single-shot-small-v1",
+    "provider_cost_estimate_micro_usd": null,
+    "status": "proposed_not_authorized",
+    "writable_disk_gib_per_concurrent_attempt": 2
+  },
+  "claim": "Preflight plan only; no provider calls or pilot results are represented.",
+  "judge": {
+    "calibration_status": "pending",
+    "distinct_from_candidates_required": true,
+    "effective_for_scoring": false,
+    "judge_model_config_id": null,
+    "judge_packet_and_request_total": null,
+    "panel_digest": "sha256:bc0ffcecf37fe3aab1d162f6ec1f3685a9a64fdc655259220355378052afd7e0",
+    "panel_id": "judge-panel-v1",
+    "price_snapshot_id": null,
+    "votes_per_packet": 3
+  },
+  "kind": "pilot_run_plan",
+  "launch_command": {
+    "available": false,
+    "bounded_generation_attempt_count": 144,
+    "bounded_max_provider_deliveries": 432,
+    "not_an_execution_command": true,
+    "planning_command_after_authorized_configs": ".venv\\Scripts\\pcb-model.exe plan --config <resolved-model-config.json> --protocol docs/implementation/plans/single-shot-v1.json --tasks 24 --samples 3 --max-deliveries 3",
+    "reason": "There is no run-start CLI or HTTP route in this checkout. pcb-model plan computes one resolved model configuration cost plan; RunCreationService is an internal service and requires frozen task-set/config/revision/campaign IDs."
+  },
+  "models": [
+    {
+      "capabilities_resolved": false,
+      "model_config_id": null,
+      "model_config_path": null,
+      "model_identity": null,
+      "price_snapshot_id": null,
+      "provider_identity": null,
+      "slot": "candidate_a"
+    },
+    {
+      "capabilities_resolved": false,
+      "model_config_id": null,
+      "model_config_path": null,
+      "model_identity": null,
+      "price_snapshot_id": null,
+      "provider_identity": null,
+      "slot": "candidate_b"
+    }
+  ],
+  "protocol": {
+    "input_token_limit_per_delivery": 32000,
+    "json_plan_copy": "docs/implementation/plans/single-shot-v1.json",
+    "mode": "single_shot",
+    "model_turns_per_attempt": 1,
+    "output_token_limit_per_delivery": 8000,
+    "path": "config/protocols/single-shot-v1.yaml",
+    "protocol_id": "single-shot-v1",
+    "sha256": "sha256:e4f798af6c903d3c6dfdf7ab44c79aaa30a079b865834ad1cee42a17c29ff2df",
+    "single_shot_and_standard_agent_acceptance_tests": [
+      "tests/test_solve_core.py",
+      "tests/test_solve_sessions.py",
+      "tests/test_solve_families.py"
+    ],
+    "tools": [],
+    "version": 1
+  },
+  "resources_per_attempt": {
+    "active_solve_seconds": 180,
+    "guest_cpu": 2,
+    "guest_memory_mib": 2048,
+    "input_tokens": 32000,
+    "output_tokens": 8000,
+    "process_count": 128,
+    "writable_disk_gib": 2
+  },
+  "retry_and_failure_policy": {
+    "infrastructure_failures": "bounded retry only under frozen delivery policy; unresolved attempts remain missing and block complete aggregate",
+    "max_provider_deliveries_per_attempt": 3,
+    "max_provider_deliveries_total": 432,
+    "model_failures": "count as completed model outcomes in denominator",
+    "sample_selection": "all three planned samples; no best-answer selection"
+  },
+  "sampling": {
+    "attempt_index_range": [
+      0,
+      1,
+      2
+    ],
+    "best_answer_selection": false,
+    "master_seed": "17017",
+    "planned_samples_per_task_per_model": 3,
+    "seed_derivation": "derive_sample_seed(master_seed, frozen_task_version_digest, sample_index)"
+  },
+  "schema_version": 1,
+  "scope": "internal_exploratory_python_rust_pilot",
+  "status": "blocked",
+  "task_set": {
+    "inventory_digests": {
+      "python": "sha256:0c19f5935fcffd36597a76c7680f5b3276056133cb502760e19cd693e08355f8",
+      "rust": "sha256:041c9f3f5e721f131427408437504f615917db6f22ab92c2ba5593b3ffabbfc7"
+    },
+    "languages": {
+      "python": {
+        "dimension_coverage": {
+          "code_quality": 12,
+          "correctness": 12,
+          "efficiency": 5,
+          "idiomatic": 8,
+          "robustness": 9,
+          "security": 4
+        },
+        "executable_admission_passed": 12,
+        "frozen": 0,
+        "fully_admitted": 0,
+        "independent_clusters": 12,
+        "tasks": 12
+      },
+      "rust": {
+        "dimension_coverage": {
+          "code_quality": 12,
+          "correctness": 12,
+          "idiomatic": 12,
+          "robustness": 12,
+          "security": 1
+        },
+        "executable_admission_passed": 12,
+        "frozen": 0,
+        "fully_admitted": 0,
+        "independent_clusters": 12,
+        "tasks": 12
+      }
+    },
+    "task_count": 24,
+    "tasks": [
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:640e9b1988eb0405f74c12fd5789399ecb308d6956e57acb75b22ccb8a42726e",
+        "applicable_dimensions": [
+          "correctness",
+          "security",
+          "code_quality",
+          "robustness"
+        ],
+        "cluster_id": "pilot-archive-path-guard-cluster",
+        "hidden_bundle_digest": "sha256:0da7ec42a04681cd4671f38efa1a96fa16ae52fdf59981f696751cc30055c22e",
+        "language": "python",
+        "manifest_digest": "sha256:251099ec0f7c5cf387047321ccaf16c257e072095ca22a78c30063e1cecebde4",
+        "opportunities": {
+          "error_handling": 1,
+          "lint_style": 1,
+          "readability_idioms": 1,
+          "stdlib_use": 1,
+          "type_hints": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not performed against external corpora or search engines. The author only checked from memory that the exact rules are not a known benchmark problem; that is not evidence of absence. The reference was checked with mypy --strict only as part of admission.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "mypy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-archive-path-guard",
+        "task_package_digest": "sha256:df4c666334a0bb9c06a897bb11eb66549f2721a0f9547b4f42ad1ba1c20eda23",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:4e48968f951501f0731d58d2344dd80368c342fb5ec0395117695c7c092b33b0"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:457f60a93f3b7ed4174d230d8ce55fdb407f79e1126d199f84ee2f6a19755bf8",
+        "applicable_dimensions": [
+          "correctness",
+          "efficiency",
+          "code_quality",
+          "idiomatic"
+        ],
+        "cluster_id": "pilot-build-scheduler-cluster",
+        "hidden_bundle_digest": "sha256:e46d12edd9864f7b600a9b06f7429f8df900ba16d46794fd57c009e85d9f8d02",
+        "language": "python",
+        "manifest_digest": "sha256:6e378c7b7bb6a73f2ad1b6dffe78551f19b63ce5871a012f36d1a0ef02c0701b",
+        "opportunities": {
+          "error_handling": 1,
+          "lint_style": 1,
+          "performance_awareness": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "No search against external corpora, benchmark lists or public code was performed; originality rests on the author's knowledge only. Generic topological scheduling is a well-known topic, the specific rules are invented.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-build-scheduler",
+        "task_package_digest": "sha256:69bdcea83c9e6e477567d33f6913aaada4c9e17197540f53619e147678327fdd",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 2,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:d20726e94a72715db21ff79ee92c67b14f89e8b86d66c0fdebbddc0b657c7da3"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:d1ed8af4542b6de71c26244f85d78bfdcf03436264f5c02e4130bab14ad9c16b",
+        "applicable_dimensions": [
+          "correctness",
+          "efficiency",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-event-window-stats-cluster",
+        "hidden_bundle_digest": "sha256:f57c00eb5345de5d409e7e422d5bf39313d0321f02b5221f369ff34b6fefc9cf",
+        "language": "python",
+        "manifest_digest": "sha256:05e49f6a3d1ab4e244e62854dbf2589b3724bd34d8ca8d2aa542da0b4e50e82a",
+        "opportunities": {
+          "error_handling": 1,
+          "iteration_laziness": 2,
+          "lint_style": 1,
+          "performance_awareness": 2,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 2,
+          "stdlib_use": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "No search against external corpora, benchmarks or the web was performed. The author only compared the task against the fixture layout in the repository and relied on having invented the rules; sliding-window streaming problems are common in general, so overlap with existing exercises is possible but unchecked.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-event-window-stats",
+        "task_package_digest": "sha256:1611723a1c650ff6e1ebe86958d1f0a61735dae803bc1bf7ec3216e9f15ed198",
+        "variant_counts": {
+          "alternative": 2,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:c95c6c1bfb9a9b036401675d3f2cc732692df7caf9a200025cdd216c4c23925a"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:c5431182014ecf5bb68833555d9b0186c97147a535ed45b9f97c0004f53cda96",
+        "applicable_dimensions": [
+          "correctness",
+          "security",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-python-expr-evaluator-cluster",
+        "hidden_bundle_digest": "sha256:a570ee0a8a2d9b098760fa7564dda7d15084b4972c78bbcb98c8b002c4dcdddd",
+        "language": "python",
+        "manifest_digest": "sha256:dd769ddd1d8b64177565d2a3a6e9c7ea40bf7279006ac527beddc3fe59ce5f38",
+        "opportunities": {
+          "data_protocol_modeling": 1,
+          "error_handling": 1,
+          "lint_style": 1,
+          "performance_awareness": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1,
+          "type_hints": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not performed against any external corpus or search index. The only check made was the author's own judgement that the rules are bespoke; similarity to generic calculator-parsing exercises in the wild is possible and was not measured.",
+        "required_analyzers": [
+          "ruff",
+          "mypy",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-python-expr-evaluator",
+        "task_package_digest": "sha256:6e3994bbcc054956ed1051d93b03bbc50f5314449fdb87d1a4dbd9cfc19e27eb",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:bc23cca6a4397dd5993c0c65c2e463543ffbf9c568f25e3231da3036c2d784e6"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:013c31958d1cff5d3410390ca840df98fc767d1b476f0cbafff024090e29920a",
+        "applicable_dimensions": [
+          "correctness",
+          "efficiency",
+          "code_quality",
+          "idiomatic"
+        ],
+        "cluster_id": "pilot-interval-calendar-cluster",
+        "hidden_bundle_digest": "sha256:c9c40862a2c1727f53a43e47cf7ac2f7cecef59163365256f23813d212f74db5",
+        "language": "python",
+        "manifest_digest": "sha256:492770e3aa33274ea42b1867276c9dfca14f66ac9fc111de5bea1be67db4a1a6",
+        "opportunities": {
+          "error_handling": 1,
+          "iteration_laziness": 1,
+          "lint_style": 1,
+          "performance_awareness": 1,
+          "readability_idioms": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not performed against external corpora or search engines. The author only checked from memory that the exact rules are not a known benchmark problem; that is not evidence of absence.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-interval-calendar",
+        "task_package_digest": "sha256:3a40c69e26a245e42c4b7a3fbfd26ad7c58bcfa2bd4390a0fd1e134e8cb2f3f0",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:aa6f175c6e8e7a92e3494c81ca5396ad635f278490fd2c8ef5322b6e9acb9c8d"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:e1be8872b483a4831b300454134b2e90e1518c57d50cdf32c6a9ebab5b31c55a",
+        "applicable_dimensions": [
+          "correctness",
+          "efficiency",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-ledger-stream-cluster",
+        "hidden_bundle_digest": "sha256:e7f52049aa0857bc248b84c97a4e9c75cafbacc9a91390b530ba16cd742a2190",
+        "language": "python",
+        "manifest_digest": "sha256:c6421d3641dbf57465ab98b708e4c9d119be2b09c557d44b4890e62cc4b42f33",
+        "opportunities": {
+          "error_handling": 1,
+          "iteration_laziness": 1,
+          "lint_style": 1,
+          "performance_awareness": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not performed against external corpora or search engines. The author only checked from memory that the exact format is not a known benchmark problem; that is not evidence of absence.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-ledger-stream",
+        "task_package_digest": "sha256:92c91d1db549254706794569299c13327ac6292d1fb5ab3ad9921633338b5a94",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:c93f5113f51f52f20b1e3f8f27bba09f320fd65f144273caf61df95a36d13103"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:267988f4e5c6d0363bcc55a0eb1ac8f944078e9240be2855c8b36ab2e22655e7",
+        "applicable_dimensions": [
+          "correctness",
+          "security",
+          "code_quality",
+          "robustness"
+        ],
+        "cluster_id": "pilot-query-filter-sql-cluster",
+        "hidden_bundle_digest": "sha256:689c3685b1b78580b0c1f8a06db151b7589c16279197c5d91cf334dc35564987",
+        "language": "python",
+        "manifest_digest": "sha256:4fde2a038fa62231b32444eb4d3761632bc0b2141e6f5d8822e34c2a725f9f22",
+        "opportunities": {
+          "data_protocol_modeling": 1,
+          "error_handling": 3,
+          "lint_style": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "No search against external corpora, benchmarks or the web was performed. The author only compared the task against the fixture layout in the repository and relied on having invented the rules; resemblance to existing query-builder libraries is possible but unchecked.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-query-filter-sql",
+        "task_package_digest": "sha256:a10263e1c2f37ced0adfe6f33421845aa11eae30f44c055a59a86654fe345290",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:5772dc112d28360b07584f42abc7fb324d9cd6fd1cc658a5033561490c39a637"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:ad458d6f01b79326f59e6791e48ac006141c6321e63712be376933c047f4fb4e",
+        "applicable_dimensions": [
+          "correctness",
+          "efficiency",
+          "code_quality",
+          "robustness"
+        ],
+        "cluster_id": "pilot-python-rate-limiter-cluster",
+        "hidden_bundle_digest": "sha256:879cc2b3f60c8a8b49637a1844b077508775057b0edd3a02f6cba924d09e2572",
+        "language": "python",
+        "manifest_digest": "sha256:e4e334fb9c59572ae4e43c324d70fe54daba8b44c9d79bfd391ee98a9cf83968",
+        "opportunities": {
+          "error_handling": 1,
+          "lint_style": 1,
+          "performance_awareness": 1,
+          "readability_idioms": 1,
+          "stdlib_use": 1,
+          "type_hints": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not performed against any external corpus or search index. The only check made was the author's own judgement that the concrete rules (global high-water clock, eviction semantics, API) are bespoke; similarity to public rate-limiter exercises was not measured.",
+        "required_analyzers": [
+          "ruff",
+          "mypy",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-python-rate-limiter",
+        "task_package_digest": "sha256:4bb22d5c0ff0a53941c0ce59769ae4ae1fc8680e8ff0a0ddc25839a012b1d32a",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:1d8841be30e6efca8be528843b84fc745f548f87aca22a58f55f66f5b7591c13"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:5997647d359854acaf19f8014736830288a26d0873701d4fba5b6f4d70c7b750",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-retry-policy-cluster",
+        "hidden_bundle_digest": "sha256:12c532ee6def433e90e5bded52418ff0061d666ca2a49cc23456a53630094437",
+        "language": "python",
+        "manifest_digest": "sha256:9e823041e50e0d3f91a7e6cc3ab0baa5a4e2a2929407d67e53cd8da4c0b0995c",
+        "opportunities": {
+          "context_resource_abstraction": 2,
+          "data_protocol_modeling": 2,
+          "error_handling": 3,
+          "lint_style": 1,
+          "readability_idioms": 1,
+          "stdlib_use": 1,
+          "type_hints": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "No search against external corpora, benchmarks or the web was performed. The author only compared the task against the fixture layout in the repository and relied on having invented the rules; retry-with-backoff helpers are a common pattern in general, so resemblance to existing libraries (for example their delay formulas) is possible but unchecked.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context",
+          "mypy"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-retry-policy",
+        "task_package_digest": "sha256:1c7b172d8047012cff420e54093e7bdcbaa531e971d2d91ce4a97b453d364f11",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:6b53f9f8bb08afb42e0197b520743375ea070635d541e35324aba834180be82b"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:09c300197a431b1834217a270b173f01cf431eff0b9f3f87bda236d382b8c62c",
+        "applicable_dimensions": [
+          "correctness",
+          "security",
+          "code_quality",
+          "robustness"
+        ],
+        "cluster_id": "pilot-safe-template-cluster",
+        "hidden_bundle_digest": "sha256:66d4f633eb91b99a8365bf906a3eec885ca066abe1aae3770aa95e5c664f4890",
+        "language": "python",
+        "manifest_digest": "sha256:252a102b0a9211b26fdb3fe0d2180ccdc07c0d97f01633bf0a20239c70df0a57",
+        "opportunities": {
+          "error_handling": 1,
+          "lint_style": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "No search against external corpora, benchmark lists or public code was performed; originality rests on the author's knowledge only. Template engines are a common topic in general, the specific rules are invented.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-safe-template",
+        "task_package_digest": "sha256:c05438910228d4906f5e75b235b57c16f4c5fb7022f16630a57ba7f70f05a6ca",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:51c3b3ef1fa7a410c84bbb6349cd97a4e62d35b05239341f0ce6c1af875418e1"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:dfa62d47626d10d54384decf965fea6d49e1996cb8c440fa5b2107032fcb8d64",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-ttl-cache-cluster",
+        "hidden_bundle_digest": "sha256:7a18902ef2ff8e4dcc58e7c7026226bf9353541bf6a0e57265a057161bb314ea",
+        "language": "python",
+        "manifest_digest": "sha256:7379d8929a398fb3a54818a4ca75e60983c35136e35cc173e9a11386cc99f05f",
+        "opportunities": {
+          "context_resource_abstraction": 1,
+          "data_protocol_modeling": 1,
+          "error_handling": 1,
+          "lint_style": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "No search against external corpora, benchmark lists or public code was performed; originality rests on the author's knowledge only. TTL/LRU caches are a common topic in general, the specific rules are invented.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-ttl-cache",
+        "task_package_digest": "sha256:63a7c1d8cc1754f5a58b90a96e7da72c2ac3b6f41fa7746cd968be9dd2410d11",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:285c332a1f768785a3220cfeb4d4735c99ac39fde7d64689b90f88e0ddcb0e2f"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:2a7999b9bcfb32f81a1fcfae21d9e77023fcb2292fe1d068ada2101517c0d24d",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic"
+        ],
+        "cluster_id": "pilot-python-version-ranges-cluster",
+        "hidden_bundle_digest": "sha256:a43cec9656355602e1a5dacc5ead1115700f5a3806606d41b2b53ecd0c80f24b",
+        "language": "python",
+        "manifest_digest": "sha256:68be9c88ade6eae7cb1aeef44198f739e032f73a1e56dea3682e793fc462acb8",
+        "opportunities": {
+          "data_protocol_modeling": 1,
+          "error_handling": 1,
+          "lint_style": 1,
+          "readability_idioms": 1,
+          "stdlib_api_choice": 1,
+          "stdlib_use": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not performed against any external corpus or search index. The only check made was the author's own judgement that the concrete rules differ from the common semver/npm/PEP 440/RubyGems rules; the resemblance of the general idea to those systems was not measured.",
+        "required_analyzers": [
+          "ruff",
+          "bandit",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-python-version-ranges",
+        "task_package_digest": "sha256:f3ba5e6339fce5ad350d318e2d1a3eafcb2c5e3f177b6dfb8b6378c014222730",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:c230a72ebf0fa49b7d55da08a93580dddaad2a34a95975f26e89f78571431360"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:b37b33300af6172a4d3235e481abc7b75d4e6b03a5dfc910fe6fe453ae30f35f",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-bounded-channel-cluster",
+        "hidden_bundle_digest": "sha256:cd74fd2de03b6594c3d70300d78b06954df3184d53ea10072b1bcd77282a3184",
+        "language": "rust",
+        "manifest_digest": "sha256:2bdfe4c7c2cb2d209ffe942b4d750594ef44da2116fe78d7e4af6933e68851cd",
+        "opportunities": {
+          "clippy": 2,
+          "concurrency": 3,
+          "concurrency_abstraction": 3,
+          "ownership_borrowing": 1,
+          "ownership_borrowing_api": 1,
+          "result_option": 2,
+          "result_option_modeling": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not compared against external corpora or search engines. Bounded blocking queues are a generic textbook exercise; the exact API and close semantics here were composed for this task and no claim of absence from public corpora is made.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-bounded-channel",
+        "task_package_digest": "sha256:881b46438ac1990ac76e9ab51a49fa0f6a093b656ef0f09b1202d7798d725b38",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:bc67895b4a71f27c24260b77918434f6bc951a34fb26fd5139ee194438d022c4"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:4a8008f6c09b690cb9afcd0ed1d41345f348c3a4eec3eaa14804b03c9d6f2d41",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-csv-records-cluster",
+        "hidden_bundle_digest": "sha256:9c0b6985eacb59e33329152ea2eefbd0d34d6137ca41e648f0cca8857193a1da",
+        "language": "rust",
+        "manifest_digest": "sha256:e56af7ed18103d4687465554c855e06c5bf5d412a8cd695de079952cdc909665",
+        "opportunities": {
+          "clippy": 2,
+          "iterator_trait_composition": 1,
+          "iterators_traits": 1,
+          "ownership_borrowing": 1,
+          "ownership_borrowing_api": 1,
+          "result_option": 3,
+          "result_option_modeling": 3
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not compared against external corpora or search engines. The author only checked from memory that the exact rules are not a known benchmark problem; that is not evidence of absence.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-csv-records",
+        "task_package_digest": "sha256:939aeccda0a922773045c4dce5c1faab5750cadd1c6a1ed9ac20ed9ea4c4e5e0",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:db2edd75843077911350b182bfaf3b5b7e372b552e12885a2986ca8722328bb9"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:435e642f46db26b578828aa160417c2fb31cf6d09e4320961e68e896b74417dd",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-expr-evaluator-cluster",
+        "hidden_bundle_digest": "sha256:a2b96591af79e3ad47219235a0a15ae8a3e87214786a1617086cd0ad345f5ce1",
+        "language": "rust",
+        "manifest_digest": "sha256:42fae8b25a1d4e529beda5320db22f0b217d5a9ec34c2f286b41940bcddb3dcf",
+        "opportunities": {
+          "clippy": 3,
+          "iterator_trait_composition": 1,
+          "iterators_traits": 2,
+          "ownership_borrowing": 1,
+          "ownership_borrowing_api": 1,
+          "result_option": 3,
+          "result_option_modeling": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before scoring",
+        "public_exposure_review": "Authorship, originality and public-exposure review: written from scratch for this pilot; not compared against external corpora; no public copy known.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-expr-evaluator",
+        "task_package_digest": "sha256:ac1e322d943af25e9977757f309fef76193f5554b639e32a7c83db8e533ea3a0",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:f0b1db4524bd814e3dac930d3113a0f47cb84e463bbedef579ff82de2a23c79c"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:1e31e6321564cd8e73ac9464fff42f24dacde704abbcd4ebc855b817ddfafe3a",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-interval-merge-cluster",
+        "hidden_bundle_digest": "sha256:92bbfd5aa1b2b9f99758c294fdc49f05df41af92a1e25eae373d7a154065dffa",
+        "language": "rust",
+        "manifest_digest": "sha256:f154087752f0f4cc2398327e6f03edbdce5a605375d977952b3dbea96d0832fb",
+        "opportunities": {
+          "clippy": 2,
+          "iterator_trait_composition": 3,
+          "iterators_traits": 3,
+          "ownership_borrowing": 2,
+          "ownership_borrowing_api": 2,
+          "result_option": 1,
+          "result_option_modeling": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not compared against external corpora or search engines. Interval merging is a generic textbook exercise; the exact API and rules here were composed for this task, and no claim of absence from public corpora is made.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-interval-merge",
+        "task_package_digest": "sha256:3f0ae5dacb7ac7cd7641afb7407e754c271a21413e455203e5a52611e6484fca",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:c4e9c9a5695181e6ac93c00d344c70c465211dd087ce2e927131d40490c1fcb4"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:f19f24c1c52c4df4e10413adae1fa4f07335287f1a500f048945c6c14f4ac364",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-lru-cache-cluster",
+        "hidden_bundle_digest": "sha256:3d0c4d48384e3dff720987292c8726b6366ff999c3859d66ce6431cfefe9ef63",
+        "language": "rust",
+        "manifest_digest": "sha256:47a43c3718d7adf590b2b40d65ff70a51b4b6b305e7ae8dd29aaf043afa5e95b",
+        "opportunities": {
+          "clippy": 2,
+          "iterator_trait_composition": 1,
+          "iterators_traits": 1,
+          "ownership_borrowing": 3,
+          "ownership_borrowing_api": 2,
+          "result_option": 1,
+          "result_option_modeling": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before owner confirmation",
+        "public_exposure_review": "Authorship, originality and public-exposure review performed by the authoring agent only: the task was not compared against external corpora and an LRU cache is a generic textbook structure, so contamination risk is unassessed until the owner confirms.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-lru-cache",
+        "task_package_digest": "sha256:571e85a1b767bdc7d193345647b788593ee1296e279af8bcae14a42d8041891f",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:684882f966fd902219164976e4e0d6a0d056166c84c244d37b4960bf86e06b96"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:abd6026f8cc424ffcc5da2c7c3bc762b155c6812a69a8f421c6b634085ff1695",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness",
+          "security"
+        ],
+        "cluster_id": "pilot-path-sandbox-cluster",
+        "hidden_bundle_digest": "sha256:8cd3faa74e930f2318f555692bab4a6e99f4363a85adb8fb430bf157bc551ee4",
+        "language": "rust",
+        "manifest_digest": "sha256:11a8a1ff619ed63c68dc5399db8b9a2fbb8facd9f6c52581dbd86a8a2cc6b6df",
+        "opportunities": {
+          "clippy": 2,
+          "iterator_trait_composition": 1,
+          "iterators_traits": 1,
+          "ownership_borrowing": 2,
+          "ownership_borrowing_api": 2,
+          "result_option": 3,
+          "result_option_modeling": 3
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "visible bundle only",
+        "public_exposure_review": "Not compared against external corpora or search engines. Path traversal is a generic vulnerability class; the exact API, error order and output format here were composed for this task and no claim of absence from public corpora is made.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-path-sandbox",
+        "task_package_digest": "sha256:4e2e1e9db8815b88253295f62f53f4f5485596f78125a04e52b437a9363ac59c",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:63427f31e02c4b0ff0ebca3fe1bf975f6902a899955f5f0b89df3959dd59a931"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:175df6c1393b4c191cd8b7dd44a13d3886d5d6345ed0b0bf55d9b188b2021973",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-pipeline-traits-cluster",
+        "hidden_bundle_digest": "sha256:2dac48811efa73c363664f7afd4720e923e6e5f1738acef5b2b6f30f627663c8",
+        "language": "rust",
+        "manifest_digest": "sha256:eb31ea735507f85ba390e811a9d0d98e8042115e049d164fb0f0ffe24036d917",
+        "opportunities": {
+          "clippy": 3,
+          "iterator_trait_composition": 2,
+          "iterators_traits": 3,
+          "ownership_borrowing": 2,
+          "ownership_borrowing_api": 1,
+          "result_option": 2,
+          "result_option_modeling": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before scoring",
+        "public_exposure_review": "Authorship, originality and public-exposure review: written from scratch for this pilot; not compared against external corpora; no public copy known.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-pipeline-traits",
+        "task_package_digest": "sha256:c28dfd557adc0296e233b68e473c0f107946e6832754df23c909c5fa3bd8ec53",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:9338de30eeb3db198cc4833c5b8d8ed771613aca0e65f487b5fbb0cb6bf3fa8b"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:87cb21eb7d0719c57990a41fdb10057b943d38fcb2f0341492cedfe46ef190d1",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-ring-buffer-unsafe-cluster",
+        "hidden_bundle_digest": "sha256:bd64ce9180e78b54d6a5ea289b4b699f62f6eeb33318b397c476a1be7da2e826",
+        "language": "rust",
+        "manifest_digest": "sha256:102f116401f307d058f074a86779a52d3b5987ff42bd7822678dc75855a45ed9",
+        "opportunities": {
+          "clippy": 2,
+          "ownership_borrowing": 2,
+          "ownership_borrowing_api": 1,
+          "unsafe_soundness": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before owner confirmation",
+        "public_exposure_review": "Authorship, originality and public-exposure review performed by the authoring agent only: the task was not compared against external corpora and a fixed-capacity ring buffer is a generic textbook structure, so contamination risk is unassessed until the owner confirms.",
+        "required_analyzers": [
+          "clippy",
+          "context",
+          "miri"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-ring-buffer-unsafe",
+        "task_package_digest": "sha256:fcb3f889a6a207361266619ab523315bdd06c84a7786de61282247e2e7d8a79e",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:fd0191830e5a113d9bbbe569825e8cd3151466d4e1064e696d7045db2385952c"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:12b2bfc22e549d1a8fbc5f4cdc6bf50e0a9d45a7d35f634a2461df686dd89c21",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-semver-ranges-cluster",
+        "hidden_bundle_digest": "sha256:4d301b6b7094401b2b5ef3b9c11ae16dd7bcbcd7baf5f2d93e64ed19cf145405",
+        "language": "rust",
+        "manifest_digest": "sha256:070c9f018edd5d39518be083fe473bf5b9ad99bbc813e28e3f65581565b12ff6",
+        "opportunities": {
+          "clippy": 3,
+          "iterator_trait_composition": 2,
+          "iterators_traits": 2,
+          "ownership_borrowing": 1,
+          "ownership_borrowing_api": 1,
+          "result_option": 3,
+          "result_option_modeling": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before scoring",
+        "public_exposure_review": "Authorship, originality and public-exposure review: written from scratch for this pilot; not compared against external corpora; no public copy known.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-semver-ranges",
+        "task_package_digest": "sha256:97c3d82fa530feaee93ab70cfa4aeda0e11bc7399ea55bad1cb1e5755f5ddafe",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:2966e381ae9a6b8a8d2476821c03d8108604cce365ce652f3d1b92be81959b64"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:72f85ec563f5f87888a4d63487df4be1780d72844ee1d3d40b0a62b3f030ae99",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-sliding-window-stats-cluster",
+        "hidden_bundle_digest": "sha256:b1410ef4e08f0c22363d52251171b70cbdc1925eec805d849ceeda1cab3e55a6",
+        "language": "rust",
+        "manifest_digest": "sha256:0cc603170babe7c97ebd00214b4a70869015e44a6cd38cbb6495c8d607d729c6",
+        "opportunities": {
+          "clippy": 3,
+          "iterator_trait_composition": 3,
+          "iterators_traits": 3,
+          "ownership_borrowing": 2,
+          "ownership_borrowing_api": 1,
+          "result_option": 3,
+          "result_option_modeling": 2
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before scoring",
+        "public_exposure_review": "Authorship, originality and public-exposure review: written from scratch for this pilot; not compared against external corpora; no public copy known.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-sliding-window-stats",
+        "task_package_digest": "sha256:c0d91b25494876e089c0fd0a4c6cf69c8d79aa2076411837fb68d6230d2cc43b",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 4,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:c867d6666dcefb0856a482a458da9b51114116e77de9337323c6619b33533ab0"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:b01040cc8af9a5293d72c1638d9980ac494a0b57577870aed9069b889fbb4a86",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-text-wrap-cluster",
+        "hidden_bundle_digest": "sha256:878407c2398be6e0b66cb126b8d67e24c392ae36e5ec87420ba33e0ebffe7594",
+        "language": "rust",
+        "manifest_digest": "sha256:1107812483a437cbaf098a1a37cc71f73c7e0a9e707469a9f991c86ad4bd78be",
+        "opportunities": {
+          "clippy": 3,
+          "iterator_trait_composition": 2,
+          "iterators_traits": 3,
+          "ownership_borrowing": 3,
+          "ownership_borrowing_api": 2,
+          "result_option": 1,
+          "result_option_modeling": 1
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before owner confirmation",
+        "public_exposure_review": "Authorship, originality and public-exposure review performed by the authoring agent only: the task was not compared against external corpora and greedy word wrapping is a common textbook exercise, so contamination risk is unassessed until the owner confirms.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-text-wrap",
+        "task_package_digest": "sha256:8409f428929972279e692ae9aa3e39d3bb86131a7b5c90097ef9499093ee4c21",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 3,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:ac4fafcf297809b27b280006206f2141ccf5e6d158e383323847eb4ec3f87320"
+      },
+      {
+        "admission": "executable_admission_passed",
+        "admission_execution_tier": "development_sandbox",
+        "admission_report_digest": "sha256:b346d60d7adfd97fbc4f3edf76ec106e736ba435cd8466cfdd5f6cfc5a8135c2",
+        "applicable_dimensions": [
+          "correctness",
+          "code_quality",
+          "idiomatic",
+          "robustness"
+        ],
+        "cluster_id": "pilot-token-bucket-cluster",
+        "hidden_bundle_digest": "sha256:f92014c7bfef00856f7822250690a7c9f0abf338f19603c0f4ec07313ce1c582",
+        "language": "rust",
+        "manifest_digest": "sha256:0908a990268ec093137098a6d7049c731e511d8e33ea238e05e085111dc0d84b",
+        "opportunities": {
+          "clippy": 3,
+          "result_option": 4,
+          "result_option_modeling": 3
+        },
+        "owner_confirmation": "pending",
+        "provider_transmission_policy": "never sent to a model provider before owner confirmation",
+        "public_exposure_review": "Authorship, originality and public-exposure review performed by the authoring agent only: the task was not compared against external corpora and a token bucket is a generic textbook structure, so contamination risk is unassessed until the owner confirms.",
+        "required_analyzers": [
+          "clippy",
+          "context"
+        ],
+        "rights_status": "authored_fixture",
+        "task_id": "pilot-token-bucket",
+        "task_package_digest": "sha256:00a9b957cbba962f9068f55a5332469dbfcd48a60eddddfdf4c035b899a19cf5",
+        "variant_counts": {
+          "alternative": 1,
+          "faulty": 5,
+          "quality_defective": 1,
+          "reference": 1,
+          "timeout": 1
+        },
+        "version": 1,
+        "visible_bundle_digest": "sha256:a70b1b4a8a9b254c48a90bb37bf5c57702b85f0bc9f1ef66e42ec5009a39ab73"
+      }
+    ]
+  }
+}

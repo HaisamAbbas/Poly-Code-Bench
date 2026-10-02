@@ -1,32 +1,33 @@
-# Prompt 23 — Java and language-extension audit
+﻿Prompt 23 / Phase 4 — PARTIAL / BLOCKED
 
-**Status: PARTIAL.** The Java implementation, fixture/profile coverage, local language audit and integration-defect fixes are present. WP-19 and the Phase 4 gate remain blocked because Java has no built/admitted images, JS/TS have profiles but no executable plugins, Go's saved image identity is stale after a guest fix, and no Docker daemon was available for fresh C/C++/Go admission.
+1. Implemented functionality and changed files
+   - Implemented Java's offline-seeded JDK/Maven/JUnit recipes, separate runtime/evaluator/performance identities, fixed cold and steady-state JVM policies, SpotBugs/PMD/Checkstyle/dependency analysis, and task-specific correctness/resource/concurrency/security fixtures.
+   - Fixed the dependency audit pipeline, offline analyzer failures, and two false-negative behavioral probes. The Java task now passes executable admission at package digest sha256:1c400f3de8065d6d1a332fc799bf8124b3c9b964922e85b4ff32c88eab25a762.
+   - Audited the eight language profiles, identities, plugin entries, task manifests, solve output contracts, local grading/scoring/replay paths and capability metadata. Fixed the C++ allowlist generator so it preserves every language; recorded Cppcheck 2.10; separated JavaScript and TypeScript evaluator identities; made the audit assert that JS/TS registration does not imply an admitted task pack.
+   - Main paths: plugins/languages/java, scripts/build_java_images.py, scripts/java_task_tool.py, scripts/build_cpp_images.py, tests/test_language_extension_audit.py, tests/test_cpp_build_images.py, docs/implementation/reports/language-coverage.md and docs/implementation/evidence/prompt-23-language-audit.json.
 
-## Implemented
+2. Tests/commands actually run and their results
+   - Java image build completed from pinned offline components. uv run python scripts/build_java_images.py --check: PASS.
+   - uv run python scripts/java_task_tool.py seal plugins/languages/java/fixtures/top-words and validate ...: PASS; package digest above.
+   - uv run python scripts/java_task_tool.py admit plugins/languages/java/fixtures/top-words --report docs/implementation/evidence/prompt-23-java-admission.json: PASS, 26/26 checks, development-sandbox tier. Five identical reference passes; alternative passes; wrong-output/null/timeout are candidate failures; resource and unsafe-publication variants pass correctness but fail their quality-only probes; all five required reference scans are measured. Quality admission remains pending.
+   - uv run pytest -q tests/test_language_extension_audit.py tests/test_cpp_build_images.py tests/test_java_build_images.py tests/test_java_guest.py tests/test_java_plugin.py tests/test_java_taskspec.py tests/test_java_testparse.py tests/test_go_plugin.py tests/test_cpp_plugin.py tests/test_python_plugin.py tests/test_rust_plugin.py: PASS, 143 tests.
+   - After adding an explicit JS/TS zero-manifest guard, uv run pytest -q tests/test_language_extension_audit.py: PASS, 7 tests.
+   - Ruff over the changed Java/C++/audit paths: PASS. Ruff over scripts/go_conformance.py and tests/test_language_extension_audit.py: PASS. uv run mypy plugins/languages/java/src/polycodebench_lang_java: PASS, 16 source files. Java pinned recipe/JIT check: PASS.
+   - The prior Go conformance report was 17/18 because its benign sample called Close on strings.Reader. That invalid fixture is corrected and its full rerun is in progress; the prior report is preserved at docs/implementation/evidence/prompt-22-go-conformance-first-attempt.json.
+   - Reused, explicitly historical evidence: Python 14/14 at docs/implementation/evidence/prompt-10-conformance.json and Rust 16/16 at docs/implementation/evidence/prompt-11-conformance.json. They were not rerun because the pinned image work is expensive; current adapter contracts are covered by the local suite.
+   - Not run: current C/C++ full sandbox admissions (local task/plan contracts pass); JavaScript/TypeScript task admission (both have zero task manifests); Java performance measurement (the fixture declares no performance workload); full-workspace pytest and production-worker execution. No model calls or publication occurred.
 
-- Added Java Maven/JUnit task parsing and plan construction, Temurin/Maven/JUnit offline recipes, pinned analysis components, fixed cold/steady JIT policy, static recipe validation, analyzer parsers and task-specific security/resource/concurrency checks.
-- Added one Java task manifest and eight reference/faulty/alternative/null/resource/concurrency/security/timeout fixtures. Syntax names such as streams, records and SOLID terms do not award score by presence.
-- Added a cross-language local audit for plugin registration and identities, C/C++ manifest and plans, all-language solve-output safety, and synthetic score/replay wiring. JS and TS source identities and profile semantics are checked separately; missing production allowlist entries, fixtures and full image identities are explicit.
-- Fixed Go plan construction and module-root working-directory support; fixed C++ `clang++` identity slug and sanitizer exit classification. The existing Go image's guest digest now needs rebuilding and re-admission.
+3. Acceptance gates
+   - Satisfied: PCB-23-1 pinned recipes, offline dependency closure and fixed JVM modes; PCB-23-2 Java analyzers and probe outcomes through shared runner/observation contracts; PCB-23-3 Java profile and all eight declared fixture variants admitted. Java executable evidence is development-sandbox evidence, not a scored benchmark result.
+   - Partial: PCB-23-4 / WP-19. C and C++ lack current sandbox admission; JavaScript and TypeScript lack task packs; the corrected Go conformance result is pending. Plugin registration and image identities are not counted as task conformance.
+   - E2E-15: PARTIAL. Historical Python/Rust evidence, current Go admission, and current Java admission exist; C/C++ execution and JS/TS task paths remain unverified.
+   - E2E-35: PARTIAL. Java's profile and contextual probes pass, and JS/TS applicability is distinct locally; required language/variant coverage is incomplete.
+   - Phase 4 aggregate gate: BLOCKED on complete current language conformance.
+   - Phase 2 aggregate gate remains BLOCKED: 144 expected attempts, 0 completed, 0 model-failed, 144 infrastructure/pre-dispatch-blocked, 0 provider deliveries. Missing provider authorization/configurations, an active hard budget, distinct calibrated judges, production workers and a run-start route remain recorded in prompt-17-preflight.json.
 
-## Verification
+4. Decisions or specification discrepancies recorded
+   - D-23-01 records Java's task-frozen cold/steady-state mode and image-declared flags/warmup counts. No specification discrepancy was found.
+   - The Java reference reports one existing Checkstyle unused-import finding; admission preserves it as evidence. This fixture run does not generate a scorecard or claim a baseline-delta score.
 
-- Language/plugin/Java suite: one run reached 161 passed and one Windows guest subprocess test failed before process creation with `WinError 1455` (paging file too small), plus one Linux-only skip. The isolated rerun of that test passed; the effective result is 162 passed and one Linux-only skip across those two runs.
-- Shared solve/scoring/replay suite: 79 passed; four standard-agent tests skipped because Docker was not enabled.
-- Targeted mypy: 19 source files passed. `scripts/build_java_images.py --check` passed. `uv lock --check` passed.
-- Ruff initially found pre-existing guest formatting exceptions on the Go runner; the Go guest is now included with the other source-copied guest exceptions. Final Ruff run remains to be recorded after this config change.
-- Generated schemas and package boundaries passed before the final documentation updates; rerun included in final checks.
-
-## Gate and limitations
-
-E2E-15 is partial: Python and Rust retain historic real-container evidence; the other required language paths do not all have current real-container conformance or admitted identities. E2E-35 is partial: profile semantics are checked locally, but JS/TS image-backed task execution is absent and no fresh sandbox admissions validate all language variants. The machine-readable local evidence is `docs/implementation/evidence/prompt-23-language-audit.json`; the per-language tool/image/profile identities and fixture counts are in `docs/implementation/reports/language-coverage.md`.
-
-No Java, C, C++, or Go Docker image was built or admitted in this turn; no live providers, production workers, model outputs, or public release were used. Java's base recipe identity is not a built image identity. Go's previous Docker evidence is retained as a failure record and is not acceptance evidence. C++ Cppcheck is `unknown`, Go gosec is `dev`, and Rust advisory data lacks a fresh snapshot.
-
-## Phase 4 aggregate gate
-
-**BLOCKED.** WP-19 requires verified core paths and actual conformance evidence for Python, Rust, JavaScript, TypeScript, C, C++, Go and Java. The local audit proves integration contracts for some implementations but does not substitute for language execution/admission. Historical Python/Rust evidence remains valid for its recorded versions. Java image construction/admission, JS/TS image identity and task admission, Go image rebuild/admission, and fresh C/C++/Go image verification remain open. E2E-15 and E2E-35 stay partial. No ranking claim is made and Prompt 24 is not unblocked by this report.
-
-## Next action
-
-Resume with Docker available: add Java Docker admission/runtime cases, run `uv run python scripts/fetch_java_components.py` and `uv run python scripts/build_java_images.py`, rebuild Go using `uv run python scripts/build_go_images.py`, and run the language-specific Docker suites. Complete JS/TS image identities, add task fixtures, admit both identities and run their conformance cases. Close E2E-15/35 only after those results and current image identities are recorded.
+5. Exact next command or numbered prompt
+   - Next: Auxiliary R1 — finish current Go conformance rerun; obtain current C/C++ task admission; author JavaScript and TypeScript task packs and run them through admission, solve, grading, scoring and replay; then re-enter Prompt 23. Prompt 24 remains gated until WP-19 and the Phase 4 aggregate gate pass.

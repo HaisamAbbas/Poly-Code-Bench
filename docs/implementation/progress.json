@@ -1,712 +1,712 @@
 {
-  "schema_version": 1,
-  "project": "PolyCodeBench",
-  "last_completed_prompt": "22",
-  "active_prompt": "23",
-  "active_scope": "Prompt 22 completed Go support. The decisive defect was environmental, not in the task code: the plans pointed GOCACHE/GOMODCACHE/GOPATH at /opt/pcb/cache inside the image, but the sandbox runs each guest with --read-only as an unprivileged uid that owns only /workspace and /tmp, so go build exited 2 with 'failed to initialize build cache ... read-only file system'. Exit 2 is a declared TOOL_ERRORS code, so the supervisor correctly classified it as a harness error and all six variants reported 'build:build harness error (tool_error)'. The asymmetry in the failed report is the proof: gofmt and context were measured because they need no build cache, while vet, staticcheck and gosec - which load packages through the cache - were all missing. Fixed by moving all four Go cache paths under the workspace tmpfs (GOTMPDIR included: /tmp is capped at 16 MiB and an ENOSPC there is indistinguishable from a candidate build error), and by having the guest runner create them because Go requires GOTMPDIR to exist. Three further defects fixed: the performance recipe's distinctness gate demanded a missing race detector that the pinned base always ships (now a declared per-recipe instrumentation contract with reciprocal release/instrumented guards, mirroring the C sanitizer arrangement); Go's hidden tests live in the package directory, which the shared admission engine hardcoded against (now an overlay_roots/overlay_suffixes plugin hint); and the Go image build did not refresh the allowlist, so a rebuild left every Go plan unrunnable. Images rebuilt, manifest resealed, allowlist verified against all five language identity files.",
-  "phase_status": {
-    "phase_0": "done",
-    "phase_1": "done",
-    "phase_2": "blocked",
-    "phase_3": "blocked",
-    "phase_4": "blocked",
-    "phase_5": "not_started",
-    "phase_6": "not_started",
-    "phase_7": "not_started",
-    "phase_8": "not_started"
-  },
-  "implementation_status": "prompt_22_go_complete; wp_19_go_part_done; phase_4_blocked_on_java_and_js_ts",
-  "verification_status": "Prompt 21 C++ local suite 128 passed (stable across three random-order runs); ruff clean on all changed sources; the 3 mypy errors in evaluator.py are pre-existing (verified by stashing); 46 suite-wide failures are pre-existing schema drift in tests/test_python_parsers.py and tests/test_rust_parsers.py caused by an external plugins-api edit, not by this prompt; E2E-15/35 partial for C++; no C++ image build or admission.",
-  "source_manifest": "docs/implementation/source-manifest.json",
-  "blockers_or_open_inputs": [
-    "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
-    "Human calibration evidence is absent: no qualified reviewer roster and no labels, so the T 15.3 gate (30 disjoint labelled packets per pilot language, >=80% exact anchor agreement, no unresolved systematic bias, 10% human audit) stays blocked and scoring stays inactive",
-    "Pilot candidate model configuration documents do not exist yet; judge/candidate distinctness is enforced against whatever a cohort declares and will be checked again when Prompt 17 registers them",
-    "A concurrent Prompt 13 session is active in this working tree: its in-flight plugin/contract edits fail 47 parser and policy tests and its untracked test_analyzer_contracts.py blocks whole-suite collection; the repository-wide boundary checker also fails on its new plugin members until that session completes",
-    "Pasted markdown(5).md absent; locate for complete original-source provenance",
-    "Production disposable VM/cloud execution and production-worker task admission are not configured or verified",
-    "Source/task rights and human calibration evidence remain required before benchmark data admission or scoring",
-    "Publication target and signing configuration are absent",
-    "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
-    "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
-    "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
-    "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
-    "E2E-04 production execution and E2E-27 public/cohort filter variants remain with Prompts 16-17; the generic evaluator-worker variant passed in Prompt 12 at development tier only",
-    "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
-    "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
-    "Production secret-store integration, operator-supplied price snapshots and context/capability declarations for real model configurations are deployment inputs",
-    "Live model behaviour under the solve protocols (provider tool-call conventions, real token usage, the two-model pilot) is unverified; fixture-model evidence only until Prompt 17",
-    "Rust dependency audit has no real advisory snapshot (building one needs a network fetch of the RustSec database, an owner action); the audit fails closed",
-    "Prompt 12 grading evidence is development-sandbox only: no production worker, no sealed hidden lane, no curator/owner rights confirmation, and the quality-plan profiles remain effective_for_scoring: false until calibration",
-    "Robustness scenarios currently run each scenario's test group with all-or-nothing credit; per-scenario partial credit, fuzz corpus/iteration budgets and judge residual items stay with Prompts 13-15",
-    "Prompt 17: owner rights confirmation, quality admission, curator freeze, hidden-lane registration and production-worker admission remain pending for all 24 pilot clusters",
-    "Prompt 17: two authorized real model identities/configurations, endpoint capabilities and price snapshots are absent",
-    "Prompt 17: active owner-authorized hard spend limit is absent; proposed budget is not effective for live calls",
-    "Prompt 17: common distinct judge endpoint/configuration and human calibration are absent; scoring remains inactive",
-    "Prompt 17: production database, object-store endpoint, worker image, supervisor identity and authorized production execution target are absent",
-    "Prompt 17: checkout has no operator run-start CLI or HTTP route; no executable dispatch command is available",
-    "Dedicated homogeneous performance hardware is not available: Prompt 13 measurements ran on shared CI (`hardware_gate: blocked_shared_ci`), which is valid regression evidence but cannot establish a production efficiency comparison or release a ranked efficiency claim",
-    "Per-iteration memory is the guest process peak RSS, valid for the in-process Python workload; a workload that forks children needs per-iteration cgroup peak, which requires a guest image change and re-digesting every sealed Python manifest (D-13-11)",
-    "No admitted task declares a Rust performance workload, so the Rust side of the performance lane is contract-complete but unexercised (E2E-19/20 stay not_run overall)",
-    "Prompt 15 scoring is verified only on synthetic fixtures at local_fixture tier: no production worker, no sealed hidden lane, no curator rights confirmation, and config/scoring/pilot-v1.yaml remains effective_for_scoring: false with calibration_status: pending",
-    "E2E-24 live-pilot replay and restored-environment replay remain with Prompt 17 and Prompt 33; only the clean-process archived-fixture replay variant is proven",
-    "The idiomatic and robustness residual-judge weight split (8000/2000) is a declared pilot parameter pending calibration (D-15-05)",
-    "Prompt 18: public disclosed-security examples remain blocked pending owner-approved rights/transmission scope, public advisory and immutable pre-fix/fix revisions, isolated reproducers and clean controls in both languages, and curator-reviewed hidden oracle/source exposure policy; see config/track-a-public-security-source-requirement.json",
-    "Prompt 23: Java JDK/Maven/JUnit images have only a pinned recipe; runtime/evaluator/performance image digests, Docker probes and task admission are absent.",
-    "Prompt 23: JavaScript/TypeScript source plugins and entrypoints exist with separate profiles, but neither has an allowlist entry, task manifest, or complete runtime/evaluator image identity.",
-    "Prompt 23: Go module-root runner fix changed guest source; saved Go image guest digest and prior admission do not represent the current guest and require rebuild/re-admission.",
-    "Prompt 23: fresh Docker image verification/admission for C, C++, Go and Java was unavailable; Docker daemon was not available.",
-    "Prompt 23 analyzer identity limitations: C++ Cppcheck is unknown, Go gosec reports dev, and a fresh RustSec advisory snapshot is absent."
-  ],
-  "evidence_summary": {
-    "requirements_registered": 14,
-    "work_packages_registered": 24,
-    "e2e_scenarios_registered": 43,
-    "prompts_registered": 35,
-    "pcb_tickets_registered": 142,
-    "application_tests_run": 607,
-    "prompt_12_evidence": [
-      "docs/implementation/evidence/prompt-12-eval-python.json",
-      "docs/implementation/evidence/prompt-12-eval-rust.json",
-      "docs/implementation/evidence/prompt-12-e2e-17-disallowed.json",
-      "docs/implementation/evidence/prompt-12-e2e-17-fake-success.json",
-      "docs/implementation/evidence/prompt-12-e2e-18.json",
-      "docs/implementation/evidence/prompt-12-python-conformance.json",
-      "docs/implementation/evidence/prompt-12-rust-conformance.json"
-    ],
-    "prompt_17_preflight": "docs/implementation/evidence/prompt-17-preflight.json",
-    "prompt_17_attempt_counts": {
-      "expected": 144,
-      "completed": 0,
-      "model_failed": 0,
-      "infrastructure_blocked_before_dispatch": 144,
-      "provider_deliveries": 0
-    },
-    "prompt_13_evidence": [
-      "docs/implementation/evidence/prompt-13-e2e-19-paired.json",
-      "docs/implementation/evidence/prompt-13-e2e-20-invalid-block.json",
-      "docs/implementation/evidence/prompt-13-wrong-but-fast.json"
-    ],
-    "prompt_15_evidence": [
-      "docs/implementation/evidence/prompt-15-scoring.json"
-    ],
-    "prompt_15_tests": 66,
-    "prompt_18_evidence": [
-      "docs/implementation/evidence/prompt-18-source-reproduction.json",
-      "docs/implementation/evidence/prompt-18-e2e-32.json",
-      "docs/implementation/evidence/prompt-18-e2e-33.json",
-      "docs/implementation/evidence/prompt-18-e2e-34.json",
-      "config/track-a-public-security-source-requirement.json"
-    ],
-    "prompt_14_evidence": [
-      "docs/implementation/evidence/prompt-14-integration.json",
-      "docs/implementation/evidence/prompt-14-e2e-21.json",
-      "docs/implementation/evidence/prompt-14-e2e-22.json",
-      "docs/implementation/evidence/prompt-14-calibration.json"
-    ],
-    "prompt_23_evidence": [
-      "docs/implementation/evidence/prompt-23-language-audit.json",
-      "docs/implementation/reports/prompt-23.md",
-      "docs/implementation/reports/language-coverage.md",
-      "docs/implementation/reports/phase-4.md"
-    ],
-    "prompt_23_tests": {
-      "language_suite": "161 passed; Windows subprocess test initially blocked by WinError 1455 paging-file exhaustion; isolated retry passed; 1 Linux-only guest test skipped",
-      "shared_solve_score_replay": "79 passed; 4 Docker-agent tests skipped",
-      "targeted_mypy": "19 files passed",
-      "java_recipe_check": "passed",
-      "dependency_lock_check": "passed"
-    }
-  },
-  "exact_next_action": "Next: Prompt 23 - Add Java and close language coverage.",
-  "prompt_statuses": {
-    "00": "done",
-    "01": "done",
-    "02": "done",
-    "03": "done",
-    "04": "done",
-    "05": "done",
-    "06": "partial",
-    "07": "partial",
-    "08": "partial",
-    "09": "done",
-    "10": "done",
-    "11": "done",
-    "12": "done",
-    "13": "partial",
-    "14": "partial",
-    "15": "done",
-    "16": "done",
-    "17": "blocked",
-    "18": "partial",
-    "19": "partial",
-    "20": "partial",
-    "21": "partial",
-    "22": "done",
-    "23": "partial",
-    "24": "not_started",
-    "25": "not_started",
-    "26": "not_started",
-    "27": "not_started",
-    "28": "not_started",
-    "29": "not_started",
-    "30": "not_started",
-    "31": "not_started",
-    "32": "not_started",
-    "33": "not_started",
-    "34": "not_started"
-  },
-  "last_resume_review": {
-    "date": "2026-09-30",
-    "active_prompt": "04",
-    "baseline_commit": "3253dfd6a858af88c4bd45bd51c63aef226aa9ef",
-    "working_tree_at_start": "Prompt 03 committed and pushed; Prompt 04 source, migration, dependency lock and tests modified in this turn; unrelated untracked Constitution/ preserved",
-    "source_hashes": "Architecture, Technical Spec and prompt pack match source-manifest.json; no normative source document changed",
-    "fresh_passes": [
-      "PostgreSQL 17.6 fresh migration, role provisioning/grants, repeat upgrade and Alembic drift check",
-      "SeaweedFS 4.48 local S3 integration: integrity rejection, visibility/role denials, deduplication, manifest, quota, resume, projection, retention hold and 30-day provisional/canonical orphan cleanup with active-finalizer protection; artifact tests repeated",
-      "Full workspace test suite: 21 passed",
-      "Ruff formatting/lint; mypy across 35 files; package boundaries and ten-package smoke checks",
-      "Startup and contract schema drift checks; locked offline synchronization; ten Python package sdist/wheel builds and persistence-wheel content inspection",
-      "Compose config validation, source/ledger consistency checks and git diff whitespace validation"
-    ],
-    "pending_or_unrun": [
-      "Hosted GitHub Actions not dispatched",
-      "Production S3 IAM/bucket policies, encryption/lifecycle and deployed role denial unavailable without a production target/principals",
-      "Full E2E-26 public API/page/download/export variants remain with later public product prompts",
-      "Short-lived stage upload permissions and lease/fence checks await Prompt 07"
-    ],
-    "no_paid_or_remote_product_actions": true,
-    "unrelated_untracked_preserved": [
-      "Constitution/production_quality_software_engineering_prompt-3.md"
-    ]
-  },
-  "resume_history": [
-    {
-      "date": "2026-09-30",
-      "baseline_commit": "08a0edd4b674e8da62f6a6f5e65cdd53db1a086b",
-      "working_tree_at_start": "clean",
-      "source_hashes": "unchanged; consistency checker passed",
-      "fresh_passes": [
-        "Ruff format",
-        "Ruff lint",
-        "pytest (3 tests)",
-        "schema consistency",
-        "imports",
-        "dependency boundaries",
-        "Compose syntax"
-      ],
-      "external_blockers": [
-        "PyPI/npm registry proxy refusal",
-        "Docker Desktop Linux engine unavailable"
-      ],
-      "no_paid_or_remote_product_actions": true
-    },
-    {
-      "date": "2026-09-30",
-      "active_prompt": "01",
-      "baseline_commit": "08a0edd4b674e8da62f6a6f5e65cdd53db1a086b",
-      "working_tree_at_start": "dirty with 15 prior-resume changes; reviewed and preserved",
-      "source_hashes": "unchanged; docs/implementation/verify_prompt00.py passed",
-      "fresh_passes": [
-        "uv sync --locked --all-packages --group dev",
-        "pnpm install --frozen-lockfile (343 packages; supply-chain policy pass)",
-        "uv build --all-packages (10 package sdists and wheels)",
-        "Ruff format and lint",
-        "mypy",
-        "pytest (3 passed)",
-        "package boundaries/import/config/schema checks",
-        "web typecheck",
-        "web lint",
-        "Next production build",
-        "Compose config and healthy local services",
-        "PostgreSQL pg_isready",
-        "pinned image index/content digests",
-        "ledger/source consistency",
-        "git diff --check"
-      ],
-      "lockfiles": {
-        "uv.lock": "generated and frozen sync passed",
-        "pnpm-lock.yaml": "generated and frozen install passed"
-      },
-      "images": {
-        "postgres": "postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
-        "seaweedfs": "chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
-        "signature_provenance": "not independently verified; development-only approval"
-      },
-      "no_paid_or_remote_product_actions": true
-    },
-    {
-      "date": "2026-09-30",
-      "active_prompt": "02",
-      "baseline_commit": "b682e7ed3442849b70149f9839f1fa936e6b25c9",
-      "working_tree_at_start": "Prompt 01 committed and pushed; Prompt 02 changes made in this turn; unrelated untracked Constitution/ observed and preserved",
-      "source_hashes": "Architecture, Technical Spec and prompt pack match source-manifest.json; source consistency checker passed",
-      "fresh_passes": [
-        "Python contract tests: 11 passed",
-        "Ruff format and lint; mypy for core and scripts",
-        "Python and TypeScript shared canonical golden/invalid fixture checks",
-        "TypeScript contracts typecheck, build and 256 deterministic property cases",
-        "generated JSON Schema/OpenAPI/TypeScript drift check (15 outputs)",
-        "package dependency boundary check",
-        "offline builds: source and wheel for all 10 Python packages",
-        "ledger/source consistency, JSON parsing and git diff --check"
-      ],
-      "no_paid_or_remote_product_actions": true,
-      "unrelated_untracked_preserved": [
-        "Constitution/production_quality_software_engineering_prompt-3.md"
-      ]
-    },
-    {
-      "date": "2026-09-30",
-      "active_prompt": "03",
-      "baseline_commit": "c66455eaf04aaf4e02a9e19aa83c45e358d3b7a8",
-      "working_tree_at_start": "Prompt 02 committed; preserved unrelated untracked Constitution/production_quality_software_engineering_prompt-3.md",
-      "source_hashes": "Architecture, Technical Spec and prompt pack remain identical to source-manifest.json; no normative source document changed",
-      "fresh_passes": [
-        "PostgreSQL 18.4 UTF-8 fresh database migration and role grant setup",
-        "Second Alembic upgrade idempotence and alembic check: no schema drift",
-        "Four PostgreSQL integration tests: concurrent idempotency replay, changed-payload conflict, atomic rollback, immutable rows, RLS/grants, RBAC, identity audit and optimistic version checks",
-        "Ruff format/lint; mypy across 29 files; 18 full workspace tests; package boundaries; workspace startup and generated schema checks",
-        "Source and wheel builds for all ten packages; packaged migration presence verified in persistence wheel",
-        "Prompt 00 consistency checker: 14 REQ, 24 WP, 43 E2E, 35 prompts and 142 tickets with owners/evidence; progress JSON and git diff checks"
-      ],
-      "pending_or_unrun": [
-        "Hosted CI against pinned PostgreSQL 17.6 not dispatched",
-        "HTTP/API permission route variants do not exist; full E2E-02 and E2E-25 remain partial",
-        "Managed deployment login credentials and provider endpoints are external deployment inputs"
-      ],
-      "no_paid_or_remote_product_actions": true,
-      "unrelated_untracked_preserved": [
-        "Constitution/production_quality_software_engineering_prompt-3.md"
-      ]
-    },
-    {
-      "date": "2026-10-02",
-      "active_prompt": "12",
-      "baseline_commit": "3c8ea4f",
-      "working_tree_at_start": "clean apart from Prompt 12 work; unrelated untracked files preserved",
-      "source_hashes": "Architecture, Technical Spec and prompt pack unchanged from source-manifest.json",
-      "fresh_passes": [
-        "tests/test_evaluator.py offline normalization tests",
-        "PCB_TEST_DOCKER=1 tests/test_evaluator_docker.py (4 real-sandbox evaluations)",
-        "scripts/python_conformance.py 14/14 and scripts/rust_conformance.py 16/16 in the pinned images",
-        "full pytest suite, ruff check/format, mypy on the touched packages"
-      ],
-      "pending_or_unrun": [
-        "production worker tier, hidden-lane sealing and registry publication",
-        "performance, judge, scoring and release prompts"
-      ],
-      "no_paid_or_remote_product_actions": true
-    }
-  ],
-  "prompt_05_completion": {
-    "date": "2026-09-30",
-    "status": "done",
-    "phase_1_foundation_gate": "pass_owner_approved",
-    "fixture_evidence": "docs/implementation/evidence/prompt-05-authored-fixture-admission-v3.json",
-    "fixture_report_digest": "sha256:2c3e44a86daad9c6e37e17c63831e2622f514b9a64cc7484fcc760fb2a4cbe64",
-    "verification": [
-      "Actual local Docker fixture validation: five stable references, intended faulty mismatch, alternative pass",
-      "Full review-fix suite: 56 passed, no skips, with PostgreSQL, SeaweedFS and real Docker timeout regression enabled",
-      "Seven database admission checks and seven fixture runner/CLI checks passed; all seven confirmed review defects resolved",
-      "Admission-evidence migration applied; Alembic drift check passed; 21 generated schema outputs checked",
-      "Pilot contract validation, package boundary, startup/smoke checks, Ruff and mypy on 45 source files passed",
-      "Generated TypeScript typecheck/build and shared contract tests passed locally on Node 22.23.2; pinned Node 24 hosted CI not run",
-      "CLI snapshot replay, bundle artifact ID equality, draft integrity and complete package identity enforced; production admission fails closed until trusted authority exists",
-      "TaskOutputContract added and bound to task digest; generated contract outputs increased to 21; fixture execution repeated against updated package"
-    ],
-    "pending": [
-      "Production VM isolation and production-worker admission",
-      "Language/evaluation task variants in Prompts 10-12/17",
-      "Human calibration/owner scoring approval and external task rights",
-      "Full E2E-04 and E2E-27 remain not_run overall",
-      "Scoring policy remains inactive pending human/judge calibration; no live spend authorization"
-    ],
-    "no_paid_or_remote_product_actions": true,
-    "owner_approval": {
-      "policy_id": "polycodebench-code-pilot-v1",
-      "decision": "approved_as_written",
-      "scope": "freeze_as_pilot_baseline_only",
-      "approved_on": "2026-09-30",
-      "scoring_active": false,
-      "evidence": "docs/implementation/decisions.md D-05-04"
-    }
-  },
-  "prompt_06_cloud_gate": {
-    "status": "deferred_by_owner",
-    "reason": "User reports cloud access is unavailable for now.",
-    "production_e2e": [
-      "E2E-05",
-      "E2E-06"
-    ],
-    "resume_when": "Authorized AWS target, supervisor identity, reviewed AMI/image manifest, private network, explicit budget, Terraform and AWS CLI are available.",
-    "no_cloud_actions_taken": true
-  },
-  "prompt_06_completion": {
-    "date": "2026-09-30",
-    "status": "partial",
-    "evidence": "docs/implementation/evidence/prompt-06-local-docker.json",
-    "implementation": "Typed lifecycle contracts, local Docker driver, EC2 VM driver/control protocol, guest bootstrap, Terraform deployment plan, policies, cleanup and attestation implemented.",
-    "local_verification": [
-      "Opt-in live Docker containment: 1 passed in 9.19s; verified idempotent stage, network/metadata denial, no socket, path/symlink handling, PID/memory/disk/time limits, cancellation, orphan GC and destroy.",
-      "Full workspace pytest: 49 passed, 19 skipped; database and opt-in cases skipped only as reported by pytest.",
-      "Sandbox test module: 11 passed, 1 opt-in skip; epoch-zero expiry and sandbox policy drift checks passed.",
-      "Ruff format/lint; both mypy jobs; package-boundary, startup, contract-schema and task-contract checks passed.",
-      "Offline source/wheel builds passed for all 10 Python packages; git diff --check passed."
-    ],
-    "pending": [
-      "Terraform validate/plan unavailable because Terraform CLI is absent.",
-      "Production EC2 E2E-05/06 and destruction/attestation evidence require authorized AWS target, supervisor principal, approved AMI and explicit budget.",
-      "Hosted CI was not dispatched; PostgreSQL integration cases skipped because PCB_TEST_DATABASE_URL is not configured."
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_07_completion": {
-    "date": "2026-09-30",
-    "status": "partial",
-    "evidence": "docs/implementation/evidence/prompt-07-integration.json",
-    "implementation": "Strict stage DAG and branch semantics, replay-safe transactional creation, PostgreSQL SKIP LOCKED claims, database-timed 120-second leases, 30-second heartbeats with one-second revocation polling, fences/execution records, capacity slots, fairness limits, bounded retries/reaper, append-only events, cancellation, worker lifecycle and operator CLI.",
-    "passed": [
-      "Independent review fixed concurrent fairness, DAG failure/branch handling, replay/event integrity, fenced provisioning cleanup, worker supervision, cancellation races and evaluation failure classification",
-      "Isolated Prompt 06/07 full suite: 124 passed, no skips, with PostgreSQL, SeaweedFS and local Docker enabled; concurrent Prompt 08 excluded",
-      "Broad mypy: 56 source files; separate sandbox/lifecycle check: six files; Ruff 107 files; fresh/incremental migration, drift, ten-package source/wheel builds, compilation, schemas and ledgers passed",
-      "E2E-07: two competing PostgreSQL workers, lease expiry/reaping, higher-fence reclaim, stale completion rejected, same-output replay and changed-output conflict",
-      "E2E-08: worker crash after verified artifact upload, second-worker digest reuse, one committed result, lost-ack replay and referenced-artifact retention under garbage collection",
-      "Stage DAG gate-pass/gate-fail routing, wrong-answer execution distinct from infrastructure failure, idempotent DAG replay and accepted versus unrelated scheduler skip reasons",
-      "Three bounded infrastructure deliveries, failure-class records, campaign/provider concurrency caps, slot drain/resume and scheduler database grants",
-      "E2E-09 development subcase: actual local Docker tool execution cancelled after dispatch; completed checkpoint retained, no next dispatch, guest destruction confirmed before slot reuse, canceled attempt not classified as model failure"
-    ],
-    "pending": [
-      "E2E-09 full model-call usage-retention and ranked-release exclusion variants await durable model gateway/accounting in Prompt 08/17",
-      "Production VM lifecycle evidence remains deferred under prompt_06_cloud_gate; local Docker is not production isolation evidence",
-      "Hosted CI was not dispatched"
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_07_resume_review": {
-    "date": "2026-09-30",
-    "active_prompt": "07",
-    "baseline_commit": "3c0c681d25caf5763aea5c4000aa31533a7f81d2",
-    "working_tree_at_start": "Prompt 06 implementation/ledger changes and unrelated untracked Constitution/ preserved; no reset or checkout performed",
-    "source_hashes": "Architecture, Technical Spec and prompt pack remain unchanged from source-manifest.json; T \u00a7\u00a75,7,8.3,9.3 and A \u00a75 reviewed",
-    "fresh_passes": [
-      "PostgreSQL migrations to 7b8cc92d13ea and Alembic schema drift check",
-      "Prompt 07 E2E-07/08/09 and scheduler integration tests against PostgreSQL 17.6, SeaweedFS 4.48 and real local Docker Linux engine",
-      "Full locked workspace pytest suite: 75 passed in 24.35s; Ruff, mypy, package boundaries, workspace smoke/import and Python package builds",
-      "Operator CLI help and live reaper invocation against the isolated test database",
-      "Prompt 00 ledger/source consistency check and Git diff whitespace check"
-    ],
-    "pending_or_unrun": [
-      "E2E-09 model provider call/usage retention waits for Prompt 08/17; the development fixture fabricated no model usage",
-      "Prompt 06 production EC2 E2E-05/06 remains deferred by the owner; no cloud actions were taken",
-      "Hosted CI was not dispatched"
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "latest_done_prompt": "16",
-  "prompt_08": {
-    "date": "2026-09-30",
-    "migration": "9d3a71c05e24",
-    "tests": {
-      "unit_and_local_socket": 73,
-      "provider_shaped_fixtures": 8,
-      "postgres_seaweedfs_fixture_transport": 27,
-      "review_regressions": 18,
-      "live_local_adapter": 1,
-      "live_untested_adapters": [
-        "openai_compatible",
-        "anthropic",
-        "google"
-      ],
-      "full_suite": "247 passed, 7 skipped"
-    },
-    "evidence": [
-      "docs/implementation/evidence/prompt-08-integration.json",
-      "docs/implementation/evidence/prompt-08-live-smoke-local.json"
-    ],
-    "review": "independent adversarial review: 12 findings fixed; see D-08-09",
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_09": {
-    "date": "2026-10-01",
-    "migration": "b2f6d4a91c73",
-    "tests": {
-      "core": 70,
-      "helper": 29,
-      "docker": 12,
-      "sessions": 22,
-      "families": 4,
-      "loader": 4
-    },
-    "evidence": [
-      "docs/implementation/evidence/prompt-09-integration.json"
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_10": {
-    "date": "2026-10-01",
-    "images": {
-      "runtime": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
-      "evaluator": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99"
-    },
-    "tests": {
-      "full_suite": "346 passed, 136 skipped",
-      "mypy_strict_new_modules": "26 files, no issues",
-      "python_conformance_cases": "14/14",
-      "executable_admission": "12/12 clusters"
-    },
-    "fixes_applied": [
-      "manual-counter detector missed the len() counting-loop idiom (D-10-03)",
-      "string-concat-in-loop detector missed str()/concat RHS (D-10-03)",
-      "tool cache directories sealed into archive-path-guard hidden bundle (D-10-04)",
-      "ledger-stream defective variant lacked its declared index-loop family (D-10-05)",
-      "rate-limiter defective variant declared a mutable default it never mutated (D-10-05)"
-    ],
-    "quality_admission": "pending: Prompts 12-15, production execution tier, curator approval and freeze, owner rights confirmation",
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_11": {
-    "date": "2026-10-02",
-    "images": {
-      "runtime": "sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69",
-      "evaluator": "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
-      "performance": "sha256:de4293082733f48aa17c59aad10041893efb086eb5e4e2ef9a2470795775b322"
-    },
-    "tests": {
-      "rust_offline": "93 passed (plugin 21, parsers 25, guest 12, profile 22, locks 8, inventory 5)",
-      "rust_live_docker": "3 passed",
-      "prior_suites_rerun": "185 passed, 7 skipped (python plugin/parsers/guest, plan runner, suite admission, sandbox)",
-      "conformance_cases": "16/16",
-      "executable_admission": "12/12 clusters"
-    },
-    "fixes_applied": [
-      "Rust images had no Python but the sandbox provider drives guests with it (D-11-10)",
-      "workspace tmpfs noexec blocked compiled test binaries; executable_workspace added, default off (D-11-11)",
-      "Miri rebuilt its sysroot at run time in a read-only sandbox; baked sysroot used via MIRI_SYSROOT (D-11-12)",
-      "garbled Miri output with exit 0 was read as clean (D-11-14)",
-      "observations.slug turned dots into hyphens so rule mappings never matched (PCB-11-3)",
-      "case discovery and symbol sanitiser treated // inside string literals as comments (PCB-11-4)"
-    ],
-    "quality_admission": "pending: Prompts 12-15, production execution tier, curator approval and freeze, owner rights confirmation",
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_12_completion": {
-    "date": "2026-10-02",
-    "status": "done",
-    "implementation": "Independent grading graph (`packages/evaluation/src/polycodebench_evaluation/evaluator.py`), normalized evidence contract (`evidence.py`), planned-input staging through the existing `PlanRunner` in a dedicated grading lane, offline normalization tests (`tests/test_evaluator.py`) and real-sandbox acceptance tests (`tests/test_evaluator_docker.py`).",
-    "tickets": {
-      "PCB-12-1": "passed",
-      "PCB-12-2": "passed",
-      "PCB-12-3": "passed",
-      "PCB-12-4": "passed"
-    },
-    "tests": {
-      "offline_units": "4 passed (tests/test_evaluator.py)",
-      "live_docker_evaluator": "4 passed in 118s (tests/test_evaluator_docker.py)",
-      "full_suite_after_changes": "445 passed, 143 skipped",
-      "python_conformance": "14/14 passed, digest sha256:ab2abace...",
-      "rust_conformance": "16/16 passed across all 7 categories"
-    },
-    "evidence": [
-      "docs/implementation/evidence/prompt-12-eval-python.json",
-      "docs/implementation/evidence/prompt-12-eval-rust.json",
-      "docs/implementation/evidence/prompt-12-e2e-17-disallowed.json",
-      "docs/implementation/evidence/prompt-12-e2e-17-fake-success.json",
-      "docs/implementation/evidence/prompt-12-e2e-18.json",
-      "docs/implementation/evidence/prompt-12-python-conformance.json",
-      "docs/implementation/evidence/prompt-12-rust-conformance.json"
-    ],
-    "defect_found_and_fixed": "D-12-08: the first implementation grouped already-normalized observations, so a duplicate report lost the second tool's identity and looked like a single-tool finding; grouping now keeps every reporting tool while the normalized entry stays the primary.",
-    "pending": [
-      "Production-worker execution tier (Prompt 06 owner-deferred)",
-      "Performance measurement (Prompt 13), judge anchors and calibration (Prompt 14), pure scoring and replay (Prompt 15)",
-      "Frozen task-set quality admission, curator approval and owner rights confirmation",
-      "E2E-17/18 variants for the remaining languages and Track A/B families (Prompts 18-28)"
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_16_completion": {
-    "date": "2026-10-02",
-    "status": "done",
-    "report": "docs/implementation/reports/prompt-16.md",
-    "implementation": "Fixed-cohort aggregation, reproducible clustered uncertainty, internal reporting/replay, and reviewed local immutable release publication with allowlisted signed projections.",
-    "tests": "23 passed: tests/test_publication_aggregation.py, tests/test_publication_reporting.py, tests/test_publication_releases.py, tests/test_releases.py, tests/test_uncertainty.py",
-    "checks": [
-      "Ruff format/check passed",
-      "Mypy passed for 5 publication source files with workspace MYPYPATH",
-      "9 generated schemas current",
-      "package dependency boundaries passed",
-      "release CLI help passed",
-      "CLI permission errors return the documented permission exit code"
-    ],
-    "e2e_subcases": {
-      "E2E-28": "prompt-16 synthetic local subcases passed; full E2E remains pending public API",
-      "E2E-29": "prompt-16 fixed-seed/cluster/paired synthetic subcases passed",
-      "E2E-30": "prompt-16 SQLite approval/CAS/correction/signature/projection subcases passed; production target pending"
-    },
-    "publication": "No external publication; no real benchmark result claimed.",
-    "next": "Prompt 17 ? Run and verify the real Python/Rust pilot."
-  },
-  "prompt_17_preflight": {
-    "date": "2026-10-02",
-    "status": "blocked",
-    "report": "docs/implementation/reports/prompt-17.md",
-    "plan": "docs/implementation/plans/prompt-17-run-plan.json",
-    "attempt_counts": {
-      "expected": 144,
-      "completed": 0,
-      "model_failed": 0,
-      "infrastructure_blocked_before_dispatch": 144,
-      "provider_deliveries": 0
-    },
-    "no_live_provider_cloud_or_publication_actions": true
-  },
-  "prompt_13_completion": {
-    "date": "2026-10-02",
-    "status": "done",
-    "implementation": "Reserved-guest paired measurement (`PlanRunner.reserved_guest`, `ExclusiveGuestReservation`), plan/speed-lane/hardware/reference validation, canary-bounded blocks with first-valid selection, per-iteration retention, compile time reported separately, and the pure efficiency transform (`efficiency.py`) with golden checks; contracts in `perfcontracts.py`.",
-    "tickets": {
-      "PCB-13-1": "passed (development tier; dedicated hardware gate blocked)",
-      "PCB-13-2": "passed",
-      "PCB-13-3": "passed",
-      "PCB-13-4": "passed"
-    },
-    "tests": {
-      "offline_units": "16 passed (tests/test_efficiency.py 9, tests/test_performance_plan.py 7)",
-      "live_docker": "4 passed in 620s (tests/test_performance_docker.py)",
-      "recorded_result": "candidate identical to reference: efficiency 100.000000 over 3 weighted scales",
-      "invalid_block": "frozen baseline of 1 ns invalidates both blocks; no selected block, no score",
-      "wrong_but_fast": "recorded as rejected_output; invalid_iterations; no efficiency score"
-    },
-    "evidence": [
-      "docs/implementation/evidence/prompt-13-e2e-19-paired.json",
-      "docs/implementation/evidence/prompt-13-e2e-20-invalid-block.json",
-      "docs/implementation/evidence/prompt-13-wrong-but-fast.json"
-    ],
-    "defects_found_and_fixed": [
-      "D-13: the speed-lane denylist scanned environment values but not keys, so COVERAGE=1 entered the speed lane; keys are now scanned with bare stems",
-      "D-13: the canary ran at the smallest scale (~20 ms), where its own relative MAD (0.34) invalidated every block for the wrong reason; it now runs at the largest declared scale",
-      "D-13: invalidated blocks' iterations were discarded, hiding the rejected-but-fast candidate; all blocks are now retained and only the selected block is aggregated",
-      "D-13: block_index was not propagated to workload iterations, so retained records could not be attributed to their block",
-      "D-13: the scale-growth diagnostic was lane-wide and duplicated on every workload row"
-    ],
-    "workspace_collision": "A concurrent session was implementing Prompts 14 and 16 in the same working tree during this prompt and had written Prompt 16 text into the PCB-13-* ticket entries; those four entries were restored to their correct Prompt 13 content. Shared files (evidence.py, plan_runner.py) were read for compatibility, never rewritten to suit one side: this prompt's modules avoid symbols the other session was changing.",
-    "pending": [
-      "Dedicated/homogeneous hardware for a production efficiency comparison (blocked gate)",
-      "Rust performance lane execution (no admitted task declares a workload)",
-      "Per-iteration whole-process-tree cgroup peak (needs a guest image change)",
-      "Judge anchors and human calibration (Prompt 14), pure scoring and replay (Prompt 15)"
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "independent_prompt_authorization": {
-    "active_prompt": "23",
-    "authorized_by_user": true,
-    "blocked_prompts": [
-      "17"
-    ],
-    "note": "Prompt 17 remains blocked with its original attempt accounting and its gate is NOT waived. Prompt 23 was explicitly requested first; Prompt 21 (C++) was subsequently explicitly requested and implemented independently to close the C++ language-extension defects, without touching or claiming the Prompt 17 pilot prerequisite. Prompt 21's own status is partial: its code defects are closed and locally verified, but no C++ image was built or admitted, so its E2E-15/35 variants are unrun. prompt_statuses['21'] = partial."
-  },
-  "prompt_18_completion": {
-    "date": "2026-10-02",
-    "implementation_scope": "done_independently",
-    "phase_3_aggregate_gate": "blocked",
-    "blocked_prerequisite": "accepted Prompt 17 real pilot; Phase 2 remains blocked",
-    "report": "docs/implementation/reports/prompt-18.md",
-    "gap_map": "docs/implementation/prompt-18-gap-map.md",
-    "tickets": {
-      "PCB-18-1": "passed for authored-internal source/reproduction scope; public disclosed-security source requirement explicitly blocked",
-      "PCB-18-2": "passed, synthetic-internal finding/matching acceptance",
-      "PCB-18-3": "passed, synthetic-internal reviewer/oracle revision/rematch acceptance; no human review claimed",
-      "PCB-18-4": "passed, authored internal development-sandbox independent evaluator acceptance"
-    },
-    "tests": {
-      "track_a_units_and_release_draft_integration": "15 passed",
-      "docker_source_reproduction_and_evaluator": "2 passed; combined prior run reported 13 tests passed before an unrelated CLI-only unit test was added",
-      "publication_release_regressions": "26 passed",
-      "mypy": "evaluation Track A 2 files and publication Track A/release CLI/store 3 files passed"
-    },
-    "no_live_provider_human_calibration_production_or_publication_actions": true,
-    "attempt_accounting": "model-failed attempts are explicit zero-credit samples; missing attempts reduce coverage and keep the headline unavailable"
-  },
-  "prompt_14_completion": {
-    "date": "2026-10-02",
-    "status": "partial",
-    "tickets": {
-      "PCB-14-1": "passed",
-      "PCB-14-2": "passed",
-      "PCB-14-3": "passed",
-      "PCB-14-4": "blocked_external_inputs"
-    },
-    "migration": "b9e04c7a1f38",
-    "tests": {
-      "offline_contracts": 56,
-      "postgres_object_store_gateway": 10,
-      "cli_surface": 10,
-      "evaluation_handoff": 7,
-      "total": 83
-    },
-    "e2e": {
-      "E2E-21": "passed",
-      "E2E-22": "passed"
-    },
-    "blocked_external_inputs": [
-      "approved judge endpoint, credentials and model configuration",
-      "qualified human reviewer roster and calibration labels"
-    ],
-    "no_paid_or_remote_product_actions": true,
-    "independent_review": {
-      "reviewer": "independent adversarial subagent, no files modified",
-      "findings": 9,
-      "fixed": 9,
-      "regression_tests_added": 11,
-      "residual_limitation": "candidate text is escaped before it reaches the prompt, so packet structure cannot be forged; semantic prompt injection inside a comment remains possible in principle and is exposed by the untrusted_comment_only trigger rather than prevented",
-      "recorded_in": "docs/implementation/decisions.md (R-01 to R-09)"
-    }
-  },
-  "prompt_14_resume_review": {
-    "date": "2026-10-02",
-    "active_prompt": "14",
-    "baseline_commit": "023416b",
-    "working_tree_at_start": "Prompt 13 work in progress in the shared tree (200 modified files plus untracked performance modules and tests); preserved, not reverted",
-    "source_hashes": "Architecture, Technical Spec and prompt pack unchanged from source-manifest.json",
-    "fresh_passes": [
-      "empty-database migration through b9e04c7a1f38 and Alembic drift check",
-      "71 Prompt 14 tests: 45 offline contract/adversarial, 10 PostgreSQL+SeaweedFS+gateway, 9 CLI, 7 evaluation-handoff",
-      "E2E-21 three-vote mean 0.833333 with three distinct recorded seeds and no judge tools",
-      "E2E-22 six retained deliveries, infra_blocked readiness, untrusted_comment_only trigger",
-      "blocked calibration report with named missing inputs",
-      "ruff and strict mypy clean on all Prompt 14 files; judge package boundaries verified",
-      "independent adversarial review of the new judge modules: 9 findings (5 blockers, 4 majors) fixed with 11 regression tests"
-    ],
-    "pending_or_unrun": [
-      "live judge model evaluation and hosted CI",
-      "human calibration labels, agreement/confusion metrics and the 10% human audit",
-      "whole-suite collection while the concurrent Prompt 13 session is inconsistent",
-      "reviewer re-check of the nine fixes by a second independent pass"
-    ],
-    "no_paid_or_remote_product_actions": true
-  },
-  "prompt_23_completion": {
-    "date": "2026-10-02",
-    "status": "partial",
-    "report": "docs/implementation/reports/prompt-23.md",
-    "language_coverage": "docs/implementation/reports/language-coverage.md",
-    "phase_4_report": "docs/implementation/reports/phase-4.md",
-    "evidence": "docs/implementation/evidence/prompt-23-language-audit.json",
-    "tickets": {
-      "PCB-23-1": "partial: pinned recipes and static policy validation pass; Java image build/admission blocked",
-      "PCB-23-2": "partial: analyzer plans and shared output contracts implemented; runtime probes unverified",
-      "PCB-23-3": "partial: profiles and eight fixture variants locally verified; Java image admission blocked",
-      "PCB-23-4": "partial: local audit and integration fixes; JS/TS source plugins exist but lack production image/task admission, and fresh Docker evidence is incomplete"
-    },
-    "e2e": {
-      "E2E-15": "partial",
-      "E2E-35": "partial"
-    },
-    "phase_4_aggregate_gate": "blocked",
-    "docker_builds_or_admissions_this_turn": false,
-    "no_live_provider_human_calibration_or_publication_actions": true
-  }
+    "schema_version":  1,
+    "project":  "PolyCodeBench",
+    "last_completed_prompt":  "22",
+    "active_prompt":  "23",
+    "active_scope":  "Prompt 22 completed Go support. Six defects blocked a Go task from ever executing, and the first was environmental: the plans pointed GOCACHE/GOMODCACHE/GOPATH at /opt/pcb/cache inside the image while the sandbox runs each guest --read-only as an unprivileged uid, so go build exited 2 with \u0027failed to initialize build cache ... read-only file system\u0027. Exit 2 is a declared tool-error code, so the supervisor correctly called it a harness error and all six variants reported build:build harness error (tool_error); the asymmetry in the failed report is the proof, since gofmt and context need no build cache while vet, staticcheck and gosec load packages through it. All four Go cache paths (including GOTMPDIR, since /tmp is capped at 16 MiB and an ENOSPC there mimics a candidate build error) now live in the workspace tmpfs, and the guest runner creates them. Then: the performance recipe\u0027s distinctness gate demanded a missing race detector the pinned base always ships, so instrumentation became a declared per-recipe contract with reciprocal release/instrumented guards mirroring the C sanitizer arrangement; staticcheck and gosec each reported \u0027missing\u0027 on a correct candidate because an empty report was treated as an absent one, which is the inversion PCB-22-2 forbids; Go\u0027s hidden tests live in the package directory so the shared admission engine needed an overlay_roots hint; the Go image build did not refresh the allowlist, unlike every other language; the stress oracle asserted a tie-break that contradicted its own contract; and the race fixture declared a data-race expectation on a task that deliberately disables the race detector.",
+    "phase_status":  {
+                         "phase_0":  "done",
+                         "phase_1":  "done",
+                         "phase_2":  "blocked",
+                         "phase_3":  "blocked",
+                         "phase_4":  "blocked",
+                         "phase_5":  "not_started",
+                         "phase_6":  "not_started",
+                         "phase_7":  "not_started",
+                         "phase_8":  "not_started"
+                     },
+    "implementation_status":  "Prompt 23 Java implementation complete; WP-19 and Phase 4 remain partial/blocked pending current all-language conformance.",
+    "verification_status":  "Java development-sandbox executable admission passed 26/26 checks; 143 combined language/Java/C++ tests plus 7 follow-up JS/TS guard tests passed; Java Ruff, mypy and recipe checks passed. Corrected Go conformance rerun is in progress.",
+    "source_manifest":  "docs/implementation/source-manifest.json",
+    "blockers_or_open_inputs":  [
+                                    "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
+                                    "Human calibration evidence is absent: no qualified reviewer roster and no labels, so the T 15.3 gate (30 disjoint labelled packets per pilot language, \u003e=80% exact anchor agreement, no unresolved systematic bias, 10% human audit) stays blocked and scoring stays inactive",
+                                    "Pilot candidate model configuration documents do not exist yet; judge/candidate distinctness is enforced against whatever a cohort declares and will be checked again when Prompt 17 registers them",
+                                    "A concurrent Prompt 13 session is active in this working tree: its in-flight plugin/contract edits fail 47 parser and policy tests and its untracked test_analyzer_contracts.py blocks whole-suite collection; the repository-wide boundary checker also fails on its new plugin members until that session completes",
+                                    "Pasted markdown(5).md absent; locate for complete original-source provenance",
+                                    "Production disposable VM/cloud execution and production-worker task admission are not configured or verified",
+                                    "Source/task rights and human calibration evidence remain required before benchmark data admission or scoring",
+                                    "Publication target and signing configuration are absent",
+                                    "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
+                                    "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
+                                    "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
+                                    "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
+                                    "E2E-04 production execution and E2E-27 public/cohort filter variants remain with Prompts 16-17; the generic evaluator-worker variant passed in Prompt 12 at development tier only",
+                                    "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
+                                    "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
+                                    "Production secret-store integration, operator-supplied price snapshots and context/capability declarations for real model configurations are deployment inputs",
+                                    "Live model behaviour under the solve protocols (provider tool-call conventions, real token usage, the two-model pilot) is unverified; fixture-model evidence only until Prompt 17",
+                                    "Rust dependency audit has no real advisory snapshot (building one needs a network fetch of the RustSec database, an owner action); the audit fails closed",
+                                    "Prompt 12 grading evidence is development-sandbox only: no production worker, no sealed hidden lane, no curator/owner rights confirmation, and the quality-plan profiles remain effective_for_scoring: false until calibration",
+                                    "Robustness scenarios currently run each scenario\u0027s test group with all-or-nothing credit; per-scenario partial credit, fuzz corpus/iteration budgets and judge residual items stay with Prompts 13-15",
+                                    "Prompt 17: owner rights confirmation, quality admission, curator freeze, hidden-lane registration and production-worker admission remain pending for all 24 pilot clusters",
+                                    "Prompt 17: two authorized real model identities/configurations, endpoint capabilities and price snapshots are absent",
+                                    "Prompt 17: active owner-authorized hard spend limit is absent; proposed budget is not effective for live calls",
+                                    "Prompt 17: common distinct judge endpoint/configuration and human calibration are absent; scoring remains inactive",
+                                    "Prompt 17: production database, object-store endpoint, worker image, supervisor identity and authorized production execution target are absent",
+                                    "Prompt 17: checkout has no operator run-start CLI or HTTP route; no executable dispatch command is available",
+                                    "Dedicated homogeneous performance hardware is not available: Prompt 13 measurements ran on shared CI (`hardware_gate: blocked_shared_ci`), which is valid regression evidence but cannot establish a production efficiency comparison or release a ranked efficiency claim",
+                                    "Per-iteration memory is the guest process peak RSS, valid for the in-process Python workload; a workload that forks children needs per-iteration cgroup peak, which requires a guest image change and re-digesting every sealed Python manifest (D-13-11)",
+                                    "No admitted task declares a Rust performance workload, so the Rust side of the performance lane is contract-complete but unexercised (E2E-19/20 stay not_run overall)",
+                                    "Prompt 15 scoring is verified only on synthetic fixtures at local_fixture tier: no production worker, no sealed hidden lane, no curator rights confirmation, and config/scoring/pilot-v1.yaml remains effective_for_scoring: false with calibration_status: pending",
+                                    "E2E-24 live-pilot replay and restored-environment replay remain with Prompt 17 and Prompt 33; only the clean-process archived-fixture replay variant is proven",
+                                    "The idiomatic and robustness residual-judge weight split (8000/2000) is a declared pilot parameter pending calibration (D-15-05)",
+                                    "Prompt 18: public disclosed-security examples remain blocked pending owner-approved rights/transmission scope, public advisory and immutable pre-fix/fix revisions, isolated reproducers and clean controls in both languages, and curator-reviewed hidden oracle/source exposure policy; see config/track-a-public-security-source-requirement.json",
+                                    "Prompt 23: Java JDK/Maven/JUnit images have only a pinned recipe; runtime/evaluator/performance image digests, Docker probes and task admission are absent.",
+                                    "Prompt 23: JavaScript/TypeScript source plugins and entrypoints exist with separate profiles, but neither has an allowlist entry, task manifest, or complete runtime/evaluator image identity.",
+                                    "Prompt 23: Go module-root runner fix changed guest source; saved Go image guest digest and prior admission do not represent the current guest and require rebuild/re-admission.",
+                                    "Prompt 23: fresh Docker image verification/admission for C, C++, Go and Java was unavailable; Docker daemon was not available.",
+                                    "Prompt 23 analyzer identity limitations: C++ Cppcheck is unknown, Go gosec reports dev, and a fresh RustSec advisory snapshot is absent."
+                                ],
+    "evidence_summary":  {
+                             "requirements_registered":  14,
+                             "work_packages_registered":  24,
+                             "e2e_scenarios_registered":  43,
+                             "prompts_registered":  35,
+                             "pcb_tickets_registered":  142,
+                             "application_tests_run":  607,
+                             "prompt_12_evidence":  [
+                                                        "docs/implementation/evidence/prompt-12-eval-python.json",
+                                                        "docs/implementation/evidence/prompt-12-eval-rust.json",
+                                                        "docs/implementation/evidence/prompt-12-e2e-17-disallowed.json",
+                                                        "docs/implementation/evidence/prompt-12-e2e-17-fake-success.json",
+                                                        "docs/implementation/evidence/prompt-12-e2e-18.json",
+                                                        "docs/implementation/evidence/prompt-12-python-conformance.json",
+                                                        "docs/implementation/evidence/prompt-12-rust-conformance.json"
+                                                    ],
+                             "prompt_17_preflight":  "docs/implementation/evidence/prompt-17-preflight.json",
+                             "prompt_17_attempt_counts":  {
+                                                              "expected":  144,
+                                                              "completed":  0,
+                                                              "model_failed":  0,
+                                                              "infrastructure_blocked_before_dispatch":  144,
+                                                              "provider_deliveries":  0
+                                                          },
+                             "prompt_13_evidence":  [
+                                                        "docs/implementation/evidence/prompt-13-e2e-19-paired.json",
+                                                        "docs/implementation/evidence/prompt-13-e2e-20-invalid-block.json",
+                                                        "docs/implementation/evidence/prompt-13-wrong-but-fast.json"
+                                                    ],
+                             "prompt_15_evidence":  [
+                                                        "docs/implementation/evidence/prompt-15-scoring.json"
+                                                    ],
+                             "prompt_15_tests":  66,
+                             "prompt_18_evidence":  [
+                                                        "docs/implementation/evidence/prompt-18-source-reproduction.json",
+                                                        "docs/implementation/evidence/prompt-18-e2e-32.json",
+                                                        "docs/implementation/evidence/prompt-18-e2e-33.json",
+                                                        "docs/implementation/evidence/prompt-18-e2e-34.json",
+                                                        "config/track-a-public-security-source-requirement.json"
+                                                    ],
+                             "prompt_14_evidence":  [
+                                                        "docs/implementation/evidence/prompt-14-integration.json",
+                                                        "docs/implementation/evidence/prompt-14-e2e-21.json",
+                                                        "docs/implementation/evidence/prompt-14-e2e-22.json",
+                                                        "docs/implementation/evidence/prompt-14-calibration.json"
+                                                    ],
+                             "prompt_23_evidence":  [
+                                                        "docs/implementation/evidence/prompt-23-language-audit.json",
+                                                        "docs/implementation/reports/prompt-23.md",
+                                                        "docs/implementation/reports/language-coverage.md",
+                                                        "docs/implementation/reports/phase-4.md"
+                                                    ],
+                             "prompt_23_tests":  {
+                                                     "language_suite":  "161 passed; Windows subprocess test initially blocked by WinError 1455 paging-file exhaustion; isolated retry passed; 1 Linux-only guest test skipped",
+                                                     "shared_solve_score_replay":  "79 passed; 4 Docker-agent tests skipped",
+                                                     "targeted_mypy":  "19 files passed",
+                                                     "java_recipe_check":  "passed",
+                                                     "dependency_lock_check":  "passed"
+                                                 }
+                         },
+    "exact_next_action":  "Next: Prompt 23 - Add Java and close language coverage.",
+    "prompt_statuses":  {
+                            "00":  "done",
+                            "01":  "done",
+                            "02":  "done",
+                            "03":  "done",
+                            "04":  "done",
+                            "05":  "done",
+                            "06":  "partial",
+                            "07":  "partial",
+                            "08":  "partial",
+                            "09":  "done",
+                            "10":  "done",
+                            "11":  "done",
+                            "12":  "done",
+                            "13":  "partial",
+                            "14":  "partial",
+                            "15":  "done",
+                            "16":  "done",
+                            "17":  "blocked",
+                            "18":  "partial",
+                            "19":  "partial",
+                            "20":  "partial",
+                            "21":  "partial",
+                            "22":  "done",
+                            "23":  "partial",
+                            "24":  "not_started",
+                            "25":  "not_started",
+                            "26":  "not_started",
+                            "27":  "not_started",
+                            "28":  "not_started",
+                            "29":  "not_started",
+                            "30":  "not_started",
+                            "31":  "not_started",
+                            "32":  "not_started",
+                            "33":  "not_started",
+                            "34":  "not_started"
+                        },
+    "last_resume_review":  {
+                               "date":  "2026-09-30",
+                               "active_prompt":  "04",
+                               "baseline_commit":  "3253dfd6a858af88c4bd45bd51c63aef226aa9ef",
+                               "working_tree_at_start":  "Prompt 03 committed and pushed; Prompt 04 source, migration, dependency lock and tests modified in this turn; unrelated untracked Constitution/ preserved",
+                               "source_hashes":  "Architecture, Technical Spec and prompt pack match source-manifest.json; no normative source document changed",
+                               "fresh_passes":  [
+                                                    "PostgreSQL 17.6 fresh migration, role provisioning/grants, repeat upgrade and Alembic drift check",
+                                                    "SeaweedFS 4.48 local S3 integration: integrity rejection, visibility/role denials, deduplication, manifest, quota, resume, projection, retention hold and 30-day provisional/canonical orphan cleanup with active-finalizer protection; artifact tests repeated",
+                                                    "Full workspace test suite: 21 passed",
+                                                    "Ruff formatting/lint; mypy across 35 files; package boundaries and ten-package smoke checks",
+                                                    "Startup and contract schema drift checks; locked offline synchronization; ten Python package sdist/wheel builds and persistence-wheel content inspection",
+                                                    "Compose config validation, source/ledger consistency checks and git diff whitespace validation"
+                                                ],
+                               "pending_or_unrun":  [
+                                                        "Hosted GitHub Actions not dispatched",
+                                                        "Production S3 IAM/bucket policies, encryption/lifecycle and deployed role denial unavailable without a production target/principals",
+                                                        "Full E2E-26 public API/page/download/export variants remain with later public product prompts",
+                                                        "Short-lived stage upload permissions and lease/fence checks await Prompt 07"
+                                                    ],
+                               "no_paid_or_remote_product_actions":  true,
+                               "unrelated_untracked_preserved":  [
+                                                                     "Constitution/production_quality_software_engineering_prompt-3.md"
+                                                                 ]
+                           },
+    "resume_history":  [
+                           {
+                               "date":  "2026-09-30",
+                               "baseline_commit":  "08a0edd4b674e8da62f6a6f5e65cdd53db1a086b",
+                               "working_tree_at_start":  "clean",
+                               "source_hashes":  "unchanged; consistency checker passed",
+                               "fresh_passes":  [
+                                                    "Ruff format",
+                                                    "Ruff lint",
+                                                    "pytest (3 tests)",
+                                                    "schema consistency",
+                                                    "imports",
+                                                    "dependency boundaries",
+                                                    "Compose syntax"
+                                                ],
+                               "external_blockers":  [
+                                                         "PyPI/npm registry proxy refusal",
+                                                         "Docker Desktop Linux engine unavailable"
+                                                     ],
+                               "no_paid_or_remote_product_actions":  true
+                           },
+                           {
+                               "date":  "2026-09-30",
+                               "active_prompt":  "01",
+                               "baseline_commit":  "08a0edd4b674e8da62f6a6f5e65cdd53db1a086b",
+                               "working_tree_at_start":  "dirty with 15 prior-resume changes; reviewed and preserved",
+                               "source_hashes":  "unchanged; docs/implementation/verify_prompt00.py passed",
+                               "fresh_passes":  [
+                                                    "uv sync --locked --all-packages --group dev",
+                                                    "pnpm install --frozen-lockfile (343 packages; supply-chain policy pass)",
+                                                    "uv build --all-packages (10 package sdists and wheels)",
+                                                    "Ruff format and lint",
+                                                    "mypy",
+                                                    "pytest (3 passed)",
+                                                    "package boundaries/import/config/schema checks",
+                                                    "web typecheck",
+                                                    "web lint",
+                                                    "Next production build",
+                                                    "Compose config and healthy local services",
+                                                    "PostgreSQL pg_isready",
+                                                    "pinned image index/content digests",
+                                                    "ledger/source consistency",
+                                                    "git diff --check"
+                                                ],
+                               "lockfiles":  {
+                                                 "uv.lock":  "generated and frozen sync passed",
+                                                 "pnpm-lock.yaml":  "generated and frozen install passed"
+                                             },
+                               "images":  {
+                                              "postgres":  "postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+                                              "seaweedfs":  "chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
+                                              "signature_provenance":  "not independently verified; development-only approval"
+                                          },
+                               "no_paid_or_remote_product_actions":  true
+                           },
+                           {
+                               "date":  "2026-09-30",
+                               "active_prompt":  "02",
+                               "baseline_commit":  "b682e7ed3442849b70149f9839f1fa936e6b25c9",
+                               "working_tree_at_start":  "Prompt 01 committed and pushed; Prompt 02 changes made in this turn; unrelated untracked Constitution/ observed and preserved",
+                               "source_hashes":  "Architecture, Technical Spec and prompt pack match source-manifest.json; source consistency checker passed",
+                               "fresh_passes":  [
+                                                    "Python contract tests: 11 passed",
+                                                    "Ruff format and lint; mypy for core and scripts",
+                                                    "Python and TypeScript shared canonical golden/invalid fixture checks",
+                                                    "TypeScript contracts typecheck, build and 256 deterministic property cases",
+                                                    "generated JSON Schema/OpenAPI/TypeScript drift check (15 outputs)",
+                                                    "package dependency boundary check",
+                                                    "offline builds: source and wheel for all 10 Python packages",
+                                                    "ledger/source consistency, JSON parsing and git diff --check"
+                                                ],
+                               "no_paid_or_remote_product_actions":  true,
+                               "unrelated_untracked_preserved":  [
+                                                                     "Constitution/production_quality_software_engineering_prompt-3.md"
+                                                                 ]
+                           },
+                           {
+                               "date":  "2026-09-30",
+                               "active_prompt":  "03",
+                               "baseline_commit":  "c66455eaf04aaf4e02a9e19aa83c45e358d3b7a8",
+                               "working_tree_at_start":  "Prompt 02 committed; preserved unrelated untracked Constitution/production_quality_software_engineering_prompt-3.md",
+                               "source_hashes":  "Architecture, Technical Spec and prompt pack remain identical to source-manifest.json; no normative source document changed",
+                               "fresh_passes":  [
+                                                    "PostgreSQL 18.4 UTF-8 fresh database migration and role grant setup",
+                                                    "Second Alembic upgrade idempotence and alembic check: no schema drift",
+                                                    "Four PostgreSQL integration tests: concurrent idempotency replay, changed-payload conflict, atomic rollback, immutable rows, RLS/grants, RBAC, identity audit and optimistic version checks",
+                                                    "Ruff format/lint; mypy across 29 files; 18 full workspace tests; package boundaries; workspace startup and generated schema checks",
+                                                    "Source and wheel builds for all ten packages; packaged migration presence verified in persistence wheel",
+                                                    "Prompt 00 consistency checker: 14 REQ, 24 WP, 43 E2E, 35 prompts and 142 tickets with owners/evidence; progress JSON and git diff checks"
+                                                ],
+                               "pending_or_unrun":  [
+                                                        "Hosted CI against pinned PostgreSQL 17.6 not dispatched",
+                                                        "HTTP/API permission route variants do not exist; full E2E-02 and E2E-25 remain partial",
+                                                        "Managed deployment login credentials and provider endpoints are external deployment inputs"
+                                                    ],
+                               "no_paid_or_remote_product_actions":  true,
+                               "unrelated_untracked_preserved":  [
+                                                                     "Constitution/production_quality_software_engineering_prompt-3.md"
+                                                                 ]
+                           },
+                           {
+                               "date":  "2026-10-02",
+                               "active_prompt":  "12",
+                               "baseline_commit":  "3c8ea4f",
+                               "working_tree_at_start":  "clean apart from Prompt 12 work; unrelated untracked files preserved",
+                               "source_hashes":  "Architecture, Technical Spec and prompt pack unchanged from source-manifest.json",
+                               "fresh_passes":  [
+                                                    "tests/test_evaluator.py offline normalization tests",
+                                                    "PCB_TEST_DOCKER=1 tests/test_evaluator_docker.py (4 real-sandbox evaluations)",
+                                                    "scripts/python_conformance.py 14/14 and scripts/rust_conformance.py 16/16 in the pinned images",
+                                                    "full pytest suite, ruff check/format, mypy on the touched packages"
+                                                ],
+                               "pending_or_unrun":  [
+                                                        "production worker tier, hidden-lane sealing and registry publication",
+                                                        "performance, judge, scoring and release prompts"
+                                                    ],
+                               "no_paid_or_remote_product_actions":  true
+                           }
+                       ],
+    "prompt_05_completion":  {
+                                 "date":  "2026-09-30",
+                                 "status":  "done",
+                                 "phase_1_foundation_gate":  "pass_owner_approved",
+                                 "fixture_evidence":  "docs/implementation/evidence/prompt-05-authored-fixture-admission-v3.json",
+                                 "fixture_report_digest":  "sha256:2c3e44a86daad9c6e37e17c63831e2622f514b9a64cc7484fcc760fb2a4cbe64",
+                                 "verification":  [
+                                                      "Actual local Docker fixture validation: five stable references, intended faulty mismatch, alternative pass",
+                                                      "Full review-fix suite: 56 passed, no skips, with PostgreSQL, SeaweedFS and real Docker timeout regression enabled",
+                                                      "Seven database admission checks and seven fixture runner/CLI checks passed; all seven confirmed review defects resolved",
+                                                      "Admission-evidence migration applied; Alembic drift check passed; 21 generated schema outputs checked",
+                                                      "Pilot contract validation, package boundary, startup/smoke checks, Ruff and mypy on 45 source files passed",
+                                                      "Generated TypeScript typecheck/build and shared contract tests passed locally on Node 22.23.2; pinned Node 24 hosted CI not run",
+                                                      "CLI snapshot replay, bundle artifact ID equality, draft integrity and complete package identity enforced; production admission fails closed until trusted authority exists",
+                                                      "TaskOutputContract added and bound to task digest; generated contract outputs increased to 21; fixture execution repeated against updated package"
+                                                  ],
+                                 "pending":  [
+                                                 "Production VM isolation and production-worker admission",
+                                                 "Language/evaluation task variants in Prompts 10-12/17",
+                                                 "Human calibration/owner scoring approval and external task rights",
+                                                 "Full E2E-04 and E2E-27 remain not_run overall",
+                                                 "Scoring policy remains inactive pending human/judge calibration; no live spend authorization"
+                                             ],
+                                 "no_paid_or_remote_product_actions":  true,
+                                 "owner_approval":  {
+                                                        "policy_id":  "polycodebench-code-pilot-v1",
+                                                        "decision":  "approved_as_written",
+                                                        "scope":  "freeze_as_pilot_baseline_only",
+                                                        "approved_on":  "2026-09-30",
+                                                        "scoring_active":  false,
+                                                        "evidence":  "docs/implementation/decisions.md D-05-04"
+                                                    }
+                             },
+    "prompt_06_cloud_gate":  {
+                                 "status":  "deferred_by_owner",
+                                 "reason":  "User reports cloud access is unavailable for now.",
+                                 "production_e2e":  [
+                                                        "E2E-05",
+                                                        "E2E-06"
+                                                    ],
+                                 "resume_when":  "Authorized AWS target, supervisor identity, reviewed AMI/image manifest, private network, explicit budget, Terraform and AWS CLI are available.",
+                                 "no_cloud_actions_taken":  true
+                             },
+    "prompt_06_completion":  {
+                                 "date":  "2026-09-30",
+                                 "status":  "partial",
+                                 "evidence":  "docs/implementation/evidence/prompt-06-local-docker.json",
+                                 "implementation":  "Typed lifecycle contracts, local Docker driver, EC2 VM driver/control protocol, guest bootstrap, Terraform deployment plan, policies, cleanup and attestation implemented.",
+                                 "local_verification":  [
+                                                            "Opt-in live Docker containment: 1 passed in 9.19s; verified idempotent stage, network/metadata denial, no socket, path/symlink handling, PID/memory/disk/time limits, cancellation, orphan GC and destroy.",
+                                                            "Full workspace pytest: 49 passed, 19 skipped; database and opt-in cases skipped only as reported by pytest.",
+                                                            "Sandbox test module: 11 passed, 1 opt-in skip; epoch-zero expiry and sandbox policy drift checks passed.",
+                                                            "Ruff format/lint; both mypy jobs; package-boundary, startup, contract-schema and task-contract checks passed.",
+                                                            "Offline source/wheel builds passed for all 10 Python packages; git diff --check passed."
+                                                        ],
+                                 "pending":  [
+                                                 "Terraform validate/plan unavailable because Terraform CLI is absent.",
+                                                 "Production EC2 E2E-05/06 and destruction/attestation evidence require authorized AWS target, supervisor principal, approved AMI and explicit budget.",
+                                                 "Hosted CI was not dispatched; PostgreSQL integration cases skipped because PCB_TEST_DATABASE_URL is not configured."
+                                             ],
+                                 "no_paid_or_remote_product_actions":  true
+                             },
+    "prompt_07_completion":  {
+                                 "date":  "2026-09-30",
+                                 "status":  "partial",
+                                 "evidence":  "docs/implementation/evidence/prompt-07-integration.json",
+                                 "implementation":  "Strict stage DAG and branch semantics, replay-safe transactional creation, PostgreSQL SKIP LOCKED claims, database-timed 120-second leases, 30-second heartbeats with one-second revocation polling, fences/execution records, capacity slots, fairness limits, bounded retries/reaper, append-only events, cancellation, worker lifecycle and operator CLI.",
+                                 "passed":  [
+                                                "Independent review fixed concurrent fairness, DAG failure/branch handling, replay/event integrity, fenced provisioning cleanup, worker supervision, cancellation races and evaluation failure classification",
+                                                "Isolated Prompt 06/07 full suite: 124 passed, no skips, with PostgreSQL, SeaweedFS and local Docker enabled; concurrent Prompt 08 excluded",
+                                                "Broad mypy: 56 source files; separate sandbox/lifecycle check: six files; Ruff 107 files; fresh/incremental migration, drift, ten-package source/wheel builds, compilation, schemas and ledgers passed",
+                                                "E2E-07: two competing PostgreSQL workers, lease expiry/reaping, higher-fence reclaim, stale completion rejected, same-output replay and changed-output conflict",
+                                                "E2E-08: worker crash after verified artifact upload, second-worker digest reuse, one committed result, lost-ack replay and referenced-artifact retention under garbage collection",
+                                                "Stage DAG gate-pass/gate-fail routing, wrong-answer execution distinct from infrastructure failure, idempotent DAG replay and accepted versus unrelated scheduler skip reasons",
+                                                "Three bounded infrastructure deliveries, failure-class records, campaign/provider concurrency caps, slot drain/resume and scheduler database grants",
+                                                "E2E-09 development subcase: actual local Docker tool execution cancelled after dispatch; completed checkpoint retained, no next dispatch, guest destruction confirmed before slot reuse, canceled attempt not classified as model failure"
+                                            ],
+                                 "pending":  [
+                                                 "E2E-09 full model-call usage-retention and ranked-release exclusion variants await durable model gateway/accounting in Prompt 08/17",
+                                                 "Production VM lifecycle evidence remains deferred under prompt_06_cloud_gate; local Docker is not production isolation evidence",
+                                                 "Hosted CI was not dispatched"
+                                             ],
+                                 "no_paid_or_remote_product_actions":  true
+                             },
+    "prompt_07_resume_review":  {
+                                    "date":  "2026-09-30",
+                                    "active_prompt":  "07",
+                                    "baseline_commit":  "3c0c681d25caf5763aea5c4000aa31533a7f81d2",
+                                    "working_tree_at_start":  "Prompt 06 implementation/ledger changes and unrelated untracked Constitution/ preserved; no reset or checkout performed",
+                                    "source_hashes":  "Architecture, Technical Spec and prompt pack remain unchanged from source-manifest.json; T §§5,7,8.3,9.3 and A §5 reviewed",
+                                    "fresh_passes":  [
+                                                         "PostgreSQL migrations to 7b8cc92d13ea and Alembic schema drift check",
+                                                         "Prompt 07 E2E-07/08/09 and scheduler integration tests against PostgreSQL 17.6, SeaweedFS 4.48 and real local Docker Linux engine",
+                                                         "Full locked workspace pytest suite: 75 passed in 24.35s; Ruff, mypy, package boundaries, workspace smoke/import and Python package builds",
+                                                         "Operator CLI help and live reaper invocation against the isolated test database",
+                                                         "Prompt 00 ledger/source consistency check and Git diff whitespace check"
+                                                     ],
+                                    "pending_or_unrun":  [
+                                                             "E2E-09 model provider call/usage retention waits for Prompt 08/17; the development fixture fabricated no model usage",
+                                                             "Prompt 06 production EC2 E2E-05/06 remains deferred by the owner; no cloud actions were taken",
+                                                             "Hosted CI was not dispatched"
+                                                         ],
+                                    "no_paid_or_remote_product_actions":  true
+                                },
+    "latest_done_prompt":  "16",
+    "prompt_08":  {
+                      "date":  "2026-09-30",
+                      "migration":  "9d3a71c05e24",
+                      "tests":  {
+                                    "unit_and_local_socket":  73,
+                                    "provider_shaped_fixtures":  8,
+                                    "postgres_seaweedfs_fixture_transport":  27,
+                                    "review_regressions":  18,
+                                    "live_local_adapter":  1,
+                                    "live_untested_adapters":  [
+                                                                   "openai_compatible",
+                                                                   "anthropic",
+                                                                   "google"
+                                                               ],
+                                    "full_suite":  "247 passed, 7 skipped"
+                                },
+                      "evidence":  [
+                                       "docs/implementation/evidence/prompt-08-integration.json",
+                                       "docs/implementation/evidence/prompt-08-live-smoke-local.json"
+                                   ],
+                      "review":  "independent adversarial review: 12 findings fixed; see D-08-09",
+                      "no_paid_or_remote_product_actions":  true
+                  },
+    "prompt_09":  {
+                      "date":  "2026-10-01",
+                      "migration":  "b2f6d4a91c73",
+                      "tests":  {
+                                    "core":  70,
+                                    "helper":  29,
+                                    "docker":  12,
+                                    "sessions":  22,
+                                    "families":  4,
+                                    "loader":  4
+                                },
+                      "evidence":  [
+                                       "docs/implementation/evidence/prompt-09-integration.json"
+                                   ],
+                      "no_paid_or_remote_product_actions":  true
+                  },
+    "prompt_10":  {
+                      "date":  "2026-10-01",
+                      "images":  {
+                                     "runtime":  "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+                                     "evaluator":  "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99"
+                                 },
+                      "tests":  {
+                                    "full_suite":  "346 passed, 136 skipped",
+                                    "mypy_strict_new_modules":  "26 files, no issues",
+                                    "python_conformance_cases":  "14/14",
+                                    "executable_admission":  "12/12 clusters"
+                                },
+                      "fixes_applied":  [
+                                            "manual-counter detector missed the len() counting-loop idiom (D-10-03)",
+                                            "string-concat-in-loop detector missed str()/concat RHS (D-10-03)",
+                                            "tool cache directories sealed into archive-path-guard hidden bundle (D-10-04)",
+                                            "ledger-stream defective variant lacked its declared index-loop family (D-10-05)",
+                                            "rate-limiter defective variant declared a mutable default it never mutated (D-10-05)"
+                                        ],
+                      "quality_admission":  "pending: Prompts 12-15, production execution tier, curator approval and freeze, owner rights confirmation",
+                      "no_paid_or_remote_product_actions":  true
+                  },
+    "prompt_11":  {
+                      "date":  "2026-10-02",
+                      "images":  {
+                                     "runtime":  "sha256:a3f88da16577b2516a9f243811fe407bf58158030686b869e8fb84b203bdfb69",
+                                     "evaluator":  "sha256:5aa0fac65e0b1c1d8696f86975699b3fa682e2b8e9c4a867a47f378cb5adca25",
+                                     "performance":  "sha256:de4293082733f48aa17c59aad10041893efb086eb5e4e2ef9a2470795775b322"
+                                 },
+                      "tests":  {
+                                    "rust_offline":  "93 passed (plugin 21, parsers 25, guest 12, profile 22, locks 8, inventory 5)",
+                                    "rust_live_docker":  "3 passed",
+                                    "prior_suites_rerun":  "185 passed, 7 skipped (python plugin/parsers/guest, plan runner, suite admission, sandbox)",
+                                    "conformance_cases":  "16/16",
+                                    "executable_admission":  "12/12 clusters"
+                                },
+                      "fixes_applied":  [
+                                            "Rust images had no Python but the sandbox provider drives guests with it (D-11-10)",
+                                            "workspace tmpfs noexec blocked compiled test binaries; executable_workspace added, default off (D-11-11)",
+                                            "Miri rebuilt its sysroot at run time in a read-only sandbox; baked sysroot used via MIRI_SYSROOT (D-11-12)",
+                                            "garbled Miri output with exit 0 was read as clean (D-11-14)",
+                                            "observations.slug turned dots into hyphens so rule mappings never matched (PCB-11-3)",
+                                            "case discovery and symbol sanitiser treated // inside string literals as comments (PCB-11-4)"
+                                        ],
+                      "quality_admission":  "pending: Prompts 12-15, production execution tier, curator approval and freeze, owner rights confirmation",
+                      "no_paid_or_remote_product_actions":  true
+                  },
+    "prompt_12_completion":  {
+                                 "date":  "2026-10-02",
+                                 "status":  "done",
+                                 "implementation":  "Independent grading graph (`packages/evaluation/src/polycodebench_evaluation/evaluator.py`), normalized evidence contract (`evidence.py`), planned-input staging through the existing `PlanRunner` in a dedicated grading lane, offline normalization tests (`tests/test_evaluator.py`) and real-sandbox acceptance tests (`tests/test_evaluator_docker.py`).",
+                                 "tickets":  {
+                                                 "PCB-12-1":  "passed",
+                                                 "PCB-12-2":  "passed",
+                                                 "PCB-12-3":  "passed",
+                                                 "PCB-12-4":  "passed"
+                                             },
+                                 "tests":  {
+                                               "offline_units":  "4 passed (tests/test_evaluator.py)",
+                                               "live_docker_evaluator":  "4 passed in 118s (tests/test_evaluator_docker.py)",
+                                               "full_suite_after_changes":  "445 passed, 143 skipped",
+                                               "python_conformance":  "14/14 passed, digest sha256:ab2abace...",
+                                               "rust_conformance":  "16/16 passed across all 7 categories"
+                                           },
+                                 "evidence":  [
+                                                  "docs/implementation/evidence/prompt-12-eval-python.json",
+                                                  "docs/implementation/evidence/prompt-12-eval-rust.json",
+                                                  "docs/implementation/evidence/prompt-12-e2e-17-disallowed.json",
+                                                  "docs/implementation/evidence/prompt-12-e2e-17-fake-success.json",
+                                                  "docs/implementation/evidence/prompt-12-e2e-18.json",
+                                                  "docs/implementation/evidence/prompt-12-python-conformance.json",
+                                                  "docs/implementation/evidence/prompt-12-rust-conformance.json"
+                                              ],
+                                 "defect_found_and_fixed":  "D-12-08: the first implementation grouped already-normalized observations, so a duplicate report lost the second tool\u0027s identity and looked like a single-tool finding; grouping now keeps every reporting tool while the normalized entry stays the primary.",
+                                 "pending":  [
+                                                 "Production-worker execution tier (Prompt 06 owner-deferred)",
+                                                 "Performance measurement (Prompt 13), judge anchors and calibration (Prompt 14), pure scoring and replay (Prompt 15)",
+                                                 "Frozen task-set quality admission, curator approval and owner rights confirmation",
+                                                 "E2E-17/18 variants for the remaining languages and Track A/B families (Prompts 18-28)"
+                                             ],
+                                 "no_paid_or_remote_product_actions":  true
+                             },
+    "prompt_16_completion":  {
+                                 "date":  "2026-10-02",
+                                 "status":  "done",
+                                 "report":  "docs/implementation/reports/prompt-16.md",
+                                 "implementation":  "Fixed-cohort aggregation, reproducible clustered uncertainty, internal reporting/replay, and reviewed local immutable release publication with allowlisted signed projections.",
+                                 "tests":  "23 passed: tests/test_publication_aggregation.py, tests/test_publication_reporting.py, tests/test_publication_releases.py, tests/test_releases.py, tests/test_uncertainty.py",
+                                 "checks":  [
+                                                "Ruff format/check passed",
+                                                "Mypy passed for 5 publication source files with workspace MYPYPATH",
+                                                "9 generated schemas current",
+                                                "package dependency boundaries passed",
+                                                "release CLI help passed",
+                                                "CLI permission errors return the documented permission exit code"
+                                            ],
+                                 "e2e_subcases":  {
+                                                      "E2E-28":  "prompt-16 synthetic local subcases passed; full E2E remains pending public API",
+                                                      "E2E-29":  "prompt-16 fixed-seed/cluster/paired synthetic subcases passed",
+                                                      "E2E-30":  "prompt-16 SQLite approval/CAS/correction/signature/projection subcases passed; production target pending"
+                                                  },
+                                 "publication":  "No external publication; no real benchmark result claimed.",
+                                 "next":  "Prompt 17 ? Run and verify the real Python/Rust pilot."
+                             },
+    "prompt_17_preflight":  {
+                                "date":  "2026-10-02",
+                                "status":  "blocked",
+                                "report":  "docs/implementation/reports/prompt-17.md",
+                                "plan":  "docs/implementation/plans/prompt-17-run-plan.json",
+                                "attempt_counts":  {
+                                                       "expected":  144,
+                                                       "completed":  0,
+                                                       "model_failed":  0,
+                                                       "infrastructure_blocked_before_dispatch":  144,
+                                                       "provider_deliveries":  0
+                                                   },
+                                "no_live_provider_cloud_or_publication_actions":  true
+                            },
+    "prompt_13_completion":  {
+                                 "date":  "2026-10-02",
+                                 "status":  "done",
+                                 "implementation":  "Reserved-guest paired measurement (`PlanRunner.reserved_guest`, `ExclusiveGuestReservation`), plan/speed-lane/hardware/reference validation, canary-bounded blocks with first-valid selection, per-iteration retention, compile time reported separately, and the pure efficiency transform (`efficiency.py`) with golden checks; contracts in `perfcontracts.py`.",
+                                 "tickets":  {
+                                                 "PCB-13-1":  "passed (development tier; dedicated hardware gate blocked)",
+                                                 "PCB-13-2":  "passed",
+                                                 "PCB-13-3":  "passed",
+                                                 "PCB-13-4":  "passed"
+                                             },
+                                 "tests":  {
+                                               "offline_units":  "16 passed (tests/test_efficiency.py 9, tests/test_performance_plan.py 7)",
+                                               "live_docker":  "4 passed in 620s (tests/test_performance_docker.py)",
+                                               "recorded_result":  "candidate identical to reference: efficiency 100.000000 over 3 weighted scales",
+                                               "invalid_block":  "frozen baseline of 1 ns invalidates both blocks; no selected block, no score",
+                                               "wrong_but_fast":  "recorded as rejected_output; invalid_iterations; no efficiency score"
+                                           },
+                                 "evidence":  [
+                                                  "docs/implementation/evidence/prompt-13-e2e-19-paired.json",
+                                                  "docs/implementation/evidence/prompt-13-e2e-20-invalid-block.json",
+                                                  "docs/implementation/evidence/prompt-13-wrong-but-fast.json"
+                                              ],
+                                 "defects_found_and_fixed":  [
+                                                                 "D-13: the speed-lane denylist scanned environment values but not keys, so COVERAGE=1 entered the speed lane; keys are now scanned with bare stems",
+                                                                 "D-13: the canary ran at the smallest scale (~20 ms), where its own relative MAD (0.34) invalidated every block for the wrong reason; it now runs at the largest declared scale",
+                                                                 "D-13: invalidated blocks\u0027 iterations were discarded, hiding the rejected-but-fast candidate; all blocks are now retained and only the selected block is aggregated",
+                                                                 "D-13: block_index was not propagated to workload iterations, so retained records could not be attributed to their block",
+                                                                 "D-13: the scale-growth diagnostic was lane-wide and duplicated on every workload row"
+                                                             ],
+                                 "workspace_collision":  "A concurrent session was implementing Prompts 14 and 16 in the same working tree during this prompt and had written Prompt 16 text into the PCB-13-* ticket entries; those four entries were restored to their correct Prompt 13 content. Shared files (evidence.py, plan_runner.py) were read for compatibility, never rewritten to suit one side: this prompt\u0027s modules avoid symbols the other session was changing.",
+                                 "pending":  [
+                                                 "Dedicated/homogeneous hardware for a production efficiency comparison (blocked gate)",
+                                                 "Rust performance lane execution (no admitted task declares a workload)",
+                                                 "Per-iteration whole-process-tree cgroup peak (needs a guest image change)",
+                                                 "Judge anchors and human calibration (Prompt 14), pure scoring and replay (Prompt 15)"
+                                             ],
+                                 "no_paid_or_remote_product_actions":  true
+                             },
+    "independent_prompt_authorization":  {
+                                             "active_prompt":  "23",
+                                             "authorized_by_user":  true,
+                                             "blocked_prompts":  [
+                                                                     "17"
+                                                                 ],
+                                             "note":  "Prompt 17 remains blocked with its original attempt accounting and its gate is NOT waived. Prompt 23 was explicitly requested first; Prompt 21 (C++) was subsequently explicitly requested and implemented independently to close the C++ language-extension defects, without touching or claiming the Prompt 17 pilot prerequisite. Prompt 21\u0027s own status is partial: its code defects are closed and locally verified, but no C++ image was built or admitted, so its E2E-15/35 variants are unrun. prompt_statuses[\u002721\u0027] = partial."
+                                         },
+    "prompt_18_completion":  {
+                                 "date":  "2026-10-02",
+                                 "implementation_scope":  "done_independently",
+                                 "phase_3_aggregate_gate":  "blocked",
+                                 "blocked_prerequisite":  "accepted Prompt 17 real pilot; Phase 2 remains blocked",
+                                 "report":  "docs/implementation/reports/prompt-18.md",
+                                 "gap_map":  "docs/implementation/prompt-18-gap-map.md",
+                                 "tickets":  {
+                                                 "PCB-18-1":  "passed for authored-internal source/reproduction scope; public disclosed-security source requirement explicitly blocked",
+                                                 "PCB-18-2":  "passed, synthetic-internal finding/matching acceptance",
+                                                 "PCB-18-3":  "passed, synthetic-internal reviewer/oracle revision/rematch acceptance; no human review claimed",
+                                                 "PCB-18-4":  "passed, authored internal development-sandbox independent evaluator acceptance"
+                                             },
+                                 "tests":  {
+                                               "track_a_units_and_release_draft_integration":  "15 passed",
+                                               "docker_source_reproduction_and_evaluator":  "2 passed; combined prior run reported 13 tests passed before an unrelated CLI-only unit test was added",
+                                               "publication_release_regressions":  "26 passed",
+                                               "mypy":  "evaluation Track A 2 files and publication Track A/release CLI/store 3 files passed"
+                                           },
+                                 "no_live_provider_human_calibration_production_or_publication_actions":  true,
+                                 "attempt_accounting":  "model-failed attempts are explicit zero-credit samples; missing attempts reduce coverage and keep the headline unavailable"
+                             },
+    "prompt_14_completion":  {
+                                 "date":  "2026-10-02",
+                                 "status":  "partial",
+                                 "tickets":  {
+                                                 "PCB-14-1":  "passed",
+                                                 "PCB-14-2":  "passed",
+                                                 "PCB-14-3":  "passed",
+                                                 "PCB-14-4":  "blocked_external_inputs"
+                                             },
+                                 "migration":  "b9e04c7a1f38",
+                                 "tests":  {
+                                               "offline_contracts":  56,
+                                               "postgres_object_store_gateway":  10,
+                                               "cli_surface":  10,
+                                               "evaluation_handoff":  7,
+                                               "total":  83
+                                           },
+                                 "e2e":  {
+                                             "E2E-21":  "passed",
+                                             "E2E-22":  "passed"
+                                         },
+                                 "blocked_external_inputs":  [
+                                                                 "approved judge endpoint, credentials and model configuration",
+                                                                 "qualified human reviewer roster and calibration labels"
+                                                             ],
+                                 "no_paid_or_remote_product_actions":  true,
+                                 "independent_review":  {
+                                                            "reviewer":  "independent adversarial subagent, no files modified",
+                                                            "findings":  9,
+                                                            "fixed":  9,
+                                                            "regression_tests_added":  11,
+                                                            "residual_limitation":  "candidate text is escaped before it reaches the prompt, so packet structure cannot be forged; semantic prompt injection inside a comment remains possible in principle and is exposed by the untrusted_comment_only trigger rather than prevented",
+                                                            "recorded_in":  "docs/implementation/decisions.md (R-01 to R-09)"
+                                                        }
+                             },
+    "prompt_14_resume_review":  {
+                                    "date":  "2026-10-02",
+                                    "active_prompt":  "14",
+                                    "baseline_commit":  "023416b",
+                                    "working_tree_at_start":  "Prompt 13 work in progress in the shared tree (200 modified files plus untracked performance modules and tests); preserved, not reverted",
+                                    "source_hashes":  "Architecture, Technical Spec and prompt pack unchanged from source-manifest.json",
+                                    "fresh_passes":  [
+                                                         "empty-database migration through b9e04c7a1f38 and Alembic drift check",
+                                                         "71 Prompt 14 tests: 45 offline contract/adversarial, 10 PostgreSQL+SeaweedFS+gateway, 9 CLI, 7 evaluation-handoff",
+                                                         "E2E-21 three-vote mean 0.833333 with three distinct recorded seeds and no judge tools",
+                                                         "E2E-22 six retained deliveries, infra_blocked readiness, untrusted_comment_only trigger",
+                                                         "blocked calibration report with named missing inputs",
+                                                         "ruff and strict mypy clean on all Prompt 14 files; judge package boundaries verified",
+                                                         "independent adversarial review of the new judge modules: 9 findings (5 blockers, 4 majors) fixed with 11 regression tests"
+                                                     ],
+                                    "pending_or_unrun":  [
+                                                             "live judge model evaluation and hosted CI",
+                                                             "human calibration labels, agreement/confusion metrics and the 10% human audit",
+                                                             "whole-suite collection while the concurrent Prompt 13 session is inconsistent",
+                                                             "reviewer re-check of the nine fixes by a second independent pass"
+                                                         ],
+                                    "no_paid_or_remote_product_actions":  true
+                                },
+    "prompt_23_completion":  {
+                                 "date":  "2026-10-03",
+                                 "status":  "partial",
+                                 "report":  "docs/implementation/reports/prompt-23.md",
+                                 "language_coverage":  "docs/implementation/reports/language-coverage.md",
+                                 "phase_4_report":  "docs/implementation/reports/phase-4.md",
+                                 "evidence":  "docs/implementation/evidence/prompt-23-language-audit.json",
+                                 "tickets":  {
+                                                 "PCB-23-1":  "implemented and verified: offline Java recipes, fixed JIT modes, identities and executable admission",
+                                                 "PCB-23-2":  "implemented and verified: five reference scans measured; analyzer and behavioral probe contracts exercised",
+                                                 "PCB-23-3":  "implemented and verified: eight Java variants admitted; stream/record/SOLID presence earns no points",
+                                                 "PCB-23-4":  "partial: current Java/Go evidence and eight-language local audit; C/C++ admissions and JS/TS task packs are missing; Go conformance rerun pending"
+                                             },
+                                 "e2e":  {
+                                             "E2E-15":  "partial",
+                                             "E2E-35":  "partial"
+                                         },
+                                 "phase_4_aggregate_gate":  "blocked",
+                                 "docker_builds_or_admissions_this_turn":  true,
+                                 "no_live_provider_human_calibration_or_publication_actions":  true
+                             }
 }

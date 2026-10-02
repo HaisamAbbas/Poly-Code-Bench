@@ -921,42 +921,70 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: implemented (pinned golang 1.26.8 base with distinct runtime/evaluator/performance recipes, an offline components build, a per-recipe instrumentation declaration, and a build step that refreshes the allowlist).- Verification: passed (images re-probed from the real artifacts after rebuild; manifest resealed; allowlist digests match config/images/go-v1.json for all five languages).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Build pinned Go/module/vendor/test and release recipes with offline execution. DoD: runtime/dependency/flag identity is reproducible and language registration is data-driven.
+- Implementation: implemented (pinned golang 1.26.8 base with distinct runtime/evaluator/performance recipes, an offline components build, a per-recipe instrumentation declaration, and a build step that refreshes the allowlist).
+- Verification: passed (images rebuilt and re-probed from the real artifacts; recorded digests match the built images and the allowlist entry; manifest resealed and validates).
+- Required verification scope: E2E-15, E2E-35.
+- Note: the Go fixtures are pinned to LF via a new `.gitattributes`; under `core.autocrlf` they arrived as CRLF and `gofmt` (a scored required analyzer) charged the reference solution a formatting finding. See D-22-13.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Acceptance criteria: — Build pinned Go/module/vendor/test and release recipes with offline execution. DoD: runtime/dependency/flag identity is reproducible and language registration is data-driven.
 
 ## PCB-22-2 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: implemented (go test, gofmt, go vet, staticcheck, gosec and race-enabled runs; the race lane is refused for the measurement recipe and the measurement recipe is refused instrumented plans).- Verification: passed (84 Go unit/contract tests plus the real-sandbox conformance run; the admission report records the executed scan inventory per variant).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Integrate go test, gofmt checking, vet, staticcheck, gosec and applicable race-enabled runs. DoD: race/instrumented results cannot enter performance measurements; checker crashes cannot look like clean output.
+- Implementation: implemented (go test, gofmt, go vet, staticcheck, gosec and race-enabled runs; the race lane is refused for the measurement recipe and the measurement recipe is refused instrumented plans).
+- Verification: passed (all five required scans measured for every variant in the executable admission; 102 unit/contract tests; the staticcheck/gosec clean-versus-absent rule is pinned by two regression tests, one of them mutation-checked).
+- Required verification scope: E2E-15, E2E-35.
+- Note: the Go fixtures are pinned to LF via a new `.gitattributes`; under `core.autocrlf` they arrived as CRLF and `gofmt` (a scored required analyzer) charged the reference solution a formatting finding. See D-22-13.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Acceptance criteria: — Integrate go test, gofmt checking, vet, staticcheck, gosec and applicable race-enabled runs. DoD: race/instrumented results cannot enter performance measurements; checker crashes cannot look like clean output.
 
 ## PCB-22-3 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: implemented (error/interface/stdlib/context/concurrency diagnostic families plus orthogonal idiom items, gated on frozen task opportunities).- Verification: passed (tests/test_go_profile.py asserts non-applicable concurrency for a nonconcurrent task and a concrete robustness owner for every lifecycle/cancellation check).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Implement error/interface/stdlib/context/concurrency diagnostic and orthogonal idiom mappings. DoD: nonconcurrent tasks mark concurrency N/A and lifecycle/cancellation findings have concrete contract/evidence ownership.
+- Implementation: implemented (error/interface/stdlib/context/concurrency diagnostic families plus orthogonal idiom items, gated on frozen task opportunities).
+- Verification: passed (a nonconcurrent task reports its concurrency items not_applicable rather than charged, and every lifecycle/cancellation check resolves to a concrete robustness owner).
+- Required verification scope: E2E-15, E2E-35.
+- Note: the Go fixtures are pinned to LF via a new `.gitattributes`; under `core.autocrlf` they arrived as CRLF and `gofmt` (a scored required analyzer) charged the reference solution a formatting finding. See D-22-13.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Acceptance criteria: — Implement error/interface/stdlib/context/concurrency diagnostic and orthogonal idiom mappings. DoD: nonconcurrent tasks mark concurrency N/A and lifecycle/cancellation findings have concrete contract/evidence ownership.
 
 ## PCB-22-4 - Prompt 22: — Add Go support
 
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
-- Implementation: implemented (six fixture variants: reference, alternative-heaps, faulty-ties, quality-defective, race-defective and timeout-case).- Verification: passed (conformance cases cover valid, alternative, wrong, quality-defective, timeout and analyzer crash/timeout outcomes).- Required verification scope: E2E-15, E2E-35.- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.- Acceptance criteria: — Admit fixtures exercising valid/alternative code, ignored errors, cancellation/lifecycle faults, wrong answers and limits. DoD: scenarios detect their intended behavior under a frozen repetition policy and clean fixtures are not falsely penalized.
+- Implementation: implemented (six fixture variants: reference, alternative-heaps, faulty-ties, quality-defective, race-defective and timeout-case).
+- Verification: passed (executable admission: reference passes 5/5 repetitions, alternative-heaps passes, faulty-ties fails its declared case, timeout-case fails as a candidate timeout, and quality-defective passes the gate while showing its intended families).
+- Required verification scope: E2E-15, E2E-35.
+- Note: the Go fixtures are pinned to LF via a new `.gitattributes`; under `core.autocrlf` they arrived as CRLF and `gofmt` (a scored required analyzer) charged the reference solution a formatting finding. See D-22-13.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Acceptance criteria: — Admit fixtures exercising valid/alternative code, ignored errors, cancellation/lifecycle faults, wrong answers and limits. DoD: scenarios detect their intended behavior under a frozen repetition policy and clean fixtures are not falsely penalized.
 
 ## PCB-23-1 - Prompt 23: — Add Java and close language coverage
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (pinned Temurin/Maven/JUnit and analyzer recipes plus a fixed cold/steady-state policy are implemented; built image identities are absent).
-- Verification: partial (static recipe/policy check passed; Docker build/probe/admission is blocked).
+- Implementation: implemented (offline-seeded Temurin/Maven/JUnit recipes, isolated evaluator analyzers, and immutable cold/steady-state JVM policy).
+- Verification: passed for the Java recipes and executable task admission. Identities are in `config/images/java-v1.json`; the current 26-check development-sandbox report is `docs/implementation/evidence/prompt-23-java-admission.json`.
 - Required verification scope: E2E-15, E2E-35 for all required languages.
 - Evidence: See `scripts/build_java_images.py --check` and `docs/implementation/reports/language-coverage.md`.
+- Required verification scope: E2E-15, E2E-35.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Required verification scope: E2E-15, E2E-35.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Required verification scope: E2E-15, E2E-35.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
+- Required verification scope: E2E-15, E2E-35.
+- Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
 - Acceptance criteria: — Build pinned JDK/Maven-or-Gradle/JUnit recipes, offline dependencies and frozen JIT/performance policy. DoD: declared cold/steady-state modes and warmup do not adapt to favor individual candidates.
 
 ## PCB-23-2 - Prompt 23: — Add Java and close language coverage
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (SpotBugs, PMD, Checkstyle, dependency analysis and task-specific probes use shared plan/output contracts; image behavior is unverified).
-- Verification: partial (local parser/plan contracts pass; analyzer runtime and baseline deltas have not been exercised in a built Java image).
+- Implementation: implemented (SpotBugs, PMD, Checkstyle, locked dependency/advisory audit, and contextual resource/concurrency/security probes use shared plan and observation contracts).
+- Verification: passed for five measured reference scans, analyzer failure/absence semantics, resource/security/concurrency findings, and the task's frozen dependency lock in the built evaluator image. Shared baseline-delta resolution remains the scoring contract; the fixture has no public score claim.
 - Required verification scope: E2E-15, E2E-35 for all required languages.
 - Evidence: See Java plugin tests and `docs/implementation/reports/language-coverage.md`.
 - Acceptance criteria: — Integrate SpotBugs, PMD, Checkstyle, dependency analysis and task-specific security/resource/concurrency probes. DoD: analyzer coverage, failure semantics and baseline deltas use shared contracts.
@@ -965,8 +993,8 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (Java profile and eight reference/faulty/alternative/null/resource/concurrency/security/timeout fixtures are implemented).
-- Verification: passed for local task/profile contract tests; no image admission claimed.
+- Implementation: implemented (Java profile and eight reference/faulty/alternative/null/resource/concurrency/security/timeout fixtures; stream/record/SOLID presence alone cannot earn points).
+- Verification: passed for the 26-check executable admission: reference 5/5 stable passes, valid alternative passes, wrong-output/null/timeout fail as candidates, and both resource/concurrency quality-only probes reject their defective variants.
 - Required verification scope: E2E-15, E2E-35 for all required languages.
 - Evidence: See `tests/test_java_taskspec.py`, `tests/test_java_plugin.py`, `tests/test_java_guest.py` and `docs/implementation/evidence/prompt-23-language-audit.json`.
 - Acceptance criteria: — Implement Java profiles and admit valid/alternative/null/resource/concurrency/security/wrong-output fixtures. DoD: streams/records/SOLID terminology do not earn automatic points; behavioral and contextual evidence determines results.
@@ -975,8 +1003,8 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (local extension contract audit added; JS/TS plugin paths are absent and other languages lack complete fresh container evidence).
-- Verification: partial (E2E-15 and E2E-35 remain partial).
+- Implementation: partial (all eight plugin/image identities are audited, JS and TS semantics are distinct, and an allowlist writer that dropped languages plus a C++ analyzer identity defect were fixed).
+- Verification: partial (Java/Go have current development-sandbox evidence, but C/C++ lack current task admission and JavaScript/TypeScript have zero task manifests; E2E-15 and E2E-35 remain partial).
 - Required verification scope: E2E-15, E2E-35 for all required languages.
 - Evidence: See `tests/test_language_extension_audit.py`, `docs/implementation/reports/language-coverage.md`, and `docs/implementation/evidence/prompt-23-language-audit.json`.
 - Acceptance criteria: — Audit Python, Rust, JS, TS, C, C++, Go and Java end to end through plugin registration, task admission, solve output contracts, grading, scoring, replay and capability metadata. DoD: every required language has actual conformance evidence, separate JS/TS semantics, and no missing core path hidden by a capability label.

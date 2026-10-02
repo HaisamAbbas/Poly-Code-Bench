@@ -35,7 +35,7 @@ from polycodebench_scoring.scorer import score_evaluation
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWLIST = ROOT / "config/plugins/allowlist-v1.yaml"
-FIXTURE_LANGUAGES = ("python", "rust", "c", "cpp", "go", "java")
+FIXTURE_LANGUAGES = ("python", "rust", "c", "cpp", "go", "java", "javascript", "typescript")
 PROFILE_VERSIONS = {
     "python": "python-profile-v1",
     "rust": "rust-profile-v1",
@@ -43,6 +43,8 @@ PROFILE_VERSIONS = {
     "cpp": "cpp-profile-v1",
     "go": "go-profile-v1",
     "java": "java-profile-v1",
+    "javascript": "javascript-profile-v1",
+    "typescript": "typescript-profile-v1",
 }
 OUTPUT_PATHS = {
     "python": "solution.py",
@@ -67,7 +69,15 @@ def _package_draft(language: str) -> tuple[TaskDraft, dict[str, Any]]:
     }
     return (
         TaskDraft(
-            task_id=manifest["task"]["task_id"],
+            # Most language packs wrap their task identity under `task`; Java's typed task
+            # fixture has a distinct, strict schema with task_id at the root. Keep the shared
+            # audit on each plugin's actual admission representation instead of coercing Java's
+            # manifest to another language's shape.
+            task_id=(
+                manifest["task"]["task_id"]
+                if isinstance(manifest.get("task"), dict)
+                else manifest["task_id"]
+            ),
             primary_language=language,
             manifest=manifest,
             files=files,
@@ -98,6 +108,8 @@ def _candidate(task_id: str) -> Candidate:
 
 def test_recorded_language_entry_points_load_and_declare_their_own_profile() -> None:
     allowlist = load_allowlist(ALLOWLIST)
+    # Every registered language must have a recorded image identity. A plugin allowlisted without
+    # one would advertise a capability no administrator ever approved.
     assert {entry.plugin_id for entry in allowlist.plugins} == set(FIXTURE_LANGUAGES)
     for language, version in PROFILE_VERSIONS.items():
         plugin = load_language_plugin(allowlist, language)
@@ -105,6 +117,7 @@ def test_recorded_language_entry_points_load_and_declare_their_own_profile() -> 
         assert plugin.language_id == language
         assert profile.language_id == language
         assert profile.effective_for_scoring is False
+        assert allowlist.get(language).image_digests
 
 
 def test_registered_plugins_publish_the_shared_profile_and_property_engine_contracts() -> None:
@@ -118,7 +131,14 @@ def test_registered_plugins_publish_the_shared_profile_and_property_engine_contr
     }
     for language, plugin_type in plugin_types.items():
         draft, _files = _package_draft(language)
-        plugin = plugin_type()
+        if language == "java":
+            # The profile/property engine contract is independent of the image, while plans are
+            # exercised against the real pinned identities in test_java_docker.py.
+            from java_plugin_support import identities as test_java_identities
+
+            plugin = plugin_type(identities=test_java_identities())
+        else:
+            plugin = plugin_type()
         frozen = plugin.freeze_view(draft, "sha256:" + "1" * 64)
         profile = plugin.language_profile
         assert callable(profile.resolve) and callable(profile.owner) and callable(profile.evaluate)
@@ -126,8 +146,10 @@ def test_registered_plugins_publish_the_shared_profile_and_property_engine_contr
         assert engine.kind == "property_engine_identity"
         assert engine.deterministic_policy
 
-    # These source plugins are not production allowlisted until images and task packs are admitted,
-    # but their two language identities must still expose the same core plugin methods.
+    # JS and TS are in the administrative image/plugin allowlist so local tools can load their
+    # distinct identities. That entry does not mean either language has an admitted task pack;
+    # pin the current zero-manifest state so registry metadata cannot silently be read as E2E
+    # coverage.
     for plugin_type, language in (
         (JavaScriptLanguagePlugin, "javascript"),
         (TypeScriptLanguagePlugin, "typescript"),
@@ -135,6 +157,8 @@ def test_registered_plugins_publish_the_shared_profile_and_property_engine_contr
         assert plugin_type.language_id == language
         assert hasattr(plugin_type, "language_profile")
         assert callable(plugin_type.property_engine)
+        fixture_root = ROOT / "plugins/languages" / language / "fixtures"
+        assert not tuple(fixture_root.rglob("manifest.yaml"))
 
 
 def test_c_and_cpp_authored_tasks_validate_and_build_typed_plans() -> None:
@@ -203,6 +227,8 @@ def test_registered_language_profiles_flow_through_scoring_and_replay() -> None:
         "cpp": CppLanguagePlugin().profile("cpp-profile-v1"),
         "go": GoLanguagePlugin().profile("go-profile-v1"),
         "java": load_java_profile().profile,
+        "javascript": JavaScriptLanguagePlugin().profile("javascript-profile-v1"),
+        "typescript": TypeScriptLanguagePlugin().profile("typescript-profile-v1"),
     }
     policy = load_scoring_policy(ROOT / "config/scoring/pilot-v1.yaml")
     ownership = load_evidence_ownership(ROOT / "config/scoring/evidence_ownership.yaml")
@@ -241,10 +267,16 @@ def test_registered_language_profiles_flow_through_scoring_and_replay() -> None:
         assert replay.matched
 
 
-def test_javascript_and_typescript_profiles_are_distinct_but_not_production_allowlisted() -> None:
+def test_javascript_and_typescript_are_registered_with_distinct_semantics() -> None:
+    """Both are now admitted, and they must stay genuinely separate once they are.
+
+    Sharing one source package is fine; sharing one toolchain is not. The images are what decide
+    that: a JavaScript candidate must not be able to run `tsc` in the image that will judge it, so
+    the JavaScript evaluator records `tsc` as absent while the TypeScript one records a version.
+    """
     allowlist = load_allowlist(ALLOWLIST)
-    assert "javascript" not in {entry.plugin_id for entry in allowlist.plugins}
-    assert "typescript" not in {entry.plugin_id for entry in allowlist.plugins}
+    registered = {entry.plugin_id for entry in allowlist.plugins}
+    assert {"javascript", "typescript"} <= registered
     project = (ROOT / "plugins/languages/javascript/pyproject.toml").read_text(encoding="utf-8")
     assert 'javascript = "polycodebench_lang_javascript.plugin:JavaScriptLanguagePlugin"' in project
     assert 'typescript = "polycodebench_lang_javascript.plugin:TypeScriptLanguagePlugin"' in project
@@ -267,3 +299,21 @@ def test_javascript_and_typescript_profiles_are_distinct_but_not_production_allo
         for rule in js["rule_mappings"]
         if isinstance(rule, dict)
     )
+
+
+def test_javascript_and_typescript_images_do_not_share_a_toolchain() -> None:
+    """The recorded identities, not just the profiles, keep the two languages apart."""
+    recorded = {}
+    for language in ("javascript", "typescript"):
+        document = json.loads(
+            (ROOT / f"config/images/{language}-v1.json").read_text(encoding="utf-8")
+        )
+        recorded[language] = document["images"]
+    assert recorded["javascript"]["evaluator"]["tools"]["tsc"] == "absent"
+    assert recorded["javascript"]["evaluator"]["tools"]["eslint"] != "absent"
+    assert recorded["typescript"]["evaluator"]["tools"]["tsc"] != "absent"
+    assert recorded["typescript"]["evaluator"]["tools"]["eslint"] != "absent"
+    # Neither language's runtime image may carry an analyzer its candidates could inspect.
+    for language, images in recorded.items():
+        for recipe in ("runtime", "performance"):
+            assert images[recipe]["tools"]["eslint"] == "absent", (language, recipe)

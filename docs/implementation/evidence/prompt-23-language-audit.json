@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "prompt": "23",
-  "date": "2026-10-02",
+  "date": "2026-10-03",
   "status": "partial",
-  "evidence_tier": "local_fixture_and_historic_container_evidence",
+  "evidence_tier": "local_contract_historical_container_and_current_development_sandbox",
   "fixture_results_are_model_benchmark_results": false,
-  "language_manifest_task_counts": {
+  "task_manifest_counts": {
     "python": 1,
     "rust": 1,
     "javascript": 0,
@@ -25,67 +25,93 @@
     "go": 6,
     "java": 8
   },
-  "historic_real_container_e2e15": {
+  "profiles_and_image_identities": {
+    "report": "docs/implementation/reports/language-coverage.md",
+    "identity_files": {
+      "python": "config/images/python-v1.json",
+      "rust": "config/images/rust-v1.json",
+      "javascript": "config/images/javascript-v1.json",
+      "typescript": "config/images/typescript-v1.json",
+      "c": "config/images/c-v1.json",
+      "cpp": "config/images/cpp-v1.json",
+      "go": "config/images/go-v1.json",
+      "java": "config/images/java-v1.json"
+    },
+    "javascript_typescript_distinct_toolchains": true
+  },
+  "current_admissions": {
+    "java": {
+      "passed": 26,
+      "total": 26,
+      "tier": "development_sandbox",
+      "package_digest": "sha256:1c400f3de8065d6d1a332fc799bf8124b3c9b964922e85b4ff32c88eab25a762",
+      "report_digest": "sha256:7b26f0af53c838cc844390fff95e14de5242082b50823661e6acf0a343c3e832",
+      "evidence": "docs/implementation/evidence/prompt-23-java-admission.json",
+      "quality_admission": "pending"
+    },
+    "go": {
+      "passed": 24,
+      "total": 24,
+      "tier": "development_sandbox",
+      "evidence": "docs/implementation/evidence/prompt-22-go-admission.json"
+    }
+  },
+  "conformance_evidence": {
     "python": {
       "passed": 14,
       "total": 14,
-      "evidence": "docs/implementation/evidence/prompt-10-conformance.json"
+      "evidence": "docs/implementation/evidence/prompt-10-conformance.json",
+      "status": "historical_reused"
     },
     "rust": {
       "passed": 16,
       "total": 16,
-      "evidence": "docs/implementation/evidence/prompt-11-conformance.json"
+      "evidence": "docs/implementation/evidence/prompt-11-conformance.json",
+      "status": "historical_reused"
+    },
+    "go_previous_attempt": {
+      "passed": 17,
+      "total": 18,
+      "failure": "benign fixture called Close on strings.Reader and did not compile",
+      "preserved_evidence": "docs/implementation/evidence/prompt-22-go-conformance-first-attempt.json",
+      "corrected_rerun": "in_progress",
+      "target_evidence": "docs/implementation/evidence/prompt-22-go-conformance.json"
+    },
+    "c_cpp": {
+      "status": "local_contracts_only",
+      "e2e_admission": false
+    },
+    "javascript_typescript": {
+      "status": "no_task_manifests",
+      "e2e_admission": false
     }
   },
   "local_audit": {
-    "test": "tests/test_language_extension_audit.py",
+    "tests": "143 passed in the combined language/Java/C++ contracts; 7 passed in the follow-up JavaScript/TypeScript missing-task guard",
     "covers": [
-      "registered plugin/profile identity checks for implemented plugins",
-      "C/C++ task manifest validation and build/test/analyzer plan generation",
-      "shared solve output extraction and path traversal rejection for all eight language identifiers",
-      "synthetic scoring and replay through the common contract for Python, Rust, C, C++, Go and Java",
-      "separate JavaScript and TypeScript profile applicability",
-      "JS/TS source plugin class and declared entrypoint protocol checks; no allowlist/image/task admission claim"
-    ],
-    "java_task_variants": [
-      "reference",
-      "faulty",
-      "alternative",
-      "null-unsafe",
-      "resource-leak",
-      "concurrency-defect",
-      "security-defective",
-      "timeout"
+      "plugin entry points, profiles, administrative image identity and allowlist digest consistency",
+      "C/C++ manifest and typed plan construction",
+      "solve output envelope and traversal rejection for all eight language ids",
+      "synthetic profile scoring/replay for all eight languages",
+      "JavaScript/TypeScript profile and evaluator toolchain separation",
+      "explicit assertion that JavaScript/TypeScript have no task manifest and registration is not admission"
     ]
   },
   "integration_defects_fixed": [
-    "Go plan assembly was absent; restored typed build/test/analyzer plan construction with language identity.",
-    "Go commands ran outside the module root; added safe relative --cwd support. Existing Go image guest identity is now stale and requires rebuild/admission.",
-    "C++ clang++ violated the Slug identity type; mapped executable identity to clang-plus-plus while retaining clang++ argv.",
-    "C++ sanitizer exit code 2 overlapped unsupported and infrastructure error categories; findings now carry the candidate-result classification without that overlap."
+    "Java offline seed omitted Maven run-time artifacts; seeded goals now cover the executed analyzer/test path.",
+    "Java fixture POM previously ran zero tests; staged hidden test source directory is now explicit.",
+    "PMD targetJdk property, Checkstyle Guava/unsupported rule, and Java dependency audit invocation/parsing defects fixed.",
+    "Java resource and concurrency probes now exercise stream closure and unsafe shared-state behavior.",
+    "C++ allowlist generation now preserves every configured language and parses Cppcheck 2.10 correctly.",
+    "JavaScript evaluator no longer exposes the TypeScript compiler."
   ],
-  "missing_or_stale": {
-    "docker_daemon_available": false,
-    "java_images_built_or_admitted": false,
-    "javascript_plugin_and_task_manifest": false,
-    "typescript_plugin_and_task_manifest": false,
-    "fresh_c_cpp_go_image_admission": false,
-    "go_saved_guest_digest_matches_current_source": false,
-    "cppcheck_version_known": false,
-    "gosec_version_reproducibly_pinned": false,
-    "fresh_rust_advisory_snapshot": false,
-    "javascript_plugin_source_exists": true,
-    "typescript_plugin_source_exists": true,
-    "javascript_typescript_production_allowlist_entries": false,
-    "javascript_typescript_task_manifests": true
-  },
-  "tests": {
-    "language_suite": "161 passed; 1 Windows subprocess test failed before process creation due WinError 1455 paging-file exhaustion; isolated rerun of that test passed; 1 Linux-only guest test skipped.",
-    "shared_solve_score_replay": "79 passed; 4 standard-agent Docker tests skipped.",
-    "targeted_mypy": "19 source files passed.",
-    "java_recipe_static_check": "passed",
-    "dependency_lock_check": "passed"
-  },
+  "limitations": [
+    "Java performance is unmeasured; fixed modes and image policy are validated.",
+    "C/C++ lack current full sandbox admission.",
+    "JavaScript/TypeScript lack authored task packs and all task-backed E2E.",
+    "Go conformance rerun is in progress; gosec reports Version: dev and go-vet identity is recorded absent despite runnable go vet plans.",
+    "Python/Rust real-container reports are historical; current shared adapter contracts are covered locally."
+  ],
   "gates": {
     "E2E-15": "partial",
     "E2E-35": "partial",
@@ -97,6 +123,8 @@
       "infrastructure_blocked_before_dispatch": 144,
       "provider_deliveries": 0
     },
-    "phase_4": "blocked"
-  }
+    "phase_4": "blocked",
+    "wp_19": "partial"
+  },
+  "no_live_provider_human_calibration_or_publication_actions": true
 }

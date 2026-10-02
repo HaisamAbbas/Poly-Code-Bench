@@ -1,12 +1,22 @@
-# Phase 4 aggregate gate — language extensions
+﻿# Phase 4 aggregate gate — BLOCKED
 
-Date: 2026-10-02  
-Gate: **BLOCKED** (Prompt 23 and WP-19 are partial).
+Date: 2026-10-03
 
-Phase 4 covers Python, Rust, JavaScript, TypeScript, C, C++, Go and Java. Its exit condition is actual conformance evidence for each required language through plugin registration, task admission, solve output, grading, scoring, replay and capability metadata. The local Prompt 23 audit proves selected shared-contract paths for six languages and separately confirms that JavaScript and TypeScript profiles are distinct. It also found that JS/TS have source plugin classes and distinct entrypoints but no production allowlist entries, task manifests or complete image identities; Java has no built image identity, and Go's recorded images no longer match the current guest. Therefore the complete requirement is not satisfied.
+Phase 4 requires current evidence for Python, Rust, JavaScript, TypeScript, C, C++, Go and Java through plugin registration, admitted task, solve output contract, grading, scoring/replay and capability metadata. Plugin and image registration alone does not close this gate.
 
-Historic Python E2E-15 evidence is 14/14 and historic Rust evidence is 16/16, both from real pinned containers and retained at their evidence paths. Local fixture audit evidence for the remaining paths is not sandbox conformance. C/C++/Go image build/admission and Java image/runtime admission were not run because the Docker daemon was unavailable. Java recipe static validation passed, but that check does not validate an image.
+| Language | Current evidence | Gate |
+|---|---|---|
+| Python | Historical Prompt 10 container conformance, 14/14; current shared contracts covered by local audit | Partial: evidence is historical |
+| Rust | Historical Prompt 11 container conformance, 16/16; current shared contracts covered by local audit | Partial: evidence is historical |
+| JavaScript | Distinct profile and image; tsc absent; zero task manifests | Blocked: no task-backed execution |
+| TypeScript | Distinct profile and image; TypeScript 7.0.2; zero task manifests | Blocked: no task-backed execution |
+| C | Current image identity, manifest and typed plan checks | Partial: no current sandbox admission |
+| C++ | Current image identity, manifest and typed plan checks; Cppcheck 2.10 | Partial: no current sandbox admission |
+| Go | Current executable admission, 24/24 checks; corrected conformance run is in progress after fixing its invalid benign sample | Partial pending conformance result and tool identity cleanup |
+| Java | Current development-sandbox executable admission, 26/26 checks; Java performance unmeasured | Partial: no performance or production score evidence |
 
-E2E-15 and E2E-35 remain **partial**. Required follow-up: admit the existing JS/TS source plugins with complete image identities and task fixtures; build and admit Java; rebuild and re-admit Go after its guest change; freshly verify and admit C/C++/Go identities; then run all task variants through the shared solve/grading/scoring/replay path. Resolve the recorded `unknown` Cppcheck and `dev` gosec identities and obtain a fresh Rust advisory snapshot before claiming the analyzer coverage requirements complete.
+E2E-15 and E2E-35 remain PARTIAL. The detailed evidence, task counts, fixture variants, tool/image/profile identities and limitations are in docs/implementation/reports/language-coverage.md. WP-19 is not complete.
 
-The Phase 2 pilot gate remains independently **BLOCKED**: 144 expected attempts, 0 completed, 0 model-failed, and 144 infrastructure/preflight-blocked before dispatch; provider deliveries are zero. Phase 3 remains blocked by that accepted-pilot prerequisite. Prompt 24 is the next planned prompt only after the applicable prerequisite gates pass.
+The Phase 2 pilot gate remains independently BLOCKED: expected attempts 144, completed 0, model-failed 0, infrastructure/pre-dispatch-blocked 144, provider deliveries 0. The missing authorization, model/judge configuration, active budget, calibrated review panel, production worker and run-start route remain recorded in docs/implementation/evidence/prompt-17-preflight.json.
+
+Next: finish the corrected Go conformance run, admit C and C++ task variants, create JavaScript and TypeScript task packs, and execute all required core paths. Prompt 24 remains gated until WP-19 and Phase 4 pass.

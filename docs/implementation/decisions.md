@@ -512,3 +512,179 @@ how the Go allowlist kept naming three digests that no longer existed.
 list. It deliberately does not patch the file with a regex: a regex-based version of this edit
 silently deleted the C and C++ entries during development, which is the exact class of failure the
 function exists to prevent.
+
+# D-22-05 ? Analyzer cleanliness is read from stdout, never from a missing file
+
+Two required Go scans reported `missing` on a correct candidate, for two different reasons that a
+file-based convention cannot distinguish from a crash.
+
+**staticcheck** keeps its own fact cache under `$HOME/.cache`. The guest runs with no `HOME`, so
+it resolved to `/.cache` and failed with `read-only file system` before analysing anything. Every
+plan now sets `HOME` and `XDG_CACHE_HOME` into the workspace tmpfs, and the guest runner creates
+them. This is the same class of defect as D-22-01: the tool needed a writable path and the
+environment did not give it one.
+
+**gosec** was told `-out=out/gosec.json`, and that file is written *only when gosec has a finding
+to report*. A clean run leaves the path non-existent, which the parser - correctly refusing to treat
+an absent report as a clean scan - reported as `missing`. So the reference solution was penalised
+for being clean, which is the exact inversion PCB-22-2's DoD forbids. gosec writes its JSON report
+to stdout, so the plan captures that stream and `-out`/`-quiet` are dropped: `-quiet` additionally
+suppresses the per-issue lines that make a partial run legible.
+
+The parser's original behaviour is kept. A run that produces nothing on stdout still yields
+`MISSING`, because that is what a gosec that died before reporting looks like. What changed is that
+"clean" is now an observable fact - an empty `Issues` list in a report that exists - rather than the
+absence of a file.
+
+# D-22-06 ? The analyzer cache is pinned with XDG_CACHE_HOME, not HOME
+
+The fix for D-22-05 first set `HOME` into every Go plan's environment and was refused:
+`ExecRequest.safe_environment` (packages/runner/src/polycodebench_runner/contracts.py:108) treats
+`HOME` as protected, alongside `PATH`, `DOCKER_*`, `AWS_*`, `PCB_*` and `SSH_*`. That guard is
+deliberate — a candidate must not be able to steer where the toolchain reads from — so the plan
+pins `XDG_CACHE_HOME` instead, which is what staticcheck consults first. Verified against the
+built image: with `XDG_CACHE_HOME` set, `staticcheck -f json ./...` exits 0 and creates its fact
+cache under that path.
+
+# D-22-07 ? An empty stream after a completed run is a clean scan
+
+`staticcheck` prints one JSON object per finding and **nothing at all** when there are none; `gosec`
+does the same on stdout. Both parsers treated an empty stream as "no report" and returned `MISSING`,
+so the reference solution — the cleanest code in the package — was the only candidate those two
+required scans could not measure. That is the inversion PCB-22-2's DoD forbids, reached from the
+opposite direction to D-22-05: there the report file was absent because the tool had nothing to say,
+and here the stream is empty for the same reason.
+
+The fix is to stop treating "empty" as a synonym for "absent". The `_guarded` prologue has already
+classified the execution from supervisor evidence alone: a timeout, a tool error and a missing
+required output are all `MISSING` before any parser body runs. If the body is reached with status
+`completed`, the tool ran and reported nothing, which is a measured clean scan. A body reached with
+`completed_with_findings` and an empty stream stays `MISSING`, because a tool that exits nonzero
+having printed nothing has not told us what it found.
+
+So the parsers keep the strict behaviour where it is warranted and yield `findings=0` only where the
+supervisor's own record proves the tool ran to completion.
+
+# D-22-08 ? The stress oracle asserted the wrong tie-break
+
+`TestLargeInputFinishesWithCorrectCounts` failed against the *reference* solution:
+`large input[2]: got {delta 20000} want {gamma 20000}`. All four words occur 20000 times, so the
+case is decided entirely by the tie-break. The visible contract says "Words with the same count are
+ordered alphabetically", which is `alpha, beta, delta, gamma`; the test's `want` list was written in
+insertion order and asserted `gamma` before `delta`.
+
+The reference was right and the test was wrong. The test was corrected to the contract's order, and
+a comment now states that the case is a pure tie-break check, because a reader comparing the list to
+the `builder.WriteString` line above it would otherwise reasonably read the insertion order as
+intended.
+
+This is recorded because it is the kind of defect that makes an oracle look like a solution bug: the
+admission reported `candidate_timeout:collection` for every variant, which pointed at the harness,
+not at a test whose expectation contradicted its own contract.
+
+# D-22-09 ? The Go suite budget is 100s, not 60s
+
+A cold `go test` in this container takes roughly 40 seconds, almost all of it compiling the standard
+library into an empty build cache; the test bodies themselves run in 0.02s and 1.6s. Against a 60s
+suite budget, five acceptance repetitions plus the three-repetition stress group ran at 44-54s each
+and any load on the host pushed them past the deadline, which the parser then reported as
+`candidate_timeout:collection` - a candidate fault for what was host contention.
+
+`suite_timeout_seconds` is raised to 100, which is still inside the plugin's own `MAX_PLAN_SECONDS`
+of 110 and inside the driver's 120s exec cap. The value is a real budget, not a workaround: a
+candidate that genuinely hangs still hits the deadline, and the `timeout-case` fixture exists to prove
+that path.
+
+# D-22-10 ? InventoryGroup carries the group classification
+
+`SuiteAdmission.evaluate` decides how many repetitions to run from
+`inventory[group.group_id].classification`, and the field existed on every plugin's `OracleGroup`
+but not on the shared `InventoryGroup` the engine actually reads. Every plugin's
+`inventory_document()` omitted it, so the attribute access raised `AttributeError` the first time a
+task declared a `quality_only` group with its own repetition count - which is exactly the case
+`suite_timeout_seconds: 100` and the three-repetition stress group created.
+
+`InventoryGroup.classification` now carries it with a default of `acceptance`, so a plugin that has
+not declared it keeps today's behaviour, and the Go inventory populates it from the oracle. The
+field is a declaration of *what a group is for*, not a scoring knob: acceptance groups are re-run
+once per evaluation repetition because their verdict gates the candidate, while quality-only groups
+keep their own count so a resource leak or a race can never become a wrong-answer failure.
+
+# D-22-11 ? The race fixture asserts the evidence its task can actually produce
+
+`race-defective` declares `expected_issue_families: [data-race]`, but `top-words` is a
+deliberately nonconcurrent task: its quality plan sets `race: unsupported`, `race_groups: []` and
+declares no `goroutines_channels` opportunity, so no race plan is built and the detector never
+runs. The expectation was unreachable by construction, and the admission check reported it as
+`quality-defect-detected: fail` even though the variant's actual findings
+(`goroutine-lifecycle`, `string-building`) were exactly right.
+
+The expectation was corrected to the families this task produces. The alternative - flipping the
+task to `race: required` so the declared expectation became true - would have been the wrong fix: it
+would make a counting task declare a concurrency opportunity it does not have, purely to satisfy a
+manifest. That is precisely the false charge PCB-22-3's DoD forbids.
+
+The defect itself is real and was verified directly rather than assumed: running
+`go test -race -count=1 -run ^TestTiesBreakAlphabetically$` against this variant's sources in the
+pinned runtime image reports `WARNING: DATA RACE` and fails. The context scanner, by contrast,
+reports only `accumulator-in-loop` for it (checked rule by rule), which maps to the `string-building`
+family. The expectation was therefore set to the family the task can observe.
+
+The measured data-race path is not left uncovered. `scripts/go_conformance.py`'s
+`race-applicability-is-contextual` case runs the same defect through a *concurrent* view of the task
+(`race: required`, `goroutines_channels: 1`) in the real runtime image and asserts
+`go.race.scan = measured 1` with the finding owned by robustness, alongside a clean control run that
+must measure zero. Coverage moves to where the evidence exists rather than being deleted.
+
+# D-22-12 ? An empty structured report is a result, not an absence (supersedes D-22-07's mechanism)
+
+D-22-07 fixed this on the parser's `status == "completed"`. That was not sufficient, and the
+admission said so: after the fix, `go.staticcheck.scan` was still `missing` while exiting 0 with no
+timeout. Instrumenting `plan_status` showed why - it does not return `completed` for a zero-byte
+required structured output. It returns its own status:
+
+    "empty_report",  # a successful structured report is present but contains no evidence
+
+That status exists precisely for this shape (results.py:26, produced at results.py:111-117), and the
+Go parsers were not handling it. staticcheck and gosec now accept `completed` *or* `empty_report` as
+a measured clean scan.
+
+The distinction that keeps this honest is the exit status. A tool that exited nonzero having printed
+nothing has not said what it found, so it stays `MISSING` - the guard only widens to the case the
+supervisor itself proved was a successful run with nothing to report.
+
+`tests/test_go_plugin.py` now pins both directions:
+`test_a_clean_staticcheck_run_is_measured_zero_not_missing` and
+`test_an_analyzer_that_died_before_reporting_is_still_missing`. The first was mutation-checked:
+removing `empty_report` from the accepted statuses makes it fail with
+`incomplete: staticcheck produced no report`, so the test pins the behaviour rather than the code.
+
+# D-22-13 ? Go fixture bytes are LF, and the repository says so
+
+Every Go fixture variant and the reference reported a `formatting` finding, and
+`test_go_docker.py` failed its reference case with `gofmt.scan value=1`. `gofmt -d` on the reference
+showed the entire file rewritten - not a formatting defect but a line-ending one: the working tree
+had checked the sources out as CRLF under `core.autocrlf=true`, and `gofmt` accepts LF only.
+
+This matters more than a cosmetic finding. `gofmt` is a required analyzer whose findings are
+scored, so a developer's checkout configuration silently decided that the *reference solution* was
+misformatted. The same bytes produced by two different clones would have scored differently.
+
+Fixed by adding a `.gitattributes` (`* text=auto` plus `*.go`, `*.mod`, `*.sum` as `text eol=lf`) and
+normalising the ten checked-in Go fixture files to LF. `.gitattributes` alone would only fix future
+checkouts; the working tree had to be corrected for the run in progress to be valid.
+
+The same trap exists for the Go sources embedded in `scripts/go_conformance.py`: they are Python
+byte literals, so they inherit the Python file's endings. `go_source()` now normalises them, because
+otherwise the clean-sample case - the one that asserts correct code is *not* penalised - fails on a
+CRLF checkout, which is the precise false positive the case exists to prevent.
+
+# D-23-01 - Java measurement modes are task-frozen and image-declared
+
+The Java performance image declares the complete `cold` and `steady-state` JVM flag sets and fixed
+warmup/measurement counts. A task freezes one of those mode names at admission. Cold execution uses
+`-Xint`; steady-state execution uses a single active processor and the fixed JVM options recorded
+in `config/images/java-v1.json`. The runtime and evaluator images do not contain these measurement
+policy files or static analyzers. Unknown modes fail closed, and plan construction has no candidate-
+specific timing or output input. This keeps the interpretation of a Java timing invariant across
+candidates and makes image digest changes visible to task resealing/admission.

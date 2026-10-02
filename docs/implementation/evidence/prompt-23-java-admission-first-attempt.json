@@ -1,0 +1,498 @@
+{
+  "schema_version": 1,
+  "kind": "suite_admission_report",
+  "profile_id": "java-fixture-admission-v1",
+  "task_id": "java-top-words",
+  "task_version": 1,
+  "package_digest": "sha256:b5bbef5861cbe874389b056d0cccbe7d883b4a5769bc2378903ca912f17c91de",
+  "plugin_id": "java",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:bc43deb9f38e8f8e5290aeae027ea7194a0af2061a2624fc7ba551d4bbb37be8",
+    "sha256:f57ec733baa7ae63b113c17217e6084c84ea7a7f9a303623ff7720dce35286a2"
+  ],
+  "checks": [
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "disclosure-scan",
+      "status": "pass",
+      "detail": "visible bundle contains no hidden bytes or hidden digests"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "rights-and-provenance",
+      "status": "pass",
+      "detail": "local authored fixture; no provider transmission or benchmark result is claimed"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "safe-paths-and-snapshot",
+      "status": "pass",
+      "detail": "contained regular files; no links or undeclared files"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "strict-schema",
+      "status": "pass",
+      "detail": "safe task package importer accepted the fixture manifest"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "visible-hidden-separation",
+      "status": "pass",
+      "detail": "separate archives; disclosure scan passed"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "plugin-task-validation",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-reference",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-wrong-ties",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-stream-alternative",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-null-unsafe",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-leaked-resource",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-unsafe-publication",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-command-injection",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-nonterminating",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "reference-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "five-reference-repetitions",
+      "status": "pass",
+      "detail": "five identical outcome inventories required"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "known-fault-rejection",
+      "status": "pass",
+      "detail": "faulty variants must fail their declared cases"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "alternative-solution-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "timeout-variants-rejected",
+      "status": "pass",
+      "detail": "timeouts are candidate failures, not harness errors"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-defect-detected",
+      "status": "fail",
+      "detail": "quality-defective variants pass the functional gate yet show their intended defect"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-quality-probe-outcomes",
+      "status": "pass",
+      "detail": "all declared quality-only probe outcomes matched"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "instrumented-lane-defect-detected",
+      "status": "fail",
+      "detail": "unsafe-publication/context missing unsafe-publication"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "crash-and-build-fixtures-rejected",
+      "status": "pass",
+      "detail": "a crashing or unbuildable solution is a candidate failure, not a harness error"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-analyzer-compatibility",
+      "status": "fail",
+      "detail": "scans: [('java.checkstyle.scan', 'measured'), ('java.context.scan', 'measured'), ('java.dependency.scan', 'missing'), ('java.pmd.scan', 'measured'), ('java.spotbugs.scan', 'measured')]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "performance-workload-smoke",
+      "status": "pass",
+      "detail": "no performance workload declared"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-opportunity-coverage",
+      "status": "pass",
+      "detail": "dimensions: code_quality,correctness,idiomatic,robustness,security"
+    }
+  ],
+  "runs": [
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "reference",
+      "variant": "reference",
+      "repetitions": 5,
+      "gates": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c",
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=missing",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "unusedimportscheck"
+      ],
+      "durations_ms": [
+        34828,
+        32562,
+        35639,
+        37562,
+        38015,
+        31639,
+        36030,
+        35796,
+        38203,
+        40264,
+        37358
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "wrong-ties",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#handlesNullAndNonPositiveLimit",
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[Count[token=b, count=2], Count[token=a, count=2]]>",
+        "fail:demo.TopWordsTest#handlesNullAndNonPositiveLimit:expected: <[]> but was: <[Count[token=b, count=2], Count[token=a, count=2]]>"
+      ],
+      "outcome_digests": [
+        "sha256:cd8a93392d40651ad23135152d05a2acd882c5f2706938c172834113dee8aff3"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        34671,
+        31983,
+        34280,
+        33342,
+        31937,
+        31467,
+        32484
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "stream-alternative",
+      "variant": "alternative",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:66f595e48d37de5d6db23864ff25c80837f7457a8c337e1ce6e356c18ea2ae6c"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        37891,
+        31780,
+        33530,
+        31733,
+        33312,
+        36733,
+        32780
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "null-unsafe",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#handlesNullAndNonPositiveLimit",
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[Count[token=b a a b c, count=1]]>",
+        "error:demo.TopWordsTest#handlesNullAndNonPositiveLimit:No value present"
+      ],
+      "outcome_digests": [
+        "sha256:0191cc5a4da4db4572e16ba15614307371630483e0583c657ef3e648afbc0360"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        33437,
+        32719,
+        38312,
+        33280,
+        37281,
+        40780,
+        40437
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "leaked-resource",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[]>"
+      ],
+      "outcome_digests": [
+        "sha256:fd49e86a720f8d700cfc9979201f3772fb5096c5693f84f13d4623812275af8e"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=missing",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "resource-not-closed"
+      ],
+      "durations_ms": [
+        32125,
+        33875,
+        33187,
+        28875,
+        28891,
+        26859,
+        30516
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "unsafe-publication",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#handlesNullAndNonPositiveLimit",
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[]>",
+        "error:demo.TopWordsTest#handlesNullAndNonPositiveLimit:Cannot invoke \"String.split(String)\" because \"text\" is null"
+      ],
+      "outcome_digests": [
+        "sha256:0191cc5a4da4db4572e16ba15614307371630483e0583c657ef3e648afbc0360"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=missing",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [],
+      "durations_ms": [
+        41469,
+        29342,
+        32312,
+        34843,
+        37062,
+        34702,
+        34578
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "command-injection",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "demo.TopWordsTest#ordersByCountAndToken"
+      ],
+      "reasons": [
+        "fail:demo.TopWordsTest#ordersByCountAndToken:expected: <[Count[token=a, count=2], Count[token=b, count=2]]> but was: <[]>"
+      ],
+      "outcome_digests": [
+        "sha256:fd49e86a720f8d700cfc9979201f3772fb5096c5693f84f13d4623812275af8e"
+      ],
+      "analyzer_scans": [
+        "java.checkstyle.scan=measured",
+        "java.context.scan=measured",
+        "java.dependency.scan=missing",
+        "java.pmd.scan=measured",
+        "java.spotbugs.scan=measured"
+      ],
+      "issue_families": [
+        "command-injection"
+      ],
+      "durations_ms": [
+        29969,
+        30578,
+        27671,
+        28437,
+        28405,
+        30875,
+        27469
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "nonterminating",
+      "variant": "timeout",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        24937,
+        26937,
+        27641,
+        89077,
+        88984,
+        89140,
+        88547
+      ],
+      "quality_only_pass": false
+    }
+  ],
+  "executable_admission_passed": false,
+  "pending_gates": [
+    "generic-evaluator-stage-integration (Prompt 12)",
+    "performance-baseline-canary-and-paired-measurement (Prompt 13)",
+    "judge-anchors-and-human-calibration (Prompt 14)",
+    "deterministic-scoring-replay-and-golden-calculations (Prompt 15)",
+    "production-worker-execution-tier (Prompt 06 owner-deferred)",
+    "curator-approval-and-task-freeze",
+    "owner-rights-confirmation"
+  ],
+  "quality_admission": "pending",
+  "report_digest": "sha256:dee6d50c19eeaaff80798da544947893c8129ba87875b607c91e9d4123c7bfe0"
+}

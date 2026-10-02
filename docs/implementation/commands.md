@@ -450,16 +450,56 @@ human calibration label exists in this workspace, so `pcb-judge run` is refused 
 | Full-workspace `pytest` | NOT CLEAN, and not because of this prompt: the shared working tree contains a concurrent Prompt 13 session whose untracked `tests/test_analyzer_contracts.py` imports a helper that no longer exists in its own `identity.py`, which blocks whole-suite collection until that session finishes. An earlier scoped run reported 666 passed / 50 failed, with every failure in concurrently modified Prompt 13 files. |
 
 
-## Prompt 23 ? Java and language coverage audit
+## Prompt 23 - Java and language coverage audit
 
-Run local Java recipe validation and focused contracts:
+Java's components were seeded before the offline image build. The recipes themselves use no network;
+the task admission command runs the pinned images through the shared development Docker sandbox.
 
 ```powershell
 uv run python scripts/build_java_images.py --check
-uv run pytest -q tests/test_language_extension_audit.py tests/test_java_taskspec.py tests/test_java_plugin.py tests/test_java_guest.py
-uv run pytest -q tests/test_solve_core.py tests/test_solve_families.py tests/test_scoring_replay.py
-uv run python scripts/export_contract_schemas.py --check
-uv run python scripts/check_boundaries.py
+uv run python scripts/build_java_images.py
+uv run python scripts/java_task_tool.py seal plugins/languages/java/fixtures/top-words
+uv run python scripts/java_task_tool.py validate plugins/languages/java/fixtures/top-words
+uv run python scripts/java_task_tool.py admit plugins/languages/java/fixtures/top-words --report docs/implementation/evidence/prompt-23-java-admission.json
+uv run pytest -q tests/test_language_extension_audit.py tests/test_cpp_build_images.py tests/test_java_build_images.py tests/test_java_guest.py tests/test_java_plugin.py tests/test_java_taskspec.py tests/test_java_testparse.py tests/test_go_plugin.py tests/test_cpp_plugin.py tests/test_python_plugin.py tests/test_rust_plugin.py
+uv run ruff check scripts/build_cpp_images.py scripts/build_java_images.py scripts/fetch_java_components.py scripts/java_task_tool.py plugins/languages/java/src tests/test_cpp_build_images.py tests/test_java_build_images.py tests/test_java_guest.py tests/test_java_plugin.py tests/test_java_taskspec.py tests/test_java_testparse.py tests/test_language_extension_audit.py
+uv run mypy plugins/languages/java/src/polycodebench_lang_java
+uv run python scripts/build_java_images.py --check
 ```
 
-When Docker is available, build and test the Java and Go images with `uv run python scripts/fetch_java_components.py`, `uv run python scripts/build_java_images.py`, and `uv run python scripts/build_go_images.py`. Java still needs a Docker conformance/admission test module; Go must be re-admitted because the current guest digest differs from the saved manifest. Then run the E2E-15/E2E-35 matrix.
+The complete task admission is deliberately rerun after any fixture byte changes because the report
+binds the sealed package digest. Python/Rust Prompt 10/11 image evidence is reused only as historical
+evidence; current shared contracts are checked locally. E2E-15/35 remain partial until JS/TS have
+task packs and C/C++ have current sandbox admissions. Java performance remains unmeasured. The
+current Go conformance report is preserved before rerunning after a fix to its benign-code fixture.
+
+## Go (Prompt 22)
+
+```powershell
+# Rebuild the three pinned recipes and re-record their identities and the allowlist entry.
+.venv/Scripts/python.exe scripts/fetch_go_components.py   # only online step
+.venv/Scripts/python.exe scripts/build_go_images.py
+
+# Reseal the fixture manifest against the rebuilt digests, then validate it.
+.venv/Scripts/python.exe scripts/go_task_tool.py seal plugins/languages/go/fixtures/top-words
+.venv/Scripts/python.exe scripts/go_task_tool.py validate plugins/languages/go/fixtures/top-words
+
+# Executable admission (six variants through the real supervisor).
+.venv/Scripts/python.exe scripts/go_task_tool.py admit plugins/languages/go/fixtures/top-words `
+    --report docs/implementation/evidence/prompt-22-go-admission.json
+
+# Language conformance surface.
+.venv/Scripts/python.exe scripts/go_conformance.py `
+    --report docs/implementation/evidence/prompt-22-go-conformance.json
+
+# Real-sandbox tests (opt-in).
+$env:PCB_TEST_DOCKER = "1"
+.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider tests/test_go_docker.py
+
+# Offline suite.
+.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider tests/test_go_plugin.py `
+    tests/test_go_guest.py tests/test_go_profile.py tests/test_go_locks.py
+```
+
+`scripts/go_quick_check.py PACKAGE --variant NAME --check build,test,vet,staticcheck,gosec,gofmt,context,race`
+is an authoring loop, not evidence: it stages one variant and prints what the tool said.

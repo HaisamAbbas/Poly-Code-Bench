@@ -150,6 +150,16 @@ class SuiteAdmission:
         # Language-specific layout comes from the plugin; the defaults are the Python layout.
         self._prefix: str = getattr(plugin, "overlay_prefix", "")
         self._suffixes: tuple[str, ...] = tuple(getattr(plugin, "candidate_suffixes", (".py",)))
+        # Which directories under ``hidden/`` hold overlay files (tests, workloads). A language
+        # whose hidden tests must live inside the package directory - Go's `_test.go` files need
+        # the package's own identifiers - cannot use the Python ``hidden/tests/`` layout, so the
+        # plugin declares its own roots rather than the engine growing a per-language branch.
+        self._overlay_roots: tuple[str, ...] = tuple(
+            getattr(plugin, "overlay_roots", ("hidden/tests/", "hidden/perf/"))
+        )
+        self._overlay_suffixes: tuple[str, ...] = tuple(
+            getattr(plugin, "overlay_suffixes", ())
+        )
         self._trusted: Any = getattr(plugin, "trusted_inputs", None)
 
     # ----------------------------------------------------------------- evaluation
@@ -351,7 +361,8 @@ class SuiteAdmission:
         overlay = {
             self._prefix + path.removeprefix("hidden/"): data
             for path, data in files.items()
-            if path.startswith(("hidden/tests/", "hidden/perf/"))
+            if path.startswith(self._overlay_roots)
+            and (not self._overlay_suffixes or path.endswith(self._overlay_suffixes))
         }
         config: dict[str, bytes] = dict(self._trusted(files, view)) if self._trusted else {}
         allowed = list(manifest["output_contract"]["allowed_paths"])
@@ -377,9 +388,14 @@ class SuiteAdmission:
         smoke = await self.workload_smoke(
             view=view, candidate_files=reference_files, overlay=overlay, config=config
         )
+        # A fixture is analyzed when it is one of the two variants whose findings are part of the
+        # evidence contract, or when it *declares* lane expectations. The second condition is what
+        # makes an ownership/leak/race fixture checkable at all: those variants pass the behaviour
+        # contract, so only an analyzer run distinguishes them from the reference.
         analyses: dict[str, tuple[list[Observation], tuple[str, ...]]] = {}
         for fixture, candidate_files, _ in outcomes:
-            if fixture["variant"] in {"reference", "quality_defective"}:
+            declares_lane = bool(fixture["expectation"].get("expected_lane_findings"))
+            if fixture["variant"] in {"reference", "quality_defective"} or declares_lane:
                 analyses[fixture["name"]] = await self.analyze(
                     view=view,
                     candidate_files=candidate_files,
@@ -491,6 +507,38 @@ class SuiteAdmission:
             "quality-defect-detected",
             defect_ok,
             "quality-defective variants pass the functional gate yet show their intended defect",
+        )
+        # A fixture whose defect only an instrumented lane can observe still has to be *shown* to
+        # produce it. Without this the four ownership/leak/race/crash fixtures were declared and
+        # then never checked, so a task could ship with a defect fixture that its own analyzers
+        # do not detect. Each lane is checked against the families that lane actually reported.
+        lane_ok = True
+        lane_detail: list[str] = []
+        for fixture, _, _ in outcomes:
+            declared = dict(fixture["expectation"].get("expected_lane_findings") or {})
+            if not declared:
+                continue
+            observed, _ = analyses.get(fixture["name"], ([], ()))
+            seen = _families(observed)
+            for lane, wanted in declared.items():
+                missing = sorted(set(wanted) - seen)
+                if missing:
+                    lane_ok = False
+                    lane_detail.append(f"{fixture['name']}/{lane} missing {','.join(missing)}")
+        check(
+            "instrumented-lane-defect-detected",
+            lane_ok,
+            "; ".join(lane_detail[:6]) or "every declared lane reported its families",
+        )
+        crash_faults = [
+            (fixture, result)
+            for fixture, _, result in outcomes
+            if fixture["expectation"].get("expected_failure") in {"candidate_crash", "build_error"}
+        ]
+        check(
+            "crash-and-build-fixtures-rejected",
+            all(set(r.gates) == {"fail"} for _, r in crash_faults),
+            "a crashing or unbuildable solution is a candidate failure, not a harness error",
         )
         required_scans = {f"{self._plugin.language_id}.{a}.scan" for a in view.required_analyzers}
         reference_scans = {

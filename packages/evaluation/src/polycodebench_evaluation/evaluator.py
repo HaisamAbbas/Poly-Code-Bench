@@ -573,7 +573,12 @@ class Evaluator:
         baseline_observations: list[Observation] = []
         raw_c: list[Observation] = []
         out_b: dict[str, bytes] = {}
-        profile = getattr(plugin, "python_profile", None) or getattr(plugin, "rust_profile", None)
+        # `language_profile` is the contract every executable plugin publishes (see
+        # `LanguageProfileEvaluator` in the plugin API). Duck-typing `python_profile`/`rust_profile`
+        # silently yielded None for every other language, which dropped that language's whole
+        # quality section from the evaluation: findings were still recorded, but no item was ever
+        # scored, so the profile looked empty rather than unevaluated.
+        profile = getattr(plugin, "language_profile", None)
         incomplete_notes: list[str] = []
         reviews: list[ReviewItem] = []
         if gate == "pass":

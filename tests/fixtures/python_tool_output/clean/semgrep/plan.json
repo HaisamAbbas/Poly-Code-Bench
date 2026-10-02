@@ -113,5 +113,6 @@
  "evidence_ownership": {
   "canonical-security-issue": "security"
  },
- "baseline_reusable": true
+ "baseline_reusable": true,
+ "language_id": "python"
 }

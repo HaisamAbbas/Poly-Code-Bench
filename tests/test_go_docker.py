@@ -23,6 +23,7 @@ from go_plugin_support import (
     package_files,
     with_quality,
 )
+from polycodebench_core.identity import new_entity_id
 from polycodebench_core.models import Candidate, MeasurementStatus
 from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
 from polycodebench_lang_go import GoLanguagePlugin
@@ -66,25 +67,38 @@ def _variant(relative: str) -> bytes:
 
 
 def _sources(candidate: bytes) -> dict[str, dict[str, bytes]]:
+    """Role-keyed sources: candidate bytes, hidden tests as overlays, module files as config.
+
+    A candidate can never supply an overlay or a config input whatever it names, so the three
+    roles are separate pools here exactly as the supervisor fills them for a real run.
+    """
     files = package_files()
-    sources: dict[str, dict[str, bytes]] = {}
-    for path, data in files.items():
-        if path.startswith("visible/repo/"):
-            sources[path.removeprefix("visible/repo/")] = {"content": data}
-        elif path.startswith("hidden/") and path.endswith("_test.go"):
-            sources[path.removeprefix("hidden/")] = {"content": data}
-    sources["topwords/topwords.go"] = {"content": candidate}
-    return sources
+    return {
+        "candidate": {"topwords/topwords.go": candidate},
+        "overlay": {
+            f"work/{path.removeprefix('hidden/')}": data
+            for path, data in files.items()
+            if path.startswith("hidden/") and path.endswith("_test.go")
+        },
+        "config": plugin.trusted_inputs(files, VIEW),
+    }
 
 
 def _candidate() -> Candidate:
-    return Candidate.model_validate_json(
-        f'{{"schema_version": 1, "kind": "candidate", "candidate_id": '
-        f'"cand-go-docker", "task_id": "{VIEW.task_id}", "task_version": '
-        f'{VIEW.task_version}, "language_id": "go", "model_id": "docker-test", '
-        f'"created_at": "2026-01-01T00:00:00Z", "attempt_kind": "generation", '
-        f'"files": [{{"path": "topwords/topwords.go", "sha256": '
-        f'"{"5" * 64}", "bytes": 1}}]}}'
+    return Candidate.model_validate(
+        {
+            "schema_version": 1,
+            "kind": "candidate",
+            "candidate_id": new_entity_id(),
+            "run_id": new_entity_id(),
+            "task_id": VIEW.task_id,
+            "task_version": VIEW.task_version,
+            "sample_index": 0,
+            "submission_kind": "source_bundle",
+            "payload_digest": "sha256:" + "0" * 64,
+            "artifact_ids": [],
+            "frozen_at": None,
+        }
     )
 
 
@@ -167,7 +181,7 @@ def test_a_race_is_detected_in_the_runtime_image_and_never_in_the_measurement_im
         races = [o for o in observations if o.check_id == "go.race.data-race"]
         assert races, observations
         assert races[0].status == MeasurementStatus.MEASURED
-        assert races[0].owner == "robustness"
+        assert races[0].primary_owner == "robustness"
 
     async def runner_run(plan: Any, sources: dict[str, dict[str, bytes]]) -> Any:
         return await _runner("race").run(

@@ -70,7 +70,7 @@
    "kind": "plan_output",
    "path": "out/miri.out",
    "format": "text",
-   "required": false,
+   "required": true,
    "max_bytes": 4194304,
    "empty_is_clean": false
   },
@@ -144,5 +144,6 @@
  "evidence_ownership": {
   "candidate-undefined-behaviour": "robustness"
  },
- "baseline_reusable": true
+ "baseline_reusable": true,
+ "language_id": "rust"
 }

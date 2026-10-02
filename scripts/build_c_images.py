@@ -313,6 +313,34 @@ def require_checks_exist(tag: str) -> dict[str, object]:
     }
 
 
+def require_suppressions_agree() -> list[str]:
+    """The machine-readable suppression list must match its reasoned sidecar exactly.
+
+    cppcheck's parser accepts only ``id:pattern`` lines, so the reasons cannot live in the file the
+    tool reads. Splitting them is a hazard - a suppression could be added with no reason, or given a
+    reason while doing nothing - so the pairing is checked here rather than trusted.
+    """
+    import yaml
+
+    rules = PLUGIN / "src" / "polycodebench_lang_c" / "rules"
+    listed = {
+        line.strip()
+        for line in (rules / "cppcheck-suppressions.txt").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+    document = yaml.safe_load((rules / "cppcheck-suppression-reasons.yaml").read_text(encoding="utf-8"))
+    reasoned = {f"{entry['id']}:{entry['pattern']}" for entry in document["suppressions"]}
+    for entry in document["suppressions"]:
+        if len(str(entry["reason"]).strip()) < 20:
+            raise SystemExit(f"suppression {entry['id']} has no usable reason")
+    if listed != reasoned:
+        raise SystemExit(
+            "cppcheck suppressions and their reasons disagree: "
+            f"only-listed={sorted(listed - reasoned)} only-reasoned={sorted(reasoned - listed)}"
+        )
+    return sorted(listed)
+
+
 def require_distinct(records: dict[str, dict[str, Any]]) -> None:
     """Fail the build unless the recipes really differ in the ways the plan depends on.
 
@@ -405,7 +433,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"building {name}...", file=sys.stderr)
         records[name] = build(name, no_cache=args.no_cache)
     require_distinct(records)
+    suppressions = require_suppressions_agree()
     checks = require_checks_exist(records["evaluator"]["tag"]) if "evaluator" in records else {}
+    checks["cppcheck_suppressions"] = suppressions
     images = {
         name: build_record(name, record, guest_digest, rules_digest)
         for name, record in sorted(records.items())

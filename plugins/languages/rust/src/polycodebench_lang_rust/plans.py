@@ -9,6 +9,7 @@ inputs.
 
 from __future__ import annotations
 
+import hashlib
 import tomllib
 from collections.abc import Mapping
 from functools import lru_cache
@@ -57,6 +58,11 @@ MAX_PLAN_SECONDS = 110
 # cargo's own "the build or a test failed".
 TOOL_ERRORS = (2, 126, 127)
 CARGO_FAILED = 101
+
+
+def advisory_snapshot() -> bytes:
+    """The exact advisory data copied into the evaluator image, including an empty snapshot."""
+    return (Path(__file__).resolve().parent / "rules" / "advisories" / "snapshot.json").read_bytes()
 
 
 def resources(timeout: int, *, memory_mib: int = 2048) -> ResourcePolicy:
@@ -243,18 +249,39 @@ def _analysis(
 ) -> AnalysisPlan:
     task = context.task
     quality = quality_from_mapping(task.quality)
+    plan_outputs = outputs
+    if not any(
+        output.required and not output.path.endswith((".run.json", ".build.json"))
+        for output in outputs
+    ):
+        # Captured compiler diagnostics are the report for clippy/Miri. They are required evidence,
+        # even though the same capture helper is optional for build and test plans.
+        report = next((output for output in outputs if output.path.endswith(".out")), None)
+        if report is not None:
+            plan_outputs = tuple(
+                item.model_copy(update={"required": True}) if item is report else item
+                for item in outputs
+            )
     fields = _base(
         ids,
         plan_id=f"rust.analysis.{analyzer}",
         argv=argv,
-        tool=ids.tool(tool, lock_digest=quality.cargo_lock_digest if needs_lock else None),
+        tool=ids.tool(
+            tool,
+            lock_digest=quality.cargo_lock_digest if needs_lock else None,
+            advisory_snapshot_digest=(
+                "sha256:" + hashlib.sha256(advisory_snapshot()).hexdigest()
+                if analyzer == "dependency"
+                else None
+            ),
+        ),
         parser_id=f"rust-{analyzer}",
         inputs=(
             *_candidate_inputs(context.candidate_paths),
             *_crate_inputs(quality.crate_files),
             *extra_inputs,
         ),
-        outputs=outputs,
+        outputs=plan_outputs,
         scope=tuple(context.candidate_paths),
         timeout=timeout,
         semantics=semantics,

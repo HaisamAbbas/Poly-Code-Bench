@@ -11,7 +11,7 @@ import json
 import pytest
 from go_plugin_support import TOP_WORDS, draft, frozen, manifest, package_files
 from polycodebench_core.identity import new_entity_id
-from polycodebench_core.models import Candidate
+from polycodebench_core.models import Candidate, MeasurementStatus
 from polycodebench_lang_go import GoLanguagePlugin
 from polycodebench_lang_go import plans as go_plans
 from polycodebench_lang_go.taskspec import discover_cases
@@ -318,6 +318,55 @@ def test_the_build_verdict_reads_the_compiler_not_a_line_pattern(plugin: GoLangu
 
     missing = DictArtifactReader({"_execution.json": _record(1, timed_out=True)})
     assert plugin.parse_build(plan, missing) == ("incomplete", "build timed out")
+
+
+def test_a_clean_staticcheck_run_is_measured_zero_not_missing(plugin: GoLanguagePlugin) -> None:
+    """An empty report is a result; only an absent one is missing evidence (PCB-22-2).
+
+    staticcheck prints one JSON object per finding and nothing at all when there are none, so a
+    clean candidate produces a zero-byte report that the supervisor classifies as
+    ``empty_report``. Reading that as MISSING makes the reference solution - the cleanest code in
+    the package - the only candidate those two required scans cannot measure.
+    """
+    view = frozen(plugin)
+    plans = {p.analyzer_id: p for p in plugin.analysis_plans(context(view))}
+    for tool in ("staticcheck", "gosec"):
+        plan = plans[tool]
+        reader = DictArtifactReader(
+            {
+                f"out/{tool}.out": b"",
+                f"out/{tool}.err": b"",
+                f"out/{tool}.run.json": b'{"exit_code":0,"timed_out":false}',
+                "_execution.json": _record(0),
+            }
+        )
+        scan = next(o for o in plugin.parse_analysis(reader, plan) if o.check_id.endswith(".scan"))
+        assert scan.check_id == f"go.{tool}.scan"
+        assert scan.status == MeasurementStatus.MEASURED, (tool, scan.explanation)
+        assert scan.value == 0
+
+
+def test_an_analyzer_that_died_before_reporting_is_still_missing(
+    plugin: GoLanguagePlugin,
+) -> None:
+    """The clean case above must not weaken the crash case.
+
+    A nonzero exit with no report is missing evidence, not a clean scan.
+    """
+    view = frozen(plugin)
+    plans = {p.analyzer_id: p for p in plugin.analysis_plans(context(view))}
+    plan = plans["staticcheck"]
+    reader = DictArtifactReader(
+        {
+            "out/staticcheck.out": b"",
+            "out/staticcheck.err": b"internal error\n",
+            "out/staticcheck.run.json": b'{"exit_code":3,"timed_out":false}',
+            "_execution.json": _record(3),
+        }
+    )
+    scan = next(o for o in plugin.parse_analysis(reader, plan) if o.check_id.endswith(".scan"))
+    assert scan.status == MeasurementStatus.MISSING
+    assert scan.value is None
 
 
 def _record(exit_code: int, *, timed_out: bool = False) -> bytes:

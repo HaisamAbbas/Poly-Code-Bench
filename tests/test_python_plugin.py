@@ -127,10 +127,10 @@ def test_registry_loads_only_allowlisted_entry_points_and_images() -> None:
     assert loaded.language_id == "python" and loaded.api_version == 1
     rust = load_language_plugin(allowlist, "rust")
     assert rust.language_id == "rust" and rust.api_version == 1
+    java = load_language_plugin(allowlist, "java")
+    assert java.language_id == "java" and java.api_version == 1
     plan = plugin.build_plan(frozen(plugin), _candidate())
     assert_plan_allowed(allowlist, "python", plan)
-    with pytest.raises(RegistryError):
-        load_language_plugin(allowlist, "java")  # not yet allowlisted with a built image identity
     tampered = _allowlist(allowlist, entry_point="evil.module:Plugin")
     with pytest.raises(RegistryError):
         load_language_plugin(tampered, "python")

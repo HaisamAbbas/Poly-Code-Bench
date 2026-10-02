@@ -127,7 +127,7 @@
    "kind": "plan_output",
    "path": "out/clippy.out",
    "format": "jsonl",
-   "required": false,
+   "required": true,
    "max_bytes": 4194304,
    "empty_is_clean": false
   },
@@ -197,5 +197,6 @@
  "required": true,
  "output_schema": "cargo-clippy-json-v1",
  "evidence_ownership": {},
- "baseline_reusable": true
+ "baseline_reusable": true,
+ "language_id": "rust"
 }

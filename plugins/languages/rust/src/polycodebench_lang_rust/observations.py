@@ -22,6 +22,7 @@ from polycodebench_core.models import (
     SourceLocation,
 )
 from polycodebench_plugins_api import AnalysisPlan
+from polycodebench_plugins_api.results import raw_report_ids
 
 Severity = Literal["critical", "high", "medium", "low"]
 
@@ -100,7 +101,7 @@ def finding(
         baseline_relation=None,
         issue_key=key,
         primary_owner=owner,
-        raw_artifact_ids=[],
+        raw_artifact_ids=raw_report_ids(plan),
         explanation=explanation[:500],
     )
 
@@ -135,6 +136,6 @@ def scan_observation(
         baseline_relation=None,
         issue_key=None,
         primary_owner=None,
-        raw_artifact_ids=[],
+        raw_artifact_ids=raw_report_ids(plan),
         explanation=explanation[:500],
     )

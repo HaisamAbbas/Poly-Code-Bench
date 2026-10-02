@@ -91,5 +91,6 @@
  "required": true,
  "output_schema": "pcb-context-scan-v1",
  "evidence_ownership": {},
- "baseline_reusable": true
+ "baseline_reusable": true,
+ "language_id": "python"
 }

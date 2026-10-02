@@ -68,6 +68,7 @@ class ImageIdentities(_Strict):
             lock_digest=image.lock_digest,
             rule_bundle_digest=self.rule_bundle_digest,
             advisory_snapshot_digest=None,
+            advisory_snapshot_state=("absent" if name == "dependency-check" else "not_applicable"),
             parser_version=parser_version,
         )
 

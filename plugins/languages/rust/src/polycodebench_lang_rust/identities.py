@@ -77,6 +77,7 @@ class ImageIdentities(_Strict):
         recipe: Recipe = "evaluator",
         parser_version: str = PARSER_VERSION,
         lock_digest: str | None = None,
+        advisory_snapshot_digest: str | None = None,
     ) -> ToolIdentity:
         """Identity of one Rust tool.
 
@@ -95,7 +96,12 @@ class ImageIdentities(_Strict):
             image_digest=record.digest,
             lock_digest=lock_digest or record.recipe_digest,
             rule_bundle_digest=self.rule_bundle_digest,
-            advisory_snapshot_digest=None,
+            advisory_snapshot_digest=advisory_snapshot_digest,
+            advisory_snapshot_state=(
+                "pinned" if advisory_snapshot_digest is not None
+                else "absent" if name == "dependency-check"
+                else "not_applicable"
+            ),
             parser_version=parser_version,
         )
 

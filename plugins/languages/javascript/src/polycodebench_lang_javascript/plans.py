@@ -337,6 +337,17 @@ def _analysis(
     task = context.task
     quality = quality_from_mapping(task.quality)
     sources = _sources(task)
+    plan_outputs = outputs
+    if not any(
+        output.required and not output.path.endswith((".run.json", ".build.json"))
+        for output in outputs
+    ):
+        report = next((output for output in outputs if output.path.endswith(".out")), None)
+        if report is not None:
+            plan_outputs = tuple(
+                item.model_copy(update={"required": True}) if item is report else item
+                for item in outputs
+            )
     fields = _base(
         ids,
         plan_id=f"javascript.analysis.{analyzer}",
@@ -348,7 +359,7 @@ def _analysis(
             *_config_inputs(quality.config_files),
             *extra_inputs,
         ),
-        outputs=outputs,
+        outputs=plan_outputs,
         scope=sources,
         timeout=timeout,
         semantics=semantics,

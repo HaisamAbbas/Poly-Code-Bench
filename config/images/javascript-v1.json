@@ -1,0 +1,132 @@
+{
+  "base_image": {
+    "digest": "sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5",
+    "reference": "node@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5"
+  },
+  "build": {
+    "advisory_source": {
+      "database": "npm advisory database (GitHub Advisory Database feed)",
+      "endpoint": "/-/npm/v1/security/audits/quick",
+      "registry": "https://registry.npmjs.org",
+      "report_digest": "sha256:d27514aa174d79ee65516e6d5b145cecc90ba993c7a36abd734bd7f1451701a5",
+      "source": "npm audit endpoint",
+      "vulnerabilities": {
+        "critical": 0,
+        "high": 0,
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "total": 0
+      }
+    },
+    "components_digest": "sha256:74630027765f7dbddc6a18dbf1101c0dc3a629f8bbc0b30648670f3cf39a9201",
+    "components_image": "pcb-js-components-lint:v1",
+    "components_images": [
+      "pcb-js-components-base:v1",
+      "pcb-js-components-lint:v1"
+    ],
+    "components_installed_at_build_time": true,
+    "components_lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
+    "dependency_tree_digest": "sha256:c7a3c34247aa37121c2e7d32d2cb51b45648ae6878a0977a914655c1e90385c7",
+    "guest_interpreter": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+    "network": "none",
+    "note": "Local development build. The dependency closure is resolved once by scripts/fetch_js_components.py -- the only step in the JS/TS pipeline that uses a network -- against the committed infra/images/javascript/package-lock.json, and is carried into each image from a pinned components image. Nothing is installed at build time here: every image is built with --network none and npm is configured with offline=true and an unreachable registry, so an install inside a scored run fails loudly instead of downloading something the identity does not know about. The evaluator images carry eslint (and tsc for TypeScript); the runtime and performance images carry neither, so a candidate cannot inspect the analyzers that judge it. Measurement settings live in the Dockerfile's performance profile, not in the task manifest. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
+    "offline_install": true,
+    "scored_runs_offline": true
+  },
+  "guest_digest": "sha256:19ce8d15f923057235331804982e76afa386662a71698e33885d9d84e8fba71f",
+  "images": {
+    "evaluator": {
+      "components": [
+        "node:22.23.2",
+        "npm:10.9.8",
+        "vitest:5.0.3",
+        "eslint:10.11.0"
+      ],
+      "digest": "sha256:5ff3e2279c5ae9bc930081ada765b168ab4802d3915a9b132510df53f9d0362a",
+      "dockerfile_digest": "sha256:f2811264a0c2f2b7e703a3132629b37fb8d6e264d7aadc6d0f46610f1c96600e",
+      "expected_tools": [
+        "node",
+        "npm",
+        "vitest",
+        "eslint"
+      ],
+      "guest_and_rules_digest": "sha256:5db1351af75fa03efbba656ad81e155a7faca20430e15573bfafb4e0451f446f",
+      "lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
+      "node": "22.23.2",
+      "package_manager": "npm@10.9.8",
+      "recipe": "evaluator",
+      "recipe_digest": "sha256:37de09d38a64c7171af9ec4e48027a0a84596be9af77bc31dcfbd906749f4f4b",
+      "reference": "pcb-js-javascript-evaluator:v1@sha256:5ff3e2279c5ae9bc930081ada765b168ab4802d3915a9b132510df53f9d0362a",
+      "tag": "pcb-js-javascript-evaluator:v1",
+      "tools": {
+        "eslint": "10.11.0",
+        "node": "22.23.2",
+        "npm": "10.9.8",
+        "tsc": "absent",
+        "vitest": "5.0.3"
+      }
+    },
+    "performance": {
+      "components": [
+        "node:22.23.2",
+        "npm:10.9.8",
+        "vitest:5.0.3"
+      ],
+      "digest": "sha256:5525cc983a8f5a4ec5538f04e585f62037abfe49286bd83a3e86a304a15ea258",
+      "dockerfile_digest": "sha256:f2811264a0c2f2b7e703a3132629b37fb8d6e264d7aadc6d0f46610f1c96600e",
+      "expected_tools": [
+        "node",
+        "npm",
+        "vitest"
+      ],
+      "guest_and_rules_digest": "sha256:5db1351af75fa03efbba656ad81e155a7faca20430e15573bfafb4e0451f446f",
+      "lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
+      "node": "22.23.2",
+      "package_manager": "npm@10.9.8",
+      "recipe": "performance",
+      "recipe_digest": "sha256:37de09d38a64c7171af9ec4e48027a0a84596be9af77bc31dcfbd906749f4f4b",
+      "reference": "pcb-js-javascript-performance:v1@sha256:5525cc983a8f5a4ec5538f04e585f62037abfe49286bd83a3e86a304a15ea258",
+      "tag": "pcb-js-javascript-performance:v1",
+      "tools": {
+        "eslint": "absent",
+        "node": "22.23.2",
+        "npm": "10.9.8",
+        "tsc": "absent",
+        "vitest": "5.0.3"
+      }
+    },
+    "runtime": {
+      "components": [
+        "node:22.23.2",
+        "npm:10.9.8",
+        "vitest:5.0.3"
+      ],
+      "digest": "sha256:733dd86c72be881f702771c3648878a9615cf00326391b22777cca74281f7e86",
+      "dockerfile_digest": "sha256:f2811264a0c2f2b7e703a3132629b37fb8d6e264d7aadc6d0f46610f1c96600e",
+      "expected_tools": [
+        "node",
+        "npm",
+        "vitest"
+      ],
+      "guest_and_rules_digest": "sha256:5db1351af75fa03efbba656ad81e155a7faca20430e15573bfafb4e0451f446f",
+      "lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
+      "node": "22.23.2",
+      "package_manager": "npm@10.9.8",
+      "recipe": "runtime",
+      "recipe_digest": "sha256:37de09d38a64c7171af9ec4e48027a0a84596be9af77bc31dcfbd906749f4f4b",
+      "reference": "pcb-js-javascript-runtime:v1@sha256:733dd86c72be881f702771c3648878a9615cf00326391b22777cca74281f7e86",
+      "tag": "pcb-js-javascript-runtime:v1",
+      "tools": {
+        "eslint": "absent",
+        "node": "22.23.2",
+        "npm": "10.9.8",
+        "tsc": "absent",
+        "vitest": "5.0.3"
+      }
+    }
+  },
+  "kind": "javascript_images",
+  "rule_bundle_digest": "sha256:cef7b974b0dcb2f85b316b7df0cf90dc4119a2cc8de21dab520ec97f41810e08",
+  "schema_version": 1
+}

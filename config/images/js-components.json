@@ -25,8 +25,8 @@
   },
   "images": {
     "pcb-js-components-base:v1": {
-      "digest": "sha256:f556d98937ce1949ce5fb51d589d38be472800d10be58d281ffac4cbed15210d",
-      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "digest": "sha256:567a6e77729b3a59d8d549057d8714f3d00ea99a9f23ef498bdd956a36fb8733",
+      "dockerfile_digest": "sha256:6f9d14202c8b2d1857a0b7cb1a101128fa7819ffdafc655a0506c51773c65ec7",
       "target": "base",
       "tools": {
         "eslint": "absent",
@@ -37,8 +37,8 @@
       }
     },
     "pcb-js-components-lint:v1": {
-      "digest": "sha256:5c8504f6b8e530a95986faace2d1c14b983182d7ad035d0e4adfe8a8c40e2fc3",
-      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "digest": "sha256:a10031651ccd4dad3871c21c322b1a58f29218b982872c9924f98f372ae7260d",
+      "dockerfile_digest": "sha256:6f9d14202c8b2d1857a0b7cb1a101128fa7819ffdafc655a0506c51773c65ec7",
       "target": "lint",
       "tools": {
         "eslint": "v10.11.0",
@@ -49,11 +49,11 @@
       }
     },
     "pcb-js-components-typescript:v1": {
-      "digest": "sha256:584da340fde93d949b1727ad6383d5c4eb7623ea75d9166d10f16d58eb85d1f8",
-      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "digest": "sha256:e64ca3856f3b02d2eb8056a55acc74e33815a510fd2dd2e569058b338e6da166",
+      "dockerfile_digest": "sha256:6f9d14202c8b2d1857a0b7cb1a101128fa7819ffdafc655a0506c51773c65ec7",
       "target": "typescript",
       "tools": {
-        "eslint": "v10.11.0",
+        "eslint": "absent",
         "node": "v22.23.2",
         "npm": "10.9.8",
         "tsc": "Version 7.0.2",
@@ -61,8 +61,8 @@
       }
     },
     "pcb-js-components:v1": {
-      "digest": "sha256:6c167d901b21679a9f864d64196c4a4d38a47abc1ba5854b7bfde06a1c42e91a",
-      "dockerfile_digest": "sha256:2149cb776a43bbb1a0cc391280e8fa24732a54176517a9a530198ca1152979d9",
+      "digest": "sha256:82753136ec3e116c9702a4d916158d4e22bccb348c92e9e04ee449ee5a7433b2",
+      "dockerfile_digest": "sha256:6f9d14202c8b2d1857a0b7cb1a101128fa7819ffdafc655a0506c51773c65ec7",
       "target": "full",
       "tools": {
         "eslint": "v10.11.0",

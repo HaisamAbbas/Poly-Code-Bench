@@ -280,6 +280,17 @@ class _NodeLanguagePlugin:
             examples_pinned=None,
         )
 
+    def profile(self, version: str) -> LanguageProfile:
+        """The scored profile for a declared version.
+
+        Every registered language plugin answers this, and the supervisor reads it rather than
+        probing for a per-language attribute. An unknown version is an error rather than a silent
+        return of whatever is loaded, so a task cannot be scored against a profile it did not name.
+        """
+        if version != profile_version(self.language_id):
+            raise ValueError(f"unknown {self.language_id} profile version {version!r}")
+        return self._profile.profile
+
     @property
     def language_profile(self) -> JsProfile:
         return self._profile

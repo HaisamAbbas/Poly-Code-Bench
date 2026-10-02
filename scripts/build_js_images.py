@@ -13,7 +13,8 @@ npm needs a registry to resolve anything, so the dependency closure is resolved 
 ``scripts/fetch_js_components.py`` -- the only step in the JS/TS pipeline that uses a network -- and
 lives in the components images. This script copies that finished closure into each image and builds
 with ``--network none``, so neither these builds nor any scored run install or fetch anything. The
-committed ``package-lock.json`` is the pinned closure; its digest is part of every recorded identity.
+committed ``package-lock.json`` is the pinned closure; its digest is part of every recorded
+identity.
 """
 
 from __future__ import annotations
@@ -48,14 +49,16 @@ ENTRY_POINTS = {
 }
 COMPONENTS_BASE_TAG = "pcb-js-components-base:v1"
 COMPONENTS_TYPESCRIPT_TAG = "pcb-js-components-typescript:v1"
+COMPONENTS_LINT_TAG = "pcb-js-components-lint:v1"
 COMPONENTS_EVALUATOR_TAG = "pcb-js-components:v1"
 # (language, recipe) -> the components image it is built from. This is what makes the recipes
-# genuinely distinct: the evaluator images carry eslint, the others do not, and only the TypeScript
-# images carry tsc.
+# genuinely distinct, and what keeps the two languages apart: a JavaScript candidate must not be
+# able to run `tsc` in the image that will judge it, so the JavaScript evaluator is built from the
+# lint-only components image while the TypeScript evaluator gets eslint *and* tsc.
 COMPONENTS_FOR_RECIPE = {
     ("javascript", "runtime"): COMPONENTS_BASE_TAG,
     ("javascript", "performance"): COMPONENTS_BASE_TAG,
-    ("javascript", "evaluator"): COMPONENTS_EVALUATOR_TAG,
+    ("javascript", "evaluator"): COMPONENTS_LINT_TAG,
     ("typescript", "runtime"): COMPONENTS_TYPESCRIPT_TAG,
     ("typescript", "performance"): COMPONENTS_TYPESCRIPT_TAG,
     ("typescript", "evaluator"): COMPONENTS_EVALUATOR_TAG,
@@ -323,14 +326,16 @@ def document_for(
             "note": (
                 "Local development build. The dependency closure is resolved once by "
                 "scripts/fetch_js_components.py -- the only step in the JS/TS pipeline that uses a "
-                "network -- against the committed infra/images/javascript/package-lock.json, and is "
+                "network -- against the committed "
+                "infra/images/javascript/package-lock.json, and is "
                 "carried into each image from a pinned components image. Nothing is installed at "
                 "build time here: every image is built with --network none and npm is configured "
                 "with offline=true and an unreachable registry, so an install inside a scored run "
                 "fails loudly instead of downloading something the identity does not know about. "
-                "The evaluator images carry eslint (and tsc for TypeScript); the runtime and "
-                "performance images carry neither, so a candidate cannot inspect the analyzers that "
-                "judge it. Measurement settings live in the Dockerfile's performance profile, not "
+                "The evaluator images carry eslint (and tsc for TypeScript only); the runtime "
+                "and performance images carry neither, so a candidate cannot inspect the "
+                "analyzers that judge it. Measurement settings live in the Dockerfile's "
+                "performance profile, not "
                 "in the task manifest. A rebuild changes image digests, so task manifests must be "
                 "resealed and admission re-run."
             ),
@@ -385,7 +390,8 @@ def refresh_allowlist(images_by_language: dict[str, dict[str, dict[str, object]]
             continue
         kept.append(entry)
     kept.extend(render_entry(language, images) for language, images in images_by_language.items())
-    ALLOWLIST.write_text("\n".join(header + [line for entry in kept for line in entry]) + "\n", "utf-8")
+    body = "\n".join(header + [line for entry in kept for line in entry])
+    ALLOWLIST.write_text(body + "\n", "utf-8")
 
 
 def main() -> int:
@@ -399,7 +405,8 @@ def main() -> int:
     recorded: dict[str, dict[str, dict[str, object]]] = {}
     for language in LANGUAGES:
         path = output_file(language)
-        recorded[language] = json.loads(path.read_text(encoding="utf-8"))["images"] if path.is_file() else {}
+        document = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        recorded[language] = document.get("images", {})
     if "--allowlist-only" in sys.argv:
         if not all(recorded.values()):
             raise SystemExit(
@@ -428,7 +435,8 @@ def main() -> int:
         )
         recorded[language] = document["images"]
     refresh_allowlist(recorded)
-    print(f"wrote {', '.join(str(output_file(l).relative_to(ROOT)) for l in LANGUAGES)}")
+    written = ", ".join(str(output_file(name).relative_to(ROOT)) for name in LANGUAGES)
+    print(f"wrote {written}")
     print(f"wrote {ALLOWLIST.relative_to(ROOT)}")
     return 0
 

@@ -1,0 +1,16 @@
+# Go sources are scored against `gofmt`, which only accepts LF line endings. Without this the
+# repository's own `core.autocrlf=true` checkout rewrites every fixture to CRLF, and the reference
+# solution is then charged a formatting finding it did not earn - the admission reported
+# `go.gofmt.scan value=1` against a reference that is correctly formatted in every other respect.
+#
+# `* text=auto` keeps git's normal end-of-line handling; the explicit `eol=lf` below overrides it
+# for the two trees whose bytes are evidence rather than prose.
+* text=auto
+
+*.go    text eol=lf
+*.mod   text eol=lf
+*.sum   text eol=lf
+# C fixtures and harness sources are sealed into task manifests and compiled under `-Wpedantic`:
+# their bytes are evidence, so a `core.autocrlf` checkout must not decide their digests (D-20-04).
+plugins/languages/c/**/*.c    text eol=lf
+plugins/languages/c/**/*.h    text eol=lf

@@ -1,0 +1,45 @@
+# PolyCodeBench Go recipes (Prompt 22, PCB-22-1).
+#
+# The Go toolchain is pinned at the distribution level: `golang:1.26.8-bookworm` ships go, gofmt,
+# go vet and the race detector. What separates the recipes is what is *added* on top, and the
+# analyzer binaries are the difference:
+#
+# runtime     : the pinned toolchain only. Build/test/vet/race plans and the solve guest.
+#               No staticcheck, no gosec: a candidate cannot inspect the analyzers that will judge
+#               it from inside the image it runs in.
+# evaluator   : runtime plus the two third-party analyzers, installed from pinned module versions
+#               in the components image. Analyzer plans that need them run here.
+# performance : runtime plus a fixed release profile and a warmed build cache, so measurement
+#               codegen is fixed by the image rather than left to whatever the task's manifest
+#               happens to say. No measurement plan may target it with an instrumented build.
+#
+# The race detector is a *plan* difference, not a package difference: it ships inside the pinned
+# `golang` base in every recipe, so the measurement image can technically run `-race`. The
+# separation is therefore contractual, exactly as it is for the C sanitizer runtimes - each recipe
+# declares its own `instrumentation`, and a plan that would measure is refused unless the recipe it
+# targets records `none`. That declared value is the gate; image capability is not, because
+# requiring the compiler to lose a feature would mean shipping a different toolchain.
+instrumentation:
+  runtime: none
+  evaluator: none
+  performance: none
+instrumented_recipes: [runtime]
+#
+# Format: <component>:<version>. Modules are installed with `go install <module>@<version>`, so the
+# version is part of the recorded tool identity.
+runtime:
+  - go:1.26.8
+  - gofmt:1.26.8
+  - go-vet:1.26.8
+  - go-race-detector:1.26.8
+evaluator:
+  - go:1.26.8
+  - gofmt:1.26.8
+  - go-vet:1.26.8
+  - go-race-detector:1.26.8
+  - staticcheck:v0.8.1
+  - gosec:v2.29.0
+performance:
+  - go:1.26.8
+  - gofmt:1.26.8
+  - go-vet:1.26.8

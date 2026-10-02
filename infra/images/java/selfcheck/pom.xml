@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Build-time offline self-check for the PolyCodeBench Java images (Prompt 23, PCB-23-1).
+
+  The image build runs an offline `mvn test` against this project, in a container with networking
+  disabled. That proves the seeded repository actually carries the compile, surefire and JUnit
+  artifacts a scored run needs, rather than proving something narrower: a help-plugin invocation
+  resolves a different graph than a build does, so it can succeed while a real build would reach for
+  the network.
+
+  The evaluator recipe replaces this POM with evaluator-pom.xml, which adds the three analyzers, and
+  runs an offline compile plus spotbugs, pmd and checkstyle, so a missing analyzer artifact fails
+  the image build too.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>pcb</groupId>
+  <artifactId>java-selfcheck</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

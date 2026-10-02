@@ -285,6 +285,11 @@ def _taskset(args: argparse.Namespace, request_id: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] == "release":
+        from polycodebench_publication.cli import main as release_main
+
+        return release_main(arguments[1:])
     args = _parser().parse_args(argv)
     request_id = args.request_id or str(uuid4())
     try:

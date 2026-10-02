@@ -670,7 +670,7 @@ tasks:
     owner_confirmation: pending
   admission:
     status: executable_admission_passed
-    report_digest: sha256:b7a4de7e5c362068f58f4a89179a80475e794a6ce96d0a519e28afd66194da0b
+    report_digest: sha256:09c300197a431b1834217a270b173f01cf431eff0b9f3f87bda236d382b8c62c
     report_package_digest: sha256:c05438910228d4906f5e75b235b57c16f4c5fb7022f16630a57ba7f70f05a6ca
     execution_tier: development_sandbox
     checks_passed: 22
@@ -733,7 +733,7 @@ tasks:
     owner_confirmation: pending
   admission:
     status: executable_admission_passed
-    report_digest: sha256:917d9aae361f874f7b181498f82ea630647d35b3be2561170d731635441ea4d8
+    report_digest: sha256:dfa62d47626d10d54384decf965fea6d49e1996cb8c440fa5b2107032fcb8d64
     report_package_digest: sha256:63a7c1d8cc1754f5a58b90a96e7da72c2ac3b6f41fa7746cd968be9dd2410d11
     execution_tier: development_sandbox
     checks_passed: 22
@@ -801,4 +801,4 @@ tasks:
     image_digests:
     - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
     - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
-inventory_digest: sha256:908d801b0829a5cb41631f9ad666f1a99c9c99cfcb50bdb66e8924facbd1a275
+inventory_digest: sha256:ef5769cf945dad9b0777e4b3634defee0e4b4be3e9d794e8117f3f9e017d8a10

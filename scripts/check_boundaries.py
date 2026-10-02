@@ -21,7 +21,14 @@ OWNERS = {
     "polycodebench_plugins_api": "plugins_api",
     "polycodebench_lang_python": "lang_python",
     "polycodebench_lang_rust": "lang_rust",
+    "polycodebench_lang_c": "lang_c",
+    "polycodebench_lang_cpp": "lang_cpp",
+    "polycodebench_lang_javascript": "lang_javascript",
+    "polycodebench_lang_java": "lang_java",
 }
+# Longest package name first: `polycodebench_lang_cpp` starts with `polycodebench_lang_c`, and a
+# C++ module attributed to the C owner would be checked against the wrong allowlist.
+_OWNERS_BY_LENGTH = sorted(OWNERS.items(), key=lambda item: -len(item[0]))
 ALLOWED = {
     "core": set(),
     "services": {"core"},
@@ -29,7 +36,10 @@ ALLOWED = {
     "orchestration": {"core", "services", "persistence", "runner"},
     "runner": {"core"},
     "evaluation": {"core", "runner", "plugins_api"},
-    "scoring": {"core"},
+    # Scoring reads the shared plugin contracts (FrozenTask, LanguageProfile) so the scorer consumes
+    # exactly the same frozen task and profile documents the plugins publish. It still may not
+    # depend on a layer that could execute code, call a model or reach a database.
+    "scoring": {"core", "plugins_api"},
     "publication": {"core", "scoring"},
     "configuration": set(),
     "plugins_api": {"core"},
@@ -38,6 +48,11 @@ ALLOWED = {
     # services, evaluation or persistence.
     "lang_python": {"core", "plugins_api"},
     "lang_rust": {"core", "plugins_api"},
+    "lang_c": {"core", "plugins_api"},
+    "lang_cpp": {"core", "plugins_api"},
+    "lang_javascript": {"core", "plugins_api"},
+    "lang_java": {"core", "plugins_api"},
+    "lang_go": {"core", "plugins_api"},
 }
 FORBIDDEN_IMPORTS = {
     "core": ("fastapi", "typer", "sqlalchemy", "alembic", "openai", "anthropic", "boto3"),
@@ -73,7 +88,8 @@ def main() -> int:
     sources = [*(ROOT / "packages").rglob("*.py"), *(ROOT / "plugins").rglob("*.py")]
     for path in sources:
         module_owner = next(
-            (key for prefix, key in OWNERS.items() if path.parts[-2].startswith(prefix)), None
+            (key for prefix, key in _OWNERS_BY_LENGTH if path.parts[-2].startswith(prefix)),
+            None,
         )
         if module_owner is None:
             continue
@@ -97,7 +113,7 @@ def main() -> int:
                 imported_owner = next(
                     (
                         OWNERS[item]
-                        for item in OWNERS
+                        for item, _ in _OWNERS_BY_LENGTH
                         if name == item or name.startswith(item + ".")
                     ),
                     None,

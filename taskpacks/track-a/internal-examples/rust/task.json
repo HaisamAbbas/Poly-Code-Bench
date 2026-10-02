@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "track_a_internal_example",
+  "task_id": "track-a-rust-path-prefix-internal-v1",
+  "language": "rust",
+  "source_family": "authored_history",
+  "evidence_tier": "authored_internal",
+  "external_source_claim": false,
+  "model_benchmark_result": false,
+  "pre_fix": "src/lib.rs",
+  "reference_repair": "src/lib_fixed.rs",
+  "reproducer": "unit test sibling_prefix_is_outside_root",
+  "defect": {
+    "taxonomy": "path_traversal",
+    "trigger": "A candidate path shares the root's textual prefix but is a sibling path component.",
+    "incorrect_behavior": "String-prefix containment treats the sibling as a child.",
+    "mechanism": "Path containment is checked by lossy serialized string prefix.",
+    "consequence": "The caller can access a sibling path outside the configured root.",
+    "severity": "high",
+    "causal_span": [6, 8]
+  },
+  "clean_control": "same implementation with Path component-aware containment and no injected defect",
+  "rights_record_id": "internal-authored-workspace"
+}

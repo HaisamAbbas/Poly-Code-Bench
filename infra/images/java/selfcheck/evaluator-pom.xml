@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Evaluator-recipe build-time offline self-check (Prompt 23, PCB-23-1).
+
+  Copied over `pom.xml` in the image build and run offline with a compile followed by spotbugs, pmd
+  and checkstyle. Each goal writes its report to target/, so a non-zero exit or a missing report
+  means the analyzer artifact is not in the seeded repository. That is checked at image build time,
+  where the fix is obvious, rather than at grading time, where it would read as a candidate defect.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>pcb</groupId>
+  <artifactId>java-selfcheck</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.8.6.0</version>
+        <configuration>
+          <xmlOutput>true</xmlOutput>
+          <xmlOutputPath>target/spotbugs.xml</xmlOutputPath>
+          <failOnError>false</failOnError>
+          <effort>Max</effort>
+          <threshold>Low</threshold>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.21.2</version>
+        <configuration>
+          <format>xml</format>
+          <targetJdk>17</targetJdk>
+          <linkXRef>false</linkXRef>
+          <rulesets>
+            <ruleset>category/java/bestpractices.xml/UnusedPrivateField</ruleset>
+          </rulesets>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <outputFile>target/checkstyle-result.xml</outputFile>
+          <outputFileFormat>xml</outputFileFormat>
+          <consoleOutput>false</consoleOutput>
+          <failOnViolation>false</failOnViolation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

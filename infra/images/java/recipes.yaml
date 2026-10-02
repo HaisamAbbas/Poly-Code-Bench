@@ -1,0 +1,41 @@
+# PolyCodeBench Java recipes (Prompt 23, PCB-23-1).
+#
+# Three recipes are built from two *components* images, and the recipe distinction is real:
+#
+#   runtime     - JDK + Maven + JUnit, with an offline repository seeded with the build and test
+#                 plugins only. No SpotBugs, no PMD, no Checkstyle: a candidate cannot inspect the
+#                 analyzers that will judge it from inside the image it runs in.
+#   evaluator   - runtime plus the three analyzer plugins in the same offline repository. Analyzer
+#                 plans run here.
+#   performance - runtime plus the frozen JVM measurement policy, so JIT and codegen settings are
+#                 fixed by the image rather than by whatever a task or a candidate asks for.
+#
+# Maven plugins are version-pinned because `mvn spotbugs:check` resolves the plugin by version and
+# two versions of the same plugin report different findings. The versions here are the same ones
+# scripts/fetch_java_components.py seeds, so the recorded identity matches what is installed.
+#
+# Format: <component>:<version>
+runtime:
+  - temurin-jdk:21
+  - maven:3.9.9
+  - junit-jupiter:5.10.2
+  - maven-compiler-plugin:3.13.0
+  - maven-surefire-plugin:3.2.5
+  - maven-dependency-plugin:3.6.1
+evaluator:
+  - temurin-jdk:21
+  - maven:3.9.9
+  - junit-jupiter:5.10.2
+  - maven-compiler-plugin:3.13.0
+  - maven-surefire-plugin:3.2.5
+  - maven-dependency-plugin:3.6.1
+  - spotbugs-maven-plugin:4.8.6.0
+  - maven-pmd-plugin:3.21.2
+  - maven-checkstyle-plugin:3.3.1
+performance:
+  - temurin-jdk:21
+  - maven:3.9.9
+  - junit-jupiter:5.10.2
+  - maven-compiler-plugin:3.13.0
+  - maven-surefire-plugin:3.2.5
+  - maven-dependency-plugin:3.6.1

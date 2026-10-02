@@ -1,0 +1,53 @@
+# PolyCodeBench JavaScript + TypeScript recipes (Prompt 19, PCB-19-1).
+#
+# One runtime implementation serves two language identities, so the recipe list is keyed by
+# (language, recipe) and every recipe names exactly what it installs. That way the recorded
+# identity can state, per image, which interpreter, which task-selected test runner and which
+# analyzers are present.
+#
+# javascript:
+#   runtime     - node + npm + vitest. Build/test plans and the solve guest.
+#   evaluator   - runtime + eslint. Analyzer plans (eslint, context, dependency).
+#   performance - runtime + the fixed measurement settings baked by the Dockerfile.
+# typescript:
+#   runtime     - node + npm + vitest + tsc. A TypeScript candidate must be able to type-check
+#                 what it writes from inside the image it runs in, so tsc is a runtime component.
+#   evaluator   - typescript runtime + eslint + tsc. Analyzer plans add the typescript analyzer.
+#   performance - typescript runtime + the fixed measurement settings. No analyzers.
+#
+# No recipe that a candidate solves or is timed in carries eslint: a candidate must not be able to
+# inspect, at leisure, the analyzers that judge it from inside the image it runs in.
+#
+# Format: <component>:<pinned version>. Versions are exact; nothing here is a range.
+languages:
+  javascript:
+    runtime:
+      - node:22.23.2
+      - npm:10.9.8
+      - vitest:5.0.3
+    evaluator:
+      - node:22.23.2
+      - npm:10.9.8
+      - vitest:5.0.3
+      - eslint:10.11.0
+    performance:
+      - node:22.23.2
+      - npm:10.9.8
+      - vitest:5.0.3
+  typescript:
+    runtime:
+      - node:22.23.2
+      - npm:10.9.8
+      - vitest:5.0.3
+      - typescript:7.0.2
+    evaluator:
+      - node:22.23.2
+      - npm:10.9.8
+      - vitest:5.0.3
+      - typescript:7.0.2
+      - eslint:10.11.0
+    performance:
+      - node:22.23.2
+      - npm:10.9.8
+      - vitest:5.0.3
+      - typescript:7.0.2

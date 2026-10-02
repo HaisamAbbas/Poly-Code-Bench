@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "track_a_internal_example",
+  "task_id": "track-a-python-path-prefix-internal-v1",
+  "language": "python",
+  "source_family": "authored_history",
+  "evidence_tier": "authored_internal",
+  "external_source_claim": false,
+  "model_benchmark_result": false,
+  "pre_fix": "path_guard_pre_fix.py",
+  "reference_repair": "path_guard_fixed.py",
+  "reproducer": "test_path_guard.py",
+  "defect": {
+    "taxonomy": "path_traversal",
+    "trigger": "A candidate path shares the root's textual prefix but is a sibling path component.",
+    "incorrect_behavior": "String-prefix containment treats the sibling as a child.",
+    "mechanism": "Path containment is checked by serialized string prefix.",
+    "consequence": "The caller can access a sibling path outside the configured root.",
+    "severity": "high",
+    "causal_span": [7, 7]
+  },
+  "clean_control": "same implementation with component-aware containment and no injected defect",
+  "rights_record_id": "internal-authored-workspace"
+}

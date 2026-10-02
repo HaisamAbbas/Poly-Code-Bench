@@ -1,0 +1,24 @@
+# PolyCodeBench C++ recipes (Prompt 21).
+#
+# Each recipe names exactly the apt packages scripts/fetch_cpp_components.py installs at the
+# versions config/languages/cpp-toolchain-v1.json pins, so the recorded image identity can state,
+# per image, which compiler and analyzers are present. The runtime and performance packages are
+# identical on purpose: what makes performance distinct is the baked release flags in the
+# Dockerfile, not a different compiler.
+#
+# runtime     : clang + libstdc++. Build/test plans, the solve guest, the asan/ubsan/tsan runs.
+# evaluator   : runtime + clang-tidy + cppcheck. Analyzer plans only.
+# performance : runtime + /opt/pcb/release-flags. The performance iteration plan.
+#
+# Format: <package>=<apt version>, exactly as the lock's apt_components lists them.
+runtime:
+  - clang=1:14.0-55.7~deb12u1
+  - libstdc++-12-dev=12.2.0-14+deb12u1
+evaluator:
+  - clang=1:14.0-55.7~deb12u1
+  - clang-tidy=1:14.0-55.7~deb12u1
+  - cppcheck=2.10-2
+  - libstdc++-12-dev=12.2.0-14+deb12u1
+performance:
+  - clang=1:14.0-55.7~deb12u1
+  - libstdc++-12-dev=12.2.0-14+deb12u1

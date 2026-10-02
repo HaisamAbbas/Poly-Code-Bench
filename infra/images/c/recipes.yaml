@@ -1,0 +1,54 @@
+# PolyCodeBench C build recipes (Prompt 20, PCB-20-1).
+#
+# Each recipe names what it must contain and, just as importantly, what it must not. The image build
+# probes both: a runtime image that accidentally shipped clang-tidy would let a candidate see the
+# checks that will judge it, and an evaluator image that lost cppcheck would turn a required scan
+# into an unexplained clean result.
+#
+# `optimization` is the level the plugin's frozen flag table uses for that recipe. It is not something
+# the image can enforce - clang reads it from the argument vector - so the enforcement lives in the
+# plugin (`recipe.resolve_recipe`, `recipe.flags_digest`) and the image records it so a captured
+# result can state which level produced it.
+schema_version: 1
+kind: c_image_recipes
+base_image: debian:bookworm-slim
+c_standard: c17
+
+recipes:
+  runtime:
+    description: solve guest and every acceptance build/test; no analyzer may be visible here
+    tools: [clang]
+    forbidden_tools: [clang-tidy, cppcheck, valgrind]
+    optimization: -O1
+    instrumentation: none
+    sanitizer_runtime: absent
+    used_by: [c.build, "c.test.*"]
+  evaluator:
+    description: static analysis and Valgrind memcheck
+    tools: [clang, clang-tidy, cppcheck, valgrind]
+    forbidden_tools: []
+    optimization: -O0
+    instrumentation: none
+    sanitizer_runtime: absent
+    used_by: [c.analysis.clang_tidy, c.analysis.cppcheck, c.analysis.valgrind]
+  instrumented:
+    description: AddressSanitizer and UndefinedBehaviorSanitizer lanes; the only recipe a dynamic lane may use
+    tools: [clang]
+    forbidden_tools: [clang-tidy, cppcheck, valgrind]
+    optimization: -O1
+    instrumentation: address_undefined
+    sanitizer_runtime: compiler-rt-14
+    used_by: [c.analysis.asan, c.analysis.ubsan]
+  performance:
+    description: measured performance only; never reachable from an instrumented recipe
+    tools: [clang]
+    forbidden_tools: [clang-tidy, cppcheck, valgrind]
+    optimization: -O2
+    instrumentation: none
+    sanitizer_runtime: absent
+    used_by: [c.performance.iteration]
+
+notes:
+  - "The sanitizer runtimes are a separate Debian package (`libclang-rt-14-dev`) from the compiler, and only the instrumented recipe installs it. A `-fsanitize=address` link in the runtime or performance image therefore fails outright rather than silently producing an uninstrumented binary, which is what makes the separation a file-level fact instead of a convention."
+  - "`optimization` is the level the plugin's frozen flag table uses for that recipe. It is not something the image can enforce - clang reads it from the argument vector - so the enforcement lives in the plugin (`recipe.resolve_recipe`, `recipe.flags_digest`) and the image records it so a captured result can state which level produced it."
+  - "Valgrind runs in the evaluator recipe and builds an *uninstrumented* binary: memcheck observes execution, so compiling with sanitizers as well would add cost without adding coverage."

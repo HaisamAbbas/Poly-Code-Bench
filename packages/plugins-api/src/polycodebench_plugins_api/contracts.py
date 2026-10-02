@@ -98,7 +98,7 @@ class PlanInput(PluginModel):
 class PlanOutput(PluginModel):
     kind: Literal["plan_output"] = "plan_output"
     path: RelativePath
-    format: Literal["junit_xml", "json", "jsonl", "sarif", "text"]
+    format: Literal["junit_xml", "xml", "json", "jsonl", "sarif", "text"]
     required: bool = True
     max_bytes: int = Field(default=4 * 1024**2, ge=1, le=64 * 1024**2)
 
@@ -172,6 +172,11 @@ class TestPlan(PluginModel):
 class AnalysisPlan(ExecutionPlan):
     kind: Literal["analysis_plan"] = "analysis_plan"  # type: ignore[assignment]
     analyzer_id: Slug
+    # The language identity this plan belongs to, so a parser can name its check ids without
+    # consulting the plugin that produced the plan. Check ids are language-namespaced
+    # (`<language>.<analyzer>.<name>`); deriving the prefix from the plan rather than from a
+    # plugin attribute is what keeps one analyzer implementation usable by two identities.
+    language_id: Slug
     candidate_digest: Digest
     required: bool
     output_schema: Slug
@@ -373,6 +378,56 @@ class LanguageProfile(PluginModel):
             if mapping.applicability not in rules:
                 raise ValueError("a rule mapping names an unknown applicability rule")
         return self
+
+
+class ProfileItemResult(PluginModel):
+    """One diagnostic or idiom item's outcome once applicability and ownership are applied.
+
+    ``status`` carries the whole point of the diagnostic view (Technical Spec 18.3). An item with
+    no frozen task opportunity is ``not_applicable`` and is dropped from the weighted average -
+    never scored as perfect. An item fed by a required scan that did not complete is ``missing``,
+    which makes the profile incomplete instead of producing a number nobody can defend.
+    """
+
+    kind: Literal["profile_item_result"] = "profile_item_result"
+    item_id: str
+    group: Literal["diagnostic", "idiom"]
+    weight_bp: int
+    opportunities: int = Field(ge=0)
+    unique_violations: int = Field(ge=0)
+    status: Literal["measured", "not_applicable", "missing"]
+    score_bp: int | None = None
+    issue_keys: tuple[str, ...] = ()
+    reasons: tuple[str, ...] = ()
+
+
+class ProfileResult(PluginModel):
+    """A language profile's evaluation of one candidate's frozen evidence."""
+
+    kind: Literal["profile_result"] = "profile_result"
+    profile_version: str
+    diagnostic: tuple[ProfileItemResult, ...]
+    idioms: tuple[ProfileItemResult, ...]
+    diagnostic_score_bp: int | None
+    idiom_score_bp: int | None
+    complete: bool
+
+
+
+class PropertyEngineIdentity(PluginModel):
+    """Which property-test engine produced this run's evidence, and under what determinism policy.
+
+    The supervisor must not switch on the task's language to decide this. The language plugin
+    states it, so a new language never means editing an engine ``if`` in the evaluator, and a
+    language whose runner has no seeded randomness says ``unknown`` rather than borrowing another
+    language's policy.
+    """
+
+    kind: Literal["property_engine_identity"] = "property_engine_identity"
+    engine: str = Field(min_length=1, max_length=64)
+    engine_version: str | None = None
+    deterministic_policy: str = Field(min_length=1, max_length=64)
+    examples_pinned: int | None = Field(default=None, ge=1)
 
 
 # --------------------------------------------------------------------------- protocols

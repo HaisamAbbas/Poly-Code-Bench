@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from typing import Literal, Protocol
 
-from polycodebench_core.models import Candidate, Observation
+from polycodebench_core.models import Candidate, Observation, ScoreDimension
 
 from polycodebench_plugins_api.contracts import (
     AnalysisContext,
@@ -15,6 +16,9 @@ from polycodebench_plugins_api.contracts import (
     FrozenTask,
     LanguageProfile,
     PerformancePlan,
+    ProfileResult,
+    PropertyEngineIdentity,
+    RuleMapping,
     SymbolIndex,
     TaskDraft,
     TestGroupPlan,
@@ -41,6 +45,28 @@ class LanguagePlugin(Protocol):
     def symbols(self, source: ArtifactReader) -> SymbolIndex: ...
 
     def profile(self, version: str) -> LanguageProfile: ...
+
+
+class LanguageProfileEvaluator(Protocol):
+    """The profile object every language plugin publishes as ``language_profile``.
+
+    The supervisor asks a plugin three questions: which rule mapping covers a check id, which
+    composite dimension owns the resulting issue, and what the frozen opportunities plus the
+    recorded observations score. Naming this shape is what keeps the evaluator language-neutral:
+    it never asks *which* language produced the evidence, only what that language says about it.
+    """
+
+    def resolve(self, check_id: str) -> RuleMapping | None: ...
+
+    def owner(self, check_id: str) -> ScoreDimension | None: ...
+
+    def evaluate(
+        self,
+        *,
+        opportunities: Mapping[str, int],
+        observations: Sequence[Observation],
+        required_tools: Sequence[str],
+    ) -> ProfileResult: ...
 
 
 class AnalyzerPlugin(Protocol):
@@ -80,3 +106,18 @@ class ExecutableLanguagePlugin(LanguagePlugin, Protocol):
     def parse_analysis(self, raw: ArtifactReader, plan: AnalysisPlan) -> list[Observation]: ...
 
     def normalize(self, observations: list[Observation]) -> list[Observation]: ...
+
+    @property
+    def language_profile(self) -> LanguageProfileEvaluator:
+        """The diagnostic/idiom profile this identity publishes: one attribute, any language."""
+        ...
+
+    def property_engine(
+        self, task: FrozenTask, raw: Mapping[str, bytes]
+    ) -> PropertyEngineIdentity:
+        """Identity of the property-test engine that produced ``raw`` for ``task``.
+
+        Stated by the plugin rather than derived by the supervisor from ``primary_language``, so
+        a new language never requires editing an engine switch in shared evaluation code.
+        """
+        ...

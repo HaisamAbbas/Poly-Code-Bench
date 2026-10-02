@@ -856,6 +856,24 @@ accounting_entry = Table(
     CheckConstraint("num_nonnulls(call_intent_id,delivery_id) >= 1", name="linked_call"),
 )
 
+judge_cohort = Table(
+    "judge_cohort",
+    metadata,
+    pk(),
+    Column("cohort_id", String(160), nullable=False),
+    Column("evaluation_version", Integer, nullable=False),
+    Column("panel_id", String(160), nullable=False),
+    Column("panel_digest", String(71), nullable=False),
+    Column("rubric_digest", String(71), nullable=False),
+    Column("candidate_model_config_ids", JSONB, nullable=False),
+    Column("cohort_digest", String(71), nullable=False),
+    created_at(),
+    UniqueConstraint("cohort_id", "evaluation_version"),
+    CheckConstraint("evaluation_version > 0", name="evaluation_version_positive"),
+    CheckConstraint("panel_digest ~ '^sha256:[0-9a-f]{64}$'", name="panel_digest_format"),
+    CheckConstraint("cohort_digest ~ '^sha256:[0-9a-f]{64}$'", name="cohort_digest_format"),
+)
+
 judge_packet = Table(
     "judge_packet",
     metadata,
@@ -865,9 +883,46 @@ judge_packet = Table(
     Column("rubric_digest", String(71), nullable=False),
     Column("panel_digest", String(71), nullable=False),
     Column("required_votes", Integer, nullable=False),
+    fk("packet_artifact_id", "artifact.id"),
+    fk("cohort_id", "judge_cohort.id", nullable=True),
+    Column("language", String(16), nullable=False),
+    Column("packet_role", String(16), nullable=False, server_default=text("'scored'")),
     created_at(),
     UniqueConstraint("evaluation_id", "packet_digest", "panel_digest"),
     CheckConstraint("required_votes >= 3", name="minimum_votes"),
+    CheckConstraint("language IN ('python','rust')", name="language"),
+    CheckConstraint("packet_role IN ('scored','calibration')", name="packet_role"),
+    CheckConstraint("packet_digest ~ '^sha256:[0-9a-f]{64}$'", name="packet_digest_format"),
+)
+
+judge_delivery = Table(
+    "judge_delivery",
+    metadata,
+    pk(),
+    fk("packet_id", "judge_packet.id"),
+    Column("vote_index", Integer, nullable=False),
+    Column("delivery_index", Integer, nullable=False),
+    fk("call_delivery_id", "call_delivery.id", nullable=True),
+    fk("call_intent_id", "call_intent.id", nullable=True),
+    fk("raw_artifact_id", "artifact.id", nullable=True),
+    Column("status", String(24), nullable=False),
+    Column("invalid_reason", String(48), nullable=True),
+    Column("detail", Text, nullable=False, server_default=text("''")),
+    Column("judge_revision", String(128), nullable=False),
+    Column("seed", BigInteger, nullable=True),
+    Column("seed_supported", Boolean, nullable=False, server_default=text("false")),
+    Column("repair_instruction_id", String(64), nullable=True),
+    Column("raw_response_digest", String(71), nullable=True),
+    created_at(),
+    UniqueConstraint("packet_id", "vote_index", "delivery_index"),
+    CheckConstraint("vote_index >= 0", name="vote_index_nonnegative"),
+    CheckConstraint("delivery_index >= 0 AND delivery_index <= 2", name="delivery_index_bound"),
+    CheckConstraint("status IN ('valid','invalid','transport_failure')", name="status"),
+    CheckConstraint(
+        "(status = 'invalid') = (invalid_reason IS NOT NULL)", name="invalid_reason_matches_status"
+    ),
+    CheckConstraint("seed IS NULL OR seed >= 0", name="seed_nonnegative"),
+    Index("ix_judge_delivery_packet_status", "packet_id", "status"),
 )
 
 judge_vote = Table(
@@ -882,6 +937,73 @@ judge_vote = Table(
     created_at(),
     UniqueConstraint("packet_id", "vote_index"),
     CheckConstraint("vote_index >= 0", name="vote_index_nonnegative"),
+    CheckConstraint("status = 'valid'", name="status_is_valid"),
+)
+
+judge_result = Table(
+    "judge_result",
+    metadata,
+    pk(),
+    fk("packet_id", "judge_packet.id"),
+    fk("evaluation_id", "evaluation.id"),
+    Column("status", String(24), nullable=False),
+    fk("report_artifact_id", "artifact.id"),
+    Column("report_digest", String(71), nullable=False),
+    Column("result_index", Integer, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("packet_id", "result_index"),
+    CheckConstraint("status IN ('ready','needs_review','infra_blocked')", name="status"),
+    CheckConstraint("result_index >= 0", name="result_index_nonnegative"),
+    CheckConstraint("report_digest ~ '^sha256:[0-9a-f]{64}$'", name="report_digest_format"),
+)
+
+judge_item_result = Table(
+    "judge_item_result",
+    metadata,
+    pk(),
+    fk("result_id", "judge_result.id"),
+    Column("item_id", String(64), nullable=False),
+    Column("dimension", String(32), nullable=False),
+    Column("status", String(24), nullable=False),
+    Column("mean_score", Numeric(12, 6), nullable=True),
+    Column("vote_count", Integer, nullable=False),
+    Column("required_votes", Integer, nullable=False),
+    Column("source", String(24), nullable=False),
+    fk("adjudication_id", "adjudication.id", nullable=True),
+    Column("triggers", JSONB, nullable=False),
+    Column("vote_scores", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("result_id", "item_id"),
+    CheckConstraint("status IN ('ready','needs_review','infra_blocked')", name="status"),
+    CheckConstraint("source IN ('judge_votes','adjudication')", name="source"),
+    CheckConstraint(
+        "mean_score IS NULL OR (mean_score >= 0 AND mean_score <= 1)", name="mean_range"
+    ),
+    CheckConstraint("vote_count >= 0 AND vote_count <= required_votes", name="vote_count_range"),
+    CheckConstraint(
+        "(source = 'adjudication') = (adjudication_id IS NOT NULL)",
+        name="adjudication_matches_source",
+    ),
+)
+
+calibration_label = Table(
+    "calibration_label",
+    metadata,
+    pk(),
+    fk("cohort_id", "judge_cohort.id"),
+    fk("packet_id", "judge_packet.id"),
+    Column("packet_digest", String(71), nullable=False),
+    Column("item_id", String(64), nullable=False),
+    Column("score", Numeric(12, 6), nullable=False),
+    Column("labeler_subject", String(255), nullable=False),
+    Column("qualification", String(64), nullable=False),
+    Column("rationale", Text, nullable=False),
+    Column("cited_anchor_ids", JSONB, nullable=False),
+    Column("labeled_at", DateTime(timezone=True), nullable=False),
+    created_at(),
+    UniqueConstraint("packet_digest", "item_id", "labeler_subject"),
+    CheckConstraint("score >= 0 AND score <= 1", name="score_range"),
+    CheckConstraint("packet_digest ~ '^sha256:[0-9a-f]{64}$'", name="packet_digest_format"),
 )
 
 adjudication = Table(

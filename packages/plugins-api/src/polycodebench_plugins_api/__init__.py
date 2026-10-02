@@ -20,6 +20,9 @@ from polycodebench_plugins_api.contracts import (
     PluginModel,
     ProfileItem,
     ResourcePolicy,
+    ProfileItemResult,
+    ProfileResult,
+    PropertyEngineIdentity,
     RuleMapping,
     Symbol,
     SymbolIndex,
@@ -31,7 +34,12 @@ from polycodebench_plugins_api.contracts import (
     ValidationReport,
     WorkloadSpec,
 )
-from polycodebench_plugins_api.protocols import AnalyzerPlugin, LanguagePlugin
+from polycodebench_plugins_api.protocols import (
+    AnalyzerPlugin,
+    ExecutableLanguagePlugin,
+    LanguagePlugin,
+    LanguageProfileEvaluator,
+)
 from polycodebench_plugins_api.registry import (
     PluginAllowlist,
     RegistryError,
@@ -63,8 +71,10 @@ __all__ = [
     "ExecutionRecord",
     "ExitSemantics",
     "FrozenTask",
+    "ExecutableLanguagePlugin",
     "LanguagePlugin",
     "LanguageProfile",
+    "LanguageProfileEvaluator",
     "PerformancePlan",
     "PlanInput",
     "PlanOutput",
@@ -72,6 +82,9 @@ __all__ = [
     "PluginAllowlist",
     "PluginModel",
     "ProfileItem",
+    "ProfileItemResult",
+    "ProfileResult",
+    "PropertyEngineIdentity",
     "RegistryError",
     "ResourcePolicy",
     "RuleMapping",

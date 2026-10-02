@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from uuid import UUID, uuid4
 
+from polycodebench_core.application_errors import InvalidState
 from polycodebench_core.canonical import (
     canonical_digest,
     canonical_document_bytes,
@@ -83,6 +84,23 @@ class PostgresModelConfigRepository:
             return config_id, revision_id
         except DBAPIError as error:
             raise map_database_error(error) from None
+
+    def load(self, config_document_id: UUID) -> ModelConfig:
+        """Load one registered, fully resolved model configuration.
+
+        The judge panel names its judge by configuration id, so the panel document stays a small
+        frozen file and the resolved configuration comes from the one place that stores it.
+        """
+        with self._engine.connect() as connection:
+            document = connection.execute(
+                select(config_document.c.document).where(
+                    config_document.c.id == config_document_id,
+                    config_document.c.kind == "model_config",
+                )
+            ).scalar_one_or_none()
+        if document is None:
+            raise InvalidState("no such registered model_config document")
+        return ModelConfig.model_validate(document, strict=False)
 
     @staticmethod
     def _revision(

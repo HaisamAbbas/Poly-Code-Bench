@@ -13,7 +13,7 @@ warning: unused doc comment
   = note: `#[warn(unused_doc_comments)]` on by default
 
 warning: `top_words` (lib) generated 1 warning
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.87s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.74s
      Running tests/behaviour.rs (target/debug/deps/behaviour-3f63251f5a1e5b80)
 
 running 8 tests

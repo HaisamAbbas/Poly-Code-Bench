@@ -1,5 +1,5 @@
    Compiling top_words v0.1.0 (/workspace/work)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.16s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.53s
      Running tests/behaviour.rs (target/debug/deps/behaviour-3f63251f5a1e5b80)
 
 running 8 tests

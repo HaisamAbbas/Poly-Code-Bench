@@ -12,7 +12,7 @@ warning: function cannot return without recursing
   = note: `#[warn(unconditional_recursion)]` on by default
 
 warning: `top_words` (lib) generated 1 warning
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.64s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.99s
      Running tests/behaviour.rs (target/debug/deps/behaviour-3f63251f5a1e5b80)
 
 running 8 tests

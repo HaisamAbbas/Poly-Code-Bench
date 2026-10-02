@@ -4,11 +4,11 @@
  "plan_id": "rust.analysis.miri",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 11500,
+ "duration_ms": 16297,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "80ec245d-6f37-4b82-b490-340b1c38796b"
+ "sandbox_id": "9daa04de-4274-4ce9-8b46-952d48b31c58"
 }

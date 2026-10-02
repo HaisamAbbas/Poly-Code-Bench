@@ -4,11 +4,11 @@
  "plan_id": "rust.test.stress",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 4828,
+ "duration_ms": 6733,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "95b25976-19c7-4bc1-8b72-6d5e61f413f9"
+ "sandbox_id": "36de7896-6c04-4350-b0c1-4bb14fa2e2dc"
 }

@@ -4,11 +4,11 @@
  "plan_id": "rust.build",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 3921,
+ "duration_ms": 4797,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "fc27ad67-bf2b-42bf-888e-375603a80163"
+ "sandbox_id": "96c95141-8e2a-4389-87f5-66068acfea19"
 }

@@ -1,1 +1,1 @@
-{"command":["cargo","+nightly-2026-09-30","miri"],"duration_ms":107003,"exit_code":124,"note":null,"schema":"pcb-rust-run-v1","timed_out":true,"truncated":[]}
+{"command":["cargo","+nightly-2026-09-30","miri"],"duration_ms":107005,"exit_code":124,"note":null,"schema":"pcb-rust-run-v1","timed_out":true,"truncated":[]}

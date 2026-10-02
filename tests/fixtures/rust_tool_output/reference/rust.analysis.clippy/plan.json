@@ -128,7 +128,8 @@
    "path": "out/clippy.out",
    "format": "jsonl",
    "required": false,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   },
   {
    "schema_version": 1,
@@ -136,7 +137,8 @@
    "path": "out/clippy.err",
    "format": "text",
    "required": false,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   },
   {
    "schema_version": 1,
@@ -144,7 +146,8 @@
    "path": "out/clippy.run.json",
    "format": "json",
    "required": true,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   }
  ],
  "resources": {
@@ -182,7 +185,8 @@
   "lock_digest": "sha256:16e861923ad295095b47beeae7b4e0ecb6be548db804e64838b90eaed4d01ac7",
   "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
   "advisory_snapshot_digest": null,
-  "parser_version": "pcb-rust-parsers-1"
+  "parser_version": "pcb-rust-parsers-1",
+  "advisory_snapshot_state": "not_applicable"
  },
  "scope": [
   "src/lib.rs"

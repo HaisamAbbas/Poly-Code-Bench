@@ -2,8 +2,8 @@
  "schema_version": 1,
  "kind": "analysis_plan",
  "plan_id": "python.analysis.mypy",
- "image": "pcb-python-evaluator@sha256:51ed960867ac7fb6a17845ae6ab9312328a48d0e8b062eed66eb909398f085d4",
- "image_digest": "sha256:51ed960867ac7fb6a17845ae6ab9312328a48d0e8b062eed66eb909398f085d4",
+ "image": "pcb-python-evaluator@sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+ "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
  "argv": [
   "python",
   "-B",
@@ -42,7 +42,8 @@
    "path": "out/mypy.json",
    "format": "jsonl",
    "required": true,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": true
   },
   {
    "schema_version": 1,
@@ -50,7 +51,8 @@
    "path": "out/mypy.err",
    "format": "text",
    "required": false,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   }
  ],
  "resources": {
@@ -62,7 +64,8 @@
   "disk_bytes": 134217728,
   "timeout_seconds": 90,
   "max_output_bytes": 1048576,
-  "network": "none"
+  "network": "none",
+  "executable_workspace": false
  },
  "exit_semantics": {
   "schema_version": 1,
@@ -84,11 +87,12 @@
   "kind": "tool_identity",
   "name": "mypy",
   "version": "1.19.1",
-  "image_digest": "sha256:51ed960867ac7fb6a17845ae6ab9312328a48d0e8b062eed66eb909398f085d4",
+  "image_digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
   "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
   "rule_bundle_digest": "sha256:c47fafa6b90594441ab2174af2e70ffa1840f67d25e346e01b2f568b6bf4ca43",
   "advisory_snapshot_digest": null,
-  "parser_version": "pcb-python-parsers-1"
+  "parser_version": "pcb-python-parsers-1",
+  "advisory_snapshot_state": "not_applicable"
  },
  "scope": [
   "solution.py"

@@ -1,0 +1,28 @@
+PCB-FAIL behaviour.c:66: beta first (got alpha, want beta)
+PCB-FAIL behaviour.c:67: alpha second (got beta, want alpha)
+PCB-FAIL behaviour.c:95: every byte is replaced or kept (got 9, want 8)
+PCB-FAIL behaviour.c:96: letters lowercased, others spaced (got ab    cd , want ab 12 cd )
+{"v":1,"kind":"group_start","group":"behaviour","declared":11}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.empty_input_returns_zero"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.empty_input_returns_zero","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.null_arguments_are_refused"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.null_arguments_are_refused","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.single_word_is_counted_once"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.single_word_is_counted_once","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.case_is_folded"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.case_is_folded","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.ranking_is_by_frequency"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.ranking_is_by_frequency","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.ties_break_alphabetically"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.ties_break_alphabetically","outcome":"fail","reason":"behaviour.c:67: alpha second (got beta, want alpha)"}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.non_letter_bytes_separate_words"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.non_letter_bytes_separate_words","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.limit_returns_the_ranked_prefix"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.limit_returns_the_ranked_prefix","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.normalise_replaces_non_letters"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.normalise_replaces_non_letters","outcome":"fail","reason":"behaviour.c:96: letters lowercased, others spaced (got ab    cd , want ab 12 cd )"}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.rank_words_sorts_in_place"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.rank_words_sorts_in_place","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"behaviour","case":"behaviour.rank_words_refuses_empty"}
+{"v":1,"kind":"case","group":"behaviour","case":"behaviour.rank_words_refuses_empty","outcome":"pass","reason":""}
+{"v":1,"kind":"session_finish","group":"behaviour","declared":11,"observed":11,"passed":9,"failed":2}

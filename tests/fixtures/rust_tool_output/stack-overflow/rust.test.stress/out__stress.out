@@ -12,11 +12,11 @@ warning: function cannot return without recursing
   = note: `#[warn(unconditional_recursion)]` on by default
 
 warning: `top_words` (lib) generated 1 warning
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.32s
      Running tests/stress.rs (target/debug/deps/stress-052d6e782e1e2470)
 
 running 1 test
 test large_input_finishes_with_correct_counts ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.90s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.93s
 

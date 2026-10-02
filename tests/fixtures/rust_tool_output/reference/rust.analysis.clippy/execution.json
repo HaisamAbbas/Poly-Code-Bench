@@ -4,11 +4,11 @@
  "plan_id": "rust.analysis.clippy",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 2500,
+ "duration_ms": 782,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "d9c70a9b-ec91-4f72-ac88-bf746f69bfa4"
+ "sandbox_id": "14c7574e-9c9f-41e4-a086-007e391d8260"
 }

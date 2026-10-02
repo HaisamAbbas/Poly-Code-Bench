@@ -1,0 +1,137 @@
+{
+ "schema_version": 1,
+ "kind": "build_plan",
+ "plan_id": "c.build",
+ "image": "pcb-c-runtime@sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1",
+ "image_digest": "sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_run.py",
+  "--name",
+  "out/build",
+  "--deadline",
+  "97",
+  "--cleanup",
+  "/workspace/build",
+  "--",
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_build.py",
+  "--out",
+  "out/build.build.json",
+  "--build-dir",
+  "/workspace/build",
+  "--binary",
+  "/workspace/build/libtask.a",
+  "--std",
+  "c17",
+  "--warning-set",
+  "standard",
+  "--recipe",
+  "runtime",
+  "--include",
+  "work/include",
+  "--archive",
+  "--source",
+  "work/src/topwords.c"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "LC_ALL": "C"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/topwords.c",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/include/topwords.h",
+   "role": "config",
+   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/build.build.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/build.out",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/build.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/build.run.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 100,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   1,
+   2
+  ],
+  "error": [
+   3,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "clang",
+  "version": "Debian clang version 14.0.6",
+  "image_digest": "sha256:05e0865fdde5846cc003d88c9a1ab2e4c45a10f0a1a57e0812e0d55f024d68f1",
+  "lock_digest": "sha256:01d9c6bbb67b7667f05d0b9fbab934d1442949f0435bf5683f0b1d89fbccba24",
+  "rule_bundle_digest": "sha256:7f670d43b1943bd96085da846eed5c887b981962a76c1e372a381d50e20869e9",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-c-parsers-1"
+ },
+ "scope": [
+  "src/topwords.c"
+ ],
+ "parser_id": "c-build",
+ "noop_reason": null
+}

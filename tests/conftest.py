@@ -11,5 +11,12 @@ import sys
 from pathlib import Path
 
 RUST_SRC = Path(__file__).resolve().parents[1] / "plugins" / "languages" / "rust" / "src"
+GO_SRC = Path(__file__).resolve().parents[1] / "plugins" / "languages" / "go" / "src"
+if str(GO_SRC) not in sys.path:
+    sys.path.insert(0, str(GO_SRC))
 if str(RUST_SRC) not in sys.path:
     sys.path.insert(0, str(RUST_SRC))
+
+CPP_SRC = Path(__file__).resolve().parents[1] / "plugins" / "languages" / "cpp" / "src"
+if str(CPP_SRC) not in sys.path:
+    sys.path.insert(0, str(CPP_SRC))

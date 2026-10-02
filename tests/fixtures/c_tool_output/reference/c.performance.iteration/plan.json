@@ -1,0 +1,144 @@
+{
+ "schema_version": 1,
+ "kind": "execution_plan",
+ "plan_id": "c.performance.iteration",
+ "image": "pcb-c-performance@sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1",
+ "image_digest": "sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_run.py",
+  "--name",
+  "out/perf",
+  "--deadline",
+  "57",
+  "--cleanup",
+  "/workspace/build",
+  "--",
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_build.py",
+  "--out",
+  "out/perf.build.json",
+  "--build-dir",
+  "/workspace/build",
+  "--binary",
+  "/workspace/build/pcb_workload",
+  "--std",
+  "c17",
+  "--warning-set",
+  "standard",
+  "--recipe",
+  "performance",
+  "--include",
+  "work/include",
+  "--source",
+  "work/src/topwords.c",
+  "--source",
+  "work/perf/workload.c"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "LC_ALL": "C"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/topwords.c",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/include/topwords.h",
+   "role": "config",
+   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/perf/workload.c",
+   "role": "overlay",
+   "digest": null
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/perf.build.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/perf.out",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/perf.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/perf.run.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 60,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [
+   1,
+   2
+  ],
+  "error": [
+   3,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "clang",
+  "version": "Debian clang version 14.0.6",
+  "image_digest": "sha256:3fdac95eac3cb0c0d0041a1190f85b5acf12e94d8873ce2f7c5236c89efc2eb1",
+  "lock_digest": "sha256:6ac5809c895251923bedde6825b2b1ab86f92b402fc65b3085d1f5d5d2b488fb",
+  "rule_bundle_digest": "sha256:7f670d43b1943bd96085da846eed5c887b981962a76c1e372a381d50e20869e9",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-c-parsers-1"
+ },
+ "scope": [
+  "src/topwords.c"
+ ],
+ "parser_id": "c-perf"
+}

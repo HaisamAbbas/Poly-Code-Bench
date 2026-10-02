@@ -71,7 +71,8 @@
    "path": "out/behaviour.out",
    "format": "text",
    "required": false,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   },
   {
    "schema_version": 1,
@@ -79,7 +80,8 @@
    "path": "out/behaviour.err",
    "format": "text",
    "required": false,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   },
   {
    "schema_version": 1,
@@ -87,7 +89,8 @@
    "path": "out/behaviour.run.json",
    "format": "json",
    "required": true,
-   "max_bytes": 4194304
+   "max_bytes": 4194304,
+   "empty_is_clean": false
   }
  ],
  "resources": {
@@ -126,7 +129,8 @@
   "lock_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
   "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
   "advisory_snapshot_digest": null,
-  "parser_version": "pcb-rust-parsers-1"
+  "parser_version": "pcb-rust-parsers-1",
+  "advisory_snapshot_state": "not_applicable"
  },
  "scope": [
   "src/lib.rs"

@@ -1,0 +1,9 @@
+/workspace/work/src/topwords.c:36:28: warning: 2 adjacent parameters of 'compare_entries' of similar type ('const void *') are easily swapped by mistake [bugprone-easily-swappable-parameters]
+static int compare_entries(const void *left, const void *right)
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/work/src/topwords.c:36:40: note: the first parameter in the range is 'left'
+static int compare_entries(const void *left, const void *right)
+                                       ^~~~
+/workspace/work/src/topwords.c:36:58: note: the last parameter in the range is 'right'
+static int compare_entries(const void *left, const void *right)
+                                                         ^~~~~

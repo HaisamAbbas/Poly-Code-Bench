@@ -4,11 +4,11 @@
  "plan_id": "python.analysis.ruff",
  "exit_code": 1,
  "timed_out": false,
- "duration_ms": 5061,
+ "duration_ms": 280,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "a4d18c44-7e43-48d7-a3df-f59dac21fe8b"
+ "sandbox_id": "b73bad05-a78f-4517-813f-ff087be36d46"
 }

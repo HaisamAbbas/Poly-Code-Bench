@@ -227,9 +227,7 @@ def test_e2e_19_paired_measurement_on_one_reserved_worker() -> None:
 
     # every iteration of every declared scale is retained with its input identity and phase
     # (counts are per block; invalid blocks are retained separately and never mixed in)
-    selected = [
-        r for r in evidence.iterations if r.block_index == evidence.selected_block
-    ]
+    selected = [r for r in evidence.iterations if r.block_index == evidence.selected_block]
     counts = evidence.iteration_counts(block=evidence.selected_block)
     for workload in ("small", "medium", "large"):
         assert counts[f"{workload}:candidate:cold_start"] == 1

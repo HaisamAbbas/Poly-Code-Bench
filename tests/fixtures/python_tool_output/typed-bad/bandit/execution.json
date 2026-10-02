@@ -4,11 +4,11 @@
  "plan_id": "python.analysis.bandit",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 7483,
+ "duration_ms": 2516,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "9a239291-61be-44c3-9203-948ee351d5d9"
+ "sandbox_id": "5af502f3-27b2-4812-a3db-2e4eeb72364e"
 }

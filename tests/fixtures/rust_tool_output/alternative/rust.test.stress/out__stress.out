@@ -1,9 +1,9 @@
    Compiling top_words v0.1.0 (/workspace/work)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.06s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.65s
      Running tests/stress.rs (target/debug/deps/stress-052d6e782e1e2470)
 
 running 1 test
 test large_input_finishes_with_correct_counts ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s
 

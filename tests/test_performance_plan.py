@@ -71,9 +71,7 @@ def test_speed_lane_rejects_instrumented_and_profiling_builds() -> None:
         # the report names where the marker was found, not just that something matched
         assert any(entry.startswith("argv:") for entry in check.forbidden_tokens_found)
     # instrumentation is also commonly switched on by an environment key, not a flag
-    by_env = base.model_copy(
-        update={"environment": {**base.environment, "COVERAGE": "1"}}
-    )
+    by_env = base.model_copy(update={"environment": {**base.environment, "COVERAGE": "1"}})
     check = check_speed_lane(by_env)
     assert not check.accepted
     assert "environment:coverage" in check.forbidden_tokens_found

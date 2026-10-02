@@ -4,11 +4,11 @@
  "plan_id": "python.analysis.semgrep",
  "exit_code": 1,
  "timed_out": false,
- "duration_ms": 30155,
+ "duration_ms": 3890,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "bf9f7d07-7d8e-4cb2-8e76-992b9707a94d"
+ "sandbox_id": "f74a5acf-e0f3-416d-a39a-4a04d118305e"
 }

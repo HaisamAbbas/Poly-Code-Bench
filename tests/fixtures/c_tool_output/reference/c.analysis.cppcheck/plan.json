@@ -1,0 +1,122 @@
+{
+ "schema_version": 1,
+ "kind": "analysis_plan",
+ "plan_id": "c.analysis.cppcheck",
+ "image": "pcb-c-evaluator@sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b",
+ "image_digest": "sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b",
+ "argv": [
+  "python",
+  "-B",
+  "/opt/pcb/guest/pcb_c_run.py",
+  "--name",
+  "out/cppcheck",
+  "--deadline",
+  "97",
+  "--cleanup",
+  "/workspace/build",
+  "--",
+  "cppcheck",
+  "--quiet",
+  "--inline-suppr",
+  "--enable=warning,style,performance,portability",
+  "--std=c17",
+  "--suppressions-list=/opt/pcb/rules/cppcheck-suppressions.txt",
+  "--template={file}:{line}:{column}: {severity}: {message} [{id}]",
+  "-D__STDC_VERSION__=201710L",
+  "-Iwork/include",
+  "work/src/topwords.c"
+ ],
+ "working_directory": ".",
+ "environment": {
+  "LC_ALL": "C"
+ },
+ "inputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/src/topwords.c",
+   "role": "candidate",
+   "digest": null
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_input",
+   "path": "work/include/topwords.h",
+   "role": "config",
+   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+  }
+ ],
+ "outputs": [
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/cppcheck.out",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/cppcheck.err",
+   "format": "text",
+   "required": false,
+   "max_bytes": 4194304
+  },
+  {
+   "schema_version": 1,
+   "kind": "plan_output",
+   "path": "out/cppcheck.run.json",
+   "format": "json",
+   "required": true,
+   "max_bytes": 4194304
+  }
+ ],
+ "resources": {
+  "schema_version": 1,
+  "kind": "resource_policy",
+  "cpu_millis": 2000,
+  "memory_bytes": 2147483648,
+  "pids_limit": 512,
+  "disk_bytes": 536870912,
+  "timeout_seconds": 100,
+  "max_output_bytes": 1048576,
+  "network": "none",
+  "executable_workspace": true
+ },
+ "exit_semantics": {
+  "schema_version": 1,
+  "kind": "exit_semantics",
+  "success": [
+   0
+  ],
+  "findings": [],
+  "error": [
+   3,
+   126,
+   127
+  ]
+ },
+ "tool": {
+  "schema_version": 1,
+  "kind": "tool_identity",
+  "name": "cppcheck",
+  "version": "Cppcheck 2.10",
+  "image_digest": "sha256:21f8269f313c402baf39d48bdcbebdbfd48a8fae9ff9e34170e0b52f6e9e991b",
+  "lock_digest": "sha256:2c224c75aef009a7731d2b3c3ea6ec3603e667f781eb41f83035a3750d1dfbf5",
+  "rule_bundle_digest": "sha256:7f670d43b1943bd96085da846eed5c887b981962a76c1e372a381d50e20869e9",
+  "advisory_snapshot_digest": null,
+  "parser_version": "pcb-c-parsers-1"
+ },
+ "scope": [
+  "src/topwords.c"
+ ],
+ "parser_id": "c-cppcheck",
+ "analyzer_id": "cppcheck",
+ "language_id": "c",
+ "candidate_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+ "required": true,
+ "output_schema": "c-cppcheck-diagnostics-v1",
+ "evidence_ownership": {},
+ "baseline_reusable": true
+}

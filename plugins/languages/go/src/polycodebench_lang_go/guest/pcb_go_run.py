@@ -48,7 +48,13 @@ def _parse(argv):
         if flag == "--merge":
             options["merge"] = True
             index += 1
-        elif flag in ("--name", "--deadline", "--max-bytes", "--cleanup", "--cwd") and index + 1 < len(argv):
+        elif flag in (
+            "--name",
+            "--deadline",
+            "--max-bytes",
+            "--cleanup",
+            "--cwd",
+        ) and index + 1 < len(argv):
             value = argv[index + 1]
             if flag == "--cleanup":
                 options["cleanup"].append(value)
@@ -83,11 +89,12 @@ def main(argv):
     parent = os.path.dirname(name)
     if parent:
         os.makedirs(parent, exist_ok=True)
-    # Go creates GOCACHE/GOMODCACHE/GOPATH/GOTMPDIR itself but *requires* GOTMPDIR to exist, so a
-    # plan that points the compile work directory at the workspace (the sandbox's only writable
-    # path) would otherwise fail before compiling anything. Creating them here keeps the plan
-    # declarative: it names the directories and the runner guarantees them.
-    for key in ("GOCACHE", "GOMODCACHE", "GOPATH", "GOTMPDIR"):
+    # Go creates GOCACHE/GOMODCACHE/GOPATH itself but *requires* GOTMPDIR to exist, so a plan that
+    # points the compile work directory at the workspace (the sandbox's only writable path) would
+    # otherwise fail before compiling anything. HOME is included because staticcheck keeps its own
+    # fact cache under it and fails outright when the directory cannot be created. Creating them
+    # here keeps the plan declarative: it names the directories and the runner guarantees them.
+    for key in ("GOCACHE", "GOMODCACHE", "GOPATH", "GOTMPDIR", "HOME", "XDG_CACHE_HOME"):
         directory = os.environ.get(key)
         if directory and os.path.isabs(directory):
             os.makedirs(directory, exist_ok=True)

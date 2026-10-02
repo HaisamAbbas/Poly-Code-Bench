@@ -25,7 +25,9 @@ import sys
 
 SCHEMA = "pcb-go-mod-audit-v1"
 
-_REQUIRE = re.compile(r"^\s*(?:require\s+)?(?P<path>[a-z0-9.\-/]+\.[a-z]{2,}[^\s]*)\s+v(?P<version>[^\s/]+)")
+_REQUIRE = re.compile(
+    r"^\s*(?:require\s+)?(?P<path>[a-z0-9.\-/]+\.[a-z]{2,}[^\s]*)\s+v(?P<version>[^\s/]+)"
+)
 _MODULE_DIRECTIVE = re.compile(r"^module\s+(?P<path>\S+)")
 _SUM = re.compile(r"^(?P<path>\S+)\s+(?P<version>\S+?)(?:/go\.mod)?\s+h1:")
 
@@ -132,6 +134,7 @@ def audit(module_path, sum_path, snapshot):
 
 def _at_least(version, fixed):
     """Whether a semantic version has reached ``fixed`` (Go versions are dotted, with suffixes)."""
+
     def parts(text):
         core = text.strip().removeprefix("v").split("-", 1)[0].split("+", 1)[0]
         return tuple(int(piece) if piece.isdigit() else 0 for piece in core.split(".")[:3])

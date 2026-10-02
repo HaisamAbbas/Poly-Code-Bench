@@ -25,9 +25,7 @@ from polycodebench_plugins_api.testreport import (
 from polycodebench_lang_go.guestmods import load_guest
 
 _RANK = {"pass": 0, "skipped": 1, "fail": 2, "error": 3}
-_COMPILE_AT = re.compile(
-    r"^(?P<path>[^\s:]+\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<msg>[^\n]+)$"
-)
+_COMPILE_AT = re.compile(r"^(?P<path>[^\s:]+\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<msg>[^\n]+)$")
 _NOISE = ("is unused", "imported and not used", "declared and not used")
 _SIGNAL = re.compile(r"signal: (?P<signal>[a-z]+)")
 

@@ -137,7 +137,11 @@ def parse_module_files(mod: bytes, sums: bytes | None) -> GoModule:
                 # Only the module zip hash fixes the content; the /go.mod hash alone does not.
                 verified.add((match.group("path"), match.group("version")))
 
-    missing = [f"{item.path} {item.version}" for item in requires if (item.path, item.version) not in verified]
+    missing = [
+        f"{item.path} {item.version}"
+        for item in requires
+        if (item.path, item.version) not in verified
+    ]
     if missing:
         raise LockError(
             "go.sum has no content hash for the required modules "

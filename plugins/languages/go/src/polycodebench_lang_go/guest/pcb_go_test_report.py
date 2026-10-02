@@ -77,9 +77,7 @@ def build_records(text, stderr_text, exit_code, timed_out):
         cases[name] = {"kind": "case", "name": name, "outcome": outcome, "duration_ms": duration}
 
     records = [{"v": RECORD_VERSION, "kind": "case_start", "name": name} for name in started]
-    records.extend(
-        {"v": RECORD_VERSION, **case} for _, case in sorted(cases.items())
-    )
+    records.extend({"v": RECORD_VERSION, **case} for _, case in sorted(cases.items()))
     records.append(
         {
             "v": RECORD_VERSION,

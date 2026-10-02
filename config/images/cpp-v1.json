@@ -38,7 +38,7 @@
       "tools": {
         "clang++": "14.0.6",
         "clang-tidy": "14.0.6",
-        "cppcheck": "unknown"
+        "cppcheck": "2.10"
       }
     },
     "performance": {

@@ -85,8 +85,11 @@ def tree_digest(root: Path, subdirs: tuple[str, ...]) -> str:
 def run(args: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, capture_output=True, text=True, check=check, encoding="utf-8")
 
+
 def _recipe_document() -> dict[str, Any]:
-    return cast(dict[str, Any], yaml.safe_load((IMAGES / "recipes.yaml").read_text(encoding="utf-8")))
+    return cast(
+        dict[str, Any], yaml.safe_load((IMAGES / "recipes.yaml").read_text(encoding="utf-8"))
+    )
 
 
 def recipe_components() -> dict[str, list[str]]:

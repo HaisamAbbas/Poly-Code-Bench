@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "kind": "conformance_report",
+  "plugin_id": "go",
+  "plugin_version": "0.1.0",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:441055d335cfdc40ac70a6b30118277ef06a8961b09be95ae7387d646621437b",
+    "sha256:32e6d0fbe6e33aeaec4ab63240d41c04466a3ae2044903616ba840518e379272"
+  ],
+  "cases": [
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "valid_solution",
+      "name": "reference-and-alternative-pass",
+      "passed": true,
+      "expected": "both valid solutions pass every required group",
+      "observed": "reference=pass alternative=pass"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "incorrect_solution",
+      "name": "wrong-tie-break-fails-its-case",
+      "passed": true,
+      "expected": "gate fail naming TestTiesBreakAlphabetically",
+      "observed": "gate=fail failed=('TestTiesBreakAlphabetically',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "incorrect_solution",
+      "name": "compile-error-is-a-candidate-failure",
+      "passed": true,
+      "expected": "build failure, gate fail (not incomplete)",
+      "observed": "gate=fail ('build:topwords/topwords.go:3:50: syntax error: unexpected name is at end of statement',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "defects-seen-despite-passing-tests",
+      "passed": true,
+      "expected": "functional gate passes; analyzers and profile record the defects",
+      "observed": "gate=pass families=['error-chain', 'error-sentinel', 'formatting', 'goroutine-lifecycle', 'ignored-error', 'string-building'] violations={'error_handling': 4, 'goroutines_channels': 0, 'cancellation_context': 0, 'simple_interfaces': 0, 'standard_library': 2, 'formatting_vet_staticcheck': 1}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "defer-close-wrapped-error-errors-is-and-joined-goroutine-are-not-penalised",
+      "passed": false,
+      "expected": "deferred close, wrapped error, errors.Is, root context and a joined goroutine: perfect score, no findings",
+      "observed": "gate=fail score=10000 measured=[]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "nonconcurrent-task-marks-concurrency-not-applicable",
+      "passed": true,
+      "expected": "no frozen concurrency opportunity means N/A and no race plan at all",
+      "observed": "statuses={'goroutines_channels': 'not_applicable', 'cancellation_context': 'not_applicable'} quality.race=unsupported"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "anti_pattern",
+      "name": "race-instrumentation-never-enters-the-measurement-lane",
+      "passed": true,
+      "expected": "every instrumented flag is refused on a measurement plan, the measurement recipe declares no instrumentation, and the race run happens in the runtime image under a distinct instrumented tool identity",
+      "observed": "assert_release refused -race; unrefused_flags=[]; require_release_recipe accepted the performance recipe; race_image=runtime:True tool=1.26.8-race cgo=1"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "gofmt-lists-files-while-exiting-zero",
+      "passed": true,
+      "expected": "gofmt exits 0 with a listing; the listing is the verdict, not the exit status",
+      "observed": "exit=0 observations=2"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "staticcheck-crash",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=101 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "staticcheck-missing-tool",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=127 timed_out=False status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "staticcheck-hang-timeout",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=None timed_out=True status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "context-hang-timeout",
+      "passed": true,
+      "expected": "required scan is MISSING (never clean) and yields no findings",
+      "observed": "exit=None timed_out=True status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "context-scanner-without-output-is-missing",
+      "passed": true,
+      "expected": "exit 0 with no report is a missing scan, not a clean one",
+      "observed": "exit=0 status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "analyzer_failure",
+      "name": "dependent-profile-items-are-missing-not-perfect",
+      "passed": true,
+      "expected": "items fed by the failed scans are missing; no aggregate score is invented",
+      "observed": "{'error_handling': 'missing', 'standard_library': 'missing'}"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "missing_dependency",
+      "name": "unvendored-module-is-a-candidate-failure",
+      "passed": true,
+      "expected": "a module the graph does not pin fails the candidate's build offline (GOPROXY=off, no fetch)",
+      "observed": "gate=fail reasons=('build:go: finding module for package github.com/pkg/errors',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "missing_dependency",
+      "name": "unpopulated-advisory-snapshot-is-never-clean",
+      "passed": true,
+      "expected": "a dependency audit without a populated pinned snapshot is a missing scan",
+      "observed": "exit=2 status=missing"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "timeout",
+      "name": "hung-test-is-a-candidate-timeout-naming-the-case",
+      "passed": true,
+      "expected": "the hard deadline stops the run; the case in flight is recorded; candidate failure",
+      "observed": "gate=fail reasons=('candidate_timeout:TestTiesBreakAlphabetically',)"
+    },
+    {
+      "schema_version": 1,
+      "kind": "conformance_case_result",
+      "category": "profile_applicability",
+      "name": "race-applicability-is-contextual",
+      "passed": true,
+      "expected": "a required race run measures a real race with a robustness owner; a clean run is measured with zero findings; an optional run with no opportunity is N/A",
+      "observed": "required=measured/1 owner=robustness item=measured/1 clean=measured/0"
+    }
+  ],
+  "passed": false,
+  "report_digest": "sha256:9c170d84a5a21edfd458f70ebc3ae771ff46cf95e37385df834b7ebc8cef6418"
+}

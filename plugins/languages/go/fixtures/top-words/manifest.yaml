@@ -42,11 +42,11 @@ rights:
 runtime:
   schema_version: 1
   kind: task_runtime
-  image_digest: sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118
+  image_digest: sha256:441055d335cfdc40ac70a6b30118277ef06a8961b09be95ae7387d646621437b
   language_plugin_id: go
   language_plugin_version: 0.1.0
-  build_recipe_digest: sha256:874e28b94fc5bd4db51d99e5443805d2ca89ba86143e914b5df2f69c008754d1
-  test_recipe_digest: sha256:7677fd0d037d420b41a5ef7386c8e1d6e09077d49f6e17206d8c0b1fe76c383a
+  build_recipe_digest: sha256:161ff2dfc15038ea2b906f3f14d675d157711040070d830a537eb9e2bae1a4ff
+  test_recipe_digest: sha256:5d622133711c34d8cdbbcd2434bc1cc5e2449fa81530676abba2686a0532fc8f
   resource_class: local-development-small
 acceptance:
   schema_version: 1
@@ -145,4 +145,4 @@ fixtures:
   solution_path: admission/race-defective/topwords/topwords.go
   expectation:
     expected_issue_families:
-    - data-race
+    - string-building

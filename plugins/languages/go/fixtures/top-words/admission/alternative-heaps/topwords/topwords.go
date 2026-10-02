@@ -66,8 +66,8 @@ func TopWords(text string, k int) []Count {
 			heap.Push(best, Count{Word: word, Count: count})
 			continue
 		}
-		if worse(best[0], Count{Word: word, Count: count}) {
-			best[0] = Count{Word: word, Count: count}
+		if worse((*best)[0], Count{Word: word, Count: count}) {
+			(*best)[0] = Count{Word: word, Count: count}
 			heap.Fix(best, 0)
 		}
 	}

@@ -320,6 +320,17 @@ def _analysis(
     recipe: Recipe = "evaluator",
 ) -> AnalysisPlan:
     quality = quality_from_mapping(context.task.quality)
+    plan_outputs = outputs
+    if not any(
+        output.required and not output.path.endswith((".run.json", ".build.json"))
+        for output in outputs
+    ):
+        report = next((output for output in outputs if output.path.endswith(".out")), None)
+        if report is not None:
+            plan_outputs = tuple(
+                item.model_copy(update={"required": True}) if item is report else item
+                for item in outputs
+            )
     return AnalysisPlan.model_validate(
         {
             **_base(
@@ -334,7 +345,7 @@ def _analysis(
                     *_recipe_inputs(_recipe_of(quality)),
                     *extra_inputs,
                 ),
-                outputs=outputs,
+                outputs=plan_outputs,
                 scope=tuple(context.candidate_paths),
                 timeout=timeout,
                 semantics=semantics,

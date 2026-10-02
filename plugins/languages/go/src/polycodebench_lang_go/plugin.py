@@ -241,9 +241,7 @@ class GoLanguagePlugin:
     def language_profile(self) -> GoProfile:
         return self._profile
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """Go tasks use fixed `go test` cases; fuzz targets are not run as scored properties."""
         del task, raw
         return PropertyEngineIdentity(

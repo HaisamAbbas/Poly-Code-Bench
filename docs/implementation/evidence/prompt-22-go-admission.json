@@ -4,12 +4,12 @@
   "profile_id": "admission-v1",
   "task_id": "conformance-go-top-words",
   "task_version": 1,
-  "package_digest": "sha256:f1711c23760958d978e8751d1e67eac2fa41926443999458a2c274346890a07d",
+  "package_digest": "sha256:ece0b94c7b6e974b789b9309676cb8f5f91e61710e058f4d9e1095e9d305854e",
   "plugin_id": "go",
   "execution_tier": "development_sandbox",
   "image_digests": [
-    "sha256:099991ea7eb2f773743a2ab6e49ab7df9fd4938c3ce01114846b20cb88dbd118",
-    "sha256:9ef8a84009a970ad69e3f3ee30a40647ea2602505aef6d8933229f4d7800badf"
+    "sha256:441055d335cfdc40ac70a6b30118277ef06a8961b09be95ae7387d646621437b",
+    "sha256:32e6d0fbe6e33aeaec4ab63240d41c04466a3ae2044903616ba840518e379272"
   ],
   "checks": [
     {
@@ -100,28 +100,28 @@
       "schema_version": 1,
       "kind": "admission_check",
       "check_id": "reference-acceptance",
-      "status": "fail",
+      "status": "pass",
       "detail": ""
     },
     {
       "schema_version": 1,
       "kind": "admission_check",
       "check_id": "five-reference-repetitions",
-      "status": "fail",
+      "status": "pass",
       "detail": "five identical outcome inventories required"
     },
     {
       "schema_version": 1,
       "kind": "admission_check",
       "check_id": "known-fault-rejection",
-      "status": "fail",
+      "status": "pass",
       "detail": "faulty variants must fail their declared cases"
     },
     {
       "schema_version": 1,
       "kind": "admission_check",
       "check_id": "alternative-solution-acceptance",
-      "status": "fail",
+      "status": "pass",
       "detail": ""
     },
     {
@@ -135,8 +135,15 @@
       "schema_version": 1,
       "kind": "admission_check",
       "check_id": "quality-defect-detected",
-      "status": "fail",
+      "status": "pass",
       "detail": "quality-defective variants pass the functional gate yet show their intended defect"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-quality-probe-outcomes",
+      "status": "pass",
+      "detail": "all declared quality-only probe outcomes matched"
     },
     {
       "schema_version": 1,
@@ -156,8 +163,8 @@
       "schema_version": 1,
       "kind": "admission_check",
       "check_id": "required-analyzer-compatibility",
-      "status": "fail",
-      "detail": "scans: [('go.context.scan', 'measured'), ('go.gofmt.scan', 'measured'), ('go.gosec.scan', 'missing'), ('go.staticcheck.scan', 'missing'), ('go.vet.scan', 'measured')]"
+      "status": "pass",
+      "detail": "scans: [('go.context.scan', 'measured'), ('go.gofmt.scan', 'measured'), ('go.gosec.scan', 'measured'), ('go.staticcheck.scan', 'measured'), ('go.vet.scan', 'measured')]"
     },
     {
       "schema_version": 1,
@@ -182,19 +189,17 @@
       "variant": "reference",
       "repetitions": 5,
       "gates": [
-        "fail",
-        "fail",
+        "pass",
+        "pass",
         "pass",
         "pass",
         "pass"
       ],
       "failing_cases": [],
-      "reasons": [
-        "candidate_timeout:collection"
-      ],
+      "reasons": [],
       "outcome_digests": [
-        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776",
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776",
         "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776",
         "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776",
         "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776"
@@ -202,23 +207,22 @@
       "analyzer_scans": [
         "go.context.scan=measured",
         "go.gofmt.scan=measured",
-        "go.gosec.scan=missing",
-        "go.staticcheck.scan=missing",
+        "go.gosec.scan=measured",
+        "go.staticcheck.scan=measured",
         "go.vet.scan=measured"
       ],
-      "issue_families": [
-        "formatting"
-      ],
+      "issue_families": [],
       "durations_ms": [
-        59532,
-        58000,
-        53546,
-        55592,
-        56764,
-        57281,
-        60094,
-        60046
-      ]
+        61780,
+        73921,
+        84562,
+        86218,
+        71281,
+        64797,
+        64796,
+        64297
+      ],
+      "quality_only_pass": false
     },
     {
       "schema_version": 1,
@@ -229,21 +233,24 @@
       "gates": [
         "fail"
       ],
-      "failing_cases": [],
+      "failing_cases": [
+        "TestTiesBreakAlphabetically"
+      ],
       "reasons": [
-        "candidate_timeout:collection"
+        "fail:TestTiesBreakAlphabetically:--- FAIL: TestTiesBreakAlphabetically (0.00s)\\n\"}"
       ],
       "outcome_digests": [
-        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        "sha256:ca5026fb436156d537219cff596f43a76510bf4e412359ef4a315d8cf48afd7d"
       ],
       "analyzer_scans": [],
       "issue_families": [],
       "durations_ms": [
-        60296,
-        59483,
-        57828,
-        55640
-      ]
+        71250,
+        72139,
+        65016,
+        66296
+      ],
+      "quality_only_pass": false
     },
     {
       "schema_version": 1,
@@ -252,18 +259,22 @@
       "variant": "alternative",
       "repetitions": 1,
       "gates": [
-        "fail"
+        "pass"
       ],
       "failing_cases": [],
-      "reasons": [
-        "build:topwords/topwords.go:69:16: cannot index best (variable of type *ranking)"
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776"
       ],
-      "outcome_digests": [],
       "analyzer_scans": [],
       "issue_families": [],
       "durations_ms": [
-        26468
-      ]
+        68157,
+        75437,
+        76187,
+        73875
+      ],
+      "quality_only_pass": false
     },
     {
       "schema_version": 1,
@@ -282,24 +293,24 @@
       "analyzer_scans": [
         "go.context.scan=measured",
         "go.gofmt.scan=measured",
-        "go.gosec.scan=missing",
-        "go.staticcheck.scan=missing",
+        "go.gosec.scan=measured",
+        "go.staticcheck.scan=measured",
         "go.vet.scan=measured"
       ],
       "issue_families": [
         "error-chain",
         "error-sentinel",
-        "formatting",
         "goroutine-lifecycle",
         "ignored-error",
         "string-building"
       ],
       "durations_ms": [
-        56750,
-        59891,
-        48639,
-        43812
-      ]
+        62187,
+        59233,
+        61141,
+        66640
+      ],
+      "quality_only_pass": false
     },
     {
       "schema_version": 1,
@@ -320,11 +331,12 @@
       "analyzer_scans": [],
       "issue_families": [],
       "durations_ms": [
-        59828,
-        57280,
-        56592,
-        58827
-      ]
+        68296,
+        75233,
+        99734,
+        77577
+      ],
+      "quality_only_pass": false
     },
     {
       "schema_version": 1,
@@ -333,35 +345,33 @@
       "variant": "quality_defective",
       "repetitions": 1,
       "gates": [
-        "fail"
+        "pass"
       ],
       "failing_cases": [],
-      "reasons": [
-        "candidate_timeout:collection"
-      ],
+      "reasons": [],
       "outcome_digests": [
-        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        "sha256:868bc321134e0136e0e56cebd1da71083e624bebfa655691ba04412f5c3b1776"
       ],
       "analyzer_scans": [
         "go.context.scan=measured",
         "go.gofmt.scan=measured",
-        "go.gosec.scan=missing",
+        "go.gosec.scan=measured",
         "go.staticcheck.scan=missing",
         "go.vet.scan=measured"
       ],
       "issue_families": [
-        "formatting",
         "string-building"
       ],
       "durations_ms": [
-        60452,
-        61703,
-        60516,
-        61016
-      ]
+        66108,
+        67562,
+        65766,
+        65405
+      ],
+      "quality_only_pass": false
     }
   ],
-  "executable_admission_passed": false,
+  "executable_admission_passed": true,
   "pending_gates": [
     "generic-evaluator-stage-integration (Prompt 12)",
     "performance-baseline-canary-and-paired-measurement (Prompt 13)",
@@ -372,5 +382,5 @@
     "owner-rights-confirmation"
   ],
   "quality_admission": "pending",
-  "report_digest": "sha256:52f6fb63362120593883067695bdd4af4b0b3e20655d48e271e777d27d170b27"
+  "report_digest": "sha256:3a2d72e6571a7d577bb509ce24660b56276e6e9a3d828f0682c550c97100b92b"
 }

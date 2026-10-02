@@ -98,6 +98,12 @@ BASE_ENV = {
     # immutable and stops a scored run from depending on a writable HOME.
     "GOENV": "off",
     "CGO_ENABLED": "0",
+    # staticcheck keeps its own fact cache under `$XDG_CACHE_HOME` (falling back to `$HOME/.cache`).
+    # `HOME` itself is a protected sandbox variable - a candidate must not control it - so the
+    # cache location is pinned here instead. Without this it resolved to `/.cache` and failed with
+    # "read-only file system" before analysing anything, which the parser then correctly reported
+    # as missing evidence.
+    "XDG_CACHE_HOME": f"{WORKSPACE_ROOT}/cache/home/.cache",
 }
 
 
@@ -125,9 +131,7 @@ def resources(timeout: int, *, memory_mib: int = 2048) -> ResourcePolicy:
     be mistaken for a candidate timeout.
     """
     if timeout > MAX_PLAN_SECONDS:
-        raise ValueError(
-            f"a Go plan may not declare more than {MAX_PLAN_SECONDS}s, got {timeout}s"
-        )
+        raise ValueError(f"a Go plan may not declare more than {MAX_PLAN_SECONDS}s, got {timeout}s")
     return ResourcePolicy(
         cpu_millis=2000,
         memory_bytes=memory_mib * MIB,
@@ -316,6 +320,24 @@ def _analysis(
 ) -> AnalysisPlan:
     task = context.task
     quality = quality_from_mapping(task.quality)
+    plan_outputs = outputs
+    if not any(
+        output.required and not output.path.endswith((".run.json", ".build.json"))
+        for output in outputs
+    ):
+        report = next((output for output in outputs if output.path.endswith(".out")), None)
+        if report is not None:
+            plan_outputs = tuple(
+                item.model_copy(
+                    update={
+                        "required": True,
+                        "empty_is_clean": analyzer == "gofmt",
+                    }
+                )
+                if item is report
+                else item
+                for item in outputs
+            )
     fields = _base(
         ids,
         plan_id=f"go.analysis.{analyzer}",
@@ -331,7 +353,7 @@ def _analysis(
             *_module_inputs(quality.module_files),
             *extra_inputs,
         ),
-        outputs=outputs,
+        outputs=plan_outputs,
         scope=tuple(context.candidate_paths),
         timeout=timeout,
         semantics=semantics,
@@ -414,20 +436,19 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
             argv=_run(
                 "gosec",
                 110,
+                # gosec's `-out` writes a file *only when it has a finding to report*: a clean run
+                # leaves the path non-existent, which is indistinguishable from a crash that
+                # printed nothing. Its JSON goes to stdout, so capturing that stream is what makes
+                # "clean" an observable fact rather than an absence. `-quiet` is deliberately not
+                # used: it suppresses the per-issue lines that make a partial run legible.
                 "gosec",
-                "-quiet",
                 "-fmt=json",
-                "-out=out/gosec.json",
                 "-confidence=low",
                 "-severity=low",
                 "./...",
                 cwd=MODULE_DIR,
             ),
-            outputs=(
-                PlanOutput(path="out/gosec.json", format="json", required=False, max_bytes=4 * MIB),
-                PlanOutput(path="out/gosec.err", format="text", required=False, max_bytes=4 * MIB),
-                PlanOutput(path="out/gosec.run.json", format="json"),
-            ),
+            outputs=_captured("gosec", "json"),
             semantics=findings_zero,
             output_schema="gosec-json-v1",
             timeout=110,

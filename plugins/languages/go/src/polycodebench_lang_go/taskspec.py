@@ -4,7 +4,8 @@ Layout (Technical Spec 11.1, Go profile)::
 
     manifest.yaml
     visible/task.md  visible/repo/go.mod  visible/repo/go.sum  visible/repo/<pkg>/*.go
-    hidden/oracle.json  hidden/quality-plan.yaml  hidden/tests/*_test.go  hidden/reference/<pkg>/*.go
+    hidden/oracle.json  hidden/quality-plan.yaml  hidden/topwords/*_test.go
+    hidden/reference/<pkg>/*.go
     admission/<variant>/...            (faulty, alternative, quality-defective, timeout solutions)
     admission/exposure-rights.json
 
@@ -146,6 +147,7 @@ class GoOracle(PluginModel):
                 {
                     "group_id": g.group_id,
                     "required": g.required,
+                    "classification": g.classification,
                     "cases": [
                         {
                             "case_id": c.case_id,
@@ -254,7 +256,8 @@ class GoQualityPlan(PluginModel):
             raise ValueError("race can only be a required analyzer when race=required")
         if self.race == "unsupported" and self.opportunities.get("goroutines_channels", 0):
             raise ValueError(
-                "goroutines_channels opportunities need a race applicability of required or optional"
+                "goroutines_channels opportunities need a race applicability of "
+                "required or optional"
             )
         return self
 
@@ -411,7 +414,9 @@ def _check_oracle(
             )
         for case_id in sorted(actual - declared):
             issues.append(
-                _issue("oracle-case-undeclared", f"{group.group_id}: test not in inventory: {case_id}")
+                _issue(
+                    "oracle-case-undeclared", f"{group.group_id}: test not in inventory: {case_id}"
+                )
             )
     acceptance = manifest.get("acceptance")
     if isinstance(acceptance, Mapping):

@@ -137,6 +137,12 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
     if result.returncode != 0:
         return "absent"
     text = (result.stdout + result.stderr).strip()
+    if tool == "cppcheck":
+        # Cppcheck reports only major.minor (for example ``Cppcheck 2.10``); the generic
+        # three-component version matcher used by clang therefore recorded a working analyzer as
+        # ``unknown``. The image digest and pinned Debian package version remain in the same record.
+        match = re.search(r"\bCppcheck\s+(\d+(?:\.\d+)+)", text, re.IGNORECASE)
+        return match.group(1) if match else "unknown"
     match = re.search(r"\d+\.\d+\.\d+[\w.+-]*", text)
     return match.group(0) if match else "unknown"
 
@@ -230,36 +236,60 @@ def recorded_digests(path: Path) -> set[str]:
     return {str(record["digest"]) for record in document["images"].values()}
 
 
+def known_digests() -> dict[str, set[str]]:
+    """Recorded image digests keyed by language, including extensions added later than C++."""
+    found: dict[str, set[str]] = {}
+    for path in sorted((ROOT / "config" / "images").glob("*-v1.json")):
+        document = json.loads(path.read_text(encoding="utf-8"))
+        language = normalize(str(document.get("kind", ""))).removesuffix("-images")
+        images = document.get("images")
+        if language and isinstance(images, dict) and images:
+            found[language] = {str(record["digest"]) for record in images.values()}
+    return found
+
+
+def plugin_entry_points() -> dict[str, str]:
+    """Read every registered language entry point from its distribution metadata."""
+    found: dict[str, str] = {}
+    for pyproject in sorted((ROOT / "plugins" / "languages").glob("*/pyproject.toml")):
+        for line in pyproject.read_text(encoding="utf-8").splitlines():
+            match = re.match(r'\s*([a-z][a-z0-9]*)\s*=\s*"([\w.]+:[A-Za-z]+)"', line)
+            if match:
+                found[match.group(1)] = match.group(2)
+    return found
+
+
 def write_allowlist(cpp_images: dict[str, dict[str, object]]) -> None:
     """Regenerate the administrator allowlist from the recorded identities themselves.
 
-    The allowlist is the set of images a plan is allowed to run, so it is derived from the
-    identity files rather than edited by hand: a digest that is not recorded cannot be approved.
+    The allowlist is the set of images a plan is allowed to run, so it is derived from every
+    identity file rather than a hand-maintained subset: rebuilding C++ cannot unregister a
+    language added after this script was written.
     """
-    plugins = [
-        ("python", "python-v1.json", "polycodebench_lang_python.plugin:PythonLanguagePlugin"),
-        ("rust", "rust-v1.json", "polycodebench_lang_rust.plugin:RustLanguagePlugin"),
-        ("cpp", "cpp-v1.json", "polycodebench_lang_cpp.plugin:CppLanguagePlugin"),
-    ]
-    lines = ["schema_version: 1", "kind: language_plugin_allowlist", "plugins:"]
-    for plugin, identity, entry_point in plugins:
-        digests = (
-            {str(record["digest"]) for record in cpp_images.values()}
-            if plugin == "cpp"
-            else recorded_digests(ROOT / "config" / "images" / identity)
-        )
-        if not digests:
-            raise SystemExit(f"cannot approve {plugin}: {identity} records no image")
-        lines += [
-            f"  - plugin_id: {plugin}",
-            f"    entry_point: {entry_point}",
-            "    api_version: 1",
-            '    plugin_version: "0.1.0"',
-            "    image_digests:",
-            *[f"      - {digest}" for digest in sorted(digests)],
-        ]
+    digests_by_language = known_digests()
+    digests_by_language["cpp"] = {str(record["digest"]) for record in cpp_images.values()}
+    entry_points = plugin_entry_points()
+    missing = sorted(set(entry_points) - set(digests_by_language))
+    if missing:
+        raise SystemExit("refusing to omit language image identities: " + ", ".join(missing))
+    document = {
+        "schema_version": 1,
+        "kind": "language_plugin_allowlist",
+        "plugins": [
+            {
+                "plugin_id": plugin,
+                "entry_point": entry_points[plugin],
+                "api_version": 1,
+                "plugin_version": "0.1.0",
+                "image_digests": sorted(digests_by_language[plugin]),
+            }
+            for plugin in sorted(entry_points)
+        ],
+    }
     ALLOWLIST.parent.mkdir(parents=True, exist_ok=True)
-    ALLOWLIST.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    ALLOWLIST.write_text(
+        yaml.safe_dump(document, sort_keys=False, default_flow_style=False), encoding="utf-8"
+    )
 
 
 def main() -> int:

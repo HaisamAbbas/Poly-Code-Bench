@@ -115,6 +115,16 @@ def main(argv: list[str]) -> int:
             target = workspace / "work" / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(solution_bytes)
+        # The Go toolchain creates GOCACHE/GOMODCACHE/GOPATH itself but requires GOTMPDIR to exist,
+        # and the analyzers need their cache home. Creating them here keeps this loop equivalent to
+        # the sandbox path, which is the point of running it at all.
+        for key in ("GOCACHE", "GOMODCACHE", "GOPATH", "GOTMPDIR", "XDG_CACHE_HOME"):
+            directory = go_plans.BASE_ENV.get(key)
+            if directory:
+                # Absolute guest paths must be re-rooted into this workspace; a bare
+                # removeprefix() would resolve them against the drive root instead.
+                relative = directory.removeprefix(go_plans.WORKSPACE_ROOT).lstrip("/")
+                (workspace / relative).mkdir(parents=True, exist_ok=True)
         identities = plugin.identities
         for tool in [item for item in args.check.split(",") if item]:
             recipe = EVALUATOR if tool in {"staticcheck", "gosec"} else RUNTIME

@@ -7,8 +7,8 @@ alone. The rules that keep an unreliable check from looking clean:
 * a missing/invalid output, a timeout, a crash or an exit code outside the declared contract
   produces a single ``go.<tool>.scan`` observation with status ``missing``;
 * several Go tools report findings while exiting 0 (``gofmt -l`` lists files and still exits 0) and
-  others exit 1 for a *build* failure rather than for findings (``go vet`` on a package that does not
-  compile), so a scan is complete only when its own report is present and names what it saw;
+  others exit 1 for a *build* failure rather than for findings (``go vet`` on a package that does
+  not compile), so a scan is complete only when its own report is present and names what it saw;
 * the race detector has three outcomes that must never be confused: **clean** (the instrumented
   suite ran and reported no race), **race** (a measured data race) and **unsupported** (the
   toolchain could not run the detector at all, which says nothing about the candidate).
@@ -250,8 +250,20 @@ def _vet(
 def _staticcheck(
     plan: AnalysisPlan, raw: ArtifactReader, profile: GoProfile, status: str, code: int | None
 ) -> list[Observation]:
+    # staticcheck prints one JSON object per finding and nothing at all when there are none, which
+    # the supervisor reports as `empty_report`: a required structured output that is present and
+    # zero bytes. For a tool whose clean result *is* an empty report, that is the finding rather
+    # than a missing one - treating it as missing penalises exactly the code with nothing wrong
+    # with it. `completed_with_findings` with an empty stream stays MISSING: a tool that exited
+    # nonzero having printed nothing has not said what it found.
     text = _optional_text(raw, "out/staticcheck.out").strip()
     if not text:
+        if status in {"completed", "empty_report"}:
+            return [
+                scan_observation(
+                    plan, "staticcheck", findings=0, explanation="staticcheck completed"
+                )
+            ]
         return _missing(plan, "staticcheck", "staticcheck produced no report")
     document = json.loads(text)
     if not isinstance(document, list):
@@ -295,8 +307,13 @@ def _staticcheck(
 def _gosec(
     plan: AnalysisPlan, raw: ArtifactReader, profile: GoProfile, status: str, code: int | None
 ) -> list[Observation]:
-    text = _optional_text(raw, "out/gosec.json").strip()
+    # gosec prints its JSON report on stdout and nothing when there are no issues, which the
+    # supervisor reports as `empty_report`. Same reasoning as staticcheck above: for this tool an
+    # empty report is the clean result, not an absent one.
+    text = _optional_text(raw, "out/gosec.out").strip()
     if not text:
+        if status in {"completed", "empty_report"}:
+            return [scan_observation(plan, "gosec", findings=0, explanation="gosec completed")]
         return _missing(plan, "gosec", "gosec produced no report")
     document = json.loads(text)
     if not isinstance(document, dict) or not isinstance(document.get("Issues"), list):
@@ -376,7 +393,9 @@ def _context(
             )
         )
     return [
-        scan_observation(plan, "context", findings=violations, explanation="context scan completed"),
+        scan_observation(
+            plan, "context", findings=violations, explanation="context scan completed"
+        ),
         *observations,
     ]
 

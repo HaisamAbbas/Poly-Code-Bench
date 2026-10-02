@@ -43,6 +43,7 @@ ALLOWED = ["topwords/topwords.go"]
 TOKEN_ONLY = b"""package topwords
 
 import (
+\t"bufio"
 \t"context"
 \t"errors"
 \t"fmt"
@@ -60,7 +61,7 @@ func TopWords(text string, k int) []Count {
 \tif k <= 0 {
 \t\treturn []Count{}
 \t}
-\treader := strings.NewReader(text)
+\treader := io.NopCloser(strings.NewReader(text))
 \tdefer reader.Close()
 
 \tctx := context.Background()
@@ -79,7 +80,7 @@ func TopWords(text string, k int) []Count {
 \t}()
 \tgroup.Wait()
 
-\tline, err := reader.ReadString('\n')
+\tline, err := bufio.NewReader(reader).ReadString('\n')
 \tif err != nil && !errors.Is(err, io.EOF) {
 \t\treturn nil
 \t}
@@ -132,6 +133,21 @@ func TopWords(text string, k int) []Count {
 \treturn nil
 }
 """
+
+
+def go_source(literal: bytes) -> bytes:
+    """Normalise an inline Go source literal to LF.
+
+    These literals are scored against ``gofmt``, which accepts LF only. They live in a Python file,
+    so on a checkout with ``core.autocrlf`` they arrive as CRLF and the tool then reports the
+    perfectly written sample as needing reformatting - the exact false positive this suite exists
+    to detect. Normalising here keeps the fixture independent of how the repository was checked out.
+    """
+    return literal.replace(b"\r\n", b"\n")
+
+
+TOKEN_ONLY = go_source(TOKEN_ONLY)
+UNVENDORED_MODULE = go_source(UNVENDORED_MODULE)
 NOT_GO = b"package topwords\n\nfunc TopWords(text string, k int) []Count { this is not go\n"
 
 
@@ -191,11 +207,15 @@ def _concurrent_view(
             **opportunities,
         },
     }
-    analyzers = list(view.required_analyzers)
+    analyzers = list(view.quality["required_analyzers"])
     if race == "required":
         analyzers = sorted({*analyzers, "race"})
     else:
         analyzers = [item for item in analyzers if item != "race"]
+    # `GoQualityPlan` validates `race` against its own `required_analyzers` field, so the quality
+    # plan and the task-level list must move together; updating only the task field leaves the plan
+    # declaring a required race run whose analyzer is not required, which validation rejects.
+    quality["required_analyzers"] = analyzers
     return view.model_copy(update={"quality": quality, "required_analyzers": tuple(analyzers)})
 
 

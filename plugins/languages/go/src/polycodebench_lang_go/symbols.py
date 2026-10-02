@@ -24,7 +24,8 @@ _LITERAL = re.compile(
     re.DOTALL,
 )
 _TOKEN = re.compile(
-    r"(?P<bol>^|\n)[ \t]*func[ \t]+(?:\([ \t]*(?P<recv>[^)]*?)[ \t]*\)[ \t]*)?(?P<name>[A-Za-z_]\w*)[ \t]*\("
+    r"(?P<bol>^|\n)[ \t]*func[ \t]+(?:\([ \t]*(?P<recv>[^)]*?)[ \t]*\)[ \t]*)?"
+    r"(?P<name>[A-Za-z_]\w*)[ \t]*\("
     r"|(?P<bol2>^|\n)[ \t]*(?P<gen>type|var|const)[ \t]+(?P<gname>[A-Za-z_]\w*)\b"
     r"|(?P<open>\{)|(?P<close>\})",
     re.MULTILINE,

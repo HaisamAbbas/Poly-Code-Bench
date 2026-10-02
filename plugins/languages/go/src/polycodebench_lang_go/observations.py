@@ -22,12 +22,13 @@ from polycodebench_core.models import (
     SourceLocation,
 )
 from polycodebench_plugins_api import AnalysisPlan
+from polycodebench_plugins_api.results import raw_report_ids
 
 Severity = Literal["critical", "high", "medium", "low"]
 
 _NON_SLUG = re.compile(r"[^a-z0-9._-]+")
-# No Go family is keyed by column. The context scanner reports whole lines (column 1), so a column in
-# the key would stop a staticcheck finding and a scanner finding for one site from merging. The
+# No Go family is keyed by column. The context scanner reports whole lines (column 1), so a column
+# in the key would stop a staticcheck finding and a scanner finding for one site from merging. The
 # price is that two defects of one family on one line count once - the conservative direction.
 COLUMN_KEYED_FAMILIES: frozenset[str] = frozenset()
 
@@ -100,7 +101,7 @@ def finding(
         baseline_relation=None,
         issue_key=key,
         primary_owner=owner,
-        raw_artifact_ids=[],
+        raw_artifact_ids=raw_report_ids(plan),
         explanation=explanation[:500],
     )
 
@@ -135,6 +136,6 @@ def scan_observation(
         baseline_relation=None,
         issue_key=None,
         primary_owner=None,
-        raw_artifact_ids=[],
+        raw_artifact_ids=raw_report_ids(plan),
         explanation=explanation[:500],
     )

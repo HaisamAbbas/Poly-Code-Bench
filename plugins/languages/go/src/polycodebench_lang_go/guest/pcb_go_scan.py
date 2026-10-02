@@ -112,7 +112,9 @@ _EMPTY_INTERFACE_PARAM = re.compile(r"\b(?:interface\s*\{\s*\}|\bany)\b")
 _SORT_SLICE = re.compile(r"\bsort\s*\.\s*Slice\s*\(")
 _SPRINTF = re.compile(r"\bfmt\s*\.\s*Sprintf\s*\(")
 _STRING_APPEND = re.compile(r"^\s*\w+\s*\+=\s*")
-_MANUAL_SEARCH = re.compile(r"\bstrings\s*\.\s*(?:Index|Contains|HasPrefix|HasSuffix|TrimPrefix)\s*\(")
+_MANUAL_SEARCH = re.compile(
+    r"\bstrings\s*\.\s*(?:Index|Contains|HasPrefix|HasSuffix|TrimPrefix)\s*\("
+)
 
 # `defer` at the top level of a function body is not "inside a loop".
 _LOOP_DEPTH_STEP = re.compile(r"\{\s*$")
@@ -369,7 +371,9 @@ class _Scanner:
         for function in self.functions:
             if not function.ctx:
                 continue
-            params = function.signature[function.signature.find("(") + 1 : function.signature.rfind(")")]
+            params = function.signature[
+                function.signature.find("(") + 1 : function.signature.rfind(")")
+            ]
             if not re.match(r"^\s*(?:\w+\s+)?\b(?:ctx|cx)\b", params):
                 self.add(
                     "context-not-first-parameter",
@@ -401,7 +405,6 @@ class _Scanner:
         if not match:
             return
         call = match.group("call")
-        name = call.strip().split("(", 1)[0].strip() if call else ""
         joined = _JOIN_MARKER.search(function.body if function else clean)
         if call is None and not joined:
             self.add(

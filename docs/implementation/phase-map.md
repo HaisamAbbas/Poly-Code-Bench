@@ -98,7 +98,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 21 | Prompt 21 | — Add C++ support | WP-19, part 3 | C++ support | partial (local C++ plugin/plans/fixtures exist; fresh image admission unverified) |
 | 22 | Prompt 22 | — Add Go support | WP-19, part 4 | Go support | implemented (plugin, pinned recipes, profiles, task pack and real-sandbox admission pass; the prior `tool_error` was a build cache in the read-only image layer, now fixed) |
 | 23 | Prompt 23 | — Add Java and close language coverage | WP-19, part 5 | Java support and complete language coverage audit | partial (Java implementation and local audit done; Java images and complete language conformance remain blocked) |
-| 24 | Prompt 24 | — Implement repository repair benchmark adapters | WP-20, part 1 | SWE-style/native repository repair adapter | not_started |
+| 24 | Prompt 24 | — Implement repository repair benchmark adapters | WP-20, part 1 | SWE-style/native repository repair adapter | done (E2E-36 passed at the local-fixture tier through the pinned upstream evaluator; no official dataset instance imported) |
 | 25 | Prompt 25 | — Implement realistic repository tasks | WP-20, part 2 | Independently curated realistic repository tasks | not_started |
 | 26 | Prompt 26 | — Implement self-repair | WP-20, part 3 | Fixed-budget self-repair protocol | not_started |
 | 27 | Prompt 27 | — Implement repository understanding and factual Q&A | WP-20, part 4 | Repository Q&A and fact-based grading | not_started |

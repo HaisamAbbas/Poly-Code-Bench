@@ -252,9 +252,13 @@ class PostgresSolveRepository:
         canonical_artifact_id: UUID,
         expected_last_seq: int | None = None,
         dispatch_allowed: Callable[[], bool] | None = None,
+        revision: int = 1,
     ) -> CandidateRow:
-        """Record the one candidate of an attempt. Replaying the same bytes returns the row; a
-        different digest for the same attempt is a conflict, never an overwrite."""
+        """Record one candidate revision of an attempt (revision 1 is the solve session's one
+        candidate; self-repair rounds freeze later revisions). Replaying the same bytes returns
+        the row; a different digest for the same revision is a conflict, never an overwrite."""
+        if revision < 1:
+            raise InvalidState("candidate revisions are positive")
         if dispatch_allowed is not None and not dispatch_allowed():
             raise LeaseLost()
         try:
@@ -277,7 +281,8 @@ class PostgresSolveRepository:
                 existing = (
                     connection.execute(
                         select(candidate).where(
-                            candidate.c.attempt_id == attempt_id, candidate.c.revision == 1
+                            candidate.c.attempt_id == attempt_id,
+                            candidate.c.revision == revision,
                         )
                     )
                     .mappings()
@@ -294,7 +299,7 @@ class PostgresSolveRepository:
                     insert(candidate).values(
                         id=candidate_id,
                         attempt_id=attempt_id,
-                        revision=1,
+                        revision=revision,
                         payload_digest=payload_digest,
                         submission_kind=submission_kind,
                         payload=payload,
@@ -318,12 +323,12 @@ class PostgresSolveRepository:
         except DBAPIError as error:
             raise map_database_error(error) from None
 
-    def candidate_for(self, attempt_id: UUID) -> CandidateRow | None:
+    def candidate_for(self, attempt_id: UUID, *, revision: int = 1) -> CandidateRow | None:
         with self._engine.connect() as connection:
             row = (
                 connection.execute(
                     select(candidate).where(
-                        candidate.c.attempt_id == attempt_id, candidate.c.revision == 1
+                        candidate.c.attempt_id == attempt_id, candidate.c.revision == revision
                     )
                 )
                 .mappings()

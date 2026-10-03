@@ -472,6 +472,84 @@ candidate = Table(
     CheckConstraint("payload_digest ~ '^sha256:[0-9a-f]{64}$'", name="payload_digest_format"),
 )
 
+repair_run = Table(
+    "repair_run",
+    metadata,
+    pk(),
+    fk("attempt_id", "attempt.id"),
+    Column("repair_run_id", String(128), nullable=False),
+    Column("protocol_digest", String(71), nullable=False),
+    Column("protocol", JSONB, nullable=False),
+    Column("public_case_ids", JSONB, nullable=False),
+    Column("rounds_committed", Integer, nullable=False),
+    Column("spend", JSONB, nullable=False),
+    Column("state", String(16), nullable=False),
+    Column("selected_round_index", Integer, nullable=True),
+    Column("run_digest", String(71), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("repair_run_id"),
+    CheckConstraint("rounds_committed >= 0", name="repair_rounds_committed_nonnegative"),
+    CheckConstraint("state IN ('open','complete')", name="repair_run_state"),
+    CheckConstraint(
+        "state <> 'complete' OR selected_round_index IS NOT NULL",
+        name="complete_run_selects_a_round",
+    ),
+    CheckConstraint("run_digest ~ '^sha256:[0-9a-f]{64}$'", name="repair_run_digest_format"),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+repair_round = Table(
+    "repair_round",
+    metadata,
+    pk(),
+    fk("repair_run_id", "repair_run.id"),
+    Column("round_index", Integer, nullable=False),
+    Column("candidate_revision", Integer, nullable=False),
+    Column("candidate_digest", String(71), nullable=True),
+    Column("prompt_digest", String(71), nullable=False),
+    Column("request_digest", String(71), nullable=False),
+    Column("feedback_digest", String(71), nullable=True),
+    Column("state", String(16), nullable=False),
+    Column("public_results", JSONB, nullable=False),
+    Column("input_tokens", Integer, nullable=False),
+    Column("output_tokens", Integer, nullable=False),
+    Column("cost_micros", BigInteger, nullable=False),
+    created_at(),
+    UniqueConstraint("repair_run_id", "round_index"),
+    CheckConstraint("round_index >= 0", name="repair_round_index_nonnegative"),
+    CheckConstraint("candidate_revision = round_index + 1", name="repair_round_revision"),
+    CheckConstraint("state IN ('frozen','model_failure')", name="repair_round_state"),
+    CheckConstraint(
+        "state <> 'frozen' OR candidate_digest IS NOT NULL", name="frozen_round_has_candidate"
+    ),
+    CheckConstraint(
+        "state <> 'model_failure' OR candidate_digest IS NULL", name="failed_round_has_no_candidate"
+    ),
+    CheckConstraint(
+        "round_index = 0 OR feedback_digest IS NOT NULL", name="repair_round_has_feedback"
+    ),
+)
+
+repair_delivery = Table(
+    "repair_delivery",
+    metadata,
+    pk(),
+    fk("repair_round_id", "repair_round.id"),
+    Column("delivery_index", Integer, nullable=False),
+    Column("input_tokens", Integer, nullable=False),
+    Column("output_tokens", Integer, nullable=False),
+    Column("cost_micros", BigInteger, nullable=False),
+    Column("active_ms", BigInteger, nullable=False),
+    created_at(),
+    UniqueConstraint("repair_round_id", "delivery_index"),
+    CheckConstraint("delivery_index >= 1", name="repair_delivery_index_positive"),
+    CheckConstraint("input_tokens >= 0", name="repair_delivery_input_nonnegative"),
+    CheckConstraint("output_tokens >= 0", name="repair_delivery_output_nonnegative"),
+    CheckConstraint("cost_micros >= 0", name="repair_delivery_cost_nonnegative"),
+    CheckConstraint("active_ms >= 0", name="repair_delivery_active_nonnegative"),
+)
+
 evaluation = Table(
     "evaluation",
     metadata,

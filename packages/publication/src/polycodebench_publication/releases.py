@@ -604,6 +604,23 @@ class ReleaseStore:
             "withdrawal": doc.get("withdrawal"),
         }
 
+    def list_public(self) -> list[dict[str, Any]]:
+        """List public release documents in stable release ID order.
+
+        Draft and review documents remain private even though the local publication store contains
+        them. Keep this visibility rule beside ``public`` so listing and direct lookup agree.
+        """
+        with self._connect() as db:
+            documents = [json.loads(row[0]) for row in db.execute("SELECT document FROM releases")]
+        return sorted(
+            (
+                document
+                for document in documents
+                if document.get("state") in {"published", "withdrawn"}
+            ),
+            key=lambda document: str(document.get("id", "")),
+        )
+
     def audit(self) -> list[dict[str, Any]]:
         with self._connect() as db:
             return [dict(row) for row in db.execute("SELECT * FROM audit ORDER BY sequence")]

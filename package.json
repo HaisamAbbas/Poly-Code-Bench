@@ -5,6 +5,7 @@
   "engines": { "node": ">=24 <25" },
   "scripts": {
     "build": "pnpm --filter @polycodebench/web build",
+    "test:web:e2e": "pnpm --filter @polycodebench/web test:e2e",
     "contracts:build": "pnpm --filter @polycodebench/contracts build",
     "contracts:test": "pnpm --filter @polycodebench/contracts test:contracts",
     "contracts:typecheck": "pnpm --filter @polycodebench/contracts typecheck",

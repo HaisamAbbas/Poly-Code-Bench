@@ -102,7 +102,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 25 | Prompt 25 | — Implement realistic repository tasks | WP-20, part 2 | Independently curated realistic repository tasks | not_started |
 | 26 | Prompt 26 | — Implement self-repair | WP-20, part 3 | Fixed-budget self-repair protocol | not_started |
 | 27 | Prompt 27 | — Implement repository understanding and factual Q&A | WP-20, part 4 | Repository Q&A and fact-based grading | not_started |
-| 28 | Prompt 28 | — Implement prediction suites and close Track B coverage | WP-20, part 5 | Output/test prediction and complete suite coverage audit | not_started |
+| 28 | Prompt 28 | — Implement prediction suites and close Track B coverage | WP-20, part 5 | Output/test prediction and complete suite coverage audit | done (E2E-38 prediction subcases passed at the local fixture tier; the seven-family coverage audit closes WP-20 on real entrypoints, with the repo_qa evidence pointer provisional until Prompt 27 completes) |
 | 29 | Prompt 29 | — Implement the complete public API and projections | WP-21 | Complete public projections/API and generated client | not_started |
 | 30 | Prompt 30 | — Build leaderboard, language and model pages | WP-22, part 1 | Leaderboard, language view and model profile | not_started |
 | 31 | Prompt 31 | — Build comparison, task explorer and methodology pages | WP-22, part 2 | Comparison, task explorer and methodology pages | not_started |

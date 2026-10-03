@@ -1173,40 +1173,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `28`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`plugins/suites/swebench/src/polycodebench_suites_swebench/prediction.py`: `validate_prediction_tools` refuses every execution tool by name, and `check_protocol_constraints` refuses test/hidden feedback and non-disabled network for both prediction families; `config/protocols/prediction-v1.yaml` is the frozen cohort with zero tools and zero tool calls, and `packages/core/src/polycodebench_core/prediction_prompts.py` renders its deterministic messages).
+- Verification: `passed` (local fixture tier).
 - Required verification scope: E2E-36–38.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `plugins/suites/swebench/tests/test_e2e38_prediction.py` (`test_a_prediction_protocol_cannot_carry_an_execution_tool`, `test_a_different_tool_policy_is_a_different_cohort`, `test_the_prediction_protocol_carries_no_tool_at_all`) and `evidence/prompt-28-e2e38.json` (`protocol_restriction`). The oracle records whether it was execution-derived; the model still cannot run anything.
 - Acceptance criteria: — Implement code-execution/output-prediction inputs and protocol restrictions. DoD: the evaluated model cannot run the target code when the declared task measures prediction without execution; a different tool policy is a different cohort.
 
 ## PCB-28-2 - Prompt 28: — Implement prediction suites and close Track B coverage
 
 - Owner prompt: `28`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`prediction.py` plus `prediction_grading.grade_prediction_task`): frozen `NormalizationRules` for `exact_bytes`/`normalized_text`/`typed_json`, one-pass `parse_submission`, and a total comparison whose verdict carries the deciding rule. A parse error is a wrong answer; the grade report has no judge field, so a mismatch cannot be rescued.
+- Verification: `passed` (local fixture tier; 16 graded cases).
 - Required verification scope: E2E-36–38.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `test_exact_bytes_compares_characters_not_whitespace`, `test_normalized_text_applies_only_its_declared_rules`, `test_typed_json_ignores_declared_key_order_and_honours_tolerance`, `test_a_parse_error_is_a_wrong_answer`, `test_judge_votes_cannot_rescue_a_mismatch`; `evidence/prompt-28-e2e38.json` records every verdict with its candidate and oracle digest.
 - Acceptance criteria: — Implement test-output-prediction tasks and explicit exact_bytes/normalized_text/typed_json grading. DoD: normalization rules are frozen, parse errors are wrong answers, and judges do not rescue deterministic mismatches.
 
 ## PCB-28-3 - Prompt 28: — Implement prediction suites and close Track B coverage
 
 - Owner prompt: `28`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (two admitted packs under `taskpacks/prediction/`, both `adapted` per the deviations register and `docs/methodology/livecodebench.md`; both import through `TaskPackageImporter`. `prediction_metric_definitions` publishes the answer-only metric with an empty code-dimension list, so the six generated-code dimensions are absent from a prediction report rather than zero).
+- Verification: `passed` (both packs import; every graded case deterministic).
 - Required verification scope: E2E-36–38.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `test_prediction_metrics_declare_no_code_dimensions`, `test_answer_only_metrics_are_absent_not_zero`; pack digests and the frozen protocol are in `evidence/prompt-28-e2e38.json` (`fixtures`).
 - Acceptance criteria: — Admit prediction fixtures and wire native/ported/inspired methodology plus answer-only metric definitions. DoD: generated-code dimensions stay N/A and output/error types are handled consistently through reports/API schemas.
 
 ## PCB-28-4 - Prompt 28: — Implement prediction suites and close Track B coverage
 
 - Owner prompt: `28`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`prediction_grading.audit_track_b` plus `docs/implementation/reports/suite-coverage.md`): the audit walks all seven required Track B families through their real grader entrypoints, refuses to build a verdict that omits a family, and fails a family whose pack or evidence path is absent from the tree. WP-20 is closed by that run: `wp20_closed: true` with `failed_families: []`.
+- Verification: `passed` (audit verdict machine-produced; prior prompt evidence reused as recorded, not re-run).
 - Required verification scope: E2E-36–38.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `evidence/prompt-28-e2e38.json` (`track_b_coverage`), `docs/implementation/reports/suite-coverage.md` (per-family entrypoints, packs, evidence and scope limits). Prior applicable evidence preserved: E2E-36 (`prompt-24-e2e36.json`), repo-task admissions (`prompt-25-*.json`), E2E-37 (`prompt-26-e2e-37.json`).
 - Acceptance criteria: — Audit codegen, repository repair, realistic repo tasks, self-repair, repo Q&A, output prediction and test prediction through actual entrypoints. DoD: all have source records, output contracts, allowed tools/feedback, grading, missingness and reproducible evidence; close WP-20 only when every required family passes.
 
 ## PCB-29-1 - Prompt 29: — Implement the complete public API and projections

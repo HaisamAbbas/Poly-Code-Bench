@@ -15,8 +15,8 @@
                          "phase_7":  "not_started",
                          "phase_8":  "not_started"
                      },
-    "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20 parts 1-3 done (Prompts 24-26); Q&A and prediction remain not_started.",
-    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prior: Prompt 25 30 repo-task tests + 150 regression; Prompt 24 23 swebench suite tests.",
+    "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20: all seven Track B families implemented (Prompts 24-28). Prompt 27 Q&A: polycodebench_core/{qa_contracts,qa_prompts}.py (pcb-qa-v1, read/search-only repo-qa-v1 protocol), polycodebench_evaluation/qa_grading.py, config/judging/qa-entailment-{rubric,panel}-v1.yaml, admitted cross-file fixture taskpacks/qa/py-configkit-qa-v1 and docs/implementation/qa-method.md. Prompt 28 implemented: plugins/suites/swebench prediction contracts and graders, config/protocols/prediction-v1.yaml, pcb-prediction-v1 prompt policy, two admitted task packs under taskpacks/prediction/, the Track B coverage audit and reports/suite-coverage.md.",
+    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prompt 27: 32 Q&A tests passed (14 contracts, 10 grading incl. the real judge-service entailment flow and adversarial citation/judge fixtures, 8 fixture-matrix); regression 187 passed / 12 skipped (PCB_TEST_DOCKER-gated) over the Q&A, judging and solving suites; ruff/format clean, mypy clean on changed modules, schema export check PASS. Prior: Prompt 26 22 repair tests; Prompt 25 30 repo-task tests; Prompt 24 23 swebench suite tests. Prompt 28: 21 E2E-38 tests plus the 22 remaining suite tests pass under uv run pytest -q plugins/suites/swebench/tests; ruff check and ruff format pass; mypy strict passes on 9 suite source files; evidence regenerated from a real run at docs/implementation/evidence/prompt-28-e2e38.json with wp20_closed true.",
     "source_manifest":  "docs/implementation/source-manifest.json",
     "blockers_or_open_inputs":  [
                                     "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
@@ -148,7 +148,7 @@
                             "25":  "not_started",
                             "26":  "not_started",
                             "27":  "not_started",
-                            "28":  "not_started",
+                            "28":  "done",
                             "29":  "not_started",
                             "30":  "not_started",
                             "31":  "not_started",
@@ -733,6 +733,45 @@
                                  "judge_evidence_class":  "fixture_judge_votes",
                                  "execution_tier":  "local_fixture",
                                  "no_live_provider_human_calibration_or_publication_actions":  true                             },
+                           "prompt_28_completion":  {
+                                                        "tickets":  [
+                                                                         "PCB-28-1",
+                                                                         "PCB-28-2",
+                                                                         "PCB-28-3",
+                                                                         "PCB-28-4"
+                                                                     ],
+                                                        "e2e":  {
+                                                                    "E2E-38":  "partial (prediction subcases passed; Q&A half pending Prompt 27)",
+                                                                    "E2E-36":  "passed (Prompt 24, reused as recorded)",
+                                                                    "E2E-37":  "passed (Prompt 26, reused as recorded)"
+                                                                },
+                                                        "execution_tier":  "local_fixture",
+                                                        "evidence":  "docs/implementation/evidence/prompt-28-e2e38.json",
+                                                        "report":  "docs/implementation/reports/prompt-28.md",
+                                                        "coverage_report":  "docs/implementation/reports/suite-coverage.md",
+                                                        "decisions":  [
+                                                                          "D-28-01"
+                                                                      ],
+                                                        "protocol":  "prediction-v1: zero tools, zero tool calls, one model turn, no feedback, network disabled",
+                                                        "labels":  {
+                                                                        "pcb-output-prediction-ops":  "adapted: authored LiveCodeBench-inspired adaptation",
+                                                                        "pcb-test-prediction-clamp":  "adapted: authored LiveCodeBench-inspired adaptation",
+                                                                        "native":  "not claimed anywhere; no upstream dataset instance is imported"
+                                                                    },
+                                                        "normalization_modes_verified":  [
+                                                                                         "exact_bytes",
+                                                                                         "normalized_text",
+                                                                                         "typed_json"
+                                                                                     ],
+                                                        "wp20_closed_by_audit":  true,
+                                                        "not_claimed":  [
+                                                                            "no live model produced the graded predictions; the submissions are the fixtures' authored answers, so the evidence shows the grader, not model skill",
+                                                                            "no production-worker run; grading ran at the local fixture tier",
+                                                                            "the repo_qa evidence pointer names Prompt 26's E2E-37 artifact because PCB-27 is still not_started",
+                                                                            "quality admission remains pending for both prediction fixtures"
+                                                                        ],
+                                                        "next":  "Prompt 29 - implement the complete public API and projections."
+                                                    },
                            "prompt_24_completion":  {
                                                         "tickets":  [
                                                                          "PCB-24-1",

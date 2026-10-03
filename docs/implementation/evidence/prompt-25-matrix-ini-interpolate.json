@@ -1,0 +1,1564 @@
+{
+  "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+  "execution_tier": "local_fixture",
+  "judge_evidence_class": "fixture_judge_votes",
+  "judge_note": "Judge evidence is deterministic fixture votes through the real judge services; the judge panel is unprovisioned (config/judging/panel-v1.yaml) and no live judge call was made.",
+  "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+  "rows": [
+    {
+      "grade": {
+        "baseline_digest": "sha256:743864ea046dc84807d264efd1ea976f63fe2ddfcfba03cb3db5a861172e2848",
+        "candidate_digest": "sha256:4839898f598c5b727ab952c6733589db966084752755111f91156ec1469c0729",
+        "cases": [
+          {
+            "case_id": "expands-single-var",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "expands-multiple-vars",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "escaped-stays-literal",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "keys-untouched",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "missing-var-raises",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parse-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "cfgkit/interpolate.py",
+          "cfgkit/loader.py"
+        ],
+        "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+        "convention_report": [
+          {
+            "detail": "'render_debug' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "line": 20,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "bare except in 'render_debug'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "line": 26,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "'render_lines' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "bare except in 'render_lines'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "line": 10,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "block 6beda0db5f67e987 duplicated at cfgkit/legacy_report.py:render_debug, cfgkit/legacy_report.py:render_lines",
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "duplicated-block",
+            "symbol": "render_lines"
+          }
+        ],
+        "criteria": [
+          {
+            "case_ids": [
+              "expands-single-var",
+              "expands-multiple-vars"
+            ],
+            "criterion_id": "interpolation",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "escaped-stays-literal"
+            ],
+            "criterion_id": "escape-literals",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "missing-var-raises"
+            ],
+            "criterion_id": "error-contract",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "keys-untouched",
+              "parse-unchanged"
+            ],
+            "criterion_id": "compat-preserved",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "change-scope",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+        "quality_issues": [
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "low"
+          }
+        ],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "ini-interpolate",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "5dc10dbf-6aca-4162-84ae-e59a654152f3",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "reference:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "10.500000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "10.500000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "100.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:743864ea046dc84807d264efd1ea976f63fe2ddfcfba03cb3db5a861172e2848",
+        "candidate_digest": "sha256:a09c64203f813fa8325781119de22ed4ca1bcf093f386fbd8c4dd7fef075d15a",
+        "cases": [
+          {
+            "case_id": "expands-single-var",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "expands-multiple-vars",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "escaped-stays-literal",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "keys-untouched",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "missing-var-raises",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parse-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "cfgkit/interpolate.py",
+          "cfgkit/loader.py"
+        ],
+        "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+        "convention_report": [
+          {
+            "detail": "'render_debug' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "line": 20,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "bare except in 'render_debug'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "line": 26,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "'render_lines' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "bare except in 'render_lines'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "line": 10,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "block 6beda0db5f67e987 duplicated at cfgkit/legacy_report.py:render_debug, cfgkit/legacy_report.py:render_lines",
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "duplicated-block",
+            "symbol": "render_lines"
+          }
+        ],
+        "criteria": [
+          {
+            "case_ids": [
+              "expands-single-var",
+              "expands-multiple-vars"
+            ],
+            "criterion_id": "interpolation",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "escaped-stays-literal"
+            ],
+            "criterion_id": "escape-literals",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "missing-var-raises"
+            ],
+            "criterion_id": "error-contract",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "keys-untouched",
+              "parse-unchanged"
+            ],
+            "criterion_id": "compat-preserved",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "change-scope",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+        "quality_issues": [
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "low"
+          }
+        ],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "ini-interpolate",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "40502c09-e0cb-4914-8b45-7069219e965c",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "alternative:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "10.500000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "10.500000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "100.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:743864ea046dc84807d264efd1ea976f63fe2ddfcfba03cb3db5a861172e2848",
+        "candidate_digest": "sha256:5fe1d6301f9a717e7aadad58b9ec86c2c0c1d457ee39ff6c36072c616fc5bdea",
+        "cases": [
+          {
+            "case_id": "expands-single-var",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "expands-multiple-vars",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "escaped-stays-literal",
+            "outcome": "fail",
+            "reason": "AssertionError: got '\\\\/opt/app'"
+          },
+          {
+            "case_id": "keys-untouched",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "missing-var-raises",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parse-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "cfgkit/interpolate.py",
+          "cfgkit/loader.py"
+        ],
+        "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+        "convention_report": [
+          {
+            "detail": "'render_debug' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "line": 20,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "bare except in 'render_debug'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "line": 26,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "'render_lines' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "bare except in 'render_lines'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "line": 10,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "block 6beda0db5f67e987 duplicated at cfgkit/legacy_report.py:render_debug, cfgkit/legacy_report.py:render_lines",
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "duplicated-block",
+            "symbol": "render_lines"
+          }
+        ],
+        "criteria": [
+          {
+            "case_ids": [
+              "expands-single-var",
+              "expands-multiple-vars"
+            ],
+            "criterion_id": "interpolation",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "escaped-stays-literal"
+            ],
+            "criterion_id": "escape-literals",
+            "detail": "escaped-stays-literal: AssertionError: got '\\\\/opt/app'",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "fail"
+          },
+          {
+            "case_ids": [
+              "missing-var-raises"
+            ],
+            "criterion_id": "error-contract",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "keys-untouched",
+              "parse-unchanged"
+            ],
+            "criterion_id": "compat-preserved",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "change-scope",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [
+          "escape-literals"
+        ],
+        "gate": {
+          "failing_conditions": [
+            "escape-literals"
+          ],
+          "incomplete_conditions": [],
+          "reasons": [
+            "required acceptance condition failed"
+          ],
+          "status": "fail"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+        "quality_issues": [
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "low"
+          }
+        ],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "ini-interpolate",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": false,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "e842c268-599f-4e14-a2b0-10edbddfc7af",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "faulty:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "0.000000",
+          "code_quality/duplication": "0.000000",
+          "code_quality/minimal_relevant_scope": "0.000000",
+          "code_quality/naming_readability": "0.000000",
+          "code_quality/repository_style_consistency": "0.000000",
+          "code_quality/unnecessary_complexity": "0.000000",
+          "correctness/gate": "0.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "fail",
+        "status": "ready",
+        "total_score": "0.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:743864ea046dc84807d264efd1ea976f63fe2ddfcfba03cb3db5a861172e2848",
+        "candidate_digest": "sha256:33161ead5530687930d6f1a6901e8d432fb218e9839274f255cd54ba8e7766b6",
+        "cases": [
+          {
+            "case_id": "expands-single-var",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "expands-multiple-vars",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "escaped-stays-literal",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "keys-untouched",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "missing-var-raises",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parse-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "cfgkit/interpolate.py",
+          "cfgkit/loader.py"
+        ],
+        "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+        "convention_report": [
+          {
+            "detail": "bare except in 'scan_right'",
+            "in_new_code": true,
+            "issue_key": "rt.convention.0064386d9a291e9c",
+            "line": 47,
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "bare-except",
+            "symbol": "scan_right"
+          },
+          {
+            "detail": "'render_debug' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "line": 20,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "bare except in 'render_debug'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "line": 26,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "bare except in 'scan_left'",
+            "in_new_code": true,
+            "issue_key": "rt.convention.2ea35940a42f7d50",
+            "line": 22,
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "bare-except",
+            "symbol": "scan_left"
+          },
+          {
+            "detail": "'render_lines' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "'scan_left' uses a mutable default argument",
+            "in_new_code": true,
+            "issue_key": "rt.convention.978e74f97ebb631c",
+            "line": 6,
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "mutable-default-arg",
+            "symbol": "scan_left"
+          },
+          {
+            "detail": "'scan_right' uses a mutable default argument",
+            "in_new_code": true,
+            "issue_key": "rt.convention.b7befb2dae0f86dd",
+            "line": 31,
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "mutable-default-arg",
+            "symbol": "scan_right"
+          },
+          {
+            "detail": "bare except in 'render_lines'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "line": 10,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "block 2e1c1c725bf989f6 duplicated at cfgkit/interpolate.py:scan_left, cfgkit/interpolate.py:scan_right",
+            "in_new_code": true,
+            "issue_key": "rt.duplication.576a981233b140ef",
+            "line": 6,
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "duplicated-block",
+            "symbol": "scan_left"
+          },
+          {
+            "detail": "block 6beda0db5f67e987 duplicated at cfgkit/legacy_report.py:render_debug, cfgkit/legacy_report.py:render_lines",
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "duplicated-block",
+            "symbol": "render_lines"
+          }
+        ],
+        "criteria": [
+          {
+            "case_ids": [
+              "expands-single-var",
+              "expands-multiple-vars"
+            ],
+            "criterion_id": "interpolation",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "escaped-stays-literal"
+            ],
+            "criterion_id": "escape-literals",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "missing-var-raises"
+            ],
+            "criterion_id": "error-contract",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "keys-untouched",
+              "parse-unchanged"
+            ],
+            "criterion_id": "compat-preserved",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "change-scope",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+        "quality_issues": [
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.0064386d9a291e9c",
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.2ea35940a42f7d50",
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.978e74f97ebb631c",
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.b7befb2dae0f86dd",
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.duplication.576a981233b140ef",
+            "path": "cfgkit/interpolate.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "low"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "low"
+          }
+        ],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "ini-interpolate",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "0.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "0.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "33d1d00f-8563-4b7f-88c6-e66b4246accc",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "quality-defective:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "0.000000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "0.000000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "79.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:743864ea046dc84807d264efd1ea976f63fe2ddfcfba03cb3db5a861172e2848",
+        "candidate_digest": "sha256:4839898f598c5b727ab952c6733589db966084752755111f91156ec1469c0729",
+        "cases": [
+          {
+            "case_id": "expands-single-var",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "expands-multiple-vars",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "escaped-stays-literal",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "keys-untouched",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "missing-var-raises",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parse-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "cfgkit/interpolate.py",
+          "cfgkit/loader.py"
+        ],
+        "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+        "convention_report": [
+          {
+            "detail": "'render_debug' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "line": 20,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "bare except in 'render_debug'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "line": 26,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_debug"
+          },
+          {
+            "detail": "'render_lines' uses a mutable default argument",
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "bare except in 'render_lines'",
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "line": 10,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "bare-except",
+            "symbol": "render_lines"
+          },
+          {
+            "detail": "block 6beda0db5f67e987 duplicated at cfgkit/legacy_report.py:render_debug, cfgkit/legacy_report.py:render_lines",
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "line": 4,
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "rule_id": "duplicated-block",
+            "symbol": "render_lines"
+          }
+        ],
+        "criteria": [
+          {
+            "case_ids": [
+              "expands-single-var",
+              "expands-multiple-vars"
+            ],
+            "criterion_id": "interpolation",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "escaped-stays-literal"
+            ],
+            "criterion_id": "escape-literals",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "missing-var-raises"
+            ],
+            "criterion_id": "error-contract",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "keys-untouched",
+              "parse-unchanged"
+            ],
+            "criterion_id": "compat-preserved",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "change-scope",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+        "quality_issues": [
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.0c85038717d9b136",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.203016dd9bf8afcf",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.93a7f3f554e14b03",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.convention.bb157a58a6dcc9f5",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": false,
+            "issue_key": "rt.duplication.fdcb5d8e0feac7be",
+            "path": "cfgkit/legacy_report.py",
+            "penalized": false,
+            "relation": "unchanged_out_of_scope",
+            "severity": "low"
+          }
+        ],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "unified_diff",
+        "task_id": "ini-interpolate",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "5dc10dbf-6aca-4162-84ae-e59a654152f3",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "reference:unified_diff",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "10.500000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "10.500000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "100.000000"
+      }
+    }
+  ],
+  "task_id": "ini-interpolate"
+}

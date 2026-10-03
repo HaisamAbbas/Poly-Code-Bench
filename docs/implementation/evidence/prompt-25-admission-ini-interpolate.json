@@ -1,0 +1,135 @@
+{
+  "admitted": true,
+  "alternative_differs": true,
+  "alternative_passes": true,
+  "checks": {
+    "acceptance_contract_frozen": true,
+    "alternative_solution_acceptance": true,
+    "disclosure_scan": true,
+    "five_reference_repetitions": true,
+    "known_fault_rejection": true,
+    "methodology_label": true,
+    "quality_weakness_detected": true,
+    "reference_acceptance": true,
+    "rights_and_provenance": true,
+    "safe_paths_and_snapshot": true,
+    "strict_schema": true,
+    "visible_hidden_separation": true
+  },
+  "contract_digest": "sha256:8bba0288929e778458560a2f6585f716d9a20f8ff6b01d8de88f8498c9c6edbf",
+  "contract_frozen": true,
+  "execution_tier": "local_fixture",
+  "faulty_rejected": true,
+  "inspiration": {
+    "source_family": "cursorbench",
+    "source_url": "https://cursor.com/blog/cursorbench",
+    "statement": "The task shape - one real developer request spanning several modules of a working repository - is inspired by the public CursorBench methodology description. The request, repository fixture and acceptance contract are independently curated by PolyCodeBench; no private task set, grader or score is used and nothing is reproduced."
+  },
+  "label_check": true,
+  "methodology_label": "inspired",
+  "package_digest": "sha256:98be13e2ddbdca280e932434726525dfefa7fabc5ea16b005e5583ffe9dd37b0",
+  "quality_defective_detected": true,
+  "quality_defective_functional_pass": true,
+  "reference_stable": true,
+  "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+  "task_id": "ini-interpolate",
+  "variants": [
+    {
+      "expected_failing_cases": [],
+      "expected_issue_families": [],
+      "failed_cases": [],
+      "functional_pass": true,
+      "identical_outcomes": true,
+      "name": "reference",
+      "notes": [],
+      "observed_issue_families": [],
+      "passed_cases": [
+        "escaped-stays-literal",
+        "expands-multiple-vars",
+        "expands-single-var",
+        "keys-untouched",
+        "missing-var-raises",
+        "parse-unchanged"
+      ],
+      "repetitions": 5,
+      "submission_kind": "source_bundle",
+      "variant": "reference",
+      "workspace_digest": "sha256:845fd6b1d092e264ed204009ee6fd5110a83ded83ea378d74d248adc3c270fcf"
+    },
+    {
+      "expected_failing_cases": [],
+      "expected_issue_families": [],
+      "failed_cases": [],
+      "functional_pass": true,
+      "identical_outcomes": true,
+      "name": "alternative",
+      "notes": [],
+      "observed_issue_families": [],
+      "passed_cases": [
+        "escaped-stays-literal",
+        "expands-multiple-vars",
+        "expands-single-var",
+        "keys-untouched",
+        "missing-var-raises",
+        "parse-unchanged"
+      ],
+      "repetitions": 1,
+      "submission_kind": "source_bundle",
+      "variant": "alternative",
+      "workspace_digest": "sha256:43484bfed1f52a8ba38d0f058fac580c9838637dbd2f3e99e281ff981af90e77"
+    },
+    {
+      "expected_failing_cases": [
+        "escaped-stays-literal"
+      ],
+      "expected_issue_families": [],
+      "failed_cases": [
+        "escaped-stays-literal"
+      ],
+      "functional_pass": false,
+      "identical_outcomes": true,
+      "name": "faulty",
+      "notes": [],
+      "observed_issue_families": [],
+      "passed_cases": [
+        "expands-multiple-vars",
+        "expands-single-var",
+        "keys-untouched",
+        "missing-var-raises",
+        "parse-unchanged"
+      ],
+      "repetitions": 1,
+      "submission_kind": "source_bundle",
+      "variant": "faulty",
+      "workspace_digest": "sha256:35929cc16fb222f90040a87127affc0b8d00cd434310c0e16ad412a6f6ec6877"
+    },
+    {
+      "expected_failing_cases": [],
+      "expected_issue_families": [
+        "convention",
+        "duplication"
+      ],
+      "failed_cases": [],
+      "functional_pass": true,
+      "identical_outcomes": true,
+      "name": "quality-defective",
+      "notes": [],
+      "observed_issue_families": [
+        "convention",
+        "duplication"
+      ],
+      "passed_cases": [
+        "escaped-stays-literal",
+        "expands-multiple-vars",
+        "expands-single-var",
+        "keys-untouched",
+        "missing-var-raises",
+        "parse-unchanged"
+      ],
+      "repetitions": 1,
+      "submission_kind": "source_bundle",
+      "variant": "quality_defective",
+      "workspace_digest": "sha256:7a1592bc09e2f244e189df48bfab65aaccf5f68a8809551e4a0a2dfe94e5affd"
+    }
+  ]
+}

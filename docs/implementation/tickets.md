@@ -1053,40 +1053,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `25`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: see prompt-specific verification.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (Prompt 25 deliverable completed).
+- Verification: `passed` (authoring/import contract tests and admitted-pack matrix evidence recorded).
+- Required verification scope: Prompt 25 acceptance: repo-task authoring/import tests, sealed acceptance contract, full variant matrix at local_fixture tier.
+- Evidence: `packages/services/src/polycodebench_services/repo_tasks.py` (authoring contracts, `seal_acceptance_contract`/`verify_acceptance_contract`, `import_repo_task_package`); packs `taskpacks/repo-tasks/{ini-interpolate,history-group}` with `repo-task.yaml` acceptance contracts; tests `tests/test_repo_tasks.py` (11 passed, including alternative-variant admission, contract-drift refusals and bounded rubric checks); admission evidence `docs/implementation/evidence/prompt-25-admission-{ini-interpolate,history-group}.json`.
 - Acceptance criteria: — Implement task authoring/import for developer requests spanning real files/modules, with repo conventions, allowed changes and acceptance contracts. DoD: multiple valid implementations can succeed; hidden requirements are not improvised after seeing a candidate.
 
 ## PCB-25-2 - Prompt 25: — Implement realistic repository tasks
 
 - Owner prompt: `25`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: see prompt-specific verification.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (Prompt 25 deliverable completed).
+- Verification: `passed` (gate-precedence and judge-seam regression cases recorded; judge evidence is fixture-class, live judge endpoints remain unprovisioned).
+- Required verification scope: Prompt 25 acceptance: executable acceptance plus bounded rubric items through the judge services; gate precedence over judgments.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/repo_task_grading.py` (`executable_gate`/`combine_gate` read no judge data), `packages/scoring/src/polycodebench_scoring/judge_evidence.py` (ItemOutcome→RubricItemEvidence seam), `packages/evaluation/src/polycodebench_evaluation/judge_inputs.py` (`judge_packet_input_from`); tests `tests/test_repo_task_grading.py::test_functionally_failing_patch_is_zero_even_with_perfect_judgments` and `::test_judge_backed_gate_criterion_can_fail_but_not_pass_by_override` (passed); matrix evidence `docs/implementation/evidence/prompt-25-matrix-*.json` (fixture_judge_votes class).
 - Acceptance criteria: — Implement executable acceptance plus bounded rubric items for genuinely non-executable criteria, using existing judge/reviewer services. DoD: all criteria have frozen evidence methods and required-gate status; judgments cannot override failed mandatory tests.
 
 ## PCB-25-3 - Prompt 25: — Implement realistic repository tasks
 
 - Owner prompt: `25`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: see prompt-specific verification.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (Prompt 25 deliverable completed).
+- Verification: `passed` (baseline-aware evidence cases recorded for both artifact kinds).
+- Required verification scope: Prompt 25 acceptance: patch and workspace artifacts, baseline-aware convention evidence, legacy-debt and unchanged-file scoping.
+- Evidence: `packages/evaluation/src/polycodebench_evaluation/repo_task_conventions.py` and shared `evaluator.baseline_relations`; tests `tests/test_repo_task_grading.py::test_legacy_debt_is_context_and_unchanged_files_are_never_new_code`, `::test_patch_and_workspace_artifacts_grade_identically`, `::test_patch_that_touches_protected_or_unknown_paths_is_rejected` (passed); matrix rows show `cfgkit/legacy_report.py` findings as `unchanged_out_of_scope`, `penalized=false`, `in_new_code=false` in `docs/implementation/evidence/prompt-25-matrix-ini-interpolate.json`.
 - Acceptance criteria: — Integrate patch/workspace artifacts and applicable quality profiles with baseline-aware evidence. DoD: repository-wide legacy debt does not become a candidate penalty and unchanged files are not scored as new code.
 
 ## PCB-25-4 - Prompt 25: — Implement realistic repository tasks
 
 - Owner prompt: `25`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: see prompt-specific verification.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (Prompt 25 deliverable completed).
+- Verification: `passed` (two realistic multi-file fixtures admitted through the harness; methodology boundary documented and asserted).
+- Required verification scope: Prompt 25 acceptance: admission of the full variant matrix and methodology-boundary documentation checks.
+- Evidence: `polycodebench_evaluation.repo_task_admission` (five stable reference repetitions, alternative accepted, faulty rejected, quality-defective functionally passing and detected); `docs/implementation/repo-task-method.md` and `docs/methodology/cursorbench.md`; tests `tests/test_repo_task_admission.py` (8 passed, including label enforcement and reproduction-claim refusals in `tests/test_repo_tasks.py`).
 - Acceptance criteria: — Admit realistic multi-file fixtures and document the Cursor-inspired methodology boundary. DoD: no claim of private CursorBench task access/exact reproduction or false statement that its approach ignores quality/efficiency.
 
 ## PCB-26-1 - Prompt 26: — Implement self-repair

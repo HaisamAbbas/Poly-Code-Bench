@@ -688,3 +688,107 @@ in `config/images/java-v1.json`. The runtime and evaluator images do not contain
 policy files or static analyzers. Unknown modes fail closed, and plan construction has no candidate-
 specific timing or output input. This keeps the interpretation of a Java timing invariant across
 candidates and makes image digest changes visible to task resealing/admission.
+
+# D-25-01 - Gate precedence over judgments is structural, not advisory
+
+The repository-task grader computes the mandatory executable gate before any judge result is
+read (`executable_gate`), and `combine_gate` accepts no scores: it can only add failing or
+incomplete conditions and never rescind a failure. The scorer's `Scorecard` contract already
+forbids nonzero contributions on a failed gate, so the DoD "judgments cannot override failed
+mandatory tests" holds at two independent layers. Production orchestration checks
+`judge_is_wanted` and does not spend judge budget on a gate-failed candidate; an operator may
+still request a diagnostic judgement, and the regression case proves a perfect judgement over a
+functionally failing patch still scores 0.000000.
+
+# D-25-02 - Judge outcomes reach the scorer through one adapter, and judge evidence is labelled
+
+`packages/scoring/src/polycodebench_scoring/judge_evidence.py` is the only conversion between
+`ItemOutcome` (judge services) and `RubricItemEvidence` (scoring): `ready` becomes `measured`
+with a half-even basis-point mean, `needs_review` stays blocking review evidence with no score,
+`infra_blocked` becomes `missing`, and a judgement that misses a frozen item produces an
+explicit missing row rather than silently scoring a subset. Because the judge panel is
+unprovisioned (`config/judging/panel-v1.yaml`), all Prompt 25 judge evidence is deterministic
+fixture votes through the real build/parse/aggregate services and is labelled
+`fixture_judge_votes` in every report; no live judge call is made or claimed.
+
+# D-25-03 - Baseline-aware repo-task quality evidence: legacy debt is context
+
+Convention analysis runs on the frozen baseline and the candidate workspace and shares the
+evaluator's relation vocabulary (`baseline_relations`). The frozen authoring contract declares
+`baseline_penalty_relations` (default `introduced`, `worsened`; overridable before freeze per
+`config/scoring/evidence_ownership.yaml`); `unchanged_out_of_scope` findings are visible context
+and never a penalty, and the new-code scope is exactly the candidate's changed files, so
+unchanged files are never scored as new code. The convention rules are the machine-ownable
+subset of the repository's written conventions; whether a construct communicates or a
+duplication is acceptable stays with the frozen residual rubric items, each carrying a residual
+reason.
+
+# D-25-04 - Repo-task scoring applicability is code_quality at this pilot step
+
+The repo-task quality plan declares `applicable_dimensions: [code_quality]`, so the scorer's
+frozen six-item code-quality weight plan is exercised end to end (judge-backed items) while
+idiomatic/robustness/scenario evidence and efficiency measurement stay out of scope and are
+declared not applicable rather than fabricated. Expanding applicability requires language
+profile/scenario evidence and is left to the calibration prompts.
+
+# D-24-01 - "Native-compatible" is labelled `inspired`, not `native`
+
+Prompt 24 must "admit native-compatible and deliberately adapted/ported fixtures" whose
+methodology labels "differ correctly", while also using "only available allowed source assets;
+unavailable/private datasets are explicit blockers rather than invented fixtures labeled official".
+The E2E-36 evidence column names the labels `Native/adapted`, so those two constraints pull in
+opposite directions and the choice is recorded rather than made silently.
+
+Three documents constrain the label, and the two *method* documents agree:
+
+- `docs/methodology/swebench.md`: "Locally authored tasks that follow similar repository-patch
+  patterns are labeled **SWE-bench-inspired** and are not mixed into official SWE-bench scores."
+- Architecture A §2: "Custom tasks following the pattern are labeled 'SWE-bench-inspired'."
+- `docs/methodology/source-terms-register.md`: no SWE-bench dataset, repository, or patch has
+  cleared rights, so an official import is a blocker, not a task.
+- Against these, `methodology_label` is the *only* provenance field on the public
+  `visible-manifest.json`; `source_kind`, `rights` and `attribution` are administrative and absent
+  from the public projection. A public reader of a `native`-labelled authored fixture would
+  therefore take it for official SWE-bench data - exactly what the pack forbids.
+
+T §17.1 says "the public label MUST use the compatibility level", which is what makes this a real
+discrepancy rather than a naming preference: read as *protocol* compatibility, the authored fixture
+is native-compatible; read as *data* provenance, it is not native, because T's own native rule
+requires "an upstream source URL" that only real dataset data can have.
+
+**Resolution.** The label follows provenance, not shape, and is checked fail-closed:
+
+- authored fixture, native record format and native F2P/P2P evaluation -> `inspired`
+- authored fixture with declared departures from a native evaluation rule -> `adapted`, with the
+  departures recorded in `protocol_deviations` and required by the record validator
+- imported official dataset record with an upstream source URL and a pinned revision -> `native`
+
+`MethodologyRecord` refuses `native` without an upstream source URL *and* revision, and
+`validate_methodology` refuses an `inspired` record that carries an upstream source URL, so an
+invented fixture cannot be published as official by any route. The deviations register
+(`config/methodology/deviations-v1.yaml`) already permits all three labels for `swebench`, and
+`never_mix_native_and_adapted_scores_without_labels` is satisfied by attaching the label to every
+metric export.
+
+**E2E-36 wording, addressed explicitly.** The scenario's *assertions* are "native metric preserved;
+modified rules labeled; candidate digest prevents stale native cache reuse", and the scenario
+subject is the "Native repo-suite fixture". All three hold: the native metric is produced by the
+pinned upstream evaluator (`swebench==5.0.2`), the modified rules carry the `adapted` label with
+their deviations recorded, and the run identity binds task, candidate and evaluator digests. The
+evidence column's phrase "Native/adapted labels" is read as "the labels distinguishing the
+native-protocol fixture from the adapted one", and the ledger records the actual labels rather than
+the shorthand. An owner who reads it as demanding a literal `native` label on an authored fixture
+would need cleared official dataset rights first; that import path is implemented and
+source-identity-checked, but it has nothing to import today.
+
+# D-24-02 - The native metric comes from the pinned upstream evaluator, or from nothing
+
+PCB-24-2 forbids "loosely recreating its result from a generic test fraction". Two decisions
+follow. First, `native_metrics()` accepts the upstream evaluator's own result object and never
+recomputes counts; a local test fraction cannot reach it. Second, the upstream package is pinned to
+an exact revision (`swebench==5.0.2`) and a mismatch raises instead of degrading: the resolution rule
+is version-specific (skip semantics in `test_failed`, the suite-ran evidence that stops a run that
+never executed from scoring every F2P test as resolved, and the exit-code cross-check), so two
+releases graded by different revisions would not be comparable. The evaluator digest covers the
+revision and the upstream entry points the adapter calls, so an upstream change invalidates cached
+grades rather than silently reusing them.

@@ -1,0 +1,998 @@
+{
+  "contract_digest": "sha256:24b93434b9b0d34ef6cdd8e7c4eda49ec80300afe2db3d5b463d436635313277",
+  "execution_tier": "local_fixture",
+  "judge_evidence_class": "fixture_judge_votes",
+  "judge_note": "Judge evidence is deterministic fixture votes through the real judge services; the judge panel is unprovisioned (config/judging/panel-v1.yaml) and no live judge call was made.",
+  "package_digest": "sha256:954988b4ec730a3efd218f9442587d006cc32b544beebcf63dc1cd8c4c8f745f",
+  "rows": [
+    {
+      "grade": {
+        "baseline_digest": "sha256:a87187851229f3dac4933a43ab0d5aae84be75a3ec84298942eb410ac7d61e79",
+        "candidate_digest": "sha256:daecd31f319dea322ab3839214e335b5ce30e605c8faefad17bbb812c1a90647",
+        "cases": [
+          {
+            "case_id": "groups-by-area",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "unprefixed-to-other",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "preserves-order",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "empty-input",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parser-api-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "histkit/group.py",
+          "histkit/render.py"
+        ],
+        "contract_digest": "sha256:24b93434b9b0d34ef6cdd8e7c4eda49ec80300afe2db3d5b463d436635313277",
+        "convention_report": [],
+        "criteria": [
+          {
+            "case_ids": [
+              "groups-by-area",
+              "unprefixed-to-other"
+            ],
+            "criterion_id": "grouping",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "preserves-order",
+              "empty-input"
+            ],
+            "criterion_id": "order-and-empty",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "parser-api-unchanged"
+            ],
+            "criterion_id": "parser-compat",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "request-honored",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": true,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:954988b4ec730a3efd218f9442587d006cc32b544beebcf63dc1cd8c4c8f745f",
+        "quality_issues": [],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "history-group",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "747426b6-10ca-4a03-a597-a047c0c1c465",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "reference:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "10.500000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "10.500000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "100.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:a87187851229f3dac4933a43ab0d5aae84be75a3ec84298942eb410ac7d61e79",
+        "candidate_digest": "sha256:ac11d14302e78c5c273c07d6bdd6da0e0eb7d55f6d3dc86388421d0d51668c2b",
+        "cases": [
+          {
+            "case_id": "groups-by-area",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "unprefixed-to-other",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "preserves-order",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "empty-input",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parser-api-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "histkit/render.py"
+        ],
+        "contract_digest": "sha256:24b93434b9b0d34ef6cdd8e7c4eda49ec80300afe2db3d5b463d436635313277",
+        "convention_report": [],
+        "criteria": [
+          {
+            "case_ids": [
+              "groups-by-area",
+              "unprefixed-to-other"
+            ],
+            "criterion_id": "grouping",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "preserves-order",
+              "empty-input"
+            ],
+            "criterion_id": "order-and-empty",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "parser-api-unchanged"
+            ],
+            "criterion_id": "parser-compat",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "request-honored",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": true,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:954988b4ec730a3efd218f9442587d006cc32b544beebcf63dc1cd8c4c8f745f",
+        "quality_issues": [],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "history-group",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "25452088-94db-4202-8c19-26931699c7d5",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "alternative:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "10.500000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "10.500000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "100.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:a87187851229f3dac4933a43ab0d5aae84be75a3ec84298942eb410ac7d61e79",
+        "candidate_digest": "sha256:a44293b8b97795873d0ebac4b8457f3dfe17f416d2a20159d6dd2dd7a6effdf0",
+        "cases": [
+          {
+            "case_id": "groups-by-area",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "unprefixed-to-other",
+            "outcome": "fail",
+            "reason": "AssertionError: got ''"
+          },
+          {
+            "case_id": "preserves-order",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "empty-input",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parser-api-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "histkit/render.py"
+        ],
+        "contract_digest": "sha256:24b93434b9b0d34ef6cdd8e7c4eda49ec80300afe2db3d5b463d436635313277",
+        "convention_report": [],
+        "criteria": [
+          {
+            "case_ids": [
+              "groups-by-area",
+              "unprefixed-to-other"
+            ],
+            "criterion_id": "grouping",
+            "detail": "unprefixed-to-other: AssertionError: got ''",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "fail"
+          },
+          {
+            "case_ids": [
+              "preserves-order",
+              "empty-input"
+            ],
+            "criterion_id": "order-and-empty",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "parser-api-unchanged"
+            ],
+            "criterion_id": "parser-compat",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "request-honored",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": true,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [
+          "grouping"
+        ],
+        "gate": {
+          "failing_conditions": [
+            "grouping"
+          ],
+          "incomplete_conditions": [],
+          "reasons": [
+            "required acceptance condition failed"
+          ],
+          "status": "fail"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:954988b4ec730a3efd218f9442587d006cc32b544beebcf63dc1cd8c4c8f745f",
+        "quality_issues": [],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "history-group",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": false,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "a2abd68c-272f-48fe-bdb8-3fd563a2b451",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "faulty:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "0.000000",
+          "code_quality/duplication": "0.000000",
+          "code_quality/minimal_relevant_scope": "0.000000",
+          "code_quality/naming_readability": "0.000000",
+          "code_quality/repository_style_consistency": "0.000000",
+          "code_quality/unnecessary_complexity": "0.000000",
+          "correctness/gate": "0.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "fail",
+        "status": "ready",
+        "total_score": "0.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:a87187851229f3dac4933a43ab0d5aae84be75a3ec84298942eb410ac7d61e79",
+        "candidate_digest": "sha256:5497fe703ce55a092851fd3e84fd93c515744320d2ecdbb097c0f3a4f63ba8c0",
+        "cases": [
+          {
+            "case_id": "groups-by-area",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "unprefixed-to-other",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "preserves-order",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "empty-input",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parser-api-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "histkit/render.py"
+        ],
+        "contract_digest": "sha256:24b93434b9b0d34ef6cdd8e7c4eda49ec80300afe2db3d5b463d436635313277",
+        "convention_report": [
+          {
+            "detail": "'render_left' uses a mutable default argument",
+            "in_new_code": true,
+            "issue_key": "rt.convention.3916e638e6ebb7e8",
+            "line": 4,
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_left"
+          },
+          {
+            "detail": "'render_right' uses a mutable default argument",
+            "in_new_code": true,
+            "issue_key": "rt.convention.57aec46dc18ef15f",
+            "line": 20,
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "mutable-default-arg",
+            "symbol": "render_right"
+          },
+          {
+            "detail": "bare except in 'render_right'",
+            "in_new_code": true,
+            "issue_key": "rt.convention.7c631b0a59271486",
+            "line": 25,
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "bare-except",
+            "symbol": "render_right"
+          },
+          {
+            "detail": "bare except in 'render_left'",
+            "in_new_code": true,
+            "issue_key": "rt.convention.c6706c9187d8f9a4",
+            "line": 9,
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "bare-except",
+            "symbol": "render_left"
+          },
+          {
+            "detail": "block c856d270686b8d96 duplicated at histkit/render.py:render_left, histkit/render.py:render_right",
+            "in_new_code": true,
+            "issue_key": "rt.duplication.a147cb7236beb29a",
+            "line": 4,
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "rule_id": "duplicated-block",
+            "symbol": "render_left"
+          }
+        ],
+        "criteria": [
+          {
+            "case_ids": [
+              "groups-by-area",
+              "unprefixed-to-other"
+            ],
+            "criterion_id": "grouping",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "preserves-order",
+              "empty-input"
+            ],
+            "criterion_id": "order-and-empty",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "parser-api-unchanged"
+            ],
+            "criterion_id": "parser-compat",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "request-honored",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": true,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:954988b4ec730a3efd218f9442587d006cc32b544beebcf63dc1cd8c4c8f745f",
+        "quality_issues": [
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.3916e638e6ebb7e8",
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.57aec46dc18ef15f",
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.7c631b0a59271486",
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.convention.c6706c9187d8f9a4",
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "medium"
+          },
+          {
+            "in_new_code": true,
+            "issue_key": "rt.duplication.a147cb7236beb29a",
+            "path": "histkit/render.py",
+            "penalized": true,
+            "relation": "introduced",
+            "severity": "low"
+          }
+        ],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "source_bundle",
+        "task_id": "history-group",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "0.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "0.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "96c18d1a-773c-483c-9e83-78e71dd1b138",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "quality-defective:source_bundle",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "0.000000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "0.000000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "79.000000"
+      }
+    },
+    {
+      "grade": {
+        "baseline_digest": "sha256:a87187851229f3dac4933a43ab0d5aae84be75a3ec84298942eb410ac7d61e79",
+        "candidate_digest": "sha256:daecd31f319dea322ab3839214e335b5ce30e605c8faefad17bbb812c1a90647",
+        "cases": [
+          {
+            "case_id": "groups-by-area",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "unprefixed-to-other",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "preserves-order",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "empty-input",
+            "outcome": "pass",
+            "reason": ""
+          },
+          {
+            "case_id": "parser-api-unchanged",
+            "outcome": "pass",
+            "reason": ""
+          }
+        ],
+        "changed_files": [
+          "histkit/group.py",
+          "histkit/render.py"
+        ],
+        "contract_digest": "sha256:24b93434b9b0d34ef6cdd8e7c4eda49ec80300afe2db3d5b463d436635313277",
+        "convention_report": [],
+        "criteria": [
+          {
+            "case_ids": [
+              "groups-by-area",
+              "unprefixed-to-other"
+            ],
+            "criterion_id": "grouping",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "preserves-order",
+              "empty-input"
+            ],
+            "criterion_id": "order-and-empty",
+            "detail": "2 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [
+              "parser-api-unchanged"
+            ],
+            "criterion_id": "parser-compat",
+            "detail": "1 hidden cases passed",
+            "evidence_method": "executable",
+            "required_gate": true,
+            "rubric_item_ids": [],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "request-honored",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": true,
+            "rubric_item_ids": [
+              "minimal_relevant_scope"
+            ],
+            "status": "pass"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "readability-and-shape",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "naming_readability",
+              "decomposition",
+              "unnecessary_complexity"
+            ],
+            "status": "graded"
+          },
+          {
+            "case_ids": [],
+            "criterion_id": "style-and-duplication",
+            "detail": "judged (minimum=0.500000)",
+            "evidence_method": "judge_rubric",
+            "required_gate": false,
+            "rubric_item_ids": [
+              "repository_style_consistency",
+              "duplication"
+            ],
+            "status": "graded"
+          }
+        ],
+        "failed_mandatory_criteria": [],
+        "gate": {
+          "failing_conditions": [],
+          "incomplete_conditions": [],
+          "reasons": [
+            "all required acceptance conditions passed"
+          ],
+          "status": "pass"
+        },
+        "judge_disposition": "used",
+        "package_digest": "sha256:954988b4ec730a3efd218f9442587d006cc32b544beebcf63dc1cd8c4c8f745f",
+        "quality_issues": [],
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "submission_kind": "unified_diff",
+        "task_id": "history-group",
+        "task_version": 1
+      },
+      "judge_evidence_class": "fixture_judge_votes",
+      "judge_is_wanted_before_dispatch": true,
+      "judgement": {
+        "items": {
+          "decomposition": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "duplication": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "minimal_relevant_scope": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "naming_readability": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "repository_style_consistency": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          },
+          "unnecessary_complexity": {
+            "mean_score": "1.000000",
+            "status": "ready"
+          }
+        },
+        "packet_id": "747426b6-10ca-4a03-a597-a047c0c1c465",
+        "rubric_digest": "sha256:dc816113b9c72574e8985fdb9f9d933a9bbdd9a5a729268f368ff5b6f538c162",
+        "status": "ready"
+      },
+      "label": "reference:unified_diff",
+      "scorecard": {
+        "contributions": {
+          "code_quality/decomposition": "17.500000",
+          "code_quality/duplication": "10.500000",
+          "code_quality/minimal_relevant_scope": "7.000000",
+          "code_quality/naming_readability": "14.000000",
+          "code_quality/repository_style_consistency": "10.500000",
+          "code_quality/unnecessary_complexity": "10.500000",
+          "correctness/gate": "30.000000",
+          "efficiency/runtime_and_memory": "0.000000",
+          "security/confirmed_issue_penalties": "0.000000"
+        },
+        "gate": "pass",
+        "status": "ready",
+        "total_score": "100.000000"
+      }
+    }
+  ],
+  "task_id": "history-group"
+}

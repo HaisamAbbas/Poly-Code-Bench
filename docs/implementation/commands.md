@@ -508,3 +508,30 @@ $env:PCB_TEST_DOCKER = "1"
 
 `scripts/go_quick_check.py PACKAGE --variant NAME --check build,test,vet,staticcheck,gosec,gofmt,context,race`
 is an authoring loop, not evidence: it stages one variant and prints what the tool said.
+
+
+## Prompt 25 - Realistic repository tasks (CursorBench-inspired)
+
+Repository-task packs are ordinary task packages plus an authoring contract. Sealing verifies the
+import, the authoring cross-checks and the acceptance-contract digest; admission runs the hidden
+acceptance inventory for the full variant matrix (five stable reference repetitions) through a
+bounded local subprocess; the matrix grades every variant with deterministic fixture judge votes
+through the real judge services and scores them with the frozen pilot policy.
+
+```powershell
+uv run python scripts/repo_task_tool.py digest taskpacks/repo-tasks/ini-interpolate
+uv run python scripts/repo_task_tool.py seal taskpacks/repo-tasks/ini-interpolate
+uv run python scripts/repo_task_tool.py seal taskpacks/repo-tasks/history-group
+uv run python scripts/repo_task_tool.py admit taskpacks/repo-tasks/ini-interpolate --report docs/implementation/evidence/prompt-25-admission-ini-interpolate.json
+uv run python scripts/repo_task_tool.py admit taskpacks/repo-tasks/history-group --report docs/implementation/evidence/prompt-25-admission-history-group.json
+uv run python scripts/repo_task_tool.py matrix taskpacks/repo-tasks/ini-interpolate --report docs/implementation/evidence/prompt-25-matrix-ini-interpolate.json
+uv run python scripts/repo_task_tool.py matrix taskpacks/repo-tasks/history-group --report docs/implementation/evidence/prompt-25-matrix-history-group.json
+uv run pytest -q tests/test_repo_tasks.py tests/test_repo_task_grading.py tests/test_repo_task_admission.py
+uv run pytest -q tests/test_evaluator.py tests/test_judge_inputs.py tests/test_judging_core.py tests/test_suite_admission.py tests/test_scoring_golden.py tests/test_scoring_policy.py tests/test_scoring_properties.py tests/test_scoring_replay.py
+uv run ruff check packages/evaluation/src/polycodebench_evaluation packages/services/src/polycodebench_services/repo_tasks.py packages/scoring/src/polycodebench_scoring/judge_evidence.py scripts/repo_task_tool.py tests/repo_task_support.py tests/test_repo_tasks.py tests/test_repo_task_grading.py tests/test_repo_task_admission.py
+uv run mypy packages/evaluation/src/polycodebench_evaluation/repo_task_grading.py packages/evaluation/src/polycodebench_evaluation/repo_task_admission.py packages/evaluation/src/polycodebench_evaluation/repo_task_conventions.py packages/services/src/polycodebench_services/repo_tasks.py packages/scoring/src/polycodebench_scoring/judge_evidence.py
+```
+
+Judge evidence in these runs is fixture-class (deterministic fixture votes through the real
+build/parse/aggregate services); the judge panel is unprovisioned and no live judge call is made.
+Execution evidence is `local_fixture` tier.

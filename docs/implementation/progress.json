@@ -1,9 +1,9 @@
 {
     "schema_version":  1,
     "project":  "PolyCodeBench",
-    "last_completed_prompt":  "22",
-    "active_prompt":  "23",
-    "active_scope":  "Prompt 22 completed Go support. Six defects blocked a Go task from ever executing, and the first was environmental: the plans pointed GOCACHE/GOMODCACHE/GOPATH at /opt/pcb/cache inside the image while the sandbox runs each guest --read-only as an unprivileged uid, so go build exited 2 with \u0027failed to initialize build cache ... read-only file system\u0027. Exit 2 is a declared tool-error code, so the supervisor correctly called it a harness error and all six variants reported build:build harness error (tool_error); the asymmetry in the failed report is the proof, since gofmt and context need no build cache while vet, staticcheck and gosec load packages through it. All four Go cache paths (including GOTMPDIR, since /tmp is capped at 16 MiB and an ENOSPC there mimics a candidate build error) now live in the workspace tmpfs, and the guest runner creates them. Then: the performance recipe\u0027s distinctness gate demanded a missing race detector the pinned base always ships, so instrumentation became a declared per-recipe contract with reciprocal release/instrumented guards mirroring the C sanitizer arrangement; staticcheck and gosec each reported \u0027missing\u0027 on a correct candidate because an empty report was treated as an absent one, which is the inversion PCB-22-2 forbids; Go\u0027s hidden tests live in the package directory so the shared admission engine needed an overlay_roots hint; the Go image build did not refresh the allowlist, unlike every other language; the stress oracle asserted a tie-break that contradicted its own contract; and the race fixture declared a data-race expectation on a task that deliberately disables the race detector.",
+    "last_completed_prompt":  "25",
+    "active_prompt":  "25",
+    "active_scope":  "Prompt 25 (executed on explicit user request; Prompt 24 remains not_started and its unmet dependency is preserved): realistic repository tasks implemented - authoring/import with sealed acceptance contracts, executable acceptance plus bounded rubric items through the judge services with structural gate precedence, baseline-aware quality evidence for patch/workspace artifacts, two admitted CursorBench-inspired packs and methodology boundary docs. E2E-36 is partial (Prompt 25 subcases pass; native/adapted suite-adapter subcases belong to Prompt 24).",
     "phase_status":  {
                          "phase_0":  "done",
                          "phase_1":  "done",
@@ -15,8 +15,8 @@
                          "phase_7":  "not_started",
                          "phase_8":  "not_started"
                      },
-    "implementation_status":  "Prompt 23 Java implementation complete; WP-19 and Phase 4 remain partial/blocked pending current all-language conformance.",
-    "verification_status":  "Java development-sandbox executable admission passed 26/26 checks; 143 combined language/Java/C++ tests plus 7 follow-up JS/TS guard tests passed; Java Ruff, mypy and recipe checks passed. Corrected Go conformance rerun is in progress.",
+    "implementation_status":  "Prompt 25 realistic repository-task suite implemented and admitted at local_fixture tier (2 packs, 12/12 admission checks each). WP-20 is partial: Prompt 24 suite adapter and Prompts 26-28 remain not_started.",
+    "verification_status":  "30 repo-task tests passed (11 authoring, 11 grading/matrix, 8 admission); 150 regression tests passed over evaluator/judge-inputs/judging/suite-admission/scoring; both admission reports and both grading-matrix reports recorded with fixture-class judge evidence.",
     "source_manifest":  "docs/implementation/source-manifest.json",
     "blockers_or_open_inputs":  [
                                     "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
@@ -118,7 +118,7 @@
                                                      "dependency_lock_check":  "passed"
                                                  }
                          },
-    "exact_next_action":  "Next: Prompt 23 - Add Java and close language coverage.",
+    "exact_next_action":  "Next: Prompt 26 - Implement self-repair. Prompt 24 (native/adapted suite adapter, E2E-36 native subcases) remains not_started and is preserved as an unmet dependency of the full E2E-36 scenario.",
     "prompt_statuses":  {
                             "00":  "done",
                             "01":  "done",
@@ -707,6 +707,31 @@
                                          },
                                  "phase_4_aggregate_gate":  "blocked",
                                  "docker_builds_or_admissions_this_turn":  true,
+                                 "no_live_provider_human_calibration_or_publication_actions":  true
+                             },
+    "prompt_25_completion":  {
+                                 "date":  "2026-10-03",
+                                 "status":  "done",
+                                 "report":  "docs/implementation/reports/prompt-25.md",
+                                 "method_doc":  "docs/implementation/repo-task-method.md",
+                                 "packs":  "taskpacks/repo-tasks/{ini-interpolate,history-group}",
+                                 "evidence":  [
+                                                  "docs/implementation/evidence/prompt-25-admission-ini-interpolate.json",
+                                                  "docs/implementation/evidence/prompt-25-admission-history-group.json",
+                                                  "docs/implementation/evidence/prompt-25-matrix-ini-interpolate.json",
+                                                  "docs/implementation/evidence/prompt-25-matrix-history-group.json"
+                                              ],
+                                 "tickets":  {
+                                                 "PCB-25-1":  "implemented and verified: authoring/import, sealed acceptance contracts, alternative-valid variant admitted",
+                                                 "PCB-25-2":  "implemented and verified: executable acceptance plus bounded rubric items via judge services; judgments cannot override failed mandatory tests",
+                                                 "PCB-25-3":  "implemented and verified: patch/workspace artifacts, baseline-aware evidence; legacy debt context-only; unchanged files never new code",
+                                                 "PCB-25-4":  "implemented and verified: two realistic multi-file fixtures admitted; CursorBench-inspired boundary documented and asserted"
+                                             },
+                                 "e2e":  {
+                                             "E2E-36":  "partial (Prompt 25 subcases pass; Prompt 24 native subcases not_run)"
+                                         },
+                                 "judge_evidence_class":  "fixture_judge_votes",
+                                 "execution_tier":  "local_fixture",
                                  "no_live_provider_human_calibration_or_publication_actions":  true
                              }
 }

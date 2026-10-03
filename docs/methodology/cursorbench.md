@@ -12,6 +12,8 @@ Cursor reports an offline suite based on real engineering sessions from its inte
 
 PolyCodeBench may independently curate realistic repository tasks and evaluate them with explicit acceptance evidence. Such tasks are **CursorBench-inspired**, not CursorBench tasks or replications. Do not claim access to internal tasks, exact graders, or comparable scores. Publish PolyCodeBench task provenance and rubric versions instead.
 
+The independently curated repository-task suite (`taskpacks/repo-tasks/`, Prompt 25) follows this boundary exactly: its task shape is inspired by the described methodology, every task is independently curated and labelled `inspired`, and no claim of private task access or exact reproduction exists in any pack, report or validation rule. The article measures correctness alongside code quality, efficiency (median completion tokens) and interaction behavior; PolyCodeBench makes no claim that the approach ignores quality or efficiency. The operational details of PolyCodeBench's own repository-task authoring, acceptance and grading are documented in `docs/implementation/repo-task-method.md`.
+
 ## Assets, limitations, and rights
 
 Private task data, source code context, and grader implementation are unavailable from the public methodology description. Rights for independently collected repositories, prompts, and task artifacts remain a per-task admission requirement. No Cursor private asset has been imported.

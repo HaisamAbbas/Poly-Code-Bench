@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Protocol
 from uuid import UUID
 
-from polycodebench_core.endpoint_policy import EndpointNetworkPolicy
+from polycodebench_core.endpoint_policy import EndpointNetworkPolicy, RegisteredEndpoint
 from polycodebench_core.model_contracts import ModelCapabilities, ProviderKind
 
 from polycodebench_services.rbac import Permission, Principal, authorize
@@ -33,6 +33,8 @@ class EndpointRepository(Protocol):
         expected_version: int,
         conformance_report: dict[str, Any] | None = None,
     ) -> None: ...
+
+    def get_approved(self, endpoint_id: UUID) -> RegisteredEndpoint: ...
 
 
 class ModelEndpointService:
@@ -80,3 +82,7 @@ class ModelEndpointService:
             expected_version=expected_version,
             conformance_report=conformance_report,
         )
+
+    def get_approved(self, endpoint_id: UUID) -> RegisteredEndpoint:
+        """Resolve an approved endpoint without performing network I/O."""
+        return self._repository.get_approved(endpoint_id)

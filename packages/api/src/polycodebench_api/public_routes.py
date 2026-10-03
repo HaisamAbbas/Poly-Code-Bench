@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Header, Query, Request
+from fastapi import APIRouter, Query, Request
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_publication.projections import (
     ComparisonResult,
@@ -47,7 +47,6 @@ from polycodebench_api.documents import (
 )
 from polycodebench_api.envelope import (
     IMMUTABLE_CACHE,
-    NO_STORE,
     SHORT_CACHE,
     ResponseMeta,
     envelope,
@@ -56,11 +55,6 @@ from polycodebench_api.envelope import (
 from polycodebench_api.errors import ApiError
 from polycodebench_api.filters import FilterSet, entry_ids_in_slice, parse_filters, task_slice
 from polycodebench_api.pagination import DEFAULT_LIMIT, page_rows, parse_page_request
-from polycodebench_api.submissions import (
-    ModelSubmission,
-    ModelSubmissionInput,
-    SubmissionRate,
-)
 
 router = APIRouter(prefix="/v1")
 
@@ -427,34 +421,6 @@ def get_methodology(request: Request, version: str, release: str = LATEST) -> Re
             meta = single_meta(resolved, release_digest(document), is_exploratory(document))
             return respond(request, envelope(methods, meta), cache=_cache(pinned))
     raise ApiError("NOT_FOUND")
-
-
-# --------------------------------------------------------------------------- submissions
-
-
-@router.post("/model-submissions")
-def post_model_submission(
-    request: Request,
-    submission: ModelSubmissionInput,
-    idempotency_key: Annotated[str | None, Header()] = None,
-) -> Response:
-    """Public intake: validated metadata plus contact and permission attestation only."""
-    services = services_of(request)
-    if idempotency_key is None or not idempotency_key.strip():
-        raise ApiError("SCHEMA_INVALID", "idempotency key is required")
-    payload = submission.model_dump(mode="json")
-    result = services.submissions.submit(
-        subject=submission.contact_email,
-        request_id=idempotency_key.strip(),
-        payload=payload,
-        rate=SubmissionRate(
-            limit=services.submission_rate_limit,
-            window_seconds=services.submission_rate_window_seconds,
-        ),
-    )
-    accepted = ModelSubmission.model_validate(result)
-    meta = ResponseMeta(release_digest=_digest_of(result))
-    return respond(request, envelope(accepted, meta), cache=NO_STORE)
 
 
 __all__ = ["router", "single_meta"]

@@ -62,13 +62,19 @@ def body_etag(body: Mapping[str, Any]) -> str:
     return '"' + sha256_bytes(canonical_json_bytes(dict(body))) + '"'
 
 
-def respond(request: Request, body: Mapping[str, Any], *, cache: str) -> Response:
+def respond(
+    request: Request,
+    body: Mapping[str, Any],
+    *,
+    cache: str,
+    status_code: int = 200,
+) -> Response:
     """Return the envelope with its ETag and cache policy, honouring ``If-None-Match``."""
     etag = body_etag(body)
     headers = {"ETag": etag, "Cache-Control": cache}
     if request.headers.get("if-none-match") == etag:
         return Response(status_code=304, headers=headers)
-    return JSONResponse(content=dict(body), headers=headers)
+    return JSONResponse(content=dict(body), headers=headers, status_code=status_code)
 
 
 __all__ = [

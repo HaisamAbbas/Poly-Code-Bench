@@ -8,7 +8,7 @@ from uuid import UUID
 
 from polycodebench_core.application_errors import PersistenceUnavailable
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from polycodebench_services.rbac import Permission, Principal, authorize
 
@@ -22,6 +22,11 @@ class RunCreateRequest(BaseModel):
     model_revision_id: UUID
     samples_per_task: int = Field(ge=1, le=10_000)
     master_seed: str
+    max_attempts: int = Field(default=100_000, ge=1, le=100_000)
+    max_cost_micro_usd: int | None = Field(default=None, ge=1, le=5_000_000)
+    max_input_tokens: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    max_output_tokens: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    endpoint_registration_id: UUID | None = None
 
     @field_validator("master_seed")
     @classmethod
@@ -35,6 +40,21 @@ class RunCreateRequest(BaseModel):
         if int(value) > 18_446_744_073_709_551_615:
             raise ValueError("master_seed exceeds unsigned 64-bit range")
         return value
+
+    @model_validator(mode="after")
+    def bounded_budget_shape(self) -> RunCreateRequest:
+        bounded_fields = (
+            self.max_cost_micro_usd,
+            self.max_input_tokens,
+            self.max_output_tokens,
+            self.endpoint_registration_id,
+        )
+        if self.max_cost_micro_usd is None:
+            if any(value is not None for value in bounded_fields[1:]):
+                raise ValueError("bounded run fields must be supplied together")
+        elif any(value is None for value in bounded_fields[1:]):
+            raise ValueError("a capped run requires token and endpoint limits")
+        return self
 
 
 class RunCreateResult(BaseModel):

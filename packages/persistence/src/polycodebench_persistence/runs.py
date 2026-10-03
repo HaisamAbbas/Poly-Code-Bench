@@ -16,7 +16,8 @@ from polycodebench_core.application_errors import (
     PersistenceUnavailable,
 )
 from polycodebench_core.identity import derive_sample_seed
-from sqlalchemy import delete, insert, select, update
+from polycodebench_core.model_planning import ModelConfig, cost_bound
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import DBAPIError
@@ -25,8 +26,11 @@ from polycodebench_persistence.errors import map_database_error
 from polycodebench_persistence.models import (
     attempt,
     audit_event,
+    budget_account,
+    budget_resource,
     campaign,
     config_document,
+    endpoint_registration,
     idempotency_record,
     model_revision,
     run,
@@ -42,6 +46,47 @@ MAX_ATTEMPTS_PER_RUN = 100_000
 class PostgresRunRepository:
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
+
+    def get_run_summary(self, run_id: UUID) -> Mapping[str, object] | None:
+        """Return only lifecycle counters and budget state suitable for the owning submitter."""
+        with self._engine.connect() as connection:
+            status = connection.execute(
+                select(run.c.status).where(run.c.id == run_id)
+            ).scalar_one_or_none()
+            if status is None:
+                return None
+            attempt_counts = {
+                str(state): int(count)
+                for state, count in connection.execute(
+                    select(attempt.c.state, func.count())
+                    .where(attempt.c.run_id == run_id)
+                    .group_by(attempt.c.state)
+                ).all()
+            }
+            budget = (
+                connection.execute(
+                    select(
+                        budget_account.c.hard_limit_micro_usd,
+                        budget_account.c.spent_confirmed,
+                        budget_account.c.reserved_open,
+                        budget_account.c.uncertain_committed,
+                    ).where(
+                        budget_account.c.scope_kind == "run",
+                        budget_account.c.scope_id == str(run_id),
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+        result: dict[str, object] = {"status": str(status), "attempt_counts": attempt_counts}
+        if budget is not None:
+            result["budget_micro_usd"] = {
+                "limit": int(budget["hard_limit_micro_usd"]),
+                "spent": int(budget["spent_confirmed"]),
+                "reserved": int(budget["reserved_open"]),
+                "uncertain": int(budget["uncertain_committed"]),
+            }
+        return result
 
     def create_idempotently(
         self,
@@ -242,8 +287,28 @@ class PostgresRunRepository:
         if not members:
             raise InvalidState("run requires a non-empty frozen task set")
         attempt_count = len(members) * samples_per_task
-        if attempt_count > MAX_ATTEMPTS_PER_RUN:
+        requested_max_attempts = request.get("max_attempts", MAX_ATTEMPTS_PER_RUN)
+        if (
+            not isinstance(requested_max_attempts, int)
+            or isinstance(requested_max_attempts, bool)
+            or requested_max_attempts < 1
+            or requested_max_attempts > MAX_ATTEMPTS_PER_RUN
+            or attempt_count > requested_max_attempts
+        ):
             raise InvalidState("requested run exceeds the configured attempt creation limit")
+
+        max_cost = request.get("max_cost_micro_usd")
+        if max_cost is not None:
+            PostgresRunRepository._validate_approved_submission_plan(
+                connection,
+                campaign_row=campaign_row,
+                run_config=config_document_value,
+                revision_id=model_revision_id,
+                endpoint_id=UUID(str(request["endpoint_registration_id"])),
+                max_cost_micro_usd=max_cost,
+                max_input_tokens=request["max_input_tokens"],
+                max_output_tokens=request["max_output_tokens"],
+            )
 
         run_id = uuid4()
         connection.execute(
@@ -257,6 +322,38 @@ class PostgresRunRepository:
                 created_by=subject_id,
             )
         )
+        if max_cost is not None:
+            campaign_budget_id = campaign_row["budget_account_id"]
+            connection.execute(
+                insert(budget_account).values(
+                    id=uuid4(),
+                    scope_kind="run",
+                    scope_id=str(run_id),
+                    parent_account_id=campaign_budget_id,
+                    hard_limit_micro_usd=max_cost,
+                )
+            )
+            run_budget_id = connection.execute(
+                select(budget_account.c.id).where(
+                    budget_account.c.scope_kind == "run",
+                    budget_account.c.scope_id == str(run_id),
+                )
+            ).scalar_one()
+            connection.execute(
+                insert(budget_resource),
+                [
+                    {
+                        "account_id": run_budget_id,
+                        "resource": "input_tokens",
+                        "hard_limit": request["max_input_tokens"],
+                    },
+                    {
+                        "account_id": run_budget_id,
+                        "resource": "output_tokens",
+                        "hard_limit": request["max_output_tokens"],
+                    },
+                ],
+            )
         attempt_ids: list[UUID] = []
         attempt_rows: list[dict[str, object]] = []
         for member in members:
@@ -276,6 +373,90 @@ class PostgresRunRepository:
                 )
         connection.execute(insert(attempt), attempt_rows)
         return run_id, attempt_ids
+
+    @staticmethod
+    def _validate_approved_submission_plan(
+        connection: Connection,
+        *,
+        campaign_row: Mapping[str, object],
+        run_config: object,
+        revision_id: UUID,
+        endpoint_id: UUID,
+        max_cost_micro_usd: object,
+        max_input_tokens: object,
+        max_output_tokens: object,
+    ) -> None:
+        """Bind a reviewed run to its exact approved endpoint and a strict capped model config."""
+        if (
+            not isinstance(max_cost_micro_usd, int)
+            or isinstance(max_cost_micro_usd, bool)
+            or not 1 <= max_cost_micro_usd <= 5_000_000
+            or not isinstance(max_input_tokens, int)
+            or isinstance(max_input_tokens, bool)
+            or max_input_tokens < 0
+            or not isinstance(max_output_tokens, int)
+            or isinstance(max_output_tokens, bool)
+            or max_output_tokens < 0
+        ):
+            raise InvalidState("submission run budget is invalid")
+        campaign_budget_id = campaign_row.get("budget_account_id")
+        if campaign_budget_id is None:
+            raise InvalidState("submission campaign must have a budget account")
+        campaign_account_exists = connection.execute(
+            select(budget_account.c.hard_limit_micro_usd).where(
+                budget_account.c.id == campaign_budget_id
+            )
+        ).scalar_one_or_none()
+        if campaign_account_exists is None:
+            raise InvalidState("submission campaign budget is unavailable")
+        if not isinstance(run_config, dict):
+            raise InvalidState("resolved run configuration is invalid")
+        model_digest = run_config.get("model_config_digest")
+        if not isinstance(model_digest, str):
+            raise InvalidState("run configuration does not pin a model configuration")
+        model_doc = connection.execute(
+            select(config_document.c.document).where(
+                config_document.c.kind == "model_config",
+                config_document.c.digest == model_digest,
+            )
+        ).scalar_one_or_none()
+        if not isinstance(model_doc, dict):
+            raise InvalidState("pinned model configuration is unavailable")
+        try:
+            model_config = ModelConfig.model_validate(model_doc)
+            bound = cost_bound(
+                model_config,
+                model_config.declared_capabilities,
+                request_bytes=0,
+            )
+        except (TypeError, ValueError):
+            raise InvalidState("approved model configuration is invalid") from None
+        if (
+            not model_config.strict_money_cap
+            or model_config.cost_policy != "provider_bound"
+            or not bound.strict_cap_eligible
+            or model_config.endpoint_id != endpoint_id
+        ):
+            raise InvalidState("approved model configuration is not strictly budgeted")
+        revision = (
+            connection.execute(select(model_revision).where(model_revision.c.id == revision_id))
+            .mappings()
+            .one_or_none()
+        )
+        if (
+            revision is None
+            or revision["provider"] != model_doc.get("provider_kind")
+            or revision["name"] != model_doc.get("model")
+            or revision["endpoint_registration_id"] != endpoint_id
+        ):
+            raise InvalidState("model revision does not match the approved configuration")
+        endpoint_status = connection.execute(
+            select(endpoint_registration.c.approval_status).where(
+                endpoint_registration.c.id == endpoint_id
+            )
+        ).scalar_one_or_none()
+        if endpoint_status != "approved":
+            raise InvalidState("approved model endpoint is unavailable")
 
     def update_campaign_status(
         self,

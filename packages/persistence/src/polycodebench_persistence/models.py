@@ -1237,8 +1237,11 @@ model_submission = Table(
     Column("requester_subject", String(255), nullable=False),
     fk("metadata_artifact_id", "artifact.id"),
     Column("status", String(24), nullable=False),
+    Column("request_document", JSONB, nullable=True),
     Column("reviewer_subject", String(255), nullable=True),
     Column("rejection_reason", Text, nullable=True),
+    Column("approval_document", JSONB, nullable=True),
+    Column("approval_digest", String(71), nullable=True),
     fk("resulting_run_id", "run.id", nullable=True),
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
     created_at(),
@@ -1246,6 +1249,10 @@ model_submission = Table(
         "status IN ('pending','under_review','approved','rejected','withdrawn')", name="status"
     ),
     CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    CheckConstraint(
+        "approval_digest IS NULL OR approval_digest ~ '^sha256:[0-9a-f]{64}$'",
+        name="approval_digest_format",
+    ),
     Index("ix_model_submission_requester", "requester_subject", "created_at"),
 )
 

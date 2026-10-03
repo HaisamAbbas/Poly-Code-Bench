@@ -20,6 +20,7 @@ class Role(StrEnum):
 class Permission(StrEnum):
     SUBMISSION_CREATE = "submission:create"
     SUBMISSION_READ_OWN = "submission:read_own"
+    SUBMISSION_REVIEW = "submission:review"
     TASK_WRITE = "task:write"
     RUN_PLAN = "run:plan"
     RUN_CREATE = "run:create"
@@ -38,6 +39,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.OPERATOR: frozenset({Permission.RUN_PLAN, Permission.RUN_CREATE, Permission.RUN_CANCEL}),
     Role.REVIEWER: frozenset(
         {
+            Permission.SUBMISSION_REVIEW,
             Permission.RESTRICTED_EVIDENCE_READ,
             Permission.EVALUATION_ADJUDICATE,
             Permission.RELEASE_REVIEW,

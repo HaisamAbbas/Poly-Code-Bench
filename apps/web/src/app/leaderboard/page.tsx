@@ -110,6 +110,18 @@ async function LeaderboardForRelease({
         </div>
       </div>
       <ReleaseNotice release={releaseSummary} />
+      <section className="section-card compare-launcher" aria-labelledby="compare-launcher-title">
+        <div><h2 id="compare-launcher-title">Start a configuration comparison</h2><p>Select two to four configurations in this release. The comparison checks protocol, budget and exact public task scorecards.</p></div>
+        <form action="/compare" method="get">
+          <input type="hidden" name="release" value={releaseId} />
+          <label htmlFor="compare-models-launcher">Configurations <span>(select 2–4)</span></label>
+          <select id="compare-models-launcher" name="models" multiple size={Math.min(5, Math.max(3, allEntries.length))}>
+            {allEntries.map((entry) => <option key={entry.model_config_id} value={entry.model_config_id}>{entry.label} · {entry.model_config_id}</option>)}
+          </select>
+          <button type="submit">Open comparison</button>
+          <a href={`/compare?release=${encodeURIComponent(releaseId)}`}>Comparison filters and details</a>
+        </form>
+      </section>
       <div className="language-filter-row">
         <LanguageFilter
           languages={languages}

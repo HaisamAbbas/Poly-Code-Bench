@@ -21,6 +21,8 @@ export function AppHeader() {
       <nav className="primary-nav" aria-label="Main navigation">
         <Link href="/leaderboard">Leaderboard</Link>
         <a href="/leaderboard#language-filter">Languages</a>
+        <Link href="/compare">Compare</Link>
+        <Link href="/tasks">Tasks</Link>
       </nav>
       <span className="header-caption">Public release explorer</span>
     </header>
@@ -106,7 +108,7 @@ export function ReleaseSelector({
   releases: readonly ReleaseSummary[];
   releaseId: string;
   action: string;
-  preserved?: Record<string, string | undefined>;
+  preserved?: Record<string, string | readonly string[] | undefined>;
 }) {
   return (
     <form className="release-selector" action={action} method="get">
@@ -118,9 +120,12 @@ export function ReleaseSelector({
           </option>
         ))}
       </select>
-      {Object.entries(preserved).map(([key, value]) =>
-        value && key !== "release" ? <input key={key} type="hidden" name={key} value={value} /> : null,
-      )}
+      {Object.entries(preserved).flatMap(([key, value]) => {
+        if (!value || key === "release") return [];
+        return (Array.isArray(value) ? value : [value]).map((item, index) =>
+          <input key={`${key}-${index}`} type="hidden" name={key} value={item} />,
+        );
+      })}
       <button type="submit">Load release</button>
     </form>
   );
@@ -146,7 +151,7 @@ export function ReleaseNotice({ release }: { release: ReleaseSummary }) {
         <p className="withdrawal-copy">
           This release has been withdrawn. {release.withdrawal_reason ?? "See its release notice."}
           {release.replacement_release_id ? (
-            <> Replacement release: {release.replacement_release_id}.</>
+            <> Successor release: <Link href={`/leaderboard${asUrlQuery({ release: release.replacement_release_id })}`}>{release.replacement_release_id}</Link>.</>
           ) : null}
         </p>
       ) : null}
@@ -156,6 +161,12 @@ export function ReleaseNotice({ release }: { release: ReleaseSummary }) {
           <ul>{release.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
         </details>
       ) : null}
+      <Link
+        className="methodology-link"
+        href={`/methodology/${encodeURIComponent(release.methodology_version)}${asUrlQuery({ release: release.release_id })}`}
+      >
+        Frozen methodology · {release.methodology_version}
+      </Link>
     </aside>
   );
 }
@@ -428,4 +439,15 @@ export function formatMicros(value: string): string {
   const whole = micros / 1_000_000n;
   const remainder = String(micros % 1_000_000n).padStart(6, "0");
   return `$${whole}.${remainder}`;
+}
+
+export function ReleaseMethodologyLink({ release }: { release: ReleaseSummary }) {
+  return (
+    <Link
+      className="methodology-link"
+      href={`/methodology/${encodeURIComponent(release.methodology_version)}${asUrlQuery({ release: release.release_id })}`}
+    >
+      Frozen methodology · {release.methodology_version}
+    </Link>
+  );
 }

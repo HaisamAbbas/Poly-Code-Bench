@@ -66,7 +66,9 @@ test("E2E-39 segment: URL filters, metric sorting, release selection, and langua
   await page.goto(`/languages/javascript?release=${selectedRelease}`);
   await expect(page.getByRole("heading", { name: "javascript", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Diagnostic profiles" })).toBeVisible();
-  await expect(page.locator(".language-tool-coverage")).toContainText("eslint");
+  await expect(page.locator(".language-tool-coverage")).toHaveCount(2);
+  await expect(page.locator(".language-tool-coverage").nth(0)).toContainText("eslint");
+  await expect(page.locator(".language-tool-coverage").nth(1)).toContainText("eslint");
   await expect(page.getByText("TypeScript", { exact: false })).toHaveCount(0);
   await expect(page.getByText("No language-specific code dimensions were published for this configuration.")).toHaveCount(0);
   await page.screenshot({ path: resolve(artifactDirectory, "javascript-profile.png"), fullPage: true });
@@ -101,9 +103,7 @@ test("E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API 
 
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "PolyCodeBench home" })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
+  for (let index = 0; index < 5; index += 1) await page.keyboard.press("Tab");
   await expect(page.locator("#release-select")).toBeFocused();
   const releaseOptions = await page.locator("#release-select option").evaluateAll((nodes) =>
     nodes.map((node) => (node as HTMLOptionElement).value),

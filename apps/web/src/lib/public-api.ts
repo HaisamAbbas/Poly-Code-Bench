@@ -77,6 +77,7 @@ export type ReleaseSummary = {
   readonly withdrawal_reason: string | null;
   readonly replacement_release_id: string | null;
   readonly methodology_url: string;
+  readonly methodology_version: string;
 };
 
 export type LeaderboardEntry = {
@@ -157,6 +158,7 @@ export type ApiEnvelope<T> = {
     readonly total?: number | null;
     readonly returned?: number | null;
     readonly limit?: number | null;
+    readonly next_cursor?: string | null;
     readonly sort?: string | null;
     readonly filters?: readonly string[];
     readonly current_release_id?: string | null;
@@ -165,6 +167,160 @@ export type ApiEnvelope<T> = {
       readonly definitions: readonly MetricDefinition[];
     } | null;
   };
+};
+
+export type Incompatibility = {
+  readonly kind: "incompatibility";
+  readonly code: string;
+  readonly model_config_id: string | null;
+  readonly detail: string;
+};
+
+export type ComparisonTaskRef = {
+  readonly kind: "comparison_task_ref";
+  readonly task_id: string;
+  readonly task_version: number;
+  readonly language_id: string;
+  readonly family: string;
+  readonly difficulty: string;
+  readonly scorecards: readonly {
+    readonly kind: "comparison_scorecard_ref";
+    readonly model_config_id: string;
+    readonly scorecard_id: string;
+    readonly evidence_url: string;
+  }[];
+};
+
+export type PairedTaskDelta = {
+  readonly kind: "paired_task_delta";
+  readonly task_id: string;
+  readonly task_version: number;
+  readonly metric_id: string;
+  readonly label: string;
+  readonly baseline_model_config_id: string;
+  readonly candidate_model_config_id: string;
+  readonly baseline_scorecard_id: string;
+  readonly candidate_scorecard_id: string;
+  readonly baseline_value: string | null;
+  readonly candidate_value: string | null;
+  readonly delta_value: string | null;
+  readonly interval_low: string | null;
+  readonly interval_high: string | null;
+  readonly interval_method: "reported_interval_difference_bounds" | "unavailable";
+  readonly status: MetricStatus;
+  readonly reason: string | null;
+};
+
+export type PairedDelta = {
+  readonly kind: "paired_delta";
+  readonly metric_id: string;
+  readonly label: string;
+  readonly baseline_model_config_id: string;
+  readonly candidate_model_config_id: string;
+  readonly delta_value: string | null;
+  readonly interval_low: string | null;
+  readonly interval_high: string | null;
+  readonly interval_method: "reported_interval_difference_bounds" | "unavailable";
+  readonly status: MetricStatus;
+  readonly reason: string | null;
+};
+
+export type ComparisonResult = {
+  readonly kind: "comparison_result";
+  readonly release_id: string;
+  readonly cohort_digest: string;
+  readonly scope: "exploratory" | "ranked_eligible";
+  readonly common_tasks: number;
+  readonly common_independent_clusters: number | null;
+  readonly entries: readonly LeaderboardEntry[];
+  readonly deltas: readonly PairedDelta[];
+  readonly common_task_refs: readonly ComparisonTaskRef[];
+  readonly paired_task_deltas: readonly PairedTaskDelta[];
+  readonly incompatibilities: readonly Incompatibility[];
+  readonly limitations: readonly string[];
+};
+
+export type TaskSummary = {
+  readonly kind: "task_summary";
+  readonly task_id: string;
+  readonly version: number;
+  readonly language_id: string;
+  readonly family: string;
+  readonly difficulty: string;
+  readonly statement_summary: string;
+  readonly evidence_url: string;
+  readonly source_version_count: number;
+  readonly patch_count: number;
+  readonly finding_count: number;
+};
+
+export type PublicTaskContent = {
+  readonly kind: "public_task_content";
+  readonly task_id: string;
+  readonly task_version: number;
+  readonly statement: string;
+  readonly source_versions: readonly {
+    readonly source_id: string;
+    readonly version_label: string;
+    readonly path: string;
+    readonly language_id: string;
+    readonly source_text: string;
+  }[];
+  readonly submitted_patches: readonly {
+    readonly patch_id: string;
+    readonly model_config_id: string;
+    readonly scorecard_id: string;
+    readonly summary: string;
+    readonly diff_text: string;
+  }[];
+  readonly tool_findings: readonly {
+    readonly finding_id: string;
+    readonly model_config_id: string;
+    readonly scorecard_id: string;
+    readonly source_id: string;
+    readonly tool_id: string;
+    readonly rule_id: string;
+    readonly severity: "critical" | "high" | "medium" | "low" | "info";
+    readonly line: number | null;
+    readonly message: string;
+  }[];
+};
+
+export type PublicScorecard = {
+  readonly kind: "public_scorecard";
+  readonly scorecard_id: string;
+  readonly release_id: string;
+  readonly model_config_id: string;
+  readonly task_id: string;
+  readonly task_version: number;
+  readonly formula_version: string;
+  readonly policy_digest: string;
+  readonly gating_status: "scored" | "gated_zero" | "needs_review";
+  readonly metrics: readonly PublicMetric[];
+  readonly contributions: readonly {
+    readonly item_id: string;
+    readonly dimension: string;
+    readonly nominal_weight_bp: number;
+    readonly effective_weight_bp: number;
+    readonly presentation_weight_bp: number;
+    readonly arithmetic: string;
+    readonly evidence_refs: readonly string[];
+    readonly value: string | null;
+  }[];
+  readonly evidence_url: string;
+  readonly redacted_evidence_count: number;
+};
+
+export type Methodology = {
+  readonly kind: "methodology";
+  readonly version: string;
+  readonly methods: readonly string[];
+  readonly formulas: readonly string[];
+  readonly tools: readonly string[];
+  readonly deviations: readonly string[];
+  readonly native_benchmarks: readonly (readonly [string, string])[];
+  readonly correction_history: readonly string[];
+  readonly limitations: readonly string[];
 };
 
 export type ReleaseContext = {
@@ -279,6 +435,17 @@ export function scoreEvidenceHref(sourceUrl: string, releaseId: string): string 
     }
     source.searchParams.set("release", releaseId);
     return `${source.pathname}${source.search}`;
+  } catch {
+    return "/leaderboard";
+  }
+}
+
+export function scorecardPageHref(sourceUrl: string, releaseId: string): string {
+  try {
+    const source = new URL(sourceUrl, "https://polycodebench.invalid");
+    const match = source.pathname.match(/^\/v1\/scorecards\/([A-Za-z0-9][A-Za-z0-9._-]{0,119})$/);
+    if (source.origin !== "https://polycodebench.invalid" || !match) return "/leaderboard";
+    return `/scorecards/${encodeURIComponent(match[1])}?release=${encodeURIComponent(releaseId)}`;
   } catch {
     return "/leaderboard";
   }

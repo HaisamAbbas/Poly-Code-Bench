@@ -74,7 +74,7 @@ class ImageIdentities(_Strict):
     build: dict[str, object]
     rule_bundle_digest: Digest
     guest_digest: Digest
-    #: Resolved analyzer selection as the image itself reports it. Recorded so a scorecard can name the
+    #: Resolved analyzer selection as the image itself reports it. Recorded so a scorecard can
     #: checks that actually ran; empty when the identities were written before this was probed.
     analyzer_checks: dict[str, object] = Field(default_factory=dict)
     images: dict[str, ImageRecord] = Field(min_length=4)
@@ -111,8 +111,9 @@ class ImageIdentities(_Strict):
         record = self.record(recipe)
         if record.instrumentation != "none":
             raise ValueError(
-                f"recipe {recipe!r} is built with {record.instrumentation} instrumentation and cannot "
-                "produce a release-performance measurement; use the 'performance' recipe"
+                f"recipe {recipe!r} is built with {record.instrumentation} instrumentation "
+                "and cannot produce a release-performance measurement; use the "
+                "'performance' recipe"
             )
         return record
 

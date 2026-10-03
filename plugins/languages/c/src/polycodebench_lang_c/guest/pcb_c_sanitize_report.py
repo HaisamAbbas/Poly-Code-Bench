@@ -99,7 +99,11 @@ _TAIL_BYTES = 4000
 
 
 def _digest(text):
-    return None if text is None else "sha256:" + hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()
+    return (
+        None
+        if text is None
+        else "sha256:" + hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()
+    )
 
 
 def _candidates(text):
@@ -139,7 +143,9 @@ def _valgrind_site(text):
 
 #: One LeakSanitizer record. Only *direct* leaks are findings: an indirect leak is memory reachable
 #: only from a directly leaked block, so it is a consequence of the same defect, not a second one.
-_LSAN_RECORD = re.compile(r"^Direct leak of (?P<bytes>\d+) byte\(s\) in \d+ object\(s\)", re.MULTILINE)
+_LSAN_RECORD = re.compile(
+    r"^Direct leak of (?P<bytes>\d+) byte\(s\) in \d+ object\(s\)", re.MULTILINE
+)
 
 
 def _leak_findings(block):
@@ -225,7 +231,9 @@ _UBSAN_MESSAGES = (
     (re.compile(r"null pointer"), "null-pointer-dereference"),
     (re.compile(r"misaligned address"), "misaligned-access"),
     (
-        re.compile(r"^(?:pointer index expression|applying (?:non-)?zero offset|.*pointer overflow)"),
+        re.compile(
+            r"^(?:pointer index expression|applying (?:non-)?zero offset|.*pointer overflow)"
+        ),
         "pointer-arithmetic-out-of-bounds",
     ),
     (re.compile(r"^(?:load of value|index -?\d+ out of bounds)"), "invalid-memory-access"),
@@ -352,7 +360,10 @@ def classify(text, lane, exit_code=None, timed_out=False):
             "the lane aborted with status %d and produced no diagnostic" % exit_code,
         )
     if lane == "valgrind" and "ERROR SUMMARY: 0 errors" not in text:
-        return VERDICT_FAILED, "the memcheck summary is missing or non-zero without a parsed finding"
+        return (
+            VERDICT_FAILED,
+            "the memcheck summary is missing or non-zero without a parsed finding",
+        )
     return VERDICT_CLEAN, "no defect was reported on the paths this lane executed"
 
 
@@ -381,7 +392,10 @@ def report(text, lane, exit_code=None, timed_out=False, tool_version=None):
 
 def main(argv):
     if len(argv) < 3:
-        print("usage: pcb_c_sanitize_report.py --report FILE --lane LANE [--exit-code N]", file=sys.stderr)
+        print(
+            "usage: pcb_c_sanitize_report.py --report FILE --lane LANE [--exit-code N]",
+            file=sys.stderr,
+        )
         return 2
     options = {"report": argv[1], "lane": argv[2], "exit_code": None, "timed_out": False}
     index = 3
@@ -398,13 +412,20 @@ def main(argv):
         with open(options["report"], encoding="utf-8", errors="replace") as handle:
             text = handle.read()
     except OSError:
-        print('{"schema":"pcb-c-sanitizer-report-v1","verdict":"failed",'
-              '"reason":"the capture is unreadable"}')
+        print(
+            '{"schema":"pcb-c-sanitizer-report-v1","verdict":"failed",'
+            '"reason":"the capture is unreadable"}'
+        )
         return 2
     import json
 
-    print(json.dumps(report(text, options["lane"], options["exit_code"], options["timed_out"]),
-                     sort_keys=True, separators=(",", ":")))
+    print(
+        json.dumps(
+            report(text, options["lane"], options["exit_code"], options["timed_out"]),
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
     return 0
 
 

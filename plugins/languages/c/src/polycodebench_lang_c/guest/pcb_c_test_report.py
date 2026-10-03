@@ -78,8 +78,7 @@ def summarize(stdout, exit_code=None, timed_out=False, group=None, stderr=None):
         "declared_cases": declared,
         "observed_cases": len(observed),
         "cases": [
-            {"case": case_id, "outcome": outcome}
-            for case_id, outcome in sorted(observed.items())
+            {"case": case_id, "outcome": outcome} for case_id, outcome in sorted(observed.items())
         ],
         "in_flight_case": str(starts[-1]["case"]) if starts else None,
         "timed_out": bool(timed_out),

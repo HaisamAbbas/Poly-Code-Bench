@@ -2,13 +2,13 @@
  "schema_version": 1,
  "kind": "execution_record",
  "plan_id": "c.performance.iteration",
- "exit_code": 0,
+ "exit_code": 2,
  "timed_out": false,
- "duration_ms": 2437,
+ "duration_ms": 484,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "0bcb580f-9ff2-414d-be0c-2180b0abb0a2"
+ "sandbox_id": "9a9e3271-b837-4dce-87a3-edb0912df3db"
 }

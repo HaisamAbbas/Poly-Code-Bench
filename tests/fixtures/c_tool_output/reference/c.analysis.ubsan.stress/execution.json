@@ -4,11 +4,11 @@
  "plan_id": "c.analysis.ubsan.stress",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 2718,
+ "duration_ms": 577,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "c3691931-1e2b-4876-86c9-7e3694109576"
+ "sandbox_id": "fd450f59-f494-4ea1-bf0f-08a41c97ab70"
 }

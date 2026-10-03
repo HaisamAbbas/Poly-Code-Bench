@@ -1,9 +1,10 @@
 """Turn a recorded C tool run into observations.
 
 Every parser starts from supervisor evidence (``plan_status``) and never from the tool's own claim.
-The rule the whole module exists to enforce: a scan that did not complete is ``MISSING``, never zero
-findings. That includes the cases C makes easy to get wrong - a compiler crash, a clang-tidy run that
-timed out, a sanitizer that could not load its runtime, a Valgrind summary that never appeared.
+The rule the whole module exists to enforce: a scan that did not complete is ``MISSING``,
+never zero findings. That includes the cases C makes easy to get wrong - a compiler crash,
+a clang-tidy run that timed out, a sanitizer that could not load its runtime, a Valgrind
+summary that never appeared.
 """
 
 from __future__ import annotations
@@ -73,9 +74,9 @@ def _text(raw: ArtifactReader, path: str) -> str:
 def capture_stem(plan: AnalysisPlan) -> str:
     """The ``out/<stem>`` prefix this plan's captures were written under.
 
-    Read from the plan's own declared outputs rather than reconstructed from the analyzer id: a
-    dynamic lane emits one plan per oracle group, so the stem carries the group and reconstructing it
-    from the analyzer would send every plan to the same file.
+    Read from the plan's own declared outputs rather than reconstructed from the analyzer id:
+    a dynamic lane emits one plan per oracle group, so the stem carries the group and
+    reconstructing it from the analyzer would send every plan to the same file.
     """
     for output in plan.outputs:
         if output.path.endswith(".build.json"):
@@ -103,9 +104,9 @@ def build_document(raw: ArtifactReader, name: str) -> dict[str, Any]:
 def first_build_error(document: dict[str, Any]) -> str:
     """The most specific explanation a build document can give.
 
-    A positioned diagnostic names the file and line. A link or archive failure usually has none - the
-    linker says ``ld: cannot find ...`` - so the driver's own ``fatal`` field is the evidence, and it
-    is quoted rather than replaced by a generic sentence.
+    A positioned diagnostic names the file and line. A link or archive failure usually has
+    none - the linker says ``ld: cannot find ...`` - so the driver's own ``fatal`` field is
+    the evidence, and it is quoted rather than replaced by a generic sentence.
     """
     for entry in document.get("diagnostics", []):
         if entry.get("raw_severity") in {"error", "fatal error"} and entry.get("path"):
@@ -146,7 +147,9 @@ def _static(
             continue
         if diagnostic.is_note:
             continue
-        check_id = f"{check_prefix}.{diagnostic.rule}" if diagnostic.rule else f"{check_prefix}.scan"
+        check_id = (
+            f"{check_prefix}.{diagnostic.rule}" if diagnostic.rule else f"{check_prefix}.scan"
+        )
         rule = rule_of(check_id)
         observations.append(
             finding(
@@ -192,9 +195,7 @@ def _cppcheck(plan: AnalysisPlan, raw: ArtifactReader, profile: CProfile) -> lis
     # cppcheck prints nothing and exits 0 on input it cannot parse, so a scan that never says which
     # files it read is not evidence of anything. Reporting it as missing is the whole point: without
     # this, uncompilable code would collect a clean cppcheck scan and a quality score built on it.
-    checked = {
-        relative_candidate_path(path) for path in checked_files(text)
-    }
+    checked = {relative_candidate_path(path) for path in checked_files(text)}
     scope = _scope(plan)
     unread = sorted(scope - checked)
     if unread:
@@ -218,11 +219,12 @@ def _cppcheck(plan: AnalysisPlan, raw: ArtifactReader, profile: CProfile) -> lis
 def _sanitizer(analyzer: str, lane: str, owner: ScoreDimension | None):  # type: ignore[no-untyped-def]
     """Parse one dynamic lane's capture.
 
-    Two names are in play and they are not interchangeable. ``analyzer`` is the tool that produced the
-    plan (``asan``, ``ubsan``, ``valgrind``) and names the observation, because that is what a task
-    requires and what the profile's feeders are keyed on. ``lane`` is the capability being judged
-    (``address``, ``undefined``, ``valgrind``) and is what the report document is keyed by. Getting
-    them the wrong way round produces an observation nothing downstream is looking for.
+    Two names are in play and they are not interchangeable. ``analyzer`` is the tool that
+    produced the plan (``asan``, ``ubsan``, ``valgrind``) and names the observation, because
+    that is what a task requires and what the profile's feeders are keyed on. ``lane`` is
+    the capability being judged (``address``, ``undefined``, ``valgrind``) and is what the
+    report document is keyed by. Getting them the wrong way round produces an observation
+    nothing downstream is looking for.
     """
 
     def parse(plan: AnalysisPlan, raw: ArtifactReader, profile: CProfile) -> list[Observation]:
@@ -230,9 +232,7 @@ def _sanitizer(analyzer: str, lane: str, owner: ScoreDimension | None):  # type:
         name = capture_stem(plan)
         text = _text(raw, f"out/{name}.out")
         run = _run_record(raw, name)
-        document = report.report(
-            text, lane, run.get("exit_code"), bool(run.get("timed_out"))
-        )
+        document = report.report(text, lane, run.get("exit_code"), bool(run.get("timed_out")))
         verdict = document["verdict"]
         if verdict == "unsupported":
             # Unsupported is not clean: a task that required this lane cannot be scored from it,
@@ -265,10 +265,11 @@ def _sanitizer(analyzer: str, lane: str, owner: ScoreDimension | None):  # type:
             column = entry.get("column")
             located = bool(path) and (not scope or path in scope)
             if not located:
-                # No frame in the candidate tree: the defect is real but its site is in the harness,
-                # libc or an unsymbolized frame. Dropping it would make a lane that *found* something
-                # report zero findings - a false clean - so it is charged to the candidate's first
-                # file at line 1 and says it is unlocated.
+                # No frame in the candidate tree: the defect is real but its site is in
+                # the harness, libc or an unsymbolized frame. Dropping it would make a
+                # lane that *found* something report zero findings - a false clean - so
+                # it is charged to the candidate's first file at line 1 and says it is
+                # unlocated.
                 path = sorted(scope)[0] if scope else "src/unknown.c"
                 line, column = 1, None
             # Named by the analyzer (`c.asan.*`), not the lane (`address`): the profile's rules and
@@ -317,9 +318,7 @@ PARSERS: dict[str, Callable[[ArtifactReader, AnalysisPlan, CProfile], list[Obser
     "cppcheck": _guarded("cppcheck", _cppcheck),
     "asan": _guarded("asan", _sanitizer("asan", "address", ScoreDimension.ROBUSTNESS)),
     "ubsan": _guarded("ubsan", _sanitizer("ubsan", "undefined", ScoreDimension.ROBUSTNESS)),
-    "valgrind": _guarded(
-        "valgrind", _sanitizer("valgrind", "valgrind", ScoreDimension.ROBUSTNESS)
-    ),
+    "valgrind": _guarded("valgrind", _sanitizer("valgrind", "valgrind", ScoreDimension.ROBUSTNESS)),
 }
 
 __all__ = ["PARSERS", "build_document", "first_build_error", "first_warning"]

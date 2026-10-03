@@ -1,0 +1,10 @@
+{"v":1,"kind":"group_start","group":"stress","declared":4}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.long_input_is_handled"}
+{"v":1,"kind":"case","group":"stress","case":"stress.long_input_is_handled","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.repeated_runs_are_stable"}
+{"v":1,"kind":"case","group":"stress","case":"stress.repeated_runs_are_stable","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.many_repeats_do_not_overflow"}
+{"v":1,"kind":"case","group":"stress","case":"stress.many_repeats_do_not_overflow","outcome":"pass","reason":""}
+{"v":1,"kind":"case_start","group":"stress","case":"stress.all_distinct_words_survive"}
+{"v":1,"kind":"case","group":"stress","case":"stress.all_distinct_words_survive","outcome":"pass","reason":""}
+{"v":1,"kind":"session_finish","group":"stress","declared":4,"observed":4,"passed":4,"failed":0}

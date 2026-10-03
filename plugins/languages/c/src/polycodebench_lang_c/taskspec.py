@@ -14,9 +14,9 @@ C differs from the Rust contract in four places that matter here:
 * **No package manager.** A C task's dependency surface is its frozen headers and compile flags, so
   the analogue of ``Cargo.lock`` is a digest of the *flags* plus the harness sources. That is what
   ``recipe_digest`` records.
-* **Warning policy is three-valued** (``werror`` / ``warn`` / ``error``) and ``werror`` is only legal
-  when the frozen baseline compiled clean under the same flags. A blanket ``-Werror`` must never
-  invalidate an otherwise admitted legacy task (Architecture 11.2, PCB-20-3).
+* **Warning policy is three-valued** (``werror`` / ``warn`` / ``error``) and ``werror`` is only
+  legal when the frozen baseline compiled clean under the same flags. A blanket ``-Werror``
+  must never invalidate an otherwise admitted legacy task (Architecture 11.2, PCB-20-3).
 * **Instrumentation applicability is explicit and three-valued** per lane
   (``address`` / ``undefined`` / ``valgrind``): ``required`` / ``optional`` / ``unsupported``. Only
   ``required`` makes a lane mandatory; ``unsupported`` records that the lane cannot judge this task,
@@ -51,10 +51,10 @@ DIAGNOSTIC_ITEMS = (
 )
 IDIOM_ITEMS = ("ownership_api_contracts", "const_type_portability", "data_function_interfaces")
 KNOWN_ANALYZERS = ("clang_tidy", "cppcheck", "asan", "ubsan", "valgrind")
-#: A lane is a *capability*; an analyzer is the *tool* that provides it. Address safety and undefined
-#: behaviour are two lanes served by two sanitizers, and the two names are deliberately different:
-#: conflating them would make it impossible to require memcheck without also demanding a sanitizer
-#: that cannot judge the task.
+#: A lane is a *capability*; an analyzer is the *tool* that provides it. Address safety and
+#: undefined behaviour are two lanes served by two sanitizers, and the two names are
+#: deliberately different: conflating them would make it impossible to require memcheck
+#: without also demanding a sanitizer that cannot judge the task.
 LANE_ANALYZER = {"address": "asan", "undefined": "ubsan", "valgrind": "valgrind"}
 LANE_NAMES = tuple(LANE_ANALYZER)
 Applicability = Literal["required", "optional", "unsupported"]
@@ -180,7 +180,9 @@ class ExposureRights(PluginModel):
     def rights_are_explicit(self) -> ExposureRights:
         needed = {"license_expression", "status", "owner_confirmation"}
         if not needed <= set(self.rights):
-            raise ValueError("rights record needs license_expression, status and owner_confirmation")
+            raise ValueError(
+                "rights record needs license_expression, status and owner_confirmation"
+            )
         if self.rights["owner_confirmation"] not in {"pending", "confirmed"}:
             raise ValueError("owner_confirmation must be pending or confirmed")
         return self
@@ -261,8 +263,8 @@ class SanitizerPolicy(PluginModel):
 class CQualityPlan(PluginModel):
     """What quality evidence a task expects.
 
-    ``recipe_digest`` and ``scaffold_files`` are not authored: ``freeze_view`` computes them so plans
-    can declare digest-checked inputs and a flag-addressed tool identity.
+    ``recipe_digest`` and ``scaffold_files`` are not authored: ``freeze_view`` computes them
+    so plans can declare digest-checked inputs and a flag-addressed tool identity.
     """
 
     kind: Literal["c_task_quality_plan"] = "c_task_quality_plan"
@@ -305,11 +307,12 @@ class CQualityPlan(PluginModel):
             unsupported = {
                 policy.lane
                 for policy in self.sanitizers
-                if policy.lane in {"address", "undefined"}
-                and policy.applicability == "unsupported"
+                if policy.lane in {"address", "undefined"} and policy.applicability == "unsupported"
             }
             if unsupported:
-                raise ValueError(f"lane cannot be both required and unsupported: {sorted(unsupported)}")
+                raise ValueError(
+                    f"lane cannot be both required and unsupported: {sorted(unsupported)}"
+                )
         for policy in self.sanitizers:
             if policy.applicability != "unsupported" and not policy.groups:
                 raise ValueError(f"lane {policy.lane} must name the oracle groups it interprets")
@@ -356,9 +359,10 @@ _GROUP = re.compile(r"PCB_GROUP\(\s*\"(?P<group>[a-z0-9][\w.-]{0,120})\"")
 def discover_cases(path: str, source: bytes) -> list[str]:
     """Case ids declared by ``PCB_CASE`` entries in one test file.
 
-    Ids are qualified by the group the file declares, exactly as the binary prints them. Comments and
-    directives are blanked but *literals are not*: the id is the payload, and a test table that
-    named its cases in comments would be one an author could silently drift out of sync with.
+    Ids are qualified by the group the file declares, exactly as the binary prints them.
+    Comments and directives are blanked but *literals are not*: the id is the payload, and a
+    test table that named its cases in comments would be one an author could silently drift
+    out of sync with.
 
     A file with no ``PCB_GROUP`` yields ids qualified by its own stem, so a package whose group is
     declared elsewhere is still discoverable rather than silently empty.
@@ -389,7 +393,9 @@ def discover_groups(path: str, source: bytes) -> list[str]:
 # ------------------------------------------------------------------------- validation
 
 
-def _issue(code: str, message: str, path: str | None = None, severity: str = "error") -> ValidationIssue:
+def _issue(
+    code: str, message: str, path: str | None = None, severity: str = "error"
+) -> ValidationIssue:
     return ValidationIssue(code=code, severity=severity, path=path, message=message[:500])  # type: ignore[arg-type]
 
 
@@ -439,7 +445,9 @@ def validate_c_task(task: TaskDraft, plugin_id: str = "c") -> ValidationReport:
     try:
         ExposureRights.model_validate_json(files["admission/exposure-rights.json"])
     except (KeyError, ValueError, ValidationError) as error:
-        issues.append(_issue("exposure-rights-invalid", f"exposure-rights.json: {str(error)[:200]}"))
+        issues.append(
+            _issue("exposure-rights-invalid", f"exposure-rights.json: {str(error)[:200]}")
+        )
     oracle = quality = None
     try:
         oracle = parse_oracle(files["hidden/oracle.json"])
@@ -448,7 +456,9 @@ def validate_c_task(task: TaskDraft, plugin_id: str = "c") -> ValidationReport:
     try:
         quality = parse_quality_plan(files["hidden/quality-plan.yaml"])
     except (KeyError, ValueError, ValidationError, yaml.YAMLError) as error:
-        issues.append(_issue("quality-plan-invalid", f"hidden/quality-plan.yaml: {str(error)[:200]}"))
+        issues.append(
+            _issue("quality-plan-invalid", f"hidden/quality-plan.yaml: {str(error)[:200]}")
+        )
     if oracle is not None:
         issues.extend(_check_oracle(oracle, files, manifest))
     if oracle is not None and quality is not None:
@@ -467,7 +477,9 @@ def _check_oracle(
         for rel in group.files:
             source = files.get(f"hidden/{rel}")
             if source is None:
-                issues.append(_issue("oracle-file-missing", "group file is not in the package", rel))
+                issues.append(
+                    _issue("oracle-file-missing", "group file is not in the package", rel)
+                )
                 continue
             actual.update(discover_cases(rel, source))
         for case_id in sorted(declared - actual):
@@ -476,7 +488,9 @@ def _check_oracle(
             )
         for case_id in sorted(actual - declared):
             issues.append(
-                _issue("oracle-case-undeclared", f"{group.group_id}: case not in inventory: {case_id}")
+                _issue(
+                    "oracle-case-undeclared", f"{group.group_id}: case not in inventory: {case_id}"
+                )
             )
     acceptance = manifest.get("acceptance")
     if isinstance(acceptance, Mapping):
@@ -503,14 +517,19 @@ def _check_quality(
     if isinstance(plan, Mapping):
         dimensions = {str(d) for d in plan.get("applicable_dimensions", [])}
         if set(plan.get("required_analyzers", [])) != set(quality.required_analyzers):
-            issues.append(_issue("analyzer-mismatch", "required analyzers differ from the manifest"))
+            issues.append(
+                _issue("analyzer-mismatch", "required analyzers differ from the manifest")
+            )
     opps = quality.opportunities
     known_groups = {group.group_id for group in oracle.groups}
     for policy in quality.sanitizers:
         unknown = set(policy.groups) - known_groups
         if unknown:
             issues.append(
-                _issue("lane-group-unknown", f"lane {policy.lane} names unknown groups {sorted(unknown)}")
+                _issue(
+                    "lane-group-unknown",
+                    f"lane {policy.lane} names unknown groups {sorted(unknown)}",
+                )
             )
         if policy.lane in {"address", "undefined"} and policy.applicability != "unsupported":
             item = "memory_safety" if policy.lane == "address" else "undefined_behavior"
@@ -523,7 +542,10 @@ def _check_quality(
                 )
     if "memory_safety" in dimensions and quality.lane("address") is None:
         issues.append(
-            _issue("memory-safety-without-lane", "memory_safety applies but no address lane is declared")
+            _issue(
+                "memory-safety-without-lane",
+                "memory_safety applies but no address lane is declared",
+            )
         )
     if "security" in dimensions and "security_surface" not in quality.opportunity_tags:
         issues.append(
@@ -531,14 +553,21 @@ def _check_quality(
         )
     if "efficiency" in dimensions and quality.performance is None:
         issues.append(_issue("efficiency-without-workload", "efficiency applies but no workload"))
-    if quality.performance is not None and f"hidden/{quality.performance.workload_file}" not in files:
+    if (
+        quality.performance is not None
+        and f"hidden/{quality.performance.workload_file}" not in files
+    ):
         issues.append(_issue("workload-missing", quality.performance.workload_file))
     if "robustness" in dimensions and not oracle.robustness_scenarios:
         issues.append(_issue("robustness-without-scenario", "robustness applies but no scenario"))
     if "idiomatic" in dimensions and not any(opps.get(i, 0) for i in IDIOM_ITEMS):
-        issues.append(_issue("idiomatic-without-opportunity", "idiomatic applies without opportunity"))
+        issues.append(
+            _issue("idiomatic-without-opportunity", "idiomatic applies without opportunity")
+        )
     if "code_quality" in dimensions and not any(opps.get(i, 0) for i in DIAGNOSTIC_ITEMS):
-        issues.append(_issue("quality-without-opportunity", "code_quality applies without opportunity"))
+        issues.append(
+            _issue("quality-without-opportunity", "code_quality applies without opportunity")
+        )
     for item in quality.judge_items:
         if item not in set(DIAGNOSTIC_ITEMS) | set(IDIOM_ITEMS) | {
             "naming_readability",
@@ -552,7 +581,9 @@ def _check_quality(
     return issues
 
 
-def _check_fixtures(manifest: Mapping[str, object], files: Mapping[str, bytes]) -> list[ValidationIssue]:
+def _check_fixtures(
+    manifest: Mapping[str, object], files: Mapping[str, bytes]
+) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     fixtures = manifest.get("fixtures")
     if not isinstance(fixtures, list):

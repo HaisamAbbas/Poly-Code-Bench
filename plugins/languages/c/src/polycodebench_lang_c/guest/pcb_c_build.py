@@ -92,7 +92,7 @@ _RECIPES = tuple(_OPTIMIZATION)
 RULES = "/opt/pcb/rules"
 #: Options that may appear more than once, mapped to the key they append to. Named explicitly rather
 #: than derived from the flag text so a plural never becomes a singular key by accident.
-_REPEATED = {"--source": "sources", "--object-include": "object_include"}
+_REPEATED = {"--source": "sources", "--object-include": "object_include", "--run-arg": "run_args"}
 
 
 def _parse(argv):
@@ -110,6 +110,7 @@ def _parse(argv):
         "sources": [],
         "execute": None,
         "run_deadline": 30.0,
+        "run_args": [],
         "archive": False,
     }
     index = 1
@@ -192,9 +193,9 @@ def parse_diagnostics(text, source):
                     "path": match.group("path").strip(),
                     "line": int(match.group("line")),
                     "column": int(match.group("column")) if match.group("column") else None,
-                    "severity": "high" if severity in {"error", "fatal error"} else (
-                        "medium" if severity == "warning" else "low"
-                    ),
+                    "severity": "high"
+                    if severity in {"error", "fatal error"}
+                    else ("medium" if severity == "warning" else "low"),
                     "raw_severity": severity,
                     "message": match.group("message").strip()[:400],
                     "rule": match.group("rule"),
@@ -233,21 +234,24 @@ def main(argv):
     options = _parse(argv)
     flags = compile_flags(options)
     linker = link_flags(options)
-    flags_digest = "sha256:" + hashlib.sha256(
-        json.dumps(
-            {
-                "compile": list(flags),
-                "link": list(linker),
-                "std": options["std"],
-                "warning_set": options["warning_set"],
-                "warn_error": options["warn_error"],
-                "sanitizer": options["sanitizer"],
-                "recipe": options["recipe"],
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
+    flags_digest = (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(
+                {
+                    "compile": list(flags),
+                    "link": list(linker),
+                    "std": options["std"],
+                    "warning_set": options["warning_set"],
+                    "warn_error": options["warn_error"],
+                    "sanitizer": options["sanitizer"],
+                    "recipe": options["recipe"],
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+    )
     try:
         os.makedirs(options["build_dir"], exist_ok=True)
     except OSError as error:
@@ -301,7 +305,9 @@ def main(argv):
                 "source": source,
                 "exit_code": returned.returncode,
                 "ok": returned.returncode == 0,
-                "error_count": sum(1 for d in found if d["raw_severity"] in {"error", "fatal error"}),
+                "error_count": sum(
+                    1 for d in found if d["raw_severity"] in {"error", "fatal error"}
+                ),
                 "warning_count": sum(1 for d in found if d["raw_severity"] == "warning"),
             }
         )
@@ -398,6 +404,7 @@ def _execute(options):
     One driver rather than two steps keeps the argument vector typed: there is no shell, no ``&&``
     and no intermediate plan whose failure could be read as the lane's result.
     """
+    arguments = [str(item) for item in options["run_args"]]
     if options["execute"] == "valgrind":
         command = [
             "valgrind",
@@ -408,9 +415,10 @@ def _execute(options):
             "--num-callers=20",
             "--child-silent-after-fork=yes",
             options["binary"],
+            *arguments,
         ]
     else:
-        command = [options["binary"]]
+        command = [options["binary"], *arguments]
     environment = dict(os.environ)
     # The sanitizer is *linked into* the binary by the frozen flags, so nothing is preloaded here.
     # Preloading a second copy is exactly the "incompatible ASan runtimes" abort, and it would turn a
@@ -442,7 +450,9 @@ def _execute(options):
         # The supervisor's own convention: a process killed by a signal is reported as 128+signal, not
         # as a negative returncode. Recording it the same way means a parser has one rule for "the
         # binary died" rather than two that disagree about the same crash.
-        "exit_code": 128 + (-returned.returncode) if returned.returncode < 0 else returned.returncode,
+        "exit_code": 128 + (-returned.returncode)
+        if returned.returncode < 0
+        else returned.returncode,
         "timed_out": False,
         "mode": options["execute"],
         "stdout_digest": "sha256:"

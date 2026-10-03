@@ -4,11 +4,11 @@
  "plan_id": "c.analysis.clang_tidy",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 2140,
+ "duration_ms": 1358,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "9e3e1ba0-9d53-49ed-a7e8-ac5464b4d970"
+ "sandbox_id": "fe2e6def-d935-4f37-bb9d-e1af445b692b"
 }

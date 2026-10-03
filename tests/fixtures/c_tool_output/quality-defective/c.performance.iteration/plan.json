@@ -2,8 +2,8 @@
  "schema_version": 1,
  "kind": "execution_plan",
  "plan_id": "c.performance.iteration",
- "image": "pcb-c-performance@sha256:cee211b0006709b238adeb2a579bb9466cf3c4e86398875decc33a221798d062",
- "image_digest": "sha256:cee211b0006709b238adeb2a579bb9466cf3c4e86398875decc33a221798d062",
+ "image": "pcb-c-performance@sha256:b836c4208407948951c2ca84c08174b502bc02cd9e8d5ab073621235adf3f2b9",
+ "image_digest": "sha256:b836c4208407948951c2ca84c08174b502bc02cd9e8d5ab073621235adf3f2b9",
  "argv": [
   "python",
   "-B",
@@ -32,6 +32,13 @@
   "performance",
   "--include",
   "work/include",
+  "--execute",
+  "plain",
+  "--run-deadline",
+  "57",
+  "--run-arg",
+  "{seed}",
+  "{scale}",
   "--source",
   "work/src/topwords.c",
   "--source",
@@ -54,7 +61,7 @@
    "kind": "plan_input",
    "path": "work/include/topwords.h",
    "role": "config",
-   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+   "digest": "sha256:05e584cfbcdcf3ffd684a72957dd502b0b824aee8f046277e9ae4f5af5a95851"
   },
   {
    "schema_version": 1,
@@ -135,9 +142,9 @@
   "kind": "tool_identity",
   "name": "clang",
   "version": "Debian clang version 14.0.6",
-  "image_digest": "sha256:cee211b0006709b238adeb2a579bb9466cf3c4e86398875decc33a221798d062",
+  "image_digest": "sha256:b836c4208407948951c2ca84c08174b502bc02cd9e8d5ab073621235adf3f2b9",
   "lock_digest": "sha256:0b2b3faa337e7b8bcabd59dcfe307a073d68903710101f82cc519e38169ee042",
-  "rule_bundle_digest": "sha256:a8676ea6ad959719cbe380542961a238c678720607e2fc2311772f1106b65675",
+  "rule_bundle_digest": "sha256:8541cfc393e5321ec005d71178da002ad492453bb74b931f5785e781a0eccce2",
   "advisory_snapshot_digest": null,
   "advisory_snapshot_state": "not_applicable",
   "parser_version": "pcb-c-parsers-1"

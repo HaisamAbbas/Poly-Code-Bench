@@ -4,11 +4,11 @@
  "plan_id": "c.analysis.valgrind.stress",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 6703,
+ "duration_ms": 4780,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "340ffda8-3933-4a35-b1e9-08a0e47c7746"
+ "sandbox_id": "552d6a64-7b3e-44cd-8a9f-8c111fd70e48"
 }

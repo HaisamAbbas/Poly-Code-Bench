@@ -2,8 +2,8 @@
  "schema_version": 1,
  "kind": "analysis_plan",
  "plan_id": "c.analysis.ubsan.stress",
- "image": "pcb-c-instrumented@sha256:6f810d457efb77d6291ae6170198a3e5ba07f5808df3bef622bdfca040a48886",
- "image_digest": "sha256:6f810d457efb77d6291ae6170198a3e5ba07f5808df3bef622bdfca040a48886",
+ "image": "pcb-c-instrumented@sha256:40c4a0dad790bd8f740ee9f8f5119bab7601ba4e0a5d3cc6227881144ef6957d",
+ "image_digest": "sha256:40c4a0dad790bd8f740ee9f8f5119bab7601ba4e0a5d3cc6227881144ef6957d",
  "argv": [
   "python",
   "-B",
@@ -63,7 +63,7 @@
    "kind": "plan_input",
    "path": "work/include/topwords.h",
    "role": "config",
-   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+   "digest": "sha256:05e584cfbcdcf3ffd684a72957dd502b0b824aee8f046277e9ae4f5af5a95851"
   },
   {
    "schema_version": 1,
@@ -145,9 +145,9 @@
   "kind": "tool_identity",
   "name": "clang",
   "version": "Debian clang version 14.0.6",
-  "image_digest": "sha256:6f810d457efb77d6291ae6170198a3e5ba07f5808df3bef622bdfca040a48886",
+  "image_digest": "sha256:40c4a0dad790bd8f740ee9f8f5119bab7601ba4e0a5d3cc6227881144ef6957d",
   "lock_digest": "sha256:3fcac260f625cd316d870f3f36f188955ad4f34e6f00488987d3314010536a3f",
-  "rule_bundle_digest": "sha256:a8676ea6ad959719cbe380542961a238c678720607e2fc2311772f1106b65675",
+  "rule_bundle_digest": "sha256:8541cfc393e5321ec005d71178da002ad492453bb74b931f5785e781a0eccce2",
   "advisory_snapshot_digest": null,
   "advisory_snapshot_state": "not_applicable",
   "parser_version": "pcb-c-parsers-1"

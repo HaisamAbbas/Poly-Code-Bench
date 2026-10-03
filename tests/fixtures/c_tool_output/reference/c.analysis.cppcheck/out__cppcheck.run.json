@@ -1,1 +1,1 @@
-{"command":["cppcheck","--quiet","--inline-suppr"],"duration_ms":217,"exit_code":0,"note":null,"schema":"pcb-c-run-v1","timed_out":false,"truncated":[]}
+{"command":["cppcheck","--inline-suppr","--enable=warning,style,performance,portability"],"duration_ms":32,"exit_code":0,"note":null,"schema":"pcb-c-run-v1","timed_out":false,"truncated":[]}

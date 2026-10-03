@@ -33,8 +33,8 @@ _SUMMARY = re.compile(
     r"Active|C-\w+)\b",
     re.IGNORECASE,
 )
-#: ``Checking src/topwords.c...`` - cppcheck's own statement that it read a file. The only evidence a
-#: cppcheck scan gives that it looked at anything at all.
+#: ``Checking src/topwords.c...`` - cppcheck's own statement that it read a file. The
+#: only evidence a cppcheck scan gives that it looked at anything at all.
 CHECKING = re.compile(r"^\s*(?:Checking|1/(\d+)) files?\s+(checked|skipped)\s+\((\d+)%\)")
 _SEVERITY_MAP = {
     "critical": "critical",
@@ -73,20 +73,45 @@ class Diagnostic:
         return self.message.lower().startswith("note:") or self.severity == "note"
 
 
+#: clang-tidy joins a module to its check with a hyphen (``clang-analyzer-security.insecureAPI``,
+#: ``cert-err34-c``, ``bugprone-unused-return-value``) while the profile spells the same id with a
+#: dot (``clang-analyzer.security.insecureapi``, ``cert.err34-c``). Left alone, the emitted id
+#: misses every reviewed mapping, the canonical family falls back to the raw tail (``strcpy``), and
+#: two tools reporting one unbounded copy file it under two different keys.
+#:
+#: Only the *first* hyphen after a known module is that boundary; hyphens inside the check name
+#: (``unused-return-value``) are part of the check itself. Anchoring to the enabled check set's
+#: module names keeps this from rewriting ids that merely look similar.
+_CLANG_TIDY_MODULE = re.compile(
+    r"^(clang-analyzer|bugprone|cert|performance|portability|modernize|misc|readability)-",
+    re.IGNORECASE,
+)
+
+
 def normalize_rule(rule: str | None, message: str) -> str | None:
     """The rule id a check is filed under.
 
-    ``-Wunused-variable`` becomes ``unused-variable``; a cppcheck ``[uninitvar]`` stays ``uninitvar``;
-    a compiler diagnostic with no flag falls back to the message's leading words so two identical
-    compiler errors at different sites still merge rather than becoming unique keys.
+    ``-Wunused-variable`` becomes ``unused-variable``; a cppcheck ``[uninitvar]`` stays
+    ``uninitvar``; a compiler diagnostic with no flag falls back to the message's leading words so
+    two identical compiler errors at different sites still merge rather than becoming unique keys.
+
+    clang-tidy joins a module to its check with a hyphen
+    (``clang-analyzer-security.insecureAPI.strcpy``), while the profile spells that same id with a
+    dot (``c.tidy.clang-analyzer.security.insecureapi.strcpy``). Left alone, the emitted id misses
+    every reviewed mapping, the canonical family silently falls back to the raw tail (``strcpy``),
+    and two tools reporting one unbounded copy file it under two different keys. This restores the
+    dot the profile uses.
     """
     if rule:
         cleaned = rule.strip()
         if cleaned.startswith("-W"):
             cleaned = cleaned[2:]
-        return re.sub(r"[^a-z0-9._-]+", "-", cleaned.lower()).strip("-.") or None
+        rule = _CLANG_TIDY_MODULE.sub(r"\1.", cleaned)
+        return re.sub(r"[^a-z0-9._-]+", "-", rule.lower()).strip("-.") or None
     lowered = message.lower()
-    named = re.match(r"^\s*(?:use of|incompatible|passing|unused|no member|call to)\b\s*([\w.']+)", lowered)
+    named = re.match(
+        r"^\s*(?:use of|incompatible|passing|unused|no member|call to)\b\s*([\w.']+)", lowered
+    )
     if named:
         return re.sub(r"[^a-z0-9._-]+", "-", named.group(1).strip("'"))[:60]
     return "compiler-diagnostic"
@@ -128,10 +153,11 @@ def parse_diagnostics(
 def checked_files(text: str) -> tuple[str, ...]:
     """Files cppcheck states it examined.
 
-    cppcheck 2.10 prints one ``Checking <path>...`` line per input and, on input it cannot parse,
-    prints *nothing* and still exits 0. A scan over uncompilable code is therefore indistinguishable from
-    a clean one unless the progress lines are kept - which is why the frozen argument vector does not
-    pass ``--quiet`` and why this function exists.
+    cppcheck 2.10 prints one ``Checking <path>...`` line per input and, on input it
+    cannot parse, prints *nothing* and still exits 0. A scan over uncompilable code is
+    therefore indistinguishable from a clean one unless the progress lines are kept -
+    which is why the frozen argument vector does not pass ``--quiet`` and why this
+    function exists.
     """
     found: list[str] = []
     for raw in text.splitlines():

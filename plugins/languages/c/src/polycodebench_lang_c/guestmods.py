@@ -1,6 +1,6 @@
 """Load a guest script by path so parsers and tests share one implementation.
 
-A guest script is plain stdlib source copied verbatim into the pinned images, executed there with the
+A guest script is plain stdlib source copied verbatim into the pinned images, executed there
 image's own interpreter. Importing the same file here means the classification logic that parses a
 recorded capture is literally the logic that would have run in the guest, not a second copy that can
 drift.

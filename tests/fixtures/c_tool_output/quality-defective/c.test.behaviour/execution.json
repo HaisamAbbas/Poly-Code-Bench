@@ -4,11 +4,11 @@
  "plan_id": "c.test.behaviour",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 2937,
+ "duration_ms": 561,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "2f152db6-2366-4def-b1e1-d3392859106b"
+ "sandbox_id": "8f4dbcc7-1d06-4cad-85a2-2256207f1566"
 }

@@ -4,11 +4,11 @@
  "plan_id": "c.test.stress",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 2125,
+ "duration_ms": 718,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "f6415a63-335d-4a73-a6f5-702e930b0fd7"
+ "sandbox_id": "e1074037-31de-4fbd-bf14-b030e20907b1"
 }

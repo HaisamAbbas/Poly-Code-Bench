@@ -1,1 +1,1 @@
-work/src/topwords.c:60:12: style: The scope of the variable 'length' can be reduced. [variableScope]
+work/src/topwords.c:76:12: style: The scope of the variable 'length' can be reduced. [variableScope]

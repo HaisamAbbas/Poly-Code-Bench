@@ -1,0 +1,525 @@
+{
+  "schema_version": 1,
+  "kind": "suite_admission_report",
+  "profile_id": "admission-v1",
+  "task_id": "conformance-c-top-words",
+  "task_version": 1,
+  "package_digest": "sha256:480aeda433e17a0c8b245ba01417823a4257577c059dc4363886b751a9e6d83d",
+  "plugin_id": "c",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:e31fc859d352997b0c2a35b2db70bec1871956b1aebc9ceef38811d84aa0021b",
+    "sha256:4600f8d03934c914add6708808b3e5c5874f85f4c919040763d8ba5007aac6af",
+    "sha256:5607877520e7af6f36bf7863e1e5e614b76416c1ca4803e267b42abc753c1918",
+    "sha256:b5653cc1572003cdeb062baf3a41d9f1b6814bd6070ecea60b50e82ee64869e2"
+  ],
+  "checks": [
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "baseline-warning-debt",
+      "status": "pass",
+      "detail": "baseline compiled=True errors=0 warnings measured=8 declared=8 clean_declared=False mode=warn set=standard"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "disclosure-scan",
+      "status": "pass",
+      "detail": "no hidden bytes/paths/digests or credentials in visible bundle"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "pinned-recipe",
+      "status": "pass",
+      "detail": "cc=Debian clang version 14.0.6; std=c17; instrumented=address_undefined; performance=none/-O2"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "rights-and-provenance",
+      "status": "pass",
+      "detail": "status=authored_fixture; license=CC0-1.0"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "safe-paths-and-snapshot",
+      "status": "pass",
+      "detail": "contained regular files, no links, no git metadata"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "strict-schema",
+      "status": "pass",
+      "detail": "manifest validated by the safe importer"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "visible-hidden-separation",
+      "status": "pass",
+      "detail": "physically separate archives; disclosure scan ran"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "plugin-task-validation",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-reference",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-faulty-ties",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-alternative-runs",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-quality-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-timeout-case",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-buffer-overflow",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-undefined-shift",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-resource-leak",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-compile-error",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "reference-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "five-reference-repetitions",
+      "status": "pass",
+      "detail": "five identical outcome inventories required"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "known-fault-rejection",
+      "status": "pass",
+      "detail": "faulty variants must fail their declared cases"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "alternative-solution-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "timeout-variants-rejected",
+      "status": "pass",
+      "detail": "timeouts are candidate failures, not harness errors"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-defect-detected",
+      "status": "pass",
+      "detail": "quality-defective variants pass the functional gate yet show their intended defect"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-quality-probe-outcomes",
+      "status": "pass",
+      "detail": "all declared quality-only probe outcomes matched"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "instrumented-lane-defect-detected",
+      "status": "pass",
+      "detail": "every declared lane reported its families"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "crash-and-build-fixtures-rejected",
+      "status": "pass",
+      "detail": "a crashing or unbuildable solution is a candidate failure, not a harness error"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-analyzer-compatibility",
+      "status": "pass",
+      "detail": "scans: [('c.asan.scan', 'measured'), ('c.clang_tidy.scan', 'measured'), ('c.cppcheck.scan', 'measured'), ('c.ubsan.scan', 'measured'), ('c.valgrind.scan', 'measured')]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "performance-workload-smoke",
+      "status": "pass",
+      "detail": "scale=5000 outputs=['out/perf.build.json', 'out/perf.err', 'out/perf.out', 'out/perf.run.json'] checksum=b'3742173761983623419'"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-opportunity-coverage",
+      "status": "pass",
+      "detail": "dimensions: code_quality,correctness,efficiency,idiomatic,robustness"
+    }
+  ],
+  "runs": [
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "reference",
+      "variant": "reference",
+      "repetitions": 5,
+      "gates": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0",
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0",
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0",
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0",
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0"
+      ],
+      "analyzer_scans": [
+        "c.asan.scan=measured",
+        "c.asan.scan=measured",
+        "c.clang_tidy.scan=measured",
+        "c.cppcheck.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.valgrind.scan=measured"
+      ],
+      "issue_families": [],
+      "durations_ms": [
+        891,
+        828,
+        827,
+        1093,
+        953,
+        985,
+        750,
+        750
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "faulty-ties",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "behaviour.non_letter_bytes_separate_words",
+        "behaviour.rank_words_sorts_in_place",
+        "behaviour.ties_break_alphabetically"
+      ],
+      "reasons": [
+        "fail:behaviour.ties_break_alphabetically:-",
+        "fail:behaviour.non_letter_bytes_separate_words:-",
+        "fail:behaviour.rank_words_sorts_in_place:-"
+      ],
+      "outcome_digests": [
+        "sha256:9bdf37c44d5090e39e8609fefab1f8c6371f9475ecfe864f9de96e824b703e8c"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        797,
+        1092,
+        1016,
+        1014
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "alternative-runs",
+      "variant": "alternative",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        889,
+        781,
+        858,
+        906
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "quality-defective",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0"
+      ],
+      "analyzer_scans": [
+        "c.asan.scan=measured",
+        "c.asan.scan=measured",
+        "c.clang_tidy.scan=measured",
+        "c.cppcheck.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.valgrind.scan=measured"
+      ],
+      "issue_families": [
+        "function",
+        "unbounded-copy",
+        "variable-scope"
+      ],
+      "durations_ms": [
+        828,
+        952,
+        1000,
+        1000
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "timeout-case",
+      "variant": "timeout",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        40750,
+        40813,
+        41045,
+        87390
+      ],
+      "quality_only_pass": false
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "buffer-overflow",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0"
+      ],
+      "analyzer_scans": [
+        "c.asan.scan=measured",
+        "c.asan.scan=measured",
+        "c.clang_tidy.scan=measured",
+        "c.cppcheck.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.valgrind.scan=measured"
+      ],
+      "issue_families": [
+        "bounds-violation",
+        "variable-scope"
+      ],
+      "durations_ms": [
+        1000,
+        812,
+        780,
+        735
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "undefined-shift",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0"
+      ],
+      "analyzer_scans": [
+        "c.asan.scan=measured",
+        "c.asan.scan=measured",
+        "c.clang_tidy.scan=measured",
+        "c.cppcheck.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.valgrind.scan=measured"
+      ],
+      "issue_families": [
+        "redundantcontinue",
+        "shift-out-of-range",
+        "variable-scope"
+      ],
+      "durations_ms": [
+        766,
+        593,
+        608,
+        608
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "resource-leak",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:a3a3060752c14ec476dd4b8fffcbe0289c3dae0cabc29831d39260abb53d5ea0"
+      ],
+      "analyzer_scans": [
+        "c.asan.scan=measured",
+        "c.asan.scan=measured",
+        "c.clang_tidy.scan=measured",
+        "c.cppcheck.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.ubsan.scan=measured",
+        "c.valgrind.scan=measured"
+      ],
+      "issue_families": [
+        "compiler-diagnostic",
+        "resource-leak",
+        "variable-scope"
+      ],
+      "durations_ms": [
+        1233,
+        671,
+        891,
+        687
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "compile-error",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "build:work/src/topwords.c:19: unknown type name 'this'"
+      ],
+      "outcome_digests": [],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        483
+      ],
+      "quality_only_pass": null
+    }
+  ],
+  "executable_admission_passed": true,
+  "pending_gates": [
+    "generic-evaluator-stage-integration (Prompt 12)",
+    "performance-baseline-canary-and-paired-measurement (Prompt 13)",
+    "judge-anchors-and-human-calibration (Prompt 14)",
+    "deterministic-scoring-replay-and-golden-calculations (Prompt 15)",
+    "production-worker-execution-tier (Prompt 06 owner-deferred)",
+    "curator-approval-and-task-freeze",
+    "owner-rights-confirmation"
+  ],
+  "quality_admission": "pending",
+  "report_digest": "sha256:bd0cef3b6966b583a76bb010306b5bad44945197eaf16a9cce107ce63d345d0b"
+}

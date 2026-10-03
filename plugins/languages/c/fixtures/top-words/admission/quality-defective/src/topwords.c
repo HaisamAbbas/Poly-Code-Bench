@@ -81,7 +81,17 @@ size_t count_words(const char *text, struct word_count *out, size_t limit)
     if (limit > MAGIC_LIMIT) {
         limit = MAGIC_LIMIT;
     }
-    /* DEFECT: the allocation result is never checked. */
+    /* DEFECT (unbounded-copy, confirmed by clang-analyzer-security.insecureAPI.strcpy): the
+       word is copied with strcpy into a fixed-size member, so a longer word overruns it. Both
+       sanitizers stay clean for the acceptance inputs, which is the point: the quality lane must
+       see a defect that a passing functional gate cannot.
+
+       The unchecked malloc below is deliberately left in place as realistic surrounding code; it
+       is NOT declared as a detected family, because no check in the pinned toolchain reports an
+       unchecked allocation (cert-err33-c, cert-err34-c, bugprone-unused-return-value and
+       clang-analyzer-security.insecureAPI.UncheckedReturn were all probed against it and all
+       produced no finding). Declaring a family the toolchain cannot see would be a fixture that
+       asserts evidence the harness cannot produce. */
     capacity = word_total(text) + 1;
     entries = malloc(sizeof(struct word_count) * capacity);
     memset(entries, 0, sizeof(struct word_count) * capacity);

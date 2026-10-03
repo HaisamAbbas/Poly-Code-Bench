@@ -3,7 +3,7 @@
 C has no declaration syntax a parser can lean on: a function definition, a prototype, a struct tag
 and a variable declaration share most of their punctuation. This index is therefore deliberately
 shallow - functions, prototypes, struct tags and file-scope variables - and it reports a file it
-could not balance as unparsed rather than guessing. A wrong symbol index is worse than an absent one,
+could not balance as unparsed rather than guessing. A wrong symbol index is worse than an
 because the annotation/judge packets are built from it.
 """
 
@@ -25,7 +25,9 @@ _FUNCTION = re.compile(
     r"(?P<signature>^[A-Za-z_][\w \t\*]*?\b(?P<name>[A-Za-z_]\w*)\s*\((?P<params>[^;{)]*)\)\s*\{)",
     re.MULTILINE,
 )
-_STORAGE = r"(?:static|extern|inline|const|unsigned|signed|register|_Noreturn|_Thread_local|_Atomic)"
+_STORAGE = (
+    r"(?:static|extern|inline|const|unsigned|signed|register|_Noreturn|_Thread_local|_Atomic)"
+)
 _PARAMETERS = r"(?:void|[A-Za-z_][\w \t\*]*?(?:\[[^\]]*\])?(?:\s*,\s*)?)*"
 _FORWARD = re.compile(
     r"^[A-Za-z_][\w \t\*]*?\b(?P<name>[A-Za-z_]\w*)\s*\((?P<params>[^;{)]*)\)\s*;",
@@ -85,7 +87,7 @@ _RESERVED = frozenset(
 def blank(source: str, *, strings: bool) -> str:
     """Blank out comments, preprocessor lines and optionally string literals, keeping every offset.
 
-    Offsets are preserved on purpose: every rule below indexes into the *original* text so a reported
+    Offsets are preserved on purpose: every rule below indexes into the *original* text so a
     line number is the line a reviewer will open. Replacing content with spaces rather than deleting
     it keeps every byte offset identical.
 
@@ -145,7 +147,7 @@ def _is_declaration(specifiers: str, type_name: str) -> bool:
     return not specifiers.strip()
 
 
-def index_c_sources(source: ArtifactReader) -> "SymbolIndex":
+def index_c_sources(source: ArtifactReader) -> SymbolIndex:
     """Index every readable C source and header the reader offers."""
     symbols: list[Symbol] = []
     unparsed: list[str] = []

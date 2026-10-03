@@ -53,7 +53,7 @@ _DIMENSIONS: dict[str, tuple[ScoreDimension, ...]] = {
 }
 _STATIC_ANALYZERS = ("clang_tidy", "cppcheck")
 _DYNAMIC_ANALYZERS = ("asan", "ubsan", "valgrind")
-#: Recipes each analyzer is allowed to run in. A lane that cannot claim the recipe it needs is refused
+#: Recipes each analyzer is allowed to run in. A lane that cannot claim the recipe it needs is
 #: at plan time rather than reported as a clean scan.
 _RECIPE_OF = {
     "clang_tidy": "evaluator",
@@ -94,11 +94,13 @@ class CAnalyzer:
     def plan(self, context: AnalysisContext) -> AnalysisPlan:
         for candidate in plans.analysis_plans(self._identities, context):
             if candidate.analyzer_id == self.analyzer_id:
-                if candidate.image_digest != self._identities.record(
-                    _RECIPE_OF[self.analyzer_id]
-                ).digest:
+                if (
+                    candidate.image_digest
+                    != self._identities.record(_RECIPE_OF[self.analyzer_id]).digest
+                ):
                     raise ValueError(
-                        f"analyzer {self.analyzer_id!r} would run in a recipe that cannot support it"
+                        f"analyzer {self.analyzer_id!r} would run in a recipe that "
+                        "cannot support it"
                     )
                 return candidate
         raise ValueError(f"analyzer {self.analyzer_id!r} does not apply to this task")
@@ -228,7 +230,10 @@ class CLanguagePlugin:
             if document.get("blocked_by_warnings"):
                 # The frozen policy says a warning is a build failure. That is reported as a build
                 # failure with the warning named, never as an unexplained "incomplete".
-                return "fail", f"warnings are errors under this task's policy: {first_warning(document)}"
+                return (
+                    "fail",
+                    f"warnings are errors under this task's policy: {first_warning(document)}",
+                )
             return "fail", "the translation units did not link"
         return "pass", "every required output compiles under the frozen recipe"
 
@@ -263,9 +268,7 @@ class CLanguagePlugin:
     def language_profile(self) -> CProfile:
         return self._profile
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """C tasks use fixed harness cases, with no generated property-test engine."""
         del task, raw
         return PropertyEngineIdentity(

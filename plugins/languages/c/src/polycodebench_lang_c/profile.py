@@ -1,7 +1,8 @@
 """The C diagnostic and idiom profiles: loading, normalisation and evaluation.
 
 C's specificity against Rust's profile is the *dynamic* lane. A sanitizer finding is a fact about
-executed paths, not a guess about intent, so it counts directly - but only when the lane actually ran.
+executed paths, not a guess about intent, so it counts directly - but only when the lane
+actually ran.
 A missing, crashed, unsupported or timed-out lane makes the item ``missing``, never perfect, and a
 lane declared ``unsupported`` makes it ``not_applicable`` rather than penalising a task the tool
 cannot judge.
@@ -9,8 +10,8 @@ cannot judge.
 Two other rules are inherited from the shared contract and are what keep C honest:
 
 * counts are per *canonical issue*, so two analyzers reporting one unchecked ``malloc`` count once;
-* a construct's presence is not a violation. ``free`` is correct somewhere and a leak somewhere else,
-  and only a leak is evidence.
+* a construct's presence is not a violation. ``free`` is correct somewhere and a leak
+  somewhere else, and only a leak is evidence.
 """
 
 from __future__ import annotations
@@ -90,7 +91,7 @@ def _repo_root() -> Path:
 
 
 @lru_cache(maxsize=2)
-def load_profile(root: str | None = None) -> "CProfile":
+def load_profile(root: str | None = None) -> CProfile:
     base = Path(root) if root else _repo_root()
     weights = yaml.safe_load((base / "config/languages/profiles-v1.yaml").read_text("utf-8"))
     own = yaml.safe_load((base / "config/languages/c-profile-v1.yaml").read_text("utf-8"))
@@ -159,8 +160,8 @@ class CProfile:
         """Merge duplicate reports of one canonical issue.
 
         A sanitizer finding is precise and wins outright. Otherwise the strongest measured report
-        wins, and a ``needs_review`` report from the same site is dropped rather than kept alongside a
-        measured one that already decided the question.
+        wins, and a ``needs_review`` report from the same site is dropped rather than kept
+        alongside a measured one that already decided the question.
         """
         keyed: dict[str, list[Observation]] = {}
         passthrough: list[Observation] = []

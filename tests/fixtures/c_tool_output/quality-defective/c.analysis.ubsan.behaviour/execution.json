@@ -4,11 +4,11 @@
  "plan_id": "c.analysis.ubsan.behaviour",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 2766,
+ "duration_ms": 2046,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "68ef2d03-0f26-47e9-9cf3-ba3532f9f1d4"
+ "sandbox_id": "50fc6805-df52-4ca2-8378-73921ea806f2"
 }

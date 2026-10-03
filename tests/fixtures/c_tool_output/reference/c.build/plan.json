@@ -2,8 +2,8 @@
  "schema_version": 1,
  "kind": "build_plan",
  "plan_id": "c.build",
- "image": "pcb-c-runtime@sha256:bf1051fbfc927ecd6f686cb7eafbcb4a3fe81a928d63d8e3bcbbfc68d36e28dd",
- "image_digest": "sha256:bf1051fbfc927ecd6f686cb7eafbcb4a3fe81a928d63d8e3bcbbfc68d36e28dd",
+ "image": "pcb-c-runtime@sha256:b9910e8f012a2895e54d4729d2a81058320b2ffc45eb890facd1b39f652a4764",
+ "image_digest": "sha256:b9910e8f012a2895e54d4729d2a81058320b2ffc45eb890facd1b39f652a4764",
  "argv": [
   "python",
   "-B",
@@ -53,7 +53,7 @@
    "kind": "plan_input",
    "path": "work/include/topwords.h",
    "role": "config",
-   "digest": "sha256:bca21b78620ac8da5c03bd41b9fecb793c3c37ecf94f5fb6275820aec8e69e5d"
+   "digest": "sha256:05e584cfbcdcf3ffd684a72957dd502b0b824aee8f046277e9ae4f5af5a95851"
   }
  ],
  "outputs": [
@@ -127,9 +127,9 @@
   "kind": "tool_identity",
   "name": "clang",
   "version": "Debian clang version 14.0.6",
-  "image_digest": "sha256:bf1051fbfc927ecd6f686cb7eafbcb4a3fe81a928d63d8e3bcbbfc68d36e28dd",
+  "image_digest": "sha256:b9910e8f012a2895e54d4729d2a81058320b2ffc45eb890facd1b39f652a4764",
   "lock_digest": "sha256:4b00134077a27979c8b15ce8e3180b94c32dd18ca2a75f24e70fabfec7a5d6b9",
-  "rule_bundle_digest": "sha256:a8676ea6ad959719cbe380542961a238c678720607e2fc2311772f1106b65675",
+  "rule_bundle_digest": "sha256:8541cfc393e5321ec005d71178da002ad492453bb74b931f5785e781a0eccce2",
   "advisory_snapshot_digest": null,
   "advisory_snapshot_state": "not_applicable",
   "parser_version": "pcb-c-parsers-1"

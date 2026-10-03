@@ -4,11 +4,11 @@
  "plan_id": "c.analysis.asan.behaviour",
  "exit_code": 0,
  "timed_out": false,
- "duration_ms": 4125,
+ "duration_ms": 875,
  "stdout_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stderr_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  "stdout_tail": "",
  "stderr_tail": "",
  "isolation_tier": "development",
- "sandbox_id": "5515eee9-9b26-4062-8ed1-bcaddbf1c405"
+ "sandbox_id": "101e49c1-0dc9-4491-a0f4-653fe0cf3262"
 }

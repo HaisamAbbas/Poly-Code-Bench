@@ -42,11 +42,11 @@ rights:
 runtime:
   schema_version: 1
   kind: task_runtime
-  image_digest: sha256:9ad2d668d3acaef2c6f33cdbfdaf1770890ca604b545665f1104f3681127c74c
+  image_digest: sha256:e31fc859d352997b0c2a35b2db70bec1871956b1aebc9ceef38811d84aa0021b
   language_plugin_id: c
   language_plugin_version: 0.1.0
-  build_recipe_digest: sha256:1045810db7ba0e27616b2c66c05b9255a4bc613f9681ef5aa0613214a376a1c5
-  test_recipe_digest: sha256:e297682d0ba8f2eef668bceadb8d23c691df60d66213153e237c9900aef6c496
+  build_recipe_digest: sha256:4edc4820673fb3cd197f21edfb3888d014bafd2fba69f3d68c216a60b881b96c
+  test_recipe_digest: sha256:8279d46f86e813934b9e781ce01646f6b61d651951ff7ddc2aeb8864e3c1b75d
   resource_class: local-development-small
 acceptance:
   schema_version: 1
@@ -136,7 +136,6 @@ fixtures:
   solution_path: admission/quality-defective/src/topwords.c
   expectation:
     expected_issue_families:
-    - unchecked-return-value
     - unbounded-copy
 - name: timeout-case
   variant: timeout

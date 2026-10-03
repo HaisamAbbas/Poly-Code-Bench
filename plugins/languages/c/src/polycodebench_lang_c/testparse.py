@@ -25,7 +25,8 @@ from polycodebench_lang_c.guestmods import load_guest
 
 _RANK = {"pass": 0, "skipped": 1, "fail": 2, "error": 3}
 _ERROR_AT = re.compile(
-    r"^(?P<path>[^:\n]+):(?P<line>\d+)(?::(?P<column>\d+))?:\s*(?:fatal error|error):\s*(?P<msg>.+)$",
+    r"^(?P<path>[^:\n]+):(?P<line>\d+)(?::(?P<column>\d+))?:\s*"
+    r"(?:fatal error|error):\s*(?P<msg>.+)$",
     re.MULTILINE,
 )
 _NOISE = ("warning:", "note:", "-W")
@@ -109,16 +110,22 @@ def parse_group_report(
     run = _run_record(raw, name)
     if run is None:
         return [], control("harness_failure", "no runner record")
-    text = raw.read(f"out/{name}.out").decode("utf-8", errors="replace") if f"out/{name}.out" in set(raw.list()) else ""
-    merge = raw.read(f"out/{name}.err").decode("utf-8", errors="replace") if f"out/{name}.err" in set(raw.list()) else ""
+    text = (
+        raw.read(f"out/{name}.out").decode("utf-8", errors="replace")
+        if f"out/{name}.out" in set(raw.list())
+        else ""
+    )
+    merge = (
+        raw.read(f"out/{name}.err").decode("utf-8", errors="replace")
+        if f"out/{name}.err" in set(raw.list())
+        else ""
+    )
     combined = text + ("\n" + merge if merge else "")
     program_exit, program_timed_out = _program_exit(raw, name, run)
     timed_out = bool(program_timed_out) or status == "timed_out"
 
     report = load_guest("pcb_c_test_report")
-    document = report.summarize(
-        text, program_exit, timed_out, name, merge or None
-    )
+    document = report.summarize(text, program_exit, timed_out, name, merge or None)
     known = {case.case_id for case in inventory.cases}
     required = {case.case_id: case.required for case in inventory.cases}
     cases: dict[str, TestCaseRecord] = {}
@@ -166,12 +173,13 @@ def parse_group_report(
         )
     candidate_sites, harness_sites = candidate_error_sites(combined, candidate_paths or set())
     if document["declared_cases"] is None:
-        # The binary produced no harness stream at all. A crash has already been caught above; what is
-        # left is either a build that never linked or a harness that could not start.
+        # The binary produced no harness stream at all. A crash has already been caught
+        # above; what is left is either a build that never linked or a harness that
+        # could not start.
         build = _build_record(raw, name)
         if build is not None and not build.get("linked", False):
-            # The compile driver recorded why, and that is a candidate-attributable error rather than
-            # an unexplained absence of evidence.
+            # The compile driver recorded why, and that is a candidate-attributable
+            # error rather than an unexplained absence of evidence.
             return ordered, control(
                 "finished",
                 "",

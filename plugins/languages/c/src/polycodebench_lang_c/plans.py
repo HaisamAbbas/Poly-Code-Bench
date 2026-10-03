@@ -4,13 +4,16 @@ Every plan runs through a Python guest driver rather than a shell:
 
 * ``pcb_c_build.py`` compiles and links one target, normalizes the compiler's diagnostics, and
   optionally runs the binary (plain, or under Valgrind);
-* ``pcb_c_run.py`` wraps any command with capture, an in-guest deadline and build-directory cleanup;
-* the analyzer plans invoke ``clang-tidy`` / ``cppcheck`` directly, with their frozen configurations.
+* ``pcb_c_run.py`` wraps any command with capture, an in-guest deadline and build-directory
+  cleanup;
+* the analyzer plans invoke ``clang-tidy`` / ``cppcheck`` directly, with their frozen
+  configurations.
 
-Sources live under ``work/`` so candidate files, trusted scaffolding (headers and the test harness)
-and hidden test groups are separate, role-checked inputs. The one rule the C toolchain does not let
-be implicit is *which flags* ran: every plan records its ``flags_digest`` in the tool identity, so a
-warning from a different flag set is not comparable evidence.
+Sources live under ``work/`` so candidate files, trusted scaffolding (headers and the test
+harness) and hidden test groups are separate, role-checked inputs. The one rule the C
+toolchain does not let be implicit is *which flags* ran: every plan records its
+``flags_digest`` in the tool identity, so a warning from a different flag set is not
+comparable evidence.
 """
 
 from __future__ import annotations
@@ -113,10 +116,10 @@ def _run(name: str, deadline: int, *command: str, merge: bool = False) -> tuple[
 def _captured(name: str, stdout_format: Literal["json", "jsonl", "text"]) -> tuple[PlanOutput, ...]:
     """The three files every plan produces.
 
-    ``.out`` is the *report*: it is required, because a plan whose output did not arrive is missing
-    evidence and has to be reported as missing rather than read as a clean scan. ``.err`` is
-    supplementary - with ``--merge`` the sanitizers' own text lands in ``.out`` - so its absence is not
-    a failure.
+    ``.out`` is the *report*: it is required, because a plan whose output did not arrive
+    is missing evidence and has to be reported as missing rather than read as a clean scan.
+    ``.err`` is supplementary - with ``--merge`` the sanitizers' own text lands in ``.out``
+    - so its absence is not a failure.
     """
     return (
         PlanOutput(path=f"out/{name}.out", format=stdout_format, required=True, max_bytes=4 * MIB),
@@ -186,6 +189,7 @@ def _build_argv(
     execute: str | None = None,
     deadline: int = 30,
     archive: bool = False,
+    run_args: tuple[str, ...] = (),
 ) -> tuple[str, ...]:
     argv = [
         "python",
@@ -214,6 +218,11 @@ def _build_argv(
         argv.append("--archive")
     if execute is not None:
         argv.extend(("--execute", execute, "--run-deadline", str(deadline)))
+        if run_args:
+            # One ``--run-arg`` per value: the guest's parser is a repeating-flag walk, so
+            # ``("--run-arg", *run_args)`` would hand the second argument to the parser as a bare
+            # positional and it would exit 2 before building anything.
+            argv.extend(part for argument in run_args for part in ("--run-arg", argument))
     for include in extra_includes:
         argv.extend(("--object-include", include))
     for source in sources:
@@ -224,14 +233,15 @@ def _build_argv(
 def build_plan(ids: ImageIdentities, task: FrozenTask, candidate: Candidate) -> BuildPlan:
     """Compile every required output into an archive, with the task's frozen warning policy.
 
-    The product is an archive rather than an executable because C has no library object to link: the
-    point of this lane is that every required output *compiles* under the frozen flags, and the
-    test lanes are what decide whether it works.
+    The product is an archive rather than an executable because C has no library object to
+    link: the point of this lane is that every required output *compiles* under the frozen
+    flags, and the test lanes are what decide whether it works.
 
     ``-Werror`` is only present when the package proved the baseline clean under the same flags.
-    That is the whole answer to "a blanket -Werror must not silently invalidate an otherwise
-    admitted legacy task": the stronger policy is opt-in and its precondition is checked twice - once
-    when the task is admitted and again here, so a hand-written quality block cannot skip it.
+    That is the whole answer to "a blanket -Werror must not silently invalidate an
+    otherwise admitted legacy task": the stronger policy is opt-in and its precondition is
+    checked twice - once when the task is admitted and again here, so a hand-written
+    quality block cannot skip it.
     """
     paths = tuple(p for p in task.required_outputs if p.endswith(".c"))
     if not paths:
@@ -262,9 +272,7 @@ def build_plan(ids: ImageIdentities, task: FrozenTask, candidate: Candidate) -> 
         ),
         scope=paths,
         timeout=100,
-        semantics=ExitSemantics(
-            success=(BUILD_OK,), findings=BUILD_FINDINGS, error=TOOL_ERRORS
-        ),
+        semantics=ExitSemantics(success=(BUILD_OK,), findings=BUILD_FINDINGS, error=TOOL_ERRORS),
         recipe="runtime",
     )
     return BuildPlan(**fields)  # type: ignore[arg-type]
@@ -323,9 +331,10 @@ def make_test_plan(ids: ImageIdentities, task: FrozenTask) -> TestPlan:
             timeout=timeout,
             semantics=ExitSemantics(
                 success=(BUILD_OK,),
-                # 1 is ambiguous on purpose and is resolved by reading the records, never the status:
-                # a failed case and a warnings-as-errors build are both the candidate's fault, and
-                # the build document plus the harness stream say which happened.
+                # 1 is ambiguous on purpose and is resolved by reading the records, never
+                # the status: a failed case and a warnings-as-errors build are both the
+                # candidate's fault, and the build document plus the harness stream say
+                # which happened.
                 findings=(1, *BUILD_FINDINGS),
                 error=TOOL_ERRORS,
             ),
@@ -491,8 +500,9 @@ def _lane_groups(
             )
         )
     if not entries:
-        # A lane that names no existing group would silently produce no evidence. One empty entry keeps
-        # the lane visible as a plan that fails, which is a better answer than a lane that vanishes.
+        # A lane that names no existing group would silently produce no evidence. One empty
+        # entry keeps the lane visible as a plan that fails, which is a better answer than a
+        # lane that vanishes.
         entries.append(("", (), ()))
     return entries
 
@@ -500,21 +510,22 @@ def _lane_groups(
 def _dynamic_plans(ids: ImageIdentities, context: AnalysisContext) -> list[AnalysisPlan]:
     """Sanitizer and Valgrind lanes: one plan per (lane, oracle group), each in its own recipe.
 
-    One plan per group rather than one per lane is forced by C, and the forcing is informative: every
-    oracle group file carries its own ``main``, so a lane that named two groups could only be run as
-    two programs. Building them separately is also what makes the evidence better - each group gets its
-    own sanitizer report, so a defect in the acceptance group and a defect in the quality-only group
-    are separate findings instead of whichever one aborted first.
+    One plan per group rather than one per lane is forced by C, and the forcing is
+    informative: every oracle group file carries its own ``main``, so a lane that named two
+    groups could only be run as two programs. Building them separately is also what makes
+    the evidence better - each group gets its own sanitizer report, so a defect in the
+    acceptance group and a defect in the quality-only group are separate findings instead
+    of whichever one aborted first.
 
     The *analyzer id* is the tool (``asan``, ``ubsan``, ``valgrind``) so it matches the frozen
-    ``required_analyzers`` list; the *lane* is the capability being judged, and it is what the report
-    document is keyed by. Conflating the two would make it impossible to require memcheck without also
-    demanding a sanitizer that cannot judge the task.
+    ``required_analyzers`` list; the *lane* is the capability being judged, and it is what
+    the report document is keyed by. Conflating the two would make it impossible to require
+    memcheck without also demanding a sanitizer that cannot judge the task.
 
-    The sanitizer lanes build *and* run in the ``instrumented`` image, so the flags and the runtime
-    cannot disagree. Valgrind builds in ``runtime`` and runs under memcheck: Valgrind is an observer,
-    not a compiler flag, so instrumenting the binary as well would only add cost without adding
-    coverage. Neither image is ever reachable from a performance plan.
+    The sanitizer lanes build *and* run in the ``instrumented`` image, so the flags and the
+    runtime cannot disagree. Valgrind builds in ``runtime`` and runs under memcheck: Valgrind
+    is an observer, not a compiler flag, so instrumenting the binary as well would only add
+    cost without adding coverage. Neither image is ever reachable from a performance plan.
     """
     task = context.task
     quality = quality_from_mapping(task.quality)
@@ -644,14 +655,18 @@ def performance_plan(ids: ImageIdentities, task: FrozenTask) -> PerformancePlan 
                         *(f"work/{p}" for p in task.required_outputs if p.endswith(".c")),
                         f"work/{declared.workload_file}",
                     ),
+                    # Without this the iteration only *built* the workload and captured an empty
+                    # stdout, so the admission smoke had nothing to read and could never pass. The
+                    # performance lane measures executed work, so the workload has to actually run.
+                    execute="plain",
+                    deadline=timeout - RUNNER_MARGIN,
+                    run_args=("{seed}", "{scale}"),
                 ),
             ),
             tool=ids.tool("clang", recipe="performance", flags_digest=recipe.flags_digest()),
             parser_id="c-perf",
             inputs=(
-                *_candidate_inputs(
-                    tuple(p for p in task.required_outputs if p.endswith(".c"))
-                ),
+                *_candidate_inputs(tuple(p for p in task.required_outputs if p.endswith(".c"))),
                 *_scaffold_inputs(quality.scaffold_files),
                 PlanInput(path=f"work/{declared.workload_file}", role="overlay"),
             ),

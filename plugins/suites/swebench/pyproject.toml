@@ -1,0 +1,24 @@
+[project]
+name = "polycodebench-suites-swebench"
+version = "0.1.0"
+description = "PolyCodeBench SWE-bench-style repository-repair suite adapter (Prompt 24)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "polycodebench-plugins-api==0.1.0",
+  "polycodebench-runner==0.1.0",
+  "swebench==5.0.2",
+  "PyYAML==6.0.3",
+]
+
+[project.entry-points."polycodebench.suite_adapters"]
+swebench = "polycodebench_suites_swebench.adapter:SweBenchStyleSuiteAdapter"
+
+[tool.uv.sources]
+polycodebench-core = { workspace = true }
+polycodebench-plugins-api = { workspace = true }
+polycodebench-runner = { workspace = true }
+
+[build-system]
+requires = ["uv_build==0.12.15"]
+build-backend = "uv_build"

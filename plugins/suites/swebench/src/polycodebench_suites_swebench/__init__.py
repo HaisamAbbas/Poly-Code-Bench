@@ -1,0 +1,98 @@
+"""SWE-bench-style repository-repair suite adapter (Prompt 24, WP-20 part 1).
+
+The adapter imports versioned native task records, validates their methodology label against the
+deviations register, wraps the pinned upstream evaluator for the native metric, and grades through
+a protected overlay that binds every result to one frozen candidate.
+"""
+
+from polycodebench_suites_swebench.adapter import (
+    FamilyProtocol,
+    NativeMetricExport,
+    SourceManifest,
+    SuiteImportError,
+    SweBenchStyleSuiteAdapter,
+    ValidationReport,
+    suite_package_digest,
+    test_spec_for,
+)
+from polycodebench_suites_swebench.grading import (
+    PINNED_EVALUATOR_PACKAGE,
+    PINNED_EVALUATOR_REVISION,
+    UpstreamEvaluatorUnavailable,
+    UpstreamRevisionMismatch,
+    UpstreamRunCache,
+    evaluator_digest,
+    grade_log_bytes,
+    native_grade,
+    run_identity,
+    upstream_grading,
+    upstream_revision,
+)
+from polycodebench_suites_swebench.overlay import (
+    GradingOutcome,
+    GradingWorkspaceError,
+    build_candidate_workspace,
+    candidate_digest_of,
+    grade_native_candidate,
+    overlay_frozen_tests,
+)
+from polycodebench_suites_swebench.records import (
+    FAIL_TO_FAIL,
+    FAIL_TO_PASS,
+    PASS_TO_FAIL,
+    PASS_TO_PASS,
+    MethodologyRecord,
+    NativeGradeResult,
+    NativeRecordError,
+    NativeTaskDraft,
+    NativeTaskInstance,
+    NativeTestSpec,
+    check_instance_leakage,
+    enforce_patch_paths,
+    graded_test_modules,
+    instance_digest,
+    normalize_native_lists,
+)
+
+__all__ = [
+    "FAIL_TO_FAIL",
+    "FAIL_TO_PASS",
+    "PASS_TO_FAIL",
+    "PASS_TO_PASS",
+    "PINNED_EVALUATOR_PACKAGE",
+    "PINNED_EVALUATOR_REVISION",
+    "FamilyProtocol",
+    "GradingOutcome",
+    "GradingWorkspaceError",
+    "MethodologyRecord",
+    "NativeGradeResult",
+    "NativeMetricExport",
+    "NativeRecordError",
+    "NativeTaskDraft",
+    "NativeTaskInstance",
+    "NativeTestSpec",
+    "SourceManifest",
+    "SuiteImportError",
+    "SweBenchStyleSuiteAdapter",
+    "UpstreamEvaluatorUnavailable",
+    "UpstreamRevisionMismatch",
+    "UpstreamRunCache",
+    "ValidationReport",
+    "build_candidate_workspace",
+    "candidate_digest_of",
+    "check_instance_leakage",
+    "enforce_patch_paths",
+    "evaluator_digest",
+    "grade_log_bytes",
+    "grade_native_candidate",
+    "graded_test_modules",
+    "instance_digest",
+    "native_grade",
+    "normalize_native_lists",
+    "overlay_frozen_tests",
+    "run_identity",
+    "suite_package_digest",
+    "test_spec_for",
+    "upstream_grading",
+    "upstream_revision",
+]

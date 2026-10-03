@@ -1,0 +1,5 @@
+{
+  "violations": [
+    "migration history has branches; merge before release"
+  ]
+}

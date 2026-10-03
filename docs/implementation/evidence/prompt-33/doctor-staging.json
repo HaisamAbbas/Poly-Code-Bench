@@ -1,0 +1,45 @@
+{
+  "checks": {
+    "identity": "requires a verified AWS principal: run `pcb-ops identity verify` inside the service",
+    "migrations_expand_only": [
+      "migration history has branches; merge before release"
+    ],
+    "separation": "pass"
+  },
+  "deployable": false,
+  "environment": "staging",
+  "isolation_tier": "production",
+  "manifest": "config\\environments\\staging.yaml",
+  "status": "template",
+  "unresolved_inputs": [
+    "identity.account_id",
+    "identity.region",
+    "identity.service_roles.api",
+    "identity.service_roles.scheduler",
+    "identity.service_roles.model-gateway",
+    "identity.service_roles.judge-gateway",
+    "identity.service_roles.solve-supervisor",
+    "identity.service_roles.eval-supervisor",
+    "identity.service_roles.scorer",
+    "identity.service_roles.publisher",
+    "identity.service_roles.web",
+    "identity.service_roles.migrator",
+    "identity.service_roles.ops-reaper",
+    "identity.service_roles.admission-operator",
+    "identity.service_roles.restore-operator",
+    "identity.operator_roles.oncall-operator",
+    "identity.operator_roles.release-approver",
+    "object_store.endpoint",
+    "object_store.bucket_hidden",
+    "object_store.bucket_internal",
+    "object_store.bucket_public",
+    "sandbox.approved_vm_image",
+    "sandbox.launch_templates.solve",
+    "sandbox.launch_templates.grading",
+    "sandbox.launch_templates.admission",
+    "sandbox.launch_templates.performance",
+    "sandbox.lane_subnets.solve",
+    "sandbox.lane_subnets.grading",
+    "sandbox.lane_subnets.admission"
+  ]
+}

@@ -1,0 +1,522 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-10-03T22:31:39.696107838Z",
+  "ArtifactName": "/infra/terraform",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "environments/production",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 102,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "environments/staging",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 102,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "modules/control_services/main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AVD-AWS-0053",
+          "AVDID": "AVD-AWS-0053",
+          "Title": "Load balancer is exposed to the internet.",
+          "Description": "There are many scenarios in which you would want to expose a load balancer to the wider internet, but this check exists as a warning to prevent accidental exposure of internal assets. You should ensure that this resource should be exposed publicly.\n",
+          "Message": "Load balancer is exposed publicly.",
+          "Namespace": "builtin.aws.elb.aws0053",
+          "Query": "data.builtin.aws.elb.aws0053.deny",
+          "Resolution": "Switch to an internal load balancer or add a tfsec ignore",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/avd-aws-0053",
+          "References": [
+            "https://avd.aquasec.com/misconfig/avd-aws-0053"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.stack",
+            "Provider": "AWS",
+            "Service": "elb",
+            "StartLine": 81,
+            "EndLine": 81,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 78,
+                  "Content": "resource \"aws_lb\" \"public\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_lb\"\u001b[0m \u001b[38;5;37m\"public\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 79,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 81,
+                  "Content": "  internal                   = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245minternal\u001b[0m                   = \u001b[38;5;166mfalse",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 91,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 92,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "aws_lb.public",
+                "Filename": "modules/control_services/main.tf",
+                "Location": {
+                  "StartLine": 78,
+                  "EndLine": 92
+                }
+              },
+              {
+                "Resource": "module.control_services",
+                "Filename": "modules/stack/main.tf",
+                "Location": {
+                  "StartLine": 132,
+                  "EndLine": 150
+                }
+              },
+              {
+                "Resource": "module.stack",
+                "Filename": "environments/production/main.tf",
+                "Location": {
+                  "StartLine": 29,
+                  "EndLine": 58
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AVD-AWS-0053",
+          "AVDID": "AVD-AWS-0053",
+          "Title": "Load balancer is exposed to the internet.",
+          "Description": "There are many scenarios in which you would want to expose a load balancer to the wider internet, but this check exists as a warning to prevent accidental exposure of internal assets. You should ensure that this resource should be exposed publicly.\n",
+          "Message": "Load balancer is exposed publicly.",
+          "Namespace": "builtin.aws.elb.aws0053",
+          "Query": "data.builtin.aws.elb.aws0053.deny",
+          "Resolution": "Switch to an internal load balancer or add a tfsec ignore",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/avd-aws-0053",
+          "References": [
+            "https://avd.aquasec.com/misconfig/avd-aws-0053"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.stack",
+            "Provider": "AWS",
+            "Service": "elb",
+            "StartLine": 81,
+            "EndLine": 81,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 78,
+                  "Content": "resource \"aws_lb\" \"public\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_lb\"\u001b[0m \u001b[38;5;37m\"public\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 79,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 81,
+                  "Content": "  internal                   = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245minternal\u001b[0m                   = \u001b[38;5;166mfalse",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 91,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 92,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "aws_lb.public",
+                "Filename": "modules/control_services/main.tf",
+                "Location": {
+                  "StartLine": 78,
+                  "EndLine": 92
+                }
+              },
+              {
+                "Resource": "module.control_services",
+                "Filename": "modules/stack/main.tf",
+                "Location": {
+                  "StartLine": 132,
+                  "EndLine": 150
+                }
+              },
+              {
+                "Resource": "module.stack",
+                "Filename": "environments/staging/main.tf",
+                "Location": {
+                  "StartLine": 29,
+                  "EndLine": 58
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Target": "modules/network/main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "aws-vpc-no-public-egress-sgr",
+          "AVDID": "AVD-AWS-0104",
+          "Title": "A security group rule should not allow unrestricted egress to any IP address.",
+          "Description": "Opening up ports to connect out to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.\n",
+          "Message": "Security group rule allows unrestricted egress to any IP address.",
+          "Namespace": "builtin.aws.ec2.aws0104",
+          "Query": "data.builtin.aws.ec2.aws0104.deny",
+          "Resolution": "Set a more restrictive cidr range",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-vpc-no-public-egress-sgr",
+          "References": [
+            "https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/centralized-egress-to-internet.html",
+            "https://avd.aquasec.com/misconfig/aws-vpc-no-public-egress-sgr"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.stack",
+            "Provider": "AWS",
+            "Service": "ec2",
+            "StartLine": 210,
+            "EndLine": 210,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 204,
+                  "Content": "resource \"aws_vpc_security_group_egress_rule\" \"control_https\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_vpc_security_group_egress_rule\"\u001b[0m \u001b[38;5;37m\"control_https\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 205,
+                  "Content": "  security_group_id = aws_security_group.control.id",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msecurity_group_id\u001b[0m = aws_security_group.control.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 206,
+                  "Content": "  description       = \"HTTPS to AWS endpoints and approved model/judge providers (via NAT)\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdescription\u001b[0m       = \u001b[38;5;37m\"HTTPS to AWS endpoints and approved model/judge providers (via NAT)\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 207,
+                  "Content": "  ip_protocol       = \"tcp\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mip_protocol\u001b[0m       = \u001b[38;5;37m\"tcp\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 208,
+                  "Content": "  from_port         = 443",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mfrom_port\u001b[0m         = \u001b[38;5;37m443",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 209,
+                  "Content": "  to_port           = 443",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mto_port\u001b[0m           = \u001b[38;5;37m443",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 210,
+                  "Content": "  cidr_ipv4         = \"0.0.0.0/0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mcidr_ipv4\u001b[0m         = \u001b[38;5;37m\"0.0.0.0/0\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 211,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "aws_vpc_security_group_egress_rule.control_https",
+                "Filename": "modules/network/main.tf",
+                "Location": {
+                  "StartLine": 204,
+                  "EndLine": 211
+                }
+              },
+              {
+                "Resource": "module.network",
+                "Filename": "modules/stack/main.tf",
+                "Location": {
+                  "StartLine": 49,
+                  "EndLine": 59
+                }
+              },
+              {
+                "Resource": "module.stack",
+                "Filename": "environments/production/main.tf",
+                "Location": {
+                  "StartLine": 29,
+                  "EndLine": 58
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "aws-vpc-no-public-egress-sgr",
+          "AVDID": "AVD-AWS-0104",
+          "Title": "A security group rule should not allow unrestricted egress to any IP address.",
+          "Description": "Opening up ports to connect out to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.\n",
+          "Message": "Security group rule allows unrestricted egress to any IP address.",
+          "Namespace": "builtin.aws.ec2.aws0104",
+          "Query": "data.builtin.aws.ec2.aws0104.deny",
+          "Resolution": "Set a more restrictive cidr range",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-vpc-no-public-egress-sgr",
+          "References": [
+            "https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/centralized-egress-to-internet.html",
+            "https://avd.aquasec.com/misconfig/aws-vpc-no-public-egress-sgr"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.stack",
+            "Provider": "AWS",
+            "Service": "ec2",
+            "StartLine": 210,
+            "EndLine": 210,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 204,
+                  "Content": "resource \"aws_vpc_security_group_egress_rule\" \"control_https\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_vpc_security_group_egress_rule\"\u001b[0m \u001b[38;5;37m\"control_https\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 205,
+                  "Content": "  security_group_id = aws_security_group.control.id",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msecurity_group_id\u001b[0m = aws_security_group.control.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 206,
+                  "Content": "  description       = \"HTTPS to AWS endpoints and approved model/judge providers (via NAT)\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdescription\u001b[0m       = \u001b[38;5;37m\"HTTPS to AWS endpoints and approved model/judge providers (via NAT)\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 207,
+                  "Content": "  ip_protocol       = \"tcp\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mip_protocol\u001b[0m       = \u001b[38;5;37m\"tcp\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 208,
+                  "Content": "  from_port         = 443",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mfrom_port\u001b[0m         = \u001b[38;5;37m443",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 209,
+                  "Content": "  to_port           = 443",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mto_port\u001b[0m           = \u001b[38;5;37m443",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 210,
+                  "Content": "  cidr_ipv4         = \"0.0.0.0/0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mcidr_ipv4\u001b[0m         = \u001b[38;5;37m\"0.0.0.0/0\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 211,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "aws_vpc_security_group_egress_rule.control_https",
+                "Filename": "modules/network/main.tf",
+                "Location": {
+                  "StartLine": 204,
+                  "EndLine": 211
+                }
+              },
+              {
+                "Resource": "module.network",
+                "Filename": "modules/stack/main.tf",
+                "Location": {
+                  "StartLine": 49,
+                  "EndLine": 59
+                }
+              },
+              {
+                "Resource": "module.stack",
+                "Filename": "environments/staging/main.tf",
+                "Location": {
+                  "StartLine": 29,
+                  "EndLine": 58
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

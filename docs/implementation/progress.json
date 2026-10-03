@@ -12,7 +12,7 @@
                          "phase_4":  "blocked",
                          "phase_5":  "not_started",
                          "phase_6":  "not_started",
-                         "phase_7":  "not_started",
+                         "phase_7":  "blocked",
                          "phase_8":  "not_started"
                      },
     "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20: all seven Track B families implemented (Prompts 24-28). Prompt 27 Q&A: polycodebench_core/{qa_contracts,qa_prompts}.py (pcb-qa-v1, read/search-only repo-qa-v1 protocol), polycodebench_evaluation/qa_grading.py, config/judging/qa-entailment-{rubric,panel}-v1.yaml, admitted cross-file fixture taskpacks/qa/py-configkit-qa-v1 and docs/implementation/qa-method.md. Prompt 28 implemented: plugins/suites/swebench prediction contracts and graders, config/protocols/prediction-v1.yaml, pcb-prediction-v1 prompt policy, two admitted task packs under taskpacks/prediction/, the Track B coverage audit and reports/suite-coverage.md.",
@@ -169,7 +169,7 @@
                             "30":  "done",
                             "31":  "not_started",
                             "32":  "not_started",
-                            "33":  "not_started",
+                            "33":  "blocked",
                             "34":  "not_started"
                         },
     "last_resume_review":  {
@@ -887,5 +887,39 @@
         "Prompt 31/32 comparison/task/methodology/seventh page and large-task-list/load browser variants"
     ],
     "no_live_benchmark_results_claimed": true
-}
+},
+    "prompt_33_completion":  {
+      "date": "2026-10-04",
+      "status": "blocked",
+      "report": "docs/implementation/reports/prompt-33.md",
+      "phase_report": "docs/implementation/reports/phase-7.md",
+      "tickets": {
+        "PCB-33-1": "blocked",
+        "PCB-33-2": "failed",
+        "PCB-33-3": "blocked",
+        "PCB-33-4": "blocked"
+      },
+      "e2e": {
+        "E2E-42": "blocked (local isolated restore variant passed; staging AWS PITR not run)",
+        "E2E-43": "blocked (local drills passed; clean staging deployment not run)",
+        "E2E-24": "restored-environment replay variant passed locally; live pilot replay pending"
+      },
+      "evidence": "docs/implementation/evidence/prompt-33/",
+      "operations_docs": "docs/operations/",
+      "measured": {
+        "local_restore_recovery_seconds": [
+          41.8,
+          58.8
+        ],
+        "orphan_reclaimed_after_expiry_seconds": 39.9,
+        "public_api_uncached_p95_ms": 443.3
+      },
+      "blockers": [
+        "No authorized staging AWS account/region, approved monthly cap (proposed USD 600 + 150 one-off), operator SSO principals, state backend, domain/certificates, approved guest AMI or service image digests: staging deployment and E2E-42/43 staging variants not run",
+        "D-33-03: alembic check fails at HEAD on Prompt 26 repair_* model/schema drift",
+        "D-33-04: working tree migration history is branched by concurrent Prompt 32 revision a20c4e619d32 (down_revision f17b6b04a237)",
+        "16 expired local development guests (provider local-default) found by dry-run sweep; not reclaimed because they belong to other sessions' work"
+      ],
+      "next_action": "Owner authorizes staging (docs/operations/staging-execution-plan.md section 1), D-33-03/D-33-04 are resolved, then run section 2-3 of the plan; otherwise Prompt 34 per explicit user authorization with Phase 7 recorded as blocked."
+    }
 }

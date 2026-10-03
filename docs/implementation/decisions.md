@@ -943,3 +943,45 @@ oracle whose expected value was derived by running the target records that fact
   render as “Not tested.” Development releases are built through the real publication lifecycle
   and carry `fixture_kind=synthetic_internal`, with the interface and screenshots stating that
   they are not live benchmark results. No specification discrepancy was required.
+
+
+## Prompt 33 decisions
+
+- **D-33-01 - Deployment authority comes from the verified principal, never a string.**
+  `polycodebench_core.deployment.resolve_deployment` derives environment, role and isolation tier
+  from the STS caller identity matched against the reviewed manifest in `config/environments/`.
+  `PCB_ENVIRONMENT`/`PCB_ROLE` are only claims; a mismatch, template manifest or missing principal
+  refuses startup (`pcb-ops identity verify` is the container entrypoint, exit 4). AWS itself
+  enforces the same boundary through role tags, a permissions boundary, KMS key policies and
+  bucket policies (`infra/terraform/modules/identity`). Ranked releases admit only
+  `production`-tier results (`refuse_inadmissible_tiers`).
+- **D-33-02 - Local production-shaped rehearsal is evidence of the procedure, not of staging.**
+  E2E-42/43 local variants (isolated container restore, drills) passed and are labelled as such.
+  The staging variants stay blocked on authorization; recovery times are reported only as the
+  measured local values (41.8 s, 58.8 s). RPO/RTO, the 10-minute orphan reclamation and the 300 ms
+  cached p95 remain targets.
+- **D-33-03 - Discrepancy: model/schema drift in the Prompt 26 repair tables.** At HEAD
+  (`e5f6a7b8c9d0`) `alembic check` fails: the migration created FKs without `ON DELETE RESTRICT`
+  and indexes `ix_repair_delivery_round`/`ix_repair_round_run` the models do not declare. Proposed
+  resolution (nonbreaking, narrowest): declare those two indexes in `models.py` and drop
+  `ondelete="RESTRICT"` from the three repair FKs so models match the deployed schema (PostgreSQL
+  `NO ACTION` and `RESTRICT` both refuse the delete for these non-deferred constraints). Not
+  applied here because a concurrent Prompt 32 session is editing `models.py`; owner: Prompt 34.
+- **D-33-04 - Discrepancy: branched migration history in the working tree.** The concurrent
+  Prompt 32 migration `a20c4e619d32` has `down_revision = f17b6b04a237`, creating a second head.
+  It must be rebased onto `e5f6a7b8c9d0` before release; `pcb-ops migrate check` refuses until
+  then. `config/operations/migration-policy.yaml` pins the released revision at `e5f6a7b8c9d0`.
+- **D-33-05 - Accepted IaC scanner exceptions.** Trivy `aws-vpc-no-public-egress-sgr` (control-tier
+  HTTPS egress, required for provider/judge APIs that are gated by the gateway's approved endpoint
+  registry) and `AVD-AWS-0053` (internet-facing ALB, restricted to the CloudFront origin-facing
+  prefix list) are accepted by design; the other three findings were fixed.
+- **D-33-06 - Orphan sweep reclaims every PolyCodeBench lane.** `Ec2VmSandboxProvider.collect_expired`
+  manages only solve/grading/admission; the `ops-reaper` sweep terminates any expired
+  `pcb:owner=polycodebench` instance of its environment (including `performance`) and treats a
+  missing expiry as expired.
+- **D-33-07 - One alert-rule source.** `infra/observability/prometheus/alerts.yaml` is loaded into
+  Amazon Managed Prometheus, unit-tested by promtool and checked by `pcb-ops alerts check` against
+  the metric catalog; unexpected hidden access is additionally alarmed from CloudTrail data events.
+- **D-33-08 - Lifecycle prefixes are reserved.** `provisional`, `debug` and `cancelled-logs` carry
+  bucket expiry rules, so `S3ArtifactStore` refuses them as encryption domains; canonical evidence
+  keys can never expire by lifecycle.

@@ -1,0 +1,29 @@
+{
+  "environments": [
+    {
+      "deployable": true,
+      "environment": "dev",
+      "status": "deployed",
+      "unresolved_inputs": 0
+    },
+    {
+      "deployable": true,
+      "environment": "integration",
+      "status": "deployed",
+      "unresolved_inputs": 0
+    },
+    {
+      "deployable": false,
+      "environment": "staging",
+      "status": "template",
+      "unresolved_inputs": 29
+    },
+    {
+      "deployable": false,
+      "environment": "production",
+      "status": "template",
+      "unresolved_inputs": 29
+    }
+  ],
+  "separation_violations": []
+}

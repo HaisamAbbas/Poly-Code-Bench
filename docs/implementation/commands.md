@@ -630,3 +630,40 @@ withdrawal/successor navigation, keyboard activation, lazy payloads, responsive 
 64-task paginated list. Prompt 30 regression cases also pass 4/4. Current run artifacts are under
 `docs/implementation/evidence/prompt-31/`. E2E-26 remains partial for binary artifact-download
 routing and production IAM validation; E2E-40 submission-page variants remain Prompt 32 scope.
+
+## Prompt 33 - Operations (verified commands)
+
+Local stack: `docker compose up -d` (PostgreSQL 17.6 on 127.0.0.1:55432, SeaweedFS on 8333).
+Terraform runs in `hashicorp/terraform:1.13`; nothing is applied.
+
+```bash
+# IaC (no credentials needed)
+docker run --rm -v "$PWD/infra:/infra" -w /infra hashicorp/terraform:1.13 fmt -recursive -check
+docker run --rm -v "$PWD/infra:/infra" -w /infra/terraform/environments/staging hashicorp/terraform:1.13 init -backend=false
+docker run --rm -v "$PWD/infra:/infra" -w /infra/terraform/environments/staging hashicorp/terraform:1.13 validate
+docker run --rm -v "$PWD/infra/observability/prometheus:/rules" --entrypoint promtool prom/prometheus:v3.5.0 test rules /rules/alerts.test.yaml
+docker run --rm -v "$PWD/infra:/infra" aquasec/trivy:0.67.2 config /infra/terraform
+
+# Manifests, migrations, alerts
+uv run --offline --locked --all-packages pcb-ops env validate
+uv run --offline --locked --all-packages pcb-ops doctor --profile staging      # exit 3: template
+uv run --offline --locked --all-packages pcb-ops migrate check               # exit 1 until D-33-04
+uv run --offline --locked --all-packages pcb-ops migrate rehearse --admin-url <admin dsn> --persistence-root <worktree>/packages/persistence
+uv run --offline --locked --all-packages pcb-ops alerts check
+
+# Recovery rehearsal (E2E-42 local variant)
+uv run --offline --locked --all-packages python scripts/seed_ops_rehearsal.py --replace
+uv run --offline --locked --all-packages pcb-ops backup create --out .local/ops-rehearsal/backup-<UTC>
+uv run --offline --locked --all-packages pcb-ops restore rehearse --backup .local/ops-rehearsal/backup-<UTC> --evidence <file>
+
+# Drills and load (E2E-43 local variants)
+uv run --offline --locked --all-packages python scripts/ops_drills.py --evidence <file>
+uv run --offline --locked --all-packages python scripts/ops_load_rehearsal.py --evidence <file>
+
+# Tests (PCB_TEST_DATABASE_URL must name a *_test database migrated to the released revision)
+uv run --offline --locked --all-packages pytest -p no:cacheprovider tests/test_operations_telemetry.py tests/test_operations_deployment.py tests/test_operations_postgres.py tests/test_operations_recovery_docker.py
+```
+
+Host note: on the Prompt 33 Windows workstation child Python processes intermittently exited with
+`0xC000070A` before running project code; re-run the command (Alembic calls are retried for that
+status only).

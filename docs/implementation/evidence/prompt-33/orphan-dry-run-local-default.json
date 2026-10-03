@@ -1,0 +1,93 @@
+{
+  "alert_firing": true,
+  "clean": false,
+  "dry_run": true,
+  "expired_before": 16,
+  "oldest_expired_seconds": 110473,
+  "over_alert_threshold": 16,
+  "provider": "local_docker",
+  "reclaimed": 0,
+  "remaining_expired": [
+    {
+      "expires": 1790982782,
+      "lane": "admission",
+      "resource": "604baa1bf3d6"
+    },
+    {
+      "expires": 1790982781,
+      "lane": "admission",
+      "resource": "a44b1af0d5c8"
+    },
+    {
+      "expires": 1790982780,
+      "lane": "admission",
+      "resource": "c7c2a87f2434"
+    },
+    {
+      "expires": 1790982769,
+      "lane": "admission",
+      "resource": "ae7cf8982e4a"
+    },
+    {
+      "expires": 1790982788,
+      "lane": "admission",
+      "resource": "8a42403fe1b0"
+    },
+    {
+      "expires": 1790982764,
+      "lane": "admission",
+      "resource": "cc57db4f71b0"
+    },
+    {
+      "expires": 1790982757,
+      "lane": "admission",
+      "resource": "9ff6f355a206"
+    },
+    {
+      "expires": 1790979591,
+      "lane": "admission",
+      "resource": "83e6761b5cd9"
+    },
+    {
+      "expires": 1790974426,
+      "lane": "admission",
+      "resource": "46539ade5dd1"
+    },
+    {
+      "expires": 1790968223,
+      "lane": "admission",
+      "resource": "a34c99a6e9a8"
+    },
+    {
+      "expires": 1790965648,
+      "lane": "admission",
+      "resource": "72fe13fb1771"
+    },
+    {
+      "expires": 1790965620,
+      "lane": "admission",
+      "resource": "508e2bd456d7"
+    },
+    {
+      "expires": 1790965508,
+      "lane": "admission",
+      "resource": "e73c5f0ade21"
+    },
+    {
+      "expires": 1790965193,
+      "lane": "admission",
+      "resource": "6d7d26e307c7"
+    },
+    {
+      "expires": 1790959520,
+      "lane": "admission",
+      "resource": "86959b601487"
+    },
+    {
+      "expires": 1790957053,
+      "lane": "admission",
+      "resource": "2f0560697157"
+    }
+  ],
+  "seconds": 38.052
+}

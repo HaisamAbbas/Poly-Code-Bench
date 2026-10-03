@@ -11,7 +11,7 @@
 | Phase 4 ? Remaining languages | 19?23 | JS, TS, C, C++, Go and Java plugins, tools, images, profiles, admitted tasks | **BLOCKED** ? Prompt 23 local audit is partial; JS/TS image-backed task execution is absent, Java has no built images, Go identity is stale, and fresh C/C++/Go admissions are missing. E2E-15/35 remain partial. |
 | Phase 5 — Remaining Track B suites | 24–28 | Repository repair, realistic tasks, self-repair, Q&A and prediction | Each family preserves its protocol/native metric and uses only applicable scoring. |
 | Phase 6 — Public product | 29–32 | Public API, all seven pages, evidence views and reviewed model submission | Actual published data drives complete public workflows; private data stays restricted. |
-| Phase 7 — Operational hardening | 33 | Production-shaped infrastructure, restoration, monitoring and runbooks | Staging deploy/recovery/isolation/withdrawal rehearsals have real evidence. |
+| Phase 7 — Operational hardening | 33 | Production-shaped infrastructure, restoration, monitoring and runbooks | **BLOCKED** - Staging deploy/recovery/isolation/withdrawal rehearsals have real evidence. Prompt 33 delivered validated IaC and passed every local production-shaped rehearsal, but no staging environment exists (no authorized account/budget); `alembic check` drift (D-33-03) and a branched migration history (D-33-04) also block deployment. |
 | Phase 8 — Final integrated audit | 34 | Full requirements audit, defect fixes, release-readiness report | No unjustified completed gates; every required capability has appropriate end-to-end evidence. |
 
 Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must include a phase-wide gate summary as well as their prompt report. The other prompts use the same brief report format for their own scope.
@@ -107,7 +107,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 30 | Prompt 30 | — Build leaderboard, language and model pages | WP-22, part 1 | Leaderboard, language view and model profile | done (PCB-30-1..4 implemented; Prompt 30 E2E-39/40 browser subcases pass against an explicitly synthetic published test release; full E2E-39/40 remain partial across Prompts 31/32) |
 | 31 | Prompt 31 | — Build comparison, task explorer and methodology pages | WP-22, part 2 | Comparison, task explorer and methodology pages | not_started |
 | 32 | Prompt 32 | — Implement reviewed model submissions and close the public product phase | WP-22, part 3; WP-23 | Seventh page plus model-submission approval workflow | not_started |
-| 33 | Prompt 33 | — Harden deployment and rehearse operations | WP-24 | Production IaC, operational drills and runbooks | not_started |
+| 33 | Prompt 33 | — Harden deployment and rehearse operations | WP-24 | Production IaC, operational drills and runbooks | blocked (PCB-33-1..4 implemented; IaC validated, local isolated restore, drills, load and security rehearsals passed; staging deployment and E2E-42/43 staging variants blocked on AWS authorization; D-33-03 migration drift and D-33-04 branched history must be resolved before any deploy) |
 | 34 | Prompt 34 | — Perform the final integrated audit and repair pass | All WP-01–24 | Final integrated audit and verified repair pass | not_started |
 
 - Prompt 23: PARTIAL. Java recipes, profiles, task fixtures and local shared-contract audit are implemented; current image identity and complete eight-language conformance remain blocked. See `reports/prompt-23.md`, `reports/language-coverage.md` and the Phase 4 gate report.

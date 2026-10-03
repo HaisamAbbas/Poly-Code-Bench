@@ -1,0 +1,277 @@
+{
+  "backup_created_at": "2026-10-03T22:02:51+00:00",
+  "environment_class": "isolated local restore (production-shaped rehearsal, not staging)",
+  "failure": null,
+  "finished_at": "2026-10-03T22:49:52+00:00",
+  "passed": true,
+  "recovery_time_seconds": 58.822,
+  "resources_reclaimed": true,
+  "schema_version": 1,
+  "started_at": "2026-10-03T22:48:39+00:00",
+  "steps": [
+    {
+      "seconds": 0.437,
+      "status": "passed",
+      "step": "verify backup file digests"
+    },
+    {
+      "images": {
+        "object-store": "chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
+        "postgres": "postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929"
+      },
+      "rehearsal_id": "64d0b1f4b06c",
+      "seconds": 30.882,
+      "status": "passed",
+      "step": "provision isolated environment"
+    },
+    {
+      "seconds": 12.975,
+      "status": "passed",
+      "step": "restore database"
+    },
+    {
+      "objects": 50,
+      "seconds": 3.991,
+      "status": "passed",
+      "step": "restore objects"
+    },
+    {
+      "seconds": 0.012,
+      "status": "passed",
+      "step": "restore publication store and keyring"
+    },
+    {
+      "foreign_keys_checked": 113,
+      "orphan_rows": 0,
+      "row_count_mismatches": {},
+      "row_count_parity_checked": true,
+      "rows_restored": 230,
+      "seconds": 3.08,
+      "status": "passed",
+      "step": "referential integrity",
+      "tables_checked": 58
+    },
+    {
+      "digest_mismatches": 0,
+      "failures": [],
+      "missing_objects": 0,
+      "seconds": 2.697,
+      "status": "passed",
+      "step": "artifact digest integrity",
+      "verified_artifacts_checked": 50
+    },
+    {
+      "all_matched": true,
+      "available_scorecards": 22,
+      "replayed": [
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "fail",
+          "outcome_digest": "sha256:3894b0e802e65426de83b8eac3bbc82ed44bb3bffa01b1707b6cc002fb15d5d9",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "5c3ad717-7fdd-4521-9aac-baa90d04bb51",
+          "stratum": "fail-gate-full"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "fail",
+          "outcome_digest": "sha256:fb4898341dd0e934a90ac416979510c6553cd68562ceddd411825b38a88c132c",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "529917d4-81ef-47e1-af11-d9a23b095cfc",
+          "stratum": "fail-gate-partial"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:c9df35cea5760d5e3a495a7386bb37bb280465498a7c9acce275e03bc62b7b65",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "e44c9dbf-8072-49f8-aec8-c9ebe6a45a0a",
+          "stratum": "incomplete-analyzer"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:0a069def0b3f1429bea46888aca53b086674a0797d55f00c532889a790a5367c",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "dc7897e6-17d1-4225-a43d-662af6444652",
+          "stratum": "pass-efficiency-60"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:7ef1fc86fddba71413b16b4cd0e60ae97bc3b97f9d7e863813dcacd67c64ef0f",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "2dbb63d9-32f8-40c7-adc9-c0540d1a9abe",
+          "stratum": "pass-golden"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:c7520152958ad7d36e7253c21facdd0ffce11cdbf465fc87e81676006c37ffde",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "c8bd7d33-f970-4862-804f-1ae10213f2ad",
+          "stratum": "pass-high-quality"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:9c2a1c8357ce6f77dcbaa83de093a93705ffd3c1689c68cc7483bdd1ff57f31a",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "5aebbec2-2f52-44ce-8141-248b15f98f52",
+          "stratum": "pass-low-quality"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:d22aaa93f056af3b7660ddbe95f756a187944ec8bd1b2d58fce0308d6b06fec5",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "02793134-ed0d-401b-aa40-d03aa4ee7806",
+          "stratum": "pass-partial-applicability"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:6c351246f6a06122c927ca85e70b1d36f2ad3bd8c76719d5a0ba80ff04bdb1fc",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "d9087e2c-4054-4544-8098-1174c1f78a18",
+          "stratum": "pass-security-high"
+        },
+        {
+          "checks": [
+            "outcome_digest",
+            "scorecard_digest",
+            "total_score",
+            "item_count"
+          ],
+          "gate": "pass",
+          "outcome_digest": "sha256:2658c46e04babc2c69fa4d25279be7bc4c0dc10d484d4da1e56918f97c6a40ee",
+          "replay_matched": true,
+          "row_matches_archive": true,
+          "scorecard_id": "5646dca8-85f5-4232-af0a-d64a7f94c46f",
+          "stratum": "pass-security-low"
+        }
+      ],
+      "requested": 10,
+      "seconds": 4.422,
+      "seed": "pcb-restore-rehearsal-v1",
+      "status": "passed",
+      "step": "replay stratified scorecards",
+      "strata_available": [
+        "fail-gate-full",
+        "fail-gate-partial",
+        "incomplete-analyzer",
+        "pass-efficiency-60",
+        "pass-golden",
+        "pass-high-quality",
+        "pass-low-quality",
+        "pass-partial-applicability",
+        "pass-security-high",
+        "pass-security-low",
+        "unknown-gate"
+      ],
+      "strata_selected": [
+        "fail-gate-full",
+        "fail-gate-partial",
+        "incomplete-analyzer",
+        "pass-efficiency-60",
+        "pass-golden",
+        "pass-high-quality",
+        "pass-low-quality",
+        "pass-partial-applicability",
+        "pass-security-high",
+        "pass-security-low"
+      ]
+    },
+    {
+      "all_rebuilt": true,
+      "board": "local:board",
+      "pointer": {
+        "generation": 1,
+        "release_id": "4b013ebe-3b7e-4368-b8f6-a6067b6e2d2f"
+      },
+      "pointer_references_available_release": true,
+      "releases": [
+        {
+          "content_digest_matches": true,
+          "content_lists_restored_members": true,
+          "members_expected": 22,
+          "members_restored": 22,
+          "projection_digest_published": "sha256:69871d675f926762619e1c95afd99466d895463eb0650a6f48ae3375f86b215b",
+          "projection_digest_rebuilt": "sha256:69871d675f926762619e1c95afd99466d895463eb0650a6f48ae3375f86b215b",
+          "release_id": "4b013ebe-3b7e-4368-b8f6-a6067b6e2d2f",
+          "signature_valid": true,
+          "signing_key_state": "active"
+        }
+      ],
+      "seconds": 0.321,
+      "status": "passed",
+      "step": "rebuild public projection"
+    },
+    {
+      "reclaimed": true,
+      "remaining_containers": 0,
+      "remaining_networks": 0,
+      "remaining_volumes": 0,
+      "removed_containers": 2,
+      "removed_volumes": 2,
+      "seconds": 14.97,
+      "status": "passed",
+      "step": "teardown and reclamation check"
+    }
+  ],
+  "target": "local-docker"
+}

@@ -1373,40 +1373,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `33`.
 - Dependencies: all public-product/engine modules ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` - environment-separated Terraform in `infra/terraform/` (modules network, keys, identity, database, backup, artifacts, registry, control_services, workers (wraps `infra/sandbox/aws`), performance, public_delivery, telemetry, stack; roots `environments/{staging,production}` with `allowed_account_ids` guard, separate state and AWS Budgets cap); environment manifests `config/environments/*.yaml`; identity-derived authority `polycodebench_core.deployment` + `pcb-ops identity verify` container entrypoint; IAM tags/permissions boundary, KMS and bucket policies enforce environment and role.
+- Verification: `blocked` - local: `terraform fmt -check` and `terraform validate` PASS for both roots (hashicorp/terraform:1.13, AWS provider 6.36.0); Trivy IaC scan 3 findings fixed, 2 accepted with justification; `pcb-ops env validate` PASS (no shared resources); identity refusal tests PASS. Clean staging deployment NOT run: no authorized AWS account, region, budget, operator principals, AMI or image digests (staging-execution-plan.md).
 - Required verification scope: E2E-42, E2E-43.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: docs/implementation/evidence/prompt-33/env-validate.json, docs/implementation/evidence/prompt-33/doctor-staging.json, docs/implementation/evidence/prompt-33/trivy-iac-scan.json; tests/test_operations_deployment.py.
 - Acceptance criteria: — Complete environment-separated infrastructure-as-code for network/identities, database/backups, artifacts, images, control services, workers, performance capacity, secrets, signing and public delivery. DoD: clean staging deployment is reproducible; actual identity/policy enforces environment and isolation tier, not a request string.
 
 ## PCB-33-2 - Prompt 33: — Harden deployment and rehearse operations
 
 - Owner prompt: `33`.
 - Dependencies: all public-product/engine modules ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` - `pcb-ops` (packages/operations): doctor, env validate/reconcile, migrate check/rehearse/upgrade (expand-only gate), workers drain, orphans sweep, artifacts collect-garbage; structured redacting JSON logs with correlation IDs and bounded metric catalog (`polycodebench_core.telemetry`) wired into the worker and `pcb-scheduler`; canonical alert rules `infra/observability/prometheus/alerts.yaml` (+ promtool tests), Grafana dashboard, AMP/CloudTrail alarms in IaC.
+- Verification: `failed` - drain/stale-commit drill PASS on PostgreSQL; promtool check+test PASS (11 rules); telemetry redaction tests PASS; migration rehearsal: empty->head and previous->head PASS with identical schemas, but `alembic check` FAILS on pre-existing repair_* drift (D-33-03) and the working tree has a branched history from the concurrent Prompt 32 migration (D-33-04); staging telemetry/alert delivery not run.
 - Required verification scope: E2E-42, E2E-43.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: docs/implementation/evidence/prompt-33/migration-rehearsal.json, docs/implementation/evidence/prompt-33/migrate-check-working-tree.json; tests/test_operations_postgres.py, tests/test_operations_telemetry.py.
 - Acceptance criteria: — Implement validated deployment/configuration, migration/rollback/drain procedures, telemetry and required alerts. DoD: expanded schemas remain compatible, stale workers cannot commit, logs/metrics expose useful run IDs without leaking secrets/held-out content.
 
 ## PCB-33-3 - Prompt 33: — Harden deployment and rehearse operations
 
 - Owner prompt: `33`.
 - Dependencies: all public-product/engine modules ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` - `pcb-ops backup create`, `restore rehearse` (isolated local-docker target), `restore verify` (any restored target, used after AWS PITR), `keys rotate/revoke/verify` (publication keyring with retained keys), orphan sweep (local + EC2 ops-reaper), drill runner scripts/ops_drills.py, seed scripts/seed_ops_rehearsal.py.
+- Verification: `blocked` - local variants PASS: isolated restore (113 FKs 0 orphans, 50/50 digests, 10 stratified scorecards replayed, projection rebuilt and signature-verified, measured 41.8 s and 58.8 s, resources reclaimed) with a passing negative control; orphan, withdrawal, key-rotation, drain and outage drills PASS. Staging (AWS PITR, live EC2 orphan, live outage) blocked on authorization.
 - Required verification scope: E2E-42, E2E-43.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: docs/implementation/evidence/prompt-33/e2e-42-local-restore.json, docs/implementation/evidence/prompt-33/e2e-43-local-drills.json, docs/implementation/evidence/prompt-33/orphan-dry-run-local-default.json; tests/test_operations_recovery_docker.py.
 - Acceptance criteria: — Implement and execute restore/orphan/outage/withdrawal/key-rotation procedures as permitted. DoD: isolated restoration verifies referential/digest integrity, replays ten stratified scorecards, rebuilds a public projection and reports measured recovery timing; resources are reclaimed.
 
 ## PCB-33-4 - Prompt 33: — Harden deployment and rehearse operations
 
 - Owner prompt: `33`.
 - Dependencies: all public-product/engine modules ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` - docs/operations: README, 12 runbooks (all T 22.7 procedures plus deployment/migration/drain), retention-and-rights-policy.md, staging-execution-plan.md (inputs, exact commands, budget), rehearsal-report-2026-10.md (restore, drills, load, security).
+- Verification: `blocked` - every runbook labels commands [V-local]/[V-test] (executed) or [S] (staging, not executed); `pcb-ops alerts check` PASS (every alert has a runbook); local load rehearsal measured p95 443 ms uncached origin (target 300 ms cached p95 remains a target); staging load/security rehearsals blocked.
 - Required verification scope: E2E-42, E2E-43.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: docs/implementation/evidence/prompt-33/load-rehearsal-public-api.json; docs/operations/rehearsal-report-2026-10.md.
 - Acceptance criteria: — Complete operator runbooks, retention/rights policies and documented load/security rehearsals. DoD: each runbook has exact verified commands, authorized role, expected state/result and recovery verification; unmeasured SLOs are targets, not achievements.
 
 ## PCB-34-1 - Prompt 34: — Perform the final integrated audit and repair pass

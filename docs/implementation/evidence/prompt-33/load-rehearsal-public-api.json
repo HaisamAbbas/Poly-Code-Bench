@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "environment_class": "local workstation, loopback, no CDN; synthetic development store",
+  "claim": "regression measurement only; the A 15.3 300 ms cached p95 target remains a target",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10"
+  },
+  "requests": 3000,
+  "concurrency": 16,
+  "routes_exercised": [
+    "/healthz",
+    "/v1/releases",
+    "/v1/releases/4e4943e5-86dc-4dbc-805b-bdcbb8a0f9f4",
+    "/v1/leaderboard",
+    "/v1/tasks"
+  ],
+  "throughput_rps": 55.2,
+  "latency_ms": {
+    "p50": 276.422,
+    "p95": 443.272,
+    "p99": 555.58,
+    "max": 996.71,
+    "mean": 288.867
+  },
+  "revalidations_304": 600,
+  "revalidations": 600,
+  "error_rate": 0.0,
+  "errors": [],
+  "per_route": {
+    "/healthz": {
+      "requests": 600,
+      "p50_ms": 246.514,
+      "p95_ms": 354.505
+    },
+    "/v1/releases": {
+      "requests": 600,
+      "p50_ms": 282.085,
+      "p95_ms": 431.883
+    },
+    "/v1/releases/4e4943e5-86dc-4dbc-805b-bdcbb8a0f9f4": {
+      "requests": 600,
+      "p50_ms": 289.051,
+      "p95_ms": 480.346
+    },
+    "/v1/leaderboard": {
+      "requests": 600,
+      "p50_ms": 287.466,
+      "p95_ms": 457.678
+    },
+    "/v1/tasks": {
+      "requests": 600,
+      "p50_ms": 285.808,
+      "p95_ms": 464.543
+    }
+  }
+}

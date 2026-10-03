@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "environment_class": "local trusted development (Docker); not staging",
+  "fixture_kind": "synthetic_internal",
+  "started": "20261003T221615Z",
+  "drills": [
+    {
+      "drill": "orphan-cleanup",
+      "passed": true,
+      "error": null,
+      "seconds": 71.059,
+      "commands": [
+        {
+          "command": "pcb-ops.exe orphans sweep --provider local --provider-id drill1791065778 --image docker.io/library/python:3.12-slim@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 27.637
+        },
+        {
+          "command": "pcb-ops.exe orphans sweep --provider local --provider-id drill1791065778 --image docker.io/library/python:3.12-slim@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 37.703
+        }
+      ],
+      "assertions": [
+        {
+          "claim": "driver created a labelled development guest",
+          "passed": true,
+          "lane": "solve",
+          "isolation_tier": "development"
+        },
+        {
+          "claim": "a live (unexpired) guest is never reclaimed",
+          "passed": true
+        },
+        {
+          "claim": "expired orphan reclaimed and verified gone",
+          "passed": true,
+          "sweep": {
+            "alert_firing": false,
+            "clean": true,
+            "dry_run": false,
+            "expired_before": 1,
+            "oldest_expired_seconds": 0,
+            "over_alert_threshold": 0,
+            "provider": "local_docker",
+            "reclaimed": 1,
+            "remaining_expired": [],
+            "seconds": 31.745
+          }
+        },
+        {
+          "claim": "reclaimed within the 10-minute target (measured, local Docker)",
+          "passed": true,
+          "seconds_after_expiry": 39.867,
+          "sweep_seconds": 31.745,
+          "waited_from": 2.164
+        },
+        {
+          "claim": "no container with the drill provider label remains",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "drill": "key-rotation-correction-withdrawal",
+      "passed": true,
+      "error": null,
+      "seconds": 104.683,
+      "commands": [
+        {
+          "command": "pcb-ops.exe keys rotate --keyring .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keyring.json --new-key-id drill-key-1 --private-key-out .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keys\\drill-key-1.pem",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 8.35
+        },
+        {
+          "command": "pcb-release.exe create --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r1-create --content .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r1-content.json --projection .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r1-projection.json",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 6.391
+        },
+        {
+          "command": "pcb-release.exe validate --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r1-validate --release-id 3f6b9ce7-a0dd-4670-806c-9ae2efe31b61 --expected-version 1 --evidence .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r1-receipts.json",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 5.262
+        },
+        {
+          "command": "pcb-release.exe review --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r1-review --release-id 3f6b9ce7-a0dd-4670-806c-9ae2efe31b61 --expected-version 2 --reason Drill review",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 4.442
+        },
+        {
+          "command": "pcb-release.exe approve --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r1-approve --release-id 3f6b9ce7-a0dd-4670-806c-9ae2efe31b61 --expected-version 3 --reason Drill approval of exact digest",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 4.51
+        },
+        {
+          "command": "pcb-release.exe publish --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r1-publish --release-id 3f6b9ce7-a0dd-4670-806c-9ae2efe31b61 --expected-version 4 --expected-generation 0 --key-file .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keys\\drill-key-1.pem --key-id drill-key-1",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 4.509
+        },
+        {
+          "command": "pcb-ops.exe keys rotate --keyring .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keyring.json --new-key-id drill-key-2 --private-key-out .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keys\\drill-key-2.pem",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 7.901
+        },
+        {
+          "command": "pcb-release.exe create --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-create --content .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r2-content.json --projection .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r2-projection.json --predecessor 3f6b9ce7-a0dd-4670-806c-9ae2efe31b61 --correction-reason Drill correction: successor supersedes the predecessor",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 1.978
+        },
+        {
+          "command": "pcb-release.exe validate --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-validate --release-id 4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440 --expected-version 1 --evidence .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r2-receipts.json",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 1.043
+        },
+        {
+          "command": "pcb-release.exe review --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-review --release-id 4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440 --expected-version 2 --reason Drill review",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 3.776
+        },
+        {
+          "command": "pcb-release.exe approve --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-approve --release-id 4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440 --expected-version 3 --reason Drill approval of exact digest",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 4.248
+        },
+        {
+          "command": "pcb-release.exe publish --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-publish --release-id 4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440 --expected-version 4 --expected-generation 1 --key-file .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keys\\drill-key-2.pem --key-id drill-key-2",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 4.068
+        },
+        {
+          "command": "pcb-ops.exe keys verify --keyring .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keyring.json --manifest .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r1-manifest.json",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 8.731
+        },
+        {
+          "command": "pcb-ops.exe keys verify --keyring .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keyring.json --manifest .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r2-manifest.json",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 7.03
+        },
+        {
+          "command": "pcb-release.exe withdraw --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r1-withdraw --release-id 3f6b9ce7-a0dd-4670-806c-9ae2efe31b61 --expected-version 5 --expected-generation 2 --reason Drill withdrawal: superseded by correction",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 4.479
+        },
+        {
+          "command": "pcb-release.exe withdraw --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-withdraw --release-id 4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440 --expected-version 5 --expected-generation 1 --reason Drill: stale generation must be refused",
+          "exit": 4,
+          "expected_exit": 4,
+          "seconds": 5.388
+        },
+        {
+          "command": "pcb-release.exe withdraw --store .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\releases.db --subject drill-operator --role curator --role reviewer --role publisher --request-id r2-withdraw-current --release-id 4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440 --expected-version 5 --expected-generation 2 --reason Drill withdrawal of the current release",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 5.212
+        },
+        {
+          "command": "pcb-ops.exe keys revoke --keyring .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keyring.json --key-id drill-key-1 --reason Drill: simulated key compromise",
+          "exit": 0,
+          "expected_exit": 0,
+          "seconds": 8.513
+        },
+        {
+          "command": "pcb-ops.exe keys verify --keyring .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\keyring.json --manifest .local\\ops-rehearsal\\drills-20261003T221615Z\\publication\\r1-manifest.json",
+          "exit": 1,
+          "expected_exit": 1,
+          "seconds": 8.719
+        }
+      ],
+      "assertions": [
+        {
+          "claim": "rotation retires the old key and activates the new one",
+          "passed": true,
+          "keys": {
+            "drill-key-1": "retired",
+            "drill-key-2": "active"
+          }
+        },
+        {
+          "claim": "release signed before rotation still verifies with the retained key",
+          "passed": true
+        },
+        {
+          "claim": "release signed after rotation verifies with the active key",
+          "passed": true
+        },
+        {
+          "claim": "correction successor links its predecessor",
+          "passed": true
+        },
+        {
+          "claim": "withdrawn release keeps its URL, manifest and a withdrawal notice",
+          "passed": true
+        },
+        {
+          "claim": "board pointer still references the published successor",
+          "passed": true,
+          "pointer": {
+            "generation": 2,
+            "release_id": "4a0d53ea-a3e8-4aeb-9e92-cddc4afbf440"
+          }
+        },
+        {
+          "claim": "withdrawal with a stale pointer generation is refused (CAS)",
+          "passed": true
+        },
+        {
+          "claim": "withdrawing the current release clears the pointer (never dangling)",
+          "passed": true,
+          "pointer": {
+            "generation": 3,
+            "release_id": null
+          }
+        },
+        {
+          "claim": "a revoked key fails verification closed",
+          "passed": true
+        },
+        {
+          "claim": "audit trail records every publication action",
+          "passed": true,
+          "audit": [
+            "draft",
+            "validate",
+            "review",
+            "approve",
+            "publish",
+            "draft",
+            "validate",
+            "review",
+            "approve",
+            "publish",
+            "withdraw",
+            "withdraw"
+          ]
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

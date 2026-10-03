@@ -1,0 +1,39 @@
+{
+  "differences": [],
+  "head": "e5f6a7b8c9d0",
+  "models_match_schema": false,
+  "passed": false,
+  "persistence_root": "<git worktree of HEAD cc0036e>/packages/persistence",
+  "previous_revision": "b9e04c7a1f38",
+  "schema_identical": true,
+  "schema_objects": 1032,
+  "steps": [
+    {
+      "errors": [],
+      "passed": true,
+      "returncode": 0,
+      "step": "empty -> head"
+    },
+    {
+      "errors": [
+        "ERROR [alembic.util.messaging] New upgrade operations detected: [('remove_index', Index('ix_repair_delivery_round', Column('repair_round_id', UUID(), table=<repair_delivery>, nullable=False))), ('remove_fk', ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x000001B6FF9B9",
+        "ERROR [alembic.util.messaging] New upgrade operations detected: [('remove_index', Index('ix_repair_delivery_round', Column('repair_round_id', UUID(), table=<repair_delivery>, nullable=False))), ('remove_fk', ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x000001B6FF9B9"
+      ],
+      "passed": false,
+      "returncode": 4294967295,
+      "step": "alembic check (models == schema)"
+    },
+    {
+      "errors": [],
+      "passed": true,
+      "returncode": 0,
+      "step": "empty -> b9e04c7a1f38"
+    },
+    {
+      "errors": [],
+      "passed": true,
+      "returncode": 0,
+      "step": "b9e04c7a1f38 -> head"
+    }
+  ]
+}

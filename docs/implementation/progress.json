@@ -144,7 +144,7 @@
                             "21":  "partial",
                             "22":  "done",
                             "23":  "partial",
-                            "24":  "not_started",
+                            "24":  "done",
                             "25":  "not_started",
                             "26":  "not_started",
                             "27":  "not_started",
@@ -733,6 +733,37 @@
                                  "judge_evidence_class":  "fixture_judge_votes",
                                  "execution_tier":  "local_fixture",
                                  "no_live_provider_human_calibration_or_publication_actions":  true                             },
+                           "prompt_24_completion":  {
+                                                        "tickets":  [
+                                                                         "PCB-24-1",
+                                                                         "PCB-24-2",
+                                                                         "PCB-24-3",
+                                                                         "PCB-24-4"
+                                                                     ],
+                                                        "e2e":  {
+                                                                    "E2E-36":  "passed"
+                                                                },
+                                                        "execution_tier":  "local_fixture",
+                                                        "evidence":  "docs/implementation/evidence/prompt-24-e2e36.json",
+                                                        "report":  "docs/implementation/reports/prompt-24.md",
+                                                        "decisions":  [
+                                                                          "D-24-01",
+                                                                          "D-24-02"
+                                                                      ],
+                                                        "upstream_evaluator":  "swebench==5.0.2, pinned; a different revision raises rather than degrading",
+                                                        "labels":  {
+                                                                        "pcb-native-compatible-calc":  "inspired: authored, native record shape and native fail-to-pass/pass-to-pass metric",
+                                                                        "pcb-adapted-calc-rs":  "adapted: Rust port declaring two protocol deviations (log parser and pass-to-pass rule)",
+                                                                        "native":  "not claimed anywhere; no official dataset instance is imported"
+                                                                    },
+                                                        "not_claimed":  [
+                                                                            "no official SWE-bench dataset instance imported; dataset, repository and patch rights are unrecorded blockers",
+                                                                            "no production-worker or sandbox-tier grading run; grading ran at the local fixture tier",
+                                                                            "the Rust port is compiled and executed in the pinned Rust image by digest (development-tier Docker), but no production-worker grading run occurred",
+                                                                            "quality admission remains pending"
+                                                                        ],
+                                                        "next":  "WP-20 stays open: Prompts 26-28 (self-repair, repository Q&A, prediction) are the remaining unstarted parts."
+                                                    },
     "prompt_26_completion":  {
                                  "date":  "2026-10-03",
                                  "status":  "done",

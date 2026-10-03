@@ -1013,40 +1013,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `24`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`plugins/suites/swebench/src/polycodebench_suites_swebench/{records,adapter}.py`): `MethodologyRecord` with the `native`/`inspired`/`adapted` vocabulary, `SourceManifest` pinned to a dataset revision and a provenance class, `NativeTaskInstance`/`NativeTestSpec`/`NativeTaskDraft` records, an immutable repository snapshot reader, and `patch_output` bound to the frozen task and candidate digest.
+- Verification: `passed` (local-fixture tier).
 - Required verification scope: E2E-36.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `plugins/suites/swebench/tests/test_e2e36_native_repo_repair.py` (23 tests, PASS at both tiers: 22 passed + 1 Docker-gated skip, and 23 passed with `PCB_TEST_DOCKER=1`); `docs/implementation/evidence/prompt-24-e2e36.json`; source revision, protocol differences and the public label are recorded on the methodology record and refused when absent (D-24-01).
 - Acceptance criteria: — Implement SuiteAdapter import/validation for supported SWE-bench-style/native task records, immutable repo snapshots and patch output. DoD: source revisions/terms/protocol differences are recorded and no future fixes/hidden tests leak into solving.
 
 ## PCB-24-2 - Prompt 24: — Implement repository repair benchmark adapters
 
 - Owner prompt: `24`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`plugins/suites/swebench/src/polycodebench_suites_swebench/grading.py`): the native metric comes from a call to the pinned upstream `swebench.harness.grading.get_eval_report` at revision `5.0.2`; `native_metrics` exports that result and never recomputes a local fraction, and a missing or mismatched upstream revision raises rather than degrading.
+- Verification: `passed` (local-fixture tier, upstream evaluator 5.0.2).
 - Required verification scope: E2E-36.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `test_the_native_metric_comes_from_the_pinned_upstream_evaluator` and `test_the_native_metric_is_reported_separately_from_the_polycodebench_gate`; `docs/implementation/evidence/prompt-24-e2e36.json` records `RESOLVED_FULL`/`RESOLVED_NO` per candidate with gate and quality evidence flagged separate.
 - Acceptance criteria: — Wrap the pinned upstream evaluator rather than loosely recreating its result from a generic test fraction. DoD: native fail-to-pass/pass-to-pass outcomes and resolution metric are preserved separately from PolyCodeBench acceptance and quality.
 
 ## PCB-24-3 - Prompt 24: — Implement repository repair benchmark adapters
 
 - Owner prompt: `24`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`plugins/suites/swebench/src/polycodebench_suites_swebench/overlay.py`): `run_identity` binds task, candidate and evaluator digests and the cache is keyed strictly by it; the candidate patch is applied before the hidden test patch, so a graded-test edit is overwritten; `check_instance_leakage` refuses a bundle exposing a fail-to-pass test, the gold patch or the test patch.
+- Verification: `passed` (local-fixture tier).
 - Required verification scope: E2E-36.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `test_a_cached_grade_is_only_returned_for_the_same_candidate`, `test_a_reimported_task_cannot_reuse_the_stale_grade`, `test_the_evaluator_digest_is_part_of_the_run_identity`, `test_editing_a_visible_test_does_not_replace_native_acceptance`, `test_a_candidate_patch_outside_the_allowlist_is_refused`; every candidate produced a distinct run identity and only a repeat of the same candidate was a cache hit.
 - Acceptance criteria: — Bind cache/upstream run identity to task, candidate and evaluator digests and integrate protected grading overlays. DoD: one candidate cannot receive another candidate's cached grade and edits to visible tests cannot replace native/hidden acceptance.
 
 ## PCB-24-4 - Prompt 24: — Implement repository repair benchmark adapters
 
 - Owner prompt: `24`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`plugins/suites/swebench/tests/{native_compatible_instance,adapted_port_instance}.py`): an authored native-record fixture (`pcb-native-compatible-calc`, labelled `inspired`) and a deliberately ported Rust fixture (`pcb-adapted-calc-rs`, labelled `adapted` with two declared protocol deviations), both admitted through the adapter and graded by the pinned upstream evaluator.
+- Verification: `passed` (local-fixture tier; the Rust port is compiled and executed in the pinned Rust image, so this is development-tier evidence, not a production-worker run).
 - Required verification scope: E2E-36.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/evidence/prompt-24-e2e36.json`: the two labels differ and each record validates; reference and alternative patches resolve `RESOLVED_FULL`, the faulty partial fix and the no-op resolve `RESOLVED_NO`, and every outcome is traceable to one frozen candidate digest. No official dataset instance is imported, so no `native` label is claimed anywhere.
 - Acceptance criteria: — Admit native-compatible and deliberately adapted/ported fixtures through the actual harness. DoD: their methodology labels differ correctly; patch correctness and applicable quality evidence are traceable to the same frozen candidate.
 
 ## PCB-25-1 - Prompt 25: — Implement realistic repository tasks

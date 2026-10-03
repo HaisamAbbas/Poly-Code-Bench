@@ -11,6 +11,7 @@ from uuid import UUID
 
 from polycodebench_core.application_errors import LeaseLost
 from polycodebench_core.jobs import JobClaim, StageOutcome
+from polycodebench_core.telemetry import METRICS, log_context, safe_label
 from polycodebench_persistence.artifacts import ArtifactRepository
 from polycodebench_persistence.jobs import HEARTBEAT_SECONDS, PostgresJobRepository
 from polycodebench_runner.contracts import (
@@ -134,9 +135,22 @@ class WorkerService:
                 output_artifact_id=result.output_artifact_id,
                 outcome=result.outcome,
             )
+            METRICS.inc(
+                "pcb_job_completions_total",
+                queue_class=safe_label(claim.queue_class),
+                outcome=safe_label(committed),
+            )
             return committed
         except BaseException as error:
             failure = error
+            if isinstance(error, LeaseLost):
+                METRICS.inc(
+                    "pcb_stale_commit_refusals_total", queue_class=safe_label(claim.queue_class)
+                )
+                with log_context(
+                    job_id=claim.job_id, execution_id=claim.execution_id, fence=claim.fence
+                ):
+                    LOGGER.warning("lease lost; stage result will not be committed")
             raise
         finally:
             cleanup_task = asyncio.create_task(

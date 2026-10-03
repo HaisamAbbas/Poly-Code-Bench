@@ -1,0 +1,84 @@
+# Production TEMPLATE. Same procedure as staging; production additionally requires
+# a Multi-AZ database, vault lock and a verified staging restore rehearsal first.
+schema_version: 1
+environment: production
+status: template
+isolation_tier: production
+identity:
+  provider: aws
+  account_id: REQUIRED-account
+  region: REQUIRED-region
+  service_roles:
+    api: arn:aws:iam::REQUIRED-account:role/pcb-production-api
+    scheduler: arn:aws:iam::REQUIRED-account:role/pcb-production-scheduler
+    model-gateway: arn:aws:iam::REQUIRED-account:role/pcb-production-model-gateway
+    judge-gateway: arn:aws:iam::REQUIRED-account:role/pcb-production-judge-gateway
+    solve-supervisor: arn:aws:iam::REQUIRED-account:role/pcb-production-solve-supervisor
+    eval-supervisor: arn:aws:iam::REQUIRED-account:role/pcb-production-eval-supervisor
+    scorer: arn:aws:iam::REQUIRED-account:role/pcb-production-scorer
+    publisher: arn:aws:iam::REQUIRED-account:role/pcb-production-publisher
+    web: arn:aws:iam::REQUIRED-account:role/pcb-production-web
+    migrator: arn:aws:iam::REQUIRED-account:role/pcb-production-migrator
+    ops-reaper: arn:aws:iam::REQUIRED-account:role/pcb-production-ops-reaper
+    admission-operator: arn:aws:iam::REQUIRED-account:role/pcb-production-admission-operator
+    restore-operator: arn:aws:iam::REQUIRED-account:role/pcb-production-restore-operator
+  operator_roles:
+    oncall-operator: arn:aws:iam::REQUIRED-account:role/pcb-production-oncall-operator
+    release-approver: arn:aws:iam::REQUIRED-account:role/pcb-production-release-approver
+object_store:
+  endpoint: https://s3.REQUIRED-region.amazonaws.com
+  bucket_hidden: REQUIRED-prefix-production-hidden
+  bucket_internal: REQUIRED-prefix-production-internal
+  bucket_public: REQUIRED-prefix-production-public
+secrets:
+  database_dsn_refs:
+    api: aws-sm:pcb/production/db/api
+    scheduler: aws-sm:pcb/production/db/scheduler
+    solve-supervisor: aws-sm:pcb/production/db/solve-supervisor
+    eval-supervisor: aws-sm:pcb/production/db/eval-supervisor
+    scorer: aws-sm:pcb/production/db/scorer
+    publisher: aws-sm:pcb/production/db/publisher
+    migrator: aws-sm:pcb/production/db/migrator
+    restore-operator: aws-sm:pcb/production/db/restore-operator
+    ops-reaper: aws-sm:pcb/production/db/ops-reaper
+  model_namespace: aws-sm:pcb/production/model/
+  judge_namespace: aws-sm:pcb/production/judge/
+  signing_key_refs:
+    production-ed25519-2026-10: aws-sm:pcb/production/signing/production-ed25519-2026-10
+  active_signing_key_id: production-ed25519-2026-10
+  cursor_key_ref: aws-sm:pcb/production/api/cursor-signing-key
+sandbox:
+  provider: ec2_vm
+  approved_vm_image: ami-REQUIRED
+  launch_templates:
+    solve: lt-REQUIRED
+    grading: lt-REQUIRED
+    admission: lt-REQUIRED
+    performance: lt-REQUIRED
+  lane_subnets:
+    solve: subnet-REQUIRED
+    grading: subnet-REQUIRED
+    admission: subnet-REQUIRED
+  guest_ttl_seconds: 3600
+  orphan_alert_grace_seconds: 600
+telemetry:
+  otel_endpoint: http://127.0.0.1:4318
+  metrics_port: 9464
+  log_format: json
+capacity:
+  max_concurrency: 64
+  queue_classes:
+  - solve
+  - grading
+  - admission
+  - performance
+  performance_hardware_class: aws-c7i-2xlarge-dedicated-v1
+policy:
+  allowed_data:
+  - public_samples
+  - private_tasks
+  fake_transports_allowed: false
+  ranked_release_allowed: true
+  publication_board: production:board
+network:
+  vpc_cidr: 10.50.0.0/16

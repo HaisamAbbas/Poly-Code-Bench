@@ -20,6 +20,7 @@ members = [
     "polycodebench-lang-javascript",
     "polycodebench-lang-python",
     "polycodebench-lang-rust",
+    "polycodebench-operations",
     "polycodebench-orchestration",
     "polycodebench-persistence",
     "polycodebench-plugins-api",
@@ -1157,6 +1158,37 @@ requires-dist = [
     { name = "polycodebench-core", editable = "packages/core" },
     { name = "polycodebench-plugins-api", editable = "packages/plugins-api" },
     { name = "pyyaml", specifier = "==6.0.3" },
+]
+
+[[package]]
+name = "polycodebench-operations"
+version = "0.1.0"
+source = { editable = "packages/operations" }
+dependencies = [
+    { name = "boto3" },
+    { name = "cryptography" },
+    { name = "polycodebench-core" },
+    { name = "polycodebench-persistence" },
+    { name = "polycodebench-publication" },
+    { name = "polycodebench-runner" },
+    { name = "polycodebench-scoring" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pyyaml" },
+    { name = "sqlalchemy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "boto3", specifier = "==1.43.105" },
+    { name = "cryptography", specifier = "==46.0.5" },
+    { name = "polycodebench-core", editable = "packages/core" },
+    { name = "polycodebench-persistence", editable = "packages/persistence" },
+    { name = "polycodebench-publication", editable = "packages/publication" },
+    { name = "polycodebench-runner", editable = "packages/runner" },
+    { name = "polycodebench-scoring", editable = "packages/scoring" },
+    { name = "psycopg", extras = ["binary"], specifier = "==3.3.6" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+    { name = "sqlalchemy", specifier = "==2.0.54" },
 ]
 
 [[package]]

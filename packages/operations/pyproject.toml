@@ -1,0 +1,31 @@
+[project]
+name = "polycodebench-operations"
+version = "0.1.0"
+description = "PolyCodeBench deployment verification, recovery rehearsals and operator drills"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "polycodebench-core==0.1.0",
+  "polycodebench-persistence==0.1.0",
+  "polycodebench-publication==0.1.0",
+  "polycodebench-scoring==0.1.0",
+  "polycodebench-runner==0.1.0",
+  "pyyaml==6.0.3",
+  "boto3==1.43.105",
+  "cryptography==46.0.5",
+  "sqlalchemy==2.0.54",
+  "psycopg[binary]==3.3.6",
+]
+
+[project.scripts]
+pcb-ops = "polycodebench_operations.cli:main"
+
+[tool.uv.sources]
+polycodebench-core = { workspace = true }
+polycodebench-persistence = { workspace = true }
+polycodebench-publication = { workspace = true }
+polycodebench-scoring = { workspace = true }
+polycodebench-runner = { workspace = true }
+
+[build-system]
+requires = ["uv_build==0.12.15"]
+build-backend = "uv_build"

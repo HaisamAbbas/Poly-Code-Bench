@@ -1,0 +1,50 @@
+# Integration: real PostgreSQL/object store, synthetic/public fixtures, isolated test credentials.
+schema_version: 1
+environment: integration
+status: deployed
+isolation_tier: development
+identity:
+  provider: none
+object_store:
+  endpoint: http://127.0.0.1:8333
+  bucket_hidden: pcb-integration-hidden
+  bucket_internal: pcb-integration-internal
+  bucket_public: pcb-integration-public
+secrets:
+  database_dsn_refs:
+    api: env:PCB_INTEGRATION_DSN_API
+    scheduler: env:PCB_INTEGRATION_DSN_SCHEDULER
+    solve-supervisor: env:PCB_INTEGRATION_DSN_SOLVE_SUPERVISOR
+    eval-supervisor: env:PCB_INTEGRATION_DSN_EVAL_SUPERVISOR
+    scorer: env:PCB_INTEGRATION_DSN_SCORER
+    publisher: env:PCB_INTEGRATION_DSN_PUBLISHER
+    migrator: env:PCB_INTEGRATION_DSN_MIGRATOR
+    restore-operator: env:PCB_INTEGRATION_DSN_RESTORE_OPERATOR
+    ops-reaper: env:PCB_INTEGRATION_DSN_OPS_REAPER
+  model_namespace: local/integration/model/
+  judge_namespace: local/integration/judge/
+  signing_key_refs:
+    integration-local-ed25519: file:.local/integration/signing/ed25519.pem
+  active_signing_key_id: integration-local-ed25519
+  cursor_key_ref: null
+sandbox:
+  provider: local_docker
+  guest_ttl_seconds: 1800
+  orphan_alert_grace_seconds: 600
+telemetry:
+  otel_endpoint: null
+  metrics_port: 9464
+  log_format: json
+capacity:
+  max_concurrency: 4
+  queue_classes:
+  - solve
+  - grading
+  - admission
+policy:
+  allowed_data:
+  - synthetic_fixtures
+  - public_samples
+  fake_transports_allowed: true
+  ranked_release_allowed: false
+  publication_board: local:integration-board

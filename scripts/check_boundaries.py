@@ -18,6 +18,7 @@ OWNERS = {
     "polycodebench_scoring": "scoring",
     "polycodebench_publication": "publication",
     "polycodebench_configuration": "configuration",
+    "polycodebench_operations": "operations",
     "polycodebench_plugins_api": "plugins_api",
     "polycodebench_lang_python": "lang_python",
     "polycodebench_lang_rust": "lang_rust",
@@ -42,6 +43,9 @@ ALLOWED = {
     "scoring": {"core", "plugins_api"},
     "publication": {"core", "scoring"},
     "configuration": set(),
+    # Operations verifies deployments and rehearses recovery over the persisted state, the
+    # publication store, the pure scorer and the sandbox drivers. Nothing imports it back.
+    "operations": {"core", "persistence", "publication", "scoring", "runner", "plugins_api"},
     "plugins_api": {"core"},
     # A language plugin is an adapter over the shared extension interfaces. It may depend on the
     # core contracts and the plugins API, and must never depend on a higher layer such as

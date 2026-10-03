@@ -23,3 +23,6 @@ tmp_probe/
 tmp_*.java
 *seed.sh
 .cache_maven_pull.log
+
+# Local operations rehearsal state: signing keys, publication store, backups (Prompt 33)
+.local/

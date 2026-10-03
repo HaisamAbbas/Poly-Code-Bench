@@ -11,6 +11,7 @@ from typing import cast
 from uuid import UUID
 
 from polycodebench_core.application_errors import ServiceError
+from polycodebench_core.telemetry import METRICS, configure_logging, serve_metrics
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.jobs import REAPER_SECONDS, PostgresJobRepository
 from sqlalchemy.exc import SQLAlchemyError
@@ -37,6 +38,13 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    configure_logging(
+        environment=os.environ.get("PCB_ENVIRONMENT", "dev"),
+        role="scheduler",
+        service_identity=os.environ.get("PCB_SERVICE_IDENTITY"),
+        log_format="json" if os.environ.get("PCB_LOG_FORMAT") == "json" else "text",
+        stream=sys.stderr,
+    )
     database_url = os.environ.get("PCB_DATABASE_URL")
     actor = os.environ.get("PCB_SERVICE_IDENTITY")
     if not database_url or not actor:
@@ -47,8 +55,13 @@ def main(argv: list[str] | None = None) -> int:
         database = Database(database_url)
         repository = PostgresJobRepository(database.engine)
         if args.command == "reap":
+            metrics_port = os.environ.get("PCB_METRICS_PORT")
+            if args.watch and metrics_port:
+                serve_metrics(METRICS, int(metrics_port))
             while True:
                 rows = repository.reap_expired(limit=args.limit)
+                if rows:
+                    METRICS.inc("pcb_expired_leases_total", float(len(rows)))
                 print(
                     json.dumps(
                         [

@@ -1,0 +1,23 @@
+# Source environment for the local-docker recovery rehearsal (E2E-42 local variant).
+# Uses the trusted local compose services; the restore target is always a NEW isolated pair
+# created and destroyed by `pcb-ops restore rehearse`. Credentials are the compose.yaml
+# development-only placeholders, never real secrets.
+schema_version: 1
+target: local-docker
+source:
+  postgres_container: polycodebench-local-postgres-1
+  database: pcb_ops_rehearsal_source
+  database_url: postgresql://polycodebench:local-development-only@127.0.0.1:55432/pcb_ops_rehearsal_source
+  admin_database_url: postgresql://polycodebench:local-development-only@127.0.0.1:55432/polycodebench
+  object_store_endpoint: http://127.0.0.1:8333
+  buckets:
+    hidden: pcb-ops-src-hidden
+    internal: pcb-ops-src-internal
+    public: pcb-ops-src-public
+  release_store_path: .local/ops-rehearsal/source/releases.db
+  keyring_path: .local/ops-rehearsal/source/keyring.json
+  signing_key_dir: .local/ops-rehearsal/source/signing
+  board: local:board
+replay:
+  count: 10
+  seed: pcb-restore-rehearsal-v1

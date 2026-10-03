@@ -1,0 +1,26 @@
+# Migration rollout policy (T 22.4). Read by `pcb-ops migrate check` / `pcb-ops migrate rehearse`.
+schema_version: 1
+# Revision of the most recently *released* schema. No environment has been deployed yet, so
+# this is the head recorded at the last accepted phase commit (Prompt 31, cc0036e). Bump it
+# when a release deploys a newer head.
+released_revision: e5f6a7b8c9d0
+# The revision before `released_revision`, used to rehearse an upgrade across a real step.
+previous_revision: b9e04c7a1f38
+# Contract (destructive) migrations are allowed only when listed here with an approved
+# retention/migration plan reference. Revisions at or before released_revision are history.
+approved_contract_migrations: {}
+# Tables holding published provenance; no migration may drop or truncate them.
+provenance_tables:
+  - artifact
+  - artifact_edge
+  - scorecard
+  - score_item
+  - evaluation
+  - release
+  - release_entry
+  - publication_pointer
+  - audit_event
+  - judge_vote
+  - judge_result
+  - usage_record
+  - accounting_entry

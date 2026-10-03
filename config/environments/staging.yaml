@@ -1,0 +1,86 @@
+# Staging TEMPLATE. Every REQUIRED value is an owner-supplied deployment input (T 25.3).
+# After `terraform apply` in infra/terraform/environments/staging, fill it from
+# `terraform output -json deployment`, set status: deployed, and run
+# `pcb-ops env reconcile --env staging --terraform-output <file>`.
+schema_version: 1
+environment: staging
+status: template
+isolation_tier: production
+identity:
+  provider: aws
+  account_id: REQUIRED-account
+  region: REQUIRED-region
+  service_roles:
+    api: arn:aws:iam::REQUIRED-account:role/pcb-staging-api
+    scheduler: arn:aws:iam::REQUIRED-account:role/pcb-staging-scheduler
+    model-gateway: arn:aws:iam::REQUIRED-account:role/pcb-staging-model-gateway
+    judge-gateway: arn:aws:iam::REQUIRED-account:role/pcb-staging-judge-gateway
+    solve-supervisor: arn:aws:iam::REQUIRED-account:role/pcb-staging-solve-supervisor
+    eval-supervisor: arn:aws:iam::REQUIRED-account:role/pcb-staging-eval-supervisor
+    scorer: arn:aws:iam::REQUIRED-account:role/pcb-staging-scorer
+    publisher: arn:aws:iam::REQUIRED-account:role/pcb-staging-publisher
+    web: arn:aws:iam::REQUIRED-account:role/pcb-staging-web
+    migrator: arn:aws:iam::REQUIRED-account:role/pcb-staging-migrator
+    ops-reaper: arn:aws:iam::REQUIRED-account:role/pcb-staging-ops-reaper
+    admission-operator: arn:aws:iam::REQUIRED-account:role/pcb-staging-admission-operator
+    restore-operator: arn:aws:iam::REQUIRED-account:role/pcb-staging-restore-operator
+  operator_roles:
+    oncall-operator: arn:aws:iam::REQUIRED-account:role/pcb-staging-oncall-operator
+    release-approver: arn:aws:iam::REQUIRED-account:role/pcb-staging-release-approver
+object_store:
+  endpoint: https://s3.REQUIRED-region.amazonaws.com
+  bucket_hidden: REQUIRED-prefix-staging-hidden
+  bucket_internal: REQUIRED-prefix-staging-internal
+  bucket_public: REQUIRED-prefix-staging-public
+secrets:
+  database_dsn_refs:
+    api: aws-sm:pcb/staging/db/api
+    scheduler: aws-sm:pcb/staging/db/scheduler
+    solve-supervisor: aws-sm:pcb/staging/db/solve-supervisor
+    eval-supervisor: aws-sm:pcb/staging/db/eval-supervisor
+    scorer: aws-sm:pcb/staging/db/scorer
+    publisher: aws-sm:pcb/staging/db/publisher
+    migrator: aws-sm:pcb/staging/db/migrator
+    restore-operator: aws-sm:pcb/staging/db/restore-operator
+    ops-reaper: aws-sm:pcb/staging/db/ops-reaper
+  model_namespace: aws-sm:pcb/staging/model/
+  judge_namespace: aws-sm:pcb/staging/judge/
+  signing_key_refs:
+    staging-ed25519-2026-10: aws-sm:pcb/staging/signing/staging-ed25519-2026-10
+  active_signing_key_id: staging-ed25519-2026-10
+  cursor_key_ref: aws-sm:pcb/staging/api/cursor-signing-key
+sandbox:
+  provider: ec2_vm
+  approved_vm_image: ami-REQUIRED
+  launch_templates:
+    solve: lt-REQUIRED
+    grading: lt-REQUIRED
+    admission: lt-REQUIRED
+    performance: lt-REQUIRED
+  lane_subnets:
+    solve: subnet-REQUIRED
+    grading: subnet-REQUIRED
+    admission: subnet-REQUIRED
+  guest_ttl_seconds: 3600
+  orphan_alert_grace_seconds: 600
+telemetry:
+  otel_endpoint: http://127.0.0.1:4318
+  metrics_port: 9464
+  log_format: json
+capacity:
+  max_concurrency: 16
+  queue_classes:
+  - solve
+  - grading
+  - admission
+  - performance
+  performance_hardware_class: aws-c7i-2xlarge-dedicated-v1
+policy:
+  allowed_data:
+  - synthetic_fixtures
+  - public_samples
+  fake_transports_allowed: false
+  ranked_release_allowed: false
+  publication_board: staging:test-board
+network:
+  vpc_cidr: 10.40.0.0/16

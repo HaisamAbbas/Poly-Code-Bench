@@ -1,0 +1,49 @@
+# Local trusted development (docker compose). Development isolation tier only.
+schema_version: 1
+environment: dev
+status: deployed
+isolation_tier: development
+identity:
+  provider: none
+object_store:
+  endpoint: http://127.0.0.1:8333
+  bucket_hidden: pcb-local-hidden
+  bucket_internal: pcb-local-internal
+  bucket_public: pcb-local-public
+secrets:
+  database_dsn_refs:
+    api: env:PCB_DEV_DSN_API
+    scheduler: env:PCB_DEV_DSN_SCHEDULER
+    solve-supervisor: env:PCB_DEV_DSN_SOLVE_SUPERVISOR
+    eval-supervisor: env:PCB_DEV_DSN_EVAL_SUPERVISOR
+    scorer: env:PCB_DEV_DSN_SCORER
+    publisher: env:PCB_DEV_DSN_PUBLISHER
+    migrator: env:PCB_DEV_DSN_MIGRATOR
+    restore-operator: env:PCB_DEV_DSN_RESTORE_OPERATOR
+    ops-reaper: env:PCB_DEV_DSN_OPS_REAPER
+  model_namespace: local/dev/model/
+  judge_namespace: local/dev/judge/
+  signing_key_refs:
+    dev-local-ed25519: file:.local/dev/signing/ed25519.pem
+  active_signing_key_id: dev-local-ed25519
+  cursor_key_ref: null
+sandbox:
+  provider: local_docker
+  guest_ttl_seconds: 1800
+  orphan_alert_grace_seconds: 600
+telemetry:
+  otel_endpoint: null
+  metrics_port: 9464
+  log_format: text
+capacity:
+  max_concurrency: 4
+  queue_classes:
+  - solve
+  - grading
+  - admission
+policy:
+  allowed_data:
+  - synthetic_fixtures
+  fake_transports_allowed: true
+  ranked_release_allowed: false
+  publication_board: local:dev-board

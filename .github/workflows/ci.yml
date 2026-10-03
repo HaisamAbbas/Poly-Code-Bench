@@ -62,6 +62,28 @@ jobs:
       - run: uv run --locked --all-packages --group dev python scripts/export_contract_schemas.py --check
       - run: uv build --all-packages
 
+  infra:
+    # Prompt 33: IaC and alert rules are validated without cloud credentials; nothing is applied.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - run: docker run --rm -v "$PWD/infra:/infra" -w /infra hashicorp/terraform:1.13 fmt -recursive -check
+      - run: |
+          for env in staging production; do
+            docker run --rm -v "$PWD/infra:/infra" -w /infra/terraform/environments/$env hashicorp/terraform:1.13 init -backend=false -input=false
+            docker run --rm -v "$PWD/infra:/infra" -w /infra/terraform/environments/$env hashicorp/terraform:1.13 validate
+          done
+      - run: docker run --rm -v "$PWD/infra/observability/prometheus:/rules" --entrypoint promtool prom/prometheus:v3.5.0 check rules /rules/alerts.yaml
+      - run: docker run --rm -v "$PWD/infra/observability/prometheus:/rules" --entrypoint promtool prom/prometheus:v3.5.0 test rules /rules/alerts.test.yaml
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - run: python -m pip install uv==0.12.17
+      - run: uv sync --locked --all-packages
+      - run: uv run --locked --all-packages pcb-ops env validate
+      - run: uv run --locked --all-packages pcb-ops migrate check
+      - run: uv run --locked --all-packages pcb-ops alerts check
+
   web:
     runs-on: ubuntu-24.04
     steps:

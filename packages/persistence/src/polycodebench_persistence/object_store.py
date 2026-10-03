@@ -16,6 +16,9 @@ if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
 
 
+RESERVED_LIFECYCLE_PREFIXES = frozenset({"provisional", "debug", "cancelled-logs"})
+
+
 class ObjectStoreError(RuntimeError):
     """Storage failed without exposing credentials or backend response bodies."""
 
@@ -171,6 +174,10 @@ class S3ArtifactStore:
             not (char.isascii() and (char.isalnum() or char in "-_")) for char in domain
         ):
             raise ValueError("invalid encryption domain")
+        if domain in RESERVED_LIFECYCLE_PREFIXES:
+            # Canonical keys start with the domain; these prefixes carry bucket expiry rules
+            # (infra/terraform/modules/artifacts), so verified evidence must never use them.
+            raise ValueError("encryption domain collides with a lifecycle-managed prefix")
 
 
 def _valid_digest(digest: str) -> bool:

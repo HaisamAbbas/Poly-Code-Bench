@@ -25,6 +25,7 @@ async def _assert_published_routes(app: FastAPI, release_id: str) -> None:
         assert {entry["model_config_id"] for entry in board["data"]} == {
             "synthetic-code-a",
             "synthetic-code-b",
+            "synthetic-code-c",
             "synthetic-answer-only",
         }
         assert {

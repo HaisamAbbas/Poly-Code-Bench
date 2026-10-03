@@ -76,6 +76,8 @@ def _entry(model_config_id: str, languages: tuple[str, ...], score: str) -> Rele
         languages=languages,
         metrics=(_metric("code_score", score),),
         coverage=Coverage(tasks=10, samples=30, independent_clusters=10),
+        run_mode="single_shot",
+        budget_profile_id="test-small-budget",
         dimensions=(
             DimensionBreakdown(
                 dimension="correctness",
@@ -121,6 +123,18 @@ def _content() -> ReleaseContent:
                 metrics=(_metric("code_score", "89.750000"),),
                 contributions=(),
                 evidence_url="/v1/scorecards/card-1",
+            ),
+            PublicScorecard(
+                scorecard_id="card-2",
+                release_id="release-1",
+                model_config_id="model-beta",
+                task_id="task-public",
+                formula_version="scoring-v1",
+                policy_digest=digest({"policy": 1}),
+                gating_status="scored",
+                metrics=(_metric("code_score", "75.000000"),),
+                contributions=(),
+                evidence_url="/v1/scorecards/card-2",
             ),
         ),
         methodology=Methodology(version="methods-v1", methods=("paired bootstrapping",)),
@@ -243,7 +257,7 @@ def test_comparison_without_common_coverage_returns_reasons_and_no_numbers() -> 
 
 def test_comparison_with_missing_language_is_incompatible_not_renormalised() -> None:
     doc = _published_document()
-    result = compare(doc, ("model-alpha", "model-beta"))
+    result = compare(doc, ("model-alpha", "model-beta"), languages=frozenset({"rust"}))
     codes = [i.code for i in result.incompatibilities]
     assert codes == ["missing_language"]
     assert result.entries == ()
@@ -267,7 +281,13 @@ def test_comparison_on_one_common_language_produces_paired_deltas() -> None:
     )
     assert result.incompatibilities == ()
     assert len(result.entries) == 2
-    assert result.common_tasks == 10
+    assert result.common_tasks == 1
+    assert result.common_task_refs[0].task_id == "task-public"
+    assert result.common_independent_clusters is None
+    paired = next(row for row in result.paired_task_deltas if row.metric_id == "code_score")
+    assert paired.delta_value == "-14.750000"
+    assert paired.baseline_scorecard_id == "card-1"
+    assert paired.candidate_scorecard_id == "card-2"
     delta = next(d for d in result.deltas if d.metric_id == "code_score")
     assert delta.delta_value == "-14.750000"
     assert delta.status == "measured"
@@ -331,6 +351,7 @@ def test_release_summary_carries_no_manifest_or_evidence() -> None:
         "withdrawal_reason",
         "replacement_release_id",
         "methodology_url",
+        "methodology_version",
     }
 
 

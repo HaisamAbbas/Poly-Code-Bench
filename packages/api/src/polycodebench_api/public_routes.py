@@ -14,22 +14,22 @@ from fastapi import APIRouter, Header, Query, Request
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_publication.projections import (
     ComparisonResult,
-    Incompatibility,
     MetricRegistry,
     ReleaseSummary,
     sort_leaderboard,
 )
 from polycodebench_publication.projections_query import (
     PublicApiError,
-    ReleaseContent,
     compare,
     language_profile,
     leaderboard,
     methodology,
     model_profile,
-    public_task,
     release_summary,
     scorecard,
+    task_content,
+    task_summaries,
+    task_summary,
 )
 from starlette.responses import Response
 
@@ -256,56 +256,15 @@ def get_language(request: Request, language_id: str, release: str = LATEST) -> R
 # --------------------------------------------------------------------------- comparison
 
 
-def _filter_gaps(
-    content: ReleaseContent, filters: FilterSet, model_ids: Sequence[str]
-) -> list[Incompatibility]:
-    """Entries that cannot join the *filtered* cohort are typed incompatibilities, never dropped."""
-    by_id = {entry.model_config_id: entry for entry in content.entries}
-    allowed: frozenset[str] | None = None
-    if filters.restricts_tasks:
-        allowed = entry_ids_in_slice(content, task_slice(content, filters))
-    gaps: list[Incompatibility] = []
-    for model_config_id in model_ids:
-        entry = by_id.get(model_config_id)
-        if entry is None:
-            continue  # the query layer reports absence itself
-        if filters.languages and not set(filters.languages) <= set(entry.languages):
-            gaps.append(
-                Incompatibility(
-                    code="missing_language",
-                    model_config_id=model_config_id,
-                    detail="entry does not cover the filtered cohort",
-                )
-            )
-        elif allowed is not None and model_config_id not in allowed:
-            gaps.append(
-                Incompatibility(
-                    code="insufficient_common_coverage",
-                    model_config_id=model_config_id,
-                    detail="entry has no task in the filtered cohort",
-                )
-            )
-    return gaps
-
-
 def _comparison(
     document: Mapping[str, Any], filters: FilterSet, model_ids: Sequence[str]
 ) -> ComparisonResult:
-    base = compare(document, tuple(model_ids))
-    gaps = _filter_gaps(content_of(document), filters, model_ids)
-    if not gaps:
-        return base
-    merged = (base.incompatibilities + tuple(gaps)) if base.incompatibilities else tuple(gaps)
-    return ComparisonResult(
-        release_id=base.release_id,
-        cohort_digest=base.cohort_digest,
-        scope=base.scope,
-        common_tasks=0,
-        common_independent_clusters=0,
-        entries=(),
-        deltas=(),
-        incompatibilities=merged,
-        limitations=base.limitations,
+    return compare(
+        document,
+        tuple(model_ids),
+        languages=frozenset(filters.languages),
+        families=frozenset(filters.families),
+        difficulties=frozenset(filters.difficulties),
     )
 
 
@@ -364,10 +323,10 @@ def list_tasks(
         filters_digest=filters.digest(),
         key=services.secret_key,
     )
-    content = content_of(document)
+    summaries = task_summaries(document)
     rows = [
         task
-        for task in content.disclosed_tasks
+        for task in summaries
         if (not filters.languages or task.language_id in filters.languages)
         and (not filters.families or task.family in filters.families)
         and (not filters.difficulties or task.difficulty in filters.difficulties)
@@ -399,9 +358,19 @@ def list_tasks(
 def get_task(request: Request, task_id: str, release: str = LATEST) -> Response:
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
-    task = public_task(document, task_id)
+    task = task_summary(document, task_id)
     meta = single_meta(resolved, release_digest(document), is_exploratory(document))
     return respond(request, envelope(task, meta), cache=_cache(pinned))
+
+
+@router.get("/tasks/{task_id}/content")
+def get_task_content(request: Request, task_id: str, release: str = LATEST) -> Response:
+    """Fetch bounded, curated task content only after a public task is explicitly opened."""
+    services = services_of(request)
+    resolved, document, pinned = load_public_document(services, release)
+    detail = task_content(document, task_id)
+    meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+    return respond(request, envelope(detail, meta), cache=_cache(pinned))
 
 
 @router.get("/scorecards/{scorecard_id}")
@@ -433,6 +402,18 @@ def get_methodology(request: Request, version: str, release: str = LATEST) -> Re
     except ApiError:
         if pinned:
             raise
+    if pinned:
+        if not candidates:
+            raise ApiError("NOT_FOUND")
+        resolved, document = candidates[0]
+        try:
+            methods = methodology(document)
+        except PublicApiError:
+            raise ApiError("NOT_FOUND") from None
+        if methods.version != version:
+            raise ApiError("NOT_FOUND")
+        meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+        return respond(request, envelope(methods, meta), cache=_cache(True))
     for document in public_documents(services):
         identifier = str(document.get("id", ""))
         if identifier and all(identifier != existing for existing, _ in candidates):

@@ -315,6 +315,7 @@ class ReleaseSummary(PublicationModel):
     withdrawal_reason: str | None = Field(default=None, max_length=400)
     replacement_release_id: str | None = Field(default=None, max_length=120)
     methodology_url: str = Field(min_length=1, max_length=200)
+    methodology_version: str = Field(min_length=1, max_length=64)
 
 
 class LeaderboardEntry(PublicationModel):
@@ -423,6 +424,8 @@ IncompatibilityCode = Literal[
     "different_cohort",
     "missing_language",
     "protocol_mismatch",
+    "budget_mismatch",
+    "incompatible_metric",
     "insufficient_common_coverage",
     "too_few_entries",
     "too_many_entries",
@@ -460,6 +463,50 @@ class PairedDelta(PublicationModel):
     delta_value: str | None
     interval_low: str | None
     interval_high: str | None
+    interval_method: Literal["reported_interval_difference_bounds", "unavailable"] = "unavailable"
+    status: MetricStatus
+    reason: str | None = Field(default=None, max_length=200)
+
+
+class ComparisonScorecardRef(PublicationModel):
+    """A scorecard that proves one selected configuration covered a public task version."""
+
+    kind: Literal["comparison_scorecard_ref"] = "comparison_scorecard_ref"
+    model_config_id: str = Field(min_length=1, max_length=120)
+    scorecard_id: str = Field(min_length=1, max_length=120)
+    evidence_url: str = Field(min_length=1, max_length=200)
+
+
+class ComparisonTaskRef(PublicationModel):
+    """One exact, disclosed task version shared by every selected configuration."""
+
+    kind: Literal["comparison_task_ref"] = "comparison_task_ref"
+    task_id: str = Field(min_length=1, max_length=120)
+    task_version: int = Field(ge=1)
+    language_id: str = Field(min_length=1, max_length=64)
+    family: str = Field(min_length=1, max_length=64)
+    difficulty: str = Field(min_length=1, max_length=32)
+    scorecards: tuple[ComparisonScorecardRef, ...] = Field(min_length=2, max_length=4)
+
+
+class PairedTaskDelta(PublicationModel):
+    """A per-task candidate-minus-baseline difference traced to both source scorecards."""
+
+    kind: Literal["paired_task_delta"] = "paired_task_delta"
+    task_id: str = Field(min_length=1, max_length=120)
+    task_version: int = Field(ge=1)
+    metric_id: str = Field(min_length=1, max_length=80)
+    label: str = Field(min_length=1, max_length=200)
+    baseline_model_config_id: str = Field(min_length=1, max_length=120)
+    candidate_model_config_id: str = Field(min_length=1, max_length=120)
+    baseline_scorecard_id: str = Field(min_length=1, max_length=120)
+    candidate_scorecard_id: str = Field(min_length=1, max_length=120)
+    baseline_value: str | None
+    candidate_value: str | None
+    delta_value: str | None
+    interval_low: str | None
+    interval_high: str | None
+    interval_method: Literal["reported_interval_difference_bounds", "unavailable"] = "unavailable"
     status: MetricStatus
     reason: str | None = Field(default=None, max_length=200)
 
@@ -477,9 +524,11 @@ class ComparisonResult(PublicationModel):
     cohort_digest: str = Field(min_length=1, max_length=200)
     scope: Literal["exploratory", "ranked_eligible"]
     common_tasks: int = Field(ge=0)
-    common_independent_clusters: int = Field(ge=0)
+    common_independent_clusters: int | None = Field(default=None, ge=0)
     entries: tuple[LeaderboardEntry, ...] = ()
     deltas: tuple[PairedDelta, ...] = ()
+    common_task_refs: tuple[ComparisonTaskRef, ...] = ()
+    paired_task_deltas: tuple[PairedTaskDelta, ...] = ()
     incompatibilities: tuple[Incompatibility, ...] = ()
     limitations: tuple[str, ...] = ()
 
@@ -513,6 +562,92 @@ class PublicTask(PublicationModel):
     evidence_url: str = Field(min_length=1, max_length=200)
 
 
+class TaskSummary(PublicationModel):
+    """Bounded task-list/detail metadata; source payloads are fetched only on request."""
+
+    kind: Literal["task_summary"] = "task_summary"
+    task_id: str = Field(min_length=1, max_length=120)
+    version: int = Field(ge=1)
+    language_id: str = Field(min_length=1, max_length=64)
+    family: str = Field(min_length=1, max_length=64)
+    difficulty: str = Field(min_length=1, max_length=32)
+    statement_summary: str = Field(min_length=1, max_length=2000)
+    evidence_url: str = Field(min_length=1, max_length=200)
+    source_version_count: int = Field(ge=0)
+    patch_count: int = Field(ge=0)
+    finding_count: int = Field(ge=0)
+
+
+class PublicSourceVersion(PublicationModel):
+    """Curated source text that is safe to disclose inside one published task release."""
+
+    kind: Literal["public_source_version"] = "public_source_version"
+    source_id: str = Field(min_length=1, max_length=120)
+    version_label: str = Field(min_length=1, max_length=80)
+    path: str = Field(min_length=1, max_length=240)
+    language_id: str = Field(min_length=1, max_length=64)
+    source_text: str = Field(max_length=65536)
+
+    @model_validator(mode="after")
+    def path_is_virtual_and_relative(self) -> PublicSourceVersion:
+        parts = self.path.replace("\\", "/").split("/")
+        if self.path.startswith(("/", "\\")) or any(part in {"", ".", ".."} for part in parts):
+            raise ValueError("public source paths must be normalized relative paths")
+        if any(ord(char) < 32 for char in self.path):
+            raise ValueError("public source paths cannot contain control characters")
+        return self
+
+
+class PublicSubmittedPatch(PublicationModel):
+    """An explicitly released candidate diff; inert text tied to a public scorecard."""
+
+    kind: Literal["public_submitted_patch"] = "public_submitted_patch"
+    patch_id: str = Field(min_length=1, max_length=120)
+    model_config_id: str = Field(min_length=1, max_length=120)
+    scorecard_id: str = Field(min_length=1, max_length=120)
+    summary: str = Field(min_length=1, max_length=240)
+    diff_text: str = Field(max_length=65536)
+
+
+class PublicToolFinding(PublicationModel):
+    """A curated, location-bounded tool observation from a public task evaluation."""
+
+    kind: Literal["public_tool_finding"] = "public_tool_finding"
+    finding_id: str = Field(min_length=1, max_length=120)
+    model_config_id: str = Field(min_length=1, max_length=120)
+    scorecard_id: str = Field(min_length=1, max_length=120)
+    source_id: str = Field(min_length=1, max_length=120)
+    tool_id: str = Field(min_length=1, max_length=80)
+    rule_id: str = Field(min_length=1, max_length=120)
+    severity: Literal["critical", "high", "medium", "low", "info"]
+    line: int | None = Field(default=None, ge=1)
+    message: str = Field(min_length=1, max_length=500)
+
+
+class PublicTaskContent(PublicationModel):
+    """On-demand content for one disclosed task version, never an upload or hidden oracle."""
+
+    kind: Literal["public_task_content"] = "public_task_content"
+    task_id: str = Field(min_length=1, max_length=120)
+    task_version: int = Field(ge=1)
+    statement: str = Field(min_length=1, max_length=20000)
+    source_versions: tuple[PublicSourceVersion, ...] = Field(max_length=20)
+    submitted_patches: tuple[PublicSubmittedPatch, ...] = Field(max_length=8)
+    tool_findings: tuple[PublicToolFinding, ...] = Field(max_length=200)
+
+    @model_validator(mode="after")
+    def unique_content_ids(self) -> PublicTaskContent:
+        for rows, key, label in (
+            (self.source_versions, lambda row: row.source_id, "source"),
+            (self.submitted_patches, lambda row: row.patch_id, "patch"),
+            (self.tool_findings, lambda row: row.finding_id, "finding"),
+        ):
+            identities = [key(row) for row in rows]
+            if len(identities) != len(set(identities)):
+                raise ValueError(f"duplicate public {label} identity")
+        return self
+
+
 class ContributionRow(PublicationModel):
     """One row of the exact contribution chain (Prompt 15's explanation contract)."""
 
@@ -539,12 +674,14 @@ class PublicScorecard(PublicationModel):
     release_id: str = Field(min_length=1, max_length=120)
     model_config_id: str = Field(min_length=1, max_length=120)
     task_id: str = Field(min_length=1, max_length=120)
+    task_version: int = Field(default=1, ge=1)
     formula_version: str = Field(min_length=1, max_length=64)
     policy_digest: str = Field(min_length=1, max_length=200)
     gating_status: Literal["scored", "gated_zero", "needs_review"]
     metrics: tuple[PublicMetric, ...]
     contributions: tuple[ContributionRow, ...] = ()
     evidence_url: str = Field(min_length=1, max_length=200)
+    redacted_evidence_count: int = Field(default=0, ge=0)
 
 
 class ArtifactRef(PublicationModel):
@@ -676,7 +813,9 @@ def sort_leaderboard(rows: Sequence[LeaderboardEntry], sort: str) -> tuple[Leade
 
 __all__ = [
     "ArtifactRef",
+    "ComparisonScorecardRef",
     "ComparisonResult",
+    "ComparisonTaskRef",
     "ContributionRow",
     "Coverage",
     "Cursor",
@@ -693,12 +832,18 @@ __all__ = [
     "Page",
     "PageMeta",
     "PairedDelta",
+    "PairedTaskDelta",
     "PublicError",
     "PublicManifest",
     "PublicMetric",
     "PublicScorecard",
+    "PublicSourceVersion",
+    "PublicSubmittedPatch",
     "PublicTask",
+    "PublicTaskContent",
+    "PublicToolFinding",
     "ReleaseSummary",
+    "TaskSummary",
     "aggregate_to_metric",
     "filters_digest",
     "metric_value",

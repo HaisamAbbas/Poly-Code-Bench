@@ -562,6 +562,7 @@ class ReleaseStore:
         expected_version: int,
         expected_generation: int,
         request_id: str,
+        replacement_release_id: str | None = None,
     ) -> dict[str, Any]:
         def operation(db: sqlite3.Connection) -> dict[str, Any]:
             doc = self._get(db, release_id)
@@ -569,6 +570,12 @@ class ReleaseStore:
                 raise OptimisticVersionConflict()
             if doc["state"] != "published" or not reason.strip():
                 raise InvalidState("withdrawal requires published release and reason")
+            if replacement_release_id is not None:
+                if replacement_release_id == release_id:
+                    raise InvalidState("a withdrawn release cannot replace itself")
+                replacement = self._get(db, replacement_release_id)
+                if replacement["state"] != "published":
+                    raise InvalidState("replacement release must already be published")
             row = db.execute(
                 "SELECT release_id,generation FROM pointers WHERE target='local:board'"
             ).fetchone()
@@ -579,7 +586,11 @@ class ReleaseStore:
             doc.update(
                 state="withdrawn",
                 version=doc["version"] + 1,
-                withdrawal={"reason": reason, "actor": principal.subject_id},
+                withdrawal={
+                    "reason": reason,
+                    "actor": principal.subject_id,
+                    "replacement_id": replacement_release_id,
+                },
             )
             return doc
 
@@ -589,7 +600,11 @@ class ReleaseStore:
             "withdraw",
             request_id,
             locals_payload(
-                release_id, expected_version, reason=reason, expected_generation=expected_generation
+                release_id,
+                expected_version,
+                reason=reason,
+                expected_generation=expected_generation,
+                replacement_release_id=replacement_release_id,
             ),
             operation,
         )

@@ -1,12 +1,3 @@
-variable "region" {
-  type        = string
-  description = "Approved AWS region for the isolated worker fleet."
-  validation {
-    condition     = can(regex("^[a-z]{2}(-gov)?-[a-z]+-[0-9]$", var.region))
-    error_message = "region must be an explicit AWS region identifier."
-  }
-}
-
 variable "vpc_id" {
   type        = string
   description = "Dedicated worker VPC owned by the authorized deployment."

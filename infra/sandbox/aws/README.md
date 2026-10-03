@@ -1,11 +1,17 @@
 # EC2 sandbox deployment plan
 
+Prompt 33: this directory is now a reusable child module. It is composed by
+`infra/terraform/modules/workers` into the per-environment stacks under
+`infra/terraform/environments/`, which own the provider, account guard and state. Both stacks
+pass `terraform validate` (AWS provider 6.36.0). Nothing has been applied: see
+`docs/operations/staging-execution-plan.md`.
+
 This module describes the private guest boundary only. It does not create an
 AWS account, VPC, supervisor, or worker instance. It must not be applied until
 an owner supplies the target account/region, budget limit, approved subnet and
 security-group identities, reviewed AMI digest/provenance, and supervisor
-principal. Terraform and AWS CLI were not installed in the local workspace at
-Prompt 06; this module has not been validated by `terraform validate/plan`.
+principal. At Prompt 06 Terraform was unavailable; since Prompt 33 it is validated through the
+`hashicorp/terraform:1.13` container, but it has never been planned or applied.
 
 The approved AMI is expected to contain a pinned Docker Engine, every
 allowlisted candidate image at its exact approved digest (preloaded before the

@@ -1,0 +1,31 @@
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: pcb-${role}
+          scrape_interval: 30s
+          static_configs:
+            - targets: ["127.0.0.1:${metrics_port}"]
+processors:
+  resource:
+    attributes:
+      - key: environment
+        value: ${environment}
+        action: upsert
+  batch: {}
+extensions:
+  sigv4auth:
+    region: ${region}
+    service: aps
+exporters:
+  prometheusremotewrite:
+    endpoint: ${remote_write_url}
+    auth:
+      authenticator: sigv4auth
+service:
+  extensions: [sigv4auth]
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [resource, batch]
+      exporters: [prometheusremotewrite]

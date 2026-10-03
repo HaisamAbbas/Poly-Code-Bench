@@ -1,0 +1,137 @@
+# production parameters. Every REQUIRED value is an owner-supplied deployment input
+# (T 25.3); none may be invented. Copy to terraform.tfvars (git-ignored).
+
+account_id                     = "REQUIRED-12-digit-account"
+region                         = "REQUIRED-region"
+bucket_prefix                  = "REQUIRED-org-slug"
+vpc_cidr                       = "10.50.0.0/16"
+availability_zones             = ["REQUIRED-regiona", "REQUIRED-regionb", "REQUIRED-regionc"]
+az_count                       = 3
+signing_key_ids                = ["production-ed25519-2026-10"]
+operator_principal_arns        = ["arn:aws:iam::REQUIRED:role/REQUIRED-sso-operator"]
+approved_guest_ami_id          = "ami-REQUIRED"
+guest_instance_type            = "m7i.large"
+performance_instance_type      = "c7i.2xlarge"
+performance_hardware_class     = "aws-c7i-2xlarge-dedicated-v1"
+performance_reserved_instances = 2
+database_instance_class        = "db.m7g.large"
+database_multi_az              = true
+database_backup_retention_days = 35
+backup_vault_lock              = true
+alb_certificate_arn            = "arn:aws:acm:REQUIRED"
+cdn_certificate_arn            = "arn:aws:acm:us-east-1:REQUIRED:certificate/REQUIRED"
+domain_names                   = ["REQUIRED-domain"]
+alert_email_endpoints          = ["REQUIRED-oncall@example.invalid"]
+monthly_budget_usd             = 0  # REQUIRED owner-approved cap
+
+services = {
+  "api" = {
+    role          = "api"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/api@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 2
+    port          = 8000
+    command       = ["uvicorn", "polycodebench_api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+  }
+  "web" = {
+    role          = "web"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/web@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 2
+    port          = 3000
+  }
+  "scheduler" = {
+    role          = "scheduler"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/scheduler@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 256
+    memory        = 512
+    desired_count = 1
+    command       = ["pcb-scheduler", "reap", "--watch"]
+  }
+  "model-gateway" = {
+    role          = "model-gateway"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/model-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 1
+  }
+  "judge-gateway" = {
+    role          = "judge-gateway"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/judge-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 1
+  }
+  "solve-supervisor" = {
+    role          = "solve-supervisor"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/solve-supervisor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 2
+  }
+  "eval-supervisor" = {
+    role          = "eval-supervisor"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/eval-supervisor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 2
+  }
+  "scorer" = {
+    role          = "scorer"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/scorer@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 512
+    memory        = 1024
+    desired_count = 1
+  }
+  "publisher" = {
+    role          = "publisher"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/publisher@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 256
+    memory        = 512
+    desired_count = 0
+  }
+  "migrator" = {
+    role          = "migrator"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/ops@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 256
+    memory        = 512
+    desired_count = 0
+    command       = ["pcb-ops", "migrate", "upgrade"]
+  }
+  "ops-reaper" = {
+    role          = "ops-reaper"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/ops@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 256
+    memory        = 512
+    desired_count = 0
+    command       = ["pcb-ops", "orphans", "sweep"]
+  }
+  "restore-operator" = {
+    role          = "restore-operator"
+    image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/ops@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    cpu           = 1024
+    memory        = 2048
+    desired_count = 0
+    command       = ["pcb-ops", "restore", "rehearse"]
+  }
+}
+
+schedules = {
+  "orphan-sweep" = {
+    service    = "ops-reaper"
+    expression = "rate(5 minutes)"
+    command    = ["pcb-ops", "orphans", "sweep", "--provider", "ec2"]
+  }
+  "artifact-gc" = {
+    service    = "ops-reaper"
+    expression = "cron(30 1 * * ? *)"
+    command    = ["pcb-ops", "artifacts", "collect-garbage"]
+  }
+  "restore-rehearsal" = {
+    service    = "restore-operator"
+    expression = "cron(0 6 1 1,4,7,10 ? *)"
+    command    = ["pcb-ops", "restore", "rehearse", "--target", "aws-pitr"]
+  }
+}

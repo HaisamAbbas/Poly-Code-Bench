@@ -1,0 +1,108 @@
+# PolyCodeBench required alerts (T 22.5). Single source of truth: loaded into Amazon Managed
+# Prometheus by infra/terraform/modules/telemetry, unit-tested by alerts.test.yaml with promtool,
+# and checked by `pcb-ops alerts check` (metrics must exist in polycodebench_core.telemetry,
+# runbooks must exist). Latency/volume thresholds are environment configuration, never scoring
+# inputs; the unexpected hidden-artifact access alarm additionally comes from CloudTrail data
+# events (modules/telemetry) so it does not depend on the accessing service reporting itself.
+groups:
+  - name: pcb-required
+    rules:
+      - alert: PcbOrphanGuestBeyondTtl
+        expr: max by (environment, provider) (pcb_orphan_guests_over_alert_threshold) > 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "Execution guests unreclaimed beyond TTL + 10 minutes"
+          runbook: docs/operations/runbooks/worker-loss-and-orphan-cleanup.md
+
+      - alert: PcbUnexpectedSecretOrHiddenAccess
+        expr: sum by (environment, role) (increase(pcb_secret_access_denied_total[5m])) > 0
+        labels:
+          severity: page
+        annotations:
+          summary: "A service attempted secret or hidden-artifact access outside its role"
+          runbook: docs/operations/runbooks/compromised-worker-identity.md
+
+      - alert: PcbCampaignSpendApproachingLimit
+        expr: max by (environment, budget_class) (pcb_campaign_spend_ratio) >= 0.9
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Campaign spend is at or above 90% of its configured threshold"
+          runbook: docs/operations/runbooks/provider-outage-and-ambiguous-billing.md
+
+      - alert: PcbRequiredQueueStalled
+        # 1800 s is the default staging/production queue SLO; override per environment.
+        expr: max by (environment, queue_class) (pcb_queue_oldest_age_seconds) > 1800
+          and on (environment, queue_class) max by (environment, queue_class) (pcb_queue_depth) > 0
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "Ready work in a required queue is older than its SLO"
+          runbook: docs/operations/runbooks/worker-loss-and-orphan-cleanup.md
+
+      - alert: PcbPerformanceCanaryRepeatedlyInvalid
+        expr: max by (environment, hardware_class) (pcb_canary_invalid_consecutive) >= 3
+        labels:
+          severity: page
+        annotations:
+          summary: "Performance reference canary invalid three times in a row"
+          runbook: docs/operations/runbooks/analyzer-or-canary-failure.md
+
+      - alert: PcbBackupRestoreIntegrityFailure
+        expr: max by (environment, target) (pcb_backup_integrity_failures) > 0
+        labels:
+          severity: page
+        annotations:
+          summary: "The latest backup/restore rehearsal failed an integrity check"
+          runbook: docs/operations/runbooks/database-object-store-restore.md
+
+      - alert: PcbPublicPointerUnavailable
+        expr: max by (environment, board) (pcb_public_pointer_unavailable) > 0
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "A public board pointer references unavailable data"
+          runbook: docs/operations/runbooks/publication-rollback-and-withdrawal.md
+
+  - name: pcb-operational
+    rules:
+      - alert: PcbRestoreRehearsalOverdue
+        # T 22.6: quarterly restore rehearsal (92 days + one week of slack).
+        expr: time() - max by (environment, target) (pcb_restore_last_success_timestamp) > 8553600
+        labels:
+          severity: ticket
+        annotations:
+          summary: "No verified restore rehearsal in the last quarter"
+          runbook: docs/operations/runbooks/database-object-store-restore.md
+
+      - alert: PcbProviderOutage
+        expr: max by (environment, provider) (pcb_provider_outage) > 0
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "A model/judge provider circuit has been open for five minutes"
+          runbook: docs/operations/runbooks/provider-outage-and-ambiguous-billing.md
+
+      - alert: PcbJudgeDisagreementHigh
+        expr: max by (environment, panel) (pcb_judge_disagreement_ratio) > 0.2
+        for: 30m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Unresolved judge disagreement above 20%"
+          runbook: docs/operations/runbooks/judge-drift.md
+
+      - alert: PcbStaleCommitRefusals
+        # Stale commits are refused by design; a burst means workers are losing leases.
+        expr: sum by (environment, queue_class) (increase(pcb_stale_commit_refusals_total[15m])) > 5
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Workers repeatedly lost leases (results refused, not lost)"
+          runbook: docs/operations/runbooks/deployment-migration-and-drain.md

@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored) with the owner-approved state location for production.
+bucket         = "REQUIRED-production-terraform-state-bucket"
+key            = "polycodebench/production/terraform.tfstate"
+region         = "REQUIRED-region"
+dynamodb_table = "REQUIRED-production-terraform-locks"
+encrypt        = true

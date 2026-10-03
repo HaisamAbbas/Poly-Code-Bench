@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored) with the owner-approved state location for staging.
+bucket         = "REQUIRED-staging-terraform-state-bucket"
+key            = "polycodebench/staging/terraform.tfstate"
+region         = "REQUIRED-region"
+dynamodb_table = "REQUIRED-staging-terraform-locks"
+encrypt        = true

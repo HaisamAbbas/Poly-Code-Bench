@@ -1,6 +1,5 @@
-provider "aws" {
-  region = var.region
-}
+# Reusable child module: the calling root (infra/terraform/environments/<env>) configures the
+# provider, account guard and region. See infra/terraform/modules/workers.
 
 locals {
   lanes = toset(["solve", "grading", "admission"])
@@ -20,12 +19,13 @@ resource "aws_security_group" "guest" {
     security_groups = [var.control_security_group_id]
   }
 
-  # Guest VM has no internet egress. Candidate Docker containers separately use network=none.
-  tags   = merge(var.common_tags, { Name = "pcb-${each.key}-sandbox", "pcb:lane" = each.key })
+  # Guest VM has no internet egress: the provider removes AWS's default allow-all egress rule
+  # and none is declared. Candidate Docker containers separately use network=none.
+  tags = merge(var.common_tags, { Name = "pcb-${each.key}-sandbox", "pcb:lane" = each.key })
 }
 
 resource "aws_launch_template" "guest" {
-  for_each               = local.lanes
+  for_each                = local.lanes
   name_prefix             = "pcb-${each.key}-sandbox-"
   image_id                = var.approved_ami_id
   instance_type           = var.instance_type
@@ -76,4 +76,9 @@ output "sandbox_security_group_ids" {
 output "sandbox_launch_template_ids" {
   value       = { for lane, template in aws_launch_template.guest : lane => template.id }
   description = "Lane-scoped disposable guest launch templates."
+}
+
+output "sandbox_launch_template_arns" {
+  value       = { for lane, template in aws_launch_template.guest : lane => template.arn }
+  description = "Lane launch template ARNs; supervisor RunInstances is conditioned on these."
 }

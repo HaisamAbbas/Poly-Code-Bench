@@ -1,0 +1,340 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_28_prediction_evidence",
+  "execution_tier": "local_fixture",
+  "quality_admission": "pending",
+  "output_prediction": {
+    "exact": {
+      "reference": {
+        "matched": true,
+        "reason": "matched under exact_bytes",
+        "normalization_mode": "exact_bytes",
+        "candidate_digest": "sha256:886b91f48c3a7c74f46f1144c2503ace5e81daba2cd7946c5a4d435b91d48cd7",
+        "oracle_digest": "sha256:d00c99b6f3ebb10d5327bb7be08e0f58c369e8dd6420b33fa3e95b41ec24cdf2"
+      },
+      "faulty": {
+        "matched": false,
+        "reason": "text differs from the oracle under exact_bytes",
+        "normalization_mode": "exact_bytes",
+        "candidate_digest": "sha256:e1ed4b64c2849def1ac6597bf59d19f10b692d46a091d895eb1f0d7ebb3b494e",
+        "oracle_digest": "sha256:d00c99b6f3ebb10d5327bb7be08e0f58c369e8dd6420b33fa3e95b41ec24cdf2"
+      },
+      "no-op": {
+        "matched": false,
+        "reason": "text differs from the oracle under exact_bytes",
+        "normalization_mode": "exact_bytes",
+        "candidate_digest": "sha256:4b83e011ee23f8b9a9416345cef108d75e9a2c9bb7baaf15cbf45d1d6c3f3e5d",
+        "oracle_digest": "sha256:d00c99b6f3ebb10d5327bb7be08e0f58c369e8dd6420b33fa3e95b41ec24cdf2"
+      },
+      "different-text": {
+        "matched": false,
+        "reason": "text differs from the oracle under exact_bytes",
+        "normalization_mode": "exact_bytes",
+        "candidate_digest": "sha256:945825c48e27dda22972438d648ba89dc458fb4e629a8d6ac0e284038448a44f",
+        "oracle_digest": "sha256:d00c99b6f3ebb10d5327bb7be08e0f58c369e8dd6420b33fa3e95b41ec24cdf2"
+      }
+    },
+    "collapsed": {
+      "reference": {
+        "matched": true,
+        "reason": "matched under normalized_text",
+        "normalization_mode": "normalized_text",
+        "candidate_digest": "sha256:392fa1eea8b67c4f39bc0aa9ac4e2b86f675697d9cfe4b136ac177d5554705be",
+        "oracle_digest": "sha256:b8340c19db2bcd739af1f6c02f8510283278fb60f0f83e034c2dbf2d5f8faec6"
+      },
+      "alternative": {
+        "matched": true,
+        "reason": "matched under normalized_text",
+        "normalization_mode": "normalized_text",
+        "candidate_digest": "sha256:e1a8c140896d29024071b2e699578738be7fd2a399f729fc9cd579b5932fffed",
+        "oracle_digest": "sha256:b8340c19db2bcd739af1f6c02f8510283278fb60f0f83e034c2dbf2d5f8faec6"
+      },
+      "faulty": {
+        "matched": false,
+        "reason": "text differs from the oracle under normalized_text",
+        "normalization_mode": "normalized_text",
+        "candidate_digest": "sha256:e1ed4b64c2849def1ac6597bf59d19f10b692d46a091d895eb1f0d7ebb3b494e",
+        "oracle_digest": "sha256:b8340c19db2bcd739af1f6c02f8510283278fb60f0f83e034c2dbf2d5f8faec6"
+      }
+    },
+    "typed": {
+      "reference": {
+        "matched": true,
+        "reason": "matched under typed_json",
+        "normalization_mode": "typed_json",
+        "candidate_digest": "sha256:c8d07975a54678319a5662c3017d73074104ac8b230e9cfdee84f129127418b7",
+        "oracle_digest": "sha256:ae4f0e5beabadf5dd14c81b3c80d84d0ad9484040120ffe2bb787d08218adfd7"
+      },
+      "alternative": {
+        "matched": true,
+        "reason": "matched under typed_json",
+        "normalization_mode": "typed_json",
+        "candidate_digest": "sha256:c8d07975a54678319a5662c3017d73074104ac8b230e9cfdee84f129127418b7",
+        "oracle_digest": "sha256:ae4f0e5beabadf5dd14c81b3c80d84d0ad9484040120ffe2bb787d08218adfd7"
+      },
+      "faulty": {
+        "matched": false,
+        "reason": "typed value differs from the oracle under the frozen rules",
+        "normalization_mode": "typed_json",
+        "candidate_digest": "sha256:1b9d899d8bbff56221e05742ed071c199bc1b817d2d42e006af616194f2333d5",
+        "oracle_digest": "sha256:ae4f0e5beabadf5dd14c81b3c80d84d0ad9484040120ffe2bb787d08218adfd7"
+      },
+      "parse-error": {
+        "matched": false,
+        "reason": "parse_error: the answer is not valid JSON: Expecting value: line 1 column 39 (char 38)",
+        "normalization_mode": "typed_json",
+        "candidate_digest": "sha256:1d134498257b7c6824ff8cb9feaf931b23145899264248e21463f107add3540f",
+        "oracle_digest": "sha256:ae4f0e5beabadf5dd14c81b3c80d84d0ad9484040120ffe2bb787d08218adfd7"
+      }
+    }
+  },
+  "test_prediction": {
+    "reference": {
+      "matched": true,
+      "reason": "matched under exact_bytes",
+      "normalization_mode": "exact_bytes",
+      "candidate_digest": "sha256:93e14a2014ed851793a890fe420c747308f8892784953bee9f804e2bb55095e2",
+      "oracle_digest": "sha256:f634d301838b966eaa9ec28c21f96feeab0ab82a07f20b0b4c2d843dca8b3ec5",
+      "declared_test_id": "tests/test_clamp.py::test_clamp_rejects_non_int"
+    },
+    "faulty": {
+      "matched": false,
+      "reason": "text differs from the oracle under exact_bytes",
+      "normalization_mode": "exact_bytes",
+      "candidate_digest": "sha256:359565941d00f15751f60bb6ffb485e846de323647a26c035ff9f450db1cc0cf",
+      "oracle_digest": "sha256:f634d301838b966eaa9ec28c21f96feeab0ab82a07f20b0b4c2d843dca8b3ec5",
+      "declared_test_id": "tests/test_clamp.py::test_clamp_rejects_non_int"
+    },
+    "wrong-output": {
+      "matched": false,
+      "reason": "text differs from the oracle under exact_bytes",
+      "normalization_mode": "exact_bytes",
+      "candidate_digest": "sha256:2559625d229671c976b2d764935b79dd681b03b74c19e7616ca10853c4ede1ad",
+      "oracle_digest": "sha256:f634d301838b966eaa9ec28c21f96feeab0ab82a07f20b0b4c2d843dca8b3ec5",
+      "declared_test_id": "tests/test_clamp.py::test_clamp_rejects_non_int"
+    },
+    "no-op": {
+      "matched": false,
+      "reason": "text differs from the oracle under exact_bytes",
+      "normalization_mode": "exact_bytes",
+      "candidate_digest": "sha256:dc2df7e3f9829982e43d6b574ad17ca992ca370e73ff0835f14a9ae782963d3e",
+      "oracle_digest": "sha256:f634d301838b966eaa9ec28c21f96feeab0ab82a07f20b0b4c2d843dca8b3ec5",
+      "declared_test_id": "tests/test_clamp.py::test_clamp_rejects_non_int"
+    },
+    "parse-error": {
+      "matched": false,
+      "reason": "parse_error: the submission carries no answer",
+      "normalization_mode": "exact_bytes",
+      "candidate_digest": "sha256:1df2f8a699d9804984a5f48c2deff656e910b242d55975339517e7b7b7e754d8",
+      "oracle_digest": "sha256:f634d301838b966eaa9ec28c21f96feeab0ab82a07f20b0b4c2d843dca8b3ec5",
+      "declared_test_id": "tests/test_clamp.py::test_clamp_rejects_non_int"
+    }
+  },
+  "protocol_restriction": {
+    "protocol_id": "prediction-v1",
+    "declared_tools": [],
+    "declared_tool_calls": 0,
+    "execution_tool_refusals": {
+      "run_command": "prediction tasks cannot allow execution tools; found ['run_command']. Running the target changes the task from predictio",
+      "run_tests": "prediction tasks cannot allow execution tools; found ['run_tests']. Running the target changes the task from prediction ",
+      "patch_file": "prediction tasks cannot allow execution tools; found ['patch_file']. Running the target changes the task from prediction",
+      "write_file": "prediction tasks cannot allow execution tools; found ['write_file']. Running the target changes the task from prediction"
+    },
+    "verdict": "the shipped protocol cannot execute the target"
+  },
+  "answer_only_metric_definitions": {
+    "prediction_match": {
+      "id": "prediction_match",
+      "label": "Prediction match",
+      "unit": "boolean",
+      "direction": "higher_is_better",
+      "domain": "answer_only",
+      "aggregation": "mean_over_samples",
+      "missingness": "missing_when_not_run",
+      "formatter": "pass_fail",
+      "applicable_families": [
+        "output_prediction",
+        "test_prediction"
+      ],
+      "code_dimensions": []
+    }
+  },
+  "track_b_coverage": {
+    "answer_only_metric_definitions": {
+      "prediction_match": {
+        "aggregation": "mean_over_samples",
+        "applicable_families": [
+          "output_prediction",
+          "test_prediction"
+        ],
+        "code_dimensions": [],
+        "direction": "higher_is_better",
+        "domain": "answer_only",
+        "formatter": "pass_fail",
+        "id": "prediction_match",
+        "label": "Prediction match",
+        "missingness": "missing_when_not_run",
+        "unit": "boolean"
+      }
+    },
+    "checks": [
+      {
+        "detail": "polycodebench_evaluation.suite_admission.SuiteAdmission.admit importable; task pack: plugins/languages/python/fixtures/top-words; evidence: docs/implementation/evidence/prompt-12-eval-python.json",
+        "evidence_recorded": true,
+        "family": "codegen",
+        "grader_entry": "SuiteAdmission.admit",
+        "grader_importable": true,
+        "grader_module": "polycodebench_evaluation.suite_admission",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "solve via single-shot or standard agent; graded by the language plugin's test plan",
+        "tool_policy_recorded": true
+      },
+      {
+        "detail": "polycodebench_suites_swebench.overlay.grade_native_candidate importable; task pack: plugins/suites/swebench/tests; evidence: docs/implementation/evidence/prompt-24-e2e36.json",
+        "evidence_recorded": true,
+        "family": "repo_repair",
+        "grader_entry": "grade_native_candidate",
+        "grader_importable": true,
+        "grader_module": "polycodebench_suites_swebench.overlay",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "suite adapter imports native records; resolution graded by the pinned upstream evaluator",
+        "tool_policy_recorded": true
+      },
+      {
+        "detail": "polycodebench_evaluation.repo_task_grading.grade_repo_task importable; task pack: taskpacks/repo-tasks/ini-interpolate; evidence: docs/implementation/evidence/prompt-25-admission-ini-interpolate.json",
+        "evidence_recorded": true,
+        "family": "repo_task",
+        "grader_entry": "grade_repo_task",
+        "grader_importable": true,
+        "grader_module": "polycodebench_evaluation.repo_task_grading",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "authoring contract with sealed acceptance; executable criteria and rubric",
+        "tool_policy_recorded": true
+      },
+      {
+        "detail": "polycodebench_evaluation.suite_admission.SuiteAdmission.admit importable; task pack: taskpacks/self-repair/py-listsort-v1; evidence: docs/implementation/evidence/prompt-26-e2e-37.json",
+        "evidence_recorded": true,
+        "family": "self_repair",
+        "grader_entry": "SuiteAdmission.admit",
+        "grader_importable": true,
+        "grader_module": "polycodebench_evaluation.suite_admission",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "fixed rounds on public feedback only; initial/final outcomes and round count preserved",
+        "tool_policy_recorded": true
+      },
+      {
+        "detail": "polycodebench_evaluation.qa_grading.grade_qa importable; task pack: packages/core/src/polycodebench_core/qa_contracts.py; evidence: docs/implementation/evidence/prompt-26-e2e-37.json",
+        "evidence_recorded": true,
+        "family": "repo_qa",
+        "grader_entry": "grade_qa",
+        "grader_importable": true,
+        "grader_module": "polycodebench_evaluation.qa_grading",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "answer with base-snapshot citations; fact recall with grounding diagnostics",
+        "tool_policy_recorded": true
+      },
+      {
+        "detail": "polycodebench_suites_swebench.prediction_grading.grade_prediction_task importable; task pack: taskpacks/prediction/output-prediction; evidence: docs/implementation/evidence/prompt-28-e2e38.json",
+        "evidence_recorded": true,
+        "family": "output_prediction",
+        "grader_entry": "grade_prediction_task",
+        "grader_importable": true,
+        "grader_module": "polycodebench_suites_swebench.prediction_grading",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "read code and input; predict output; execution tools disabled",
+        "tool_policy_recorded": true
+      },
+      {
+        "detail": "polycodebench_suites_swebench.prediction_grading.grade_prediction_task importable; task pack: taskpacks/prediction/test-prediction; evidence: docs/implementation/evidence/prompt-28-e2e38.json",
+        "evidence_recorded": true,
+        "family": "test_prediction",
+        "grader_entry": "grade_prediction_task",
+        "grader_importable": true,
+        "grader_module": "polycodebench_suites_swebench.prediction_grading",
+        "grading_present": true,
+        "kind": "coverage_check",
+        "missingness_recorded": true,
+        "output_contract": true,
+        "schema_version": 1,
+        "solve_behavior": "predict a declared test's result under scenario constraints",
+        "tool_policy_recorded": true
+      }
+    ],
+    "execution_tier": "local_fixture",
+    "failed_families": [],
+    "kind": "track_b_coverage_audit",
+    "prompt": "28",
+    "schema_version": 1,
+    "skipped": [],
+    "wp20_closed": true
+  },
+  "not_claimed": [
+    "no live model produced these predictions: the graded submissions are the fixture's authored answers, so this evidence shows the grader's behaviour, not model skill",
+    "no production-worker run occurred; grading ran at the local fixture tier",
+    "the repo_qa evidence pointer names Prompt 26's E2E-37 artifact because that prompt's Q&A grading is not separately evidenced yet (PCB-27 is still not_started in tickets)",
+    "quality admission remains pending for both prediction fixtures"
+  ],
+  "fixtures": {
+    "output_prediction": {
+      "instance_id": "pcb-output-prediction-ops",
+      "repo": "polycodebench-authored/seqcalc",
+      "base_commit": "a1b2c3d4e5f60718",
+      "problem_statement": "Predict the output of ``run(3)`` in the module below.\n\nState exactly what the function prints, character for character. You cannot execute the module: no command, test or patch tool exists in this protocol, so the answer has to come from reading the code and the scenario.",
+      "version": "authored-fixture-v1",
+      "created_at": "2026-10-03T00:00:00Z",
+      "test_patch": "",
+      "gold_patch": "",
+      "fail_to_pass": [],
+      "pass_to_pass": [],
+      "fail_to_fail": [],
+      "pass_to_fail": [],
+      "eval_type": "pass_and_fail",
+      "log_parser": "none",
+      "protocol_deviations": [],
+      "test_command": ""
+    },
+    "test_prediction": {
+      "instance_id": "pcb-test-prediction-clamp",
+      "repo": "polycodebench-authored/clamp",
+      "base_commit": "a1b2c3d4e5f60718",
+      "problem_statement": "Predict the declared test's result and the line pytest prints for it.\n\nAnswer with the status word (passed/failed/error), then the test id exactly as pytest's short test summary would print it. You cannot execute anything: no command, test or patch tool exists in this protocol, so the answer has to come from reading the module and the scenario.",
+      "version": "authored-fixture-v1",
+      "created_at": "2026-10-03T00:00:00Z",
+      "test_patch": "",
+      "gold_patch": "",
+      "fail_to_pass": [],
+      "pass_to_pass": [],
+      "fail_to_fail": [],
+      "pass_to_fail": [],
+      "eval_type": "pass_and_fail",
+      "log_parser": "none",
+      "protocol_deviations": [],
+      "test_command": ""
+    }
+  },
+  "report_digest": "sha256:b7fc39f3f603d2096cf90431127345beb1452b8428bbefce0f5a8242dacfcbf6"
+}

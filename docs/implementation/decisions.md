@@ -831,3 +831,28 @@ never executed from scoring every F2P test as resolved, and the exit-code cross-
 releases graded by different revisions would not be comparable. The evaluator digest covers the
 revision and the upstream entry points the adapter calls, so an upstream change invalidates cached
 grades rather than silently reusing them.
+# D-28-01 - Prediction normalization is frozen, parse-failed and unrescuable
+
+Technical Spec 17.4 gives three rules: each task chooses its normalization mode, the rules must be
+stated (a parser error is a wrong prediction), and a judge must not rescue an incorrect
+deterministic output. The implementation turns each into a checkable boundary rather than a
+convention:
+
+- `NormalizationRules` refuses a rules document that contradicts its mode: `exact_bytes` declares
+  nothing (its default is `preserve`, so bytes are compared as bytes), `normalized_text` must state
+  line-ending, whitespace and final-newline rules, and `typed_json` must state a numeric tolerance.
+  A grader can therefore never fall back to guessed rules.
+- `parse_submission` parses once, before any comparison, and records the failure on the submission;
+  the grader compares exactly what was parsed and never re-parses or substitutes.
+- `grade_prediction_task`'s report has no judge field, no vote field and no override: the verdict
+  path is `submission -> compare -> verdict`, so a judge has no channel through which a mismatch
+  could be softened. The test `test_judge_votes_cannot_rescue_a_mismatch` asserts the absence of
+  such a field on the shipped type.
+
+The same contract carries PCB-28-1's restriction: `validate_prediction_tools` refuses every
+execution tool by name, and `check_protocol_constraints` refuses test/hidden feedback and a
+non-disabled network for both prediction families. A cohort that allows an execution tool is a
+different protocol by construction (`prediction-v1` carries zero tools and zero tool calls), and an
+oracle whose expected value was derived by running the target records that fact
+(`execution_required` plus a `reason`) instead of hiding it - the model still cannot run anything.
+

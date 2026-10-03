@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_24_native_repo_repair_evidence",
+  "execution_tier": "local_fixture",
+  "upstream_evaluator": {
+    "package": "swebench",
+    "revision": "5.0.2",
+    "evaluator_digest": "sha256:be54fad500595a9638434c670807650e6b151a4e74c9ffc4cbe51e143de0e7aa"
+  },
+  "quality_admission": "pending",
+  "not_claimed": [
+    "no official SWE-bench dataset instance is imported; dataset, repository and patch rights are unrecorded blockers, so both fixtures are authored",
+    "no production-worker grading run occurred; the Rust port executes in the pinned Rust image through the local Docker driver, which is development-tier evidence",
+    "the Python fixture's frozen command runs on the host rather than in a pinned image"
+  ],
+  "fixtures": [
+    {
+      "instance_id": "pcb-native-compatible-calc",
+      "methodology_label": "inspired",
+      "methodology_validation_ok": true,
+      "methodology_issues": [],
+      "task_digest": "sha256:448505965a736973133a44506bfd0562858706e9c9f34bcd3d0ac66ecb3e466b",
+      "log_parser": "parse_log_pytest",
+      "test_command": "python -m pytest -q tests/test_calculator.py",
+      "fail_to_pass": [
+        "tests/test_calculator.py::test_parse_bool_tolerates_trailing_separator"
+      ],
+      "pass_to_pass": [
+        "tests/test_calculator.py::test_add_sums",
+        "tests/test_calculator.py::test_parse_bool_rejects_unknown"
+      ],
+      "protocol_deviations": [],
+      "upstream_source_url": null,
+      "graded_candidates": {
+        "reference": {
+          "run_identity": "sha256:93d6befc072b7c9ec0f3d89c740b762f413dd5c1bf479e33a045827c4f019ae4",
+          "candidate_digest": "sha256:c72352a1b7946f5858f4b6b07ebcd078100c890359e02e3b7b91777dbb488a09",
+          "resolved": true,
+          "resolution_status": "RESOLVED_FULL",
+          "native_metrics": {
+            "fail_to_pass": 1,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 2,
+            "pass_to_pass_total": 2,
+            "resolved": true,
+            "resolution_status": "RESOLVED_FULL"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        },
+        "alternative": {
+          "run_identity": "sha256:9d0bb1dd23f430d0d489944426ac28e08206e37ac578e00ec122a9c62b034d4d",
+          "candidate_digest": "sha256:f474aec75132f7424460b701cc4bb71fcc059d0f503f51e2b34cb31a7f253db3",
+          "resolved": true,
+          "resolution_status": "RESOLVED_FULL",
+          "native_metrics": {
+            "fail_to_pass": 1,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 2,
+            "pass_to_pass_total": 2,
+            "resolved": true,
+            "resolution_status": "RESOLVED_FULL"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        },
+        "faulty": {
+          "run_identity": "sha256:e79d6c171e9254b15e2252bc25909032a287db476250112158310f8e085012cd",
+          "candidate_digest": "sha256:21d292eba30e5d185fff83bc44a2d4f79a127a3c62627bbb0a245ae012ba1f1e",
+          "resolved": false,
+          "resolution_status": "RESOLVED_NO",
+          "native_metrics": {
+            "fail_to_pass": 0,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 2,
+            "pass_to_pass_total": 2,
+            "resolved": false,
+            "resolution_status": "RESOLVED_NO"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        },
+        "no-op": {
+          "run_identity": "sha256:ded5b238a5b656f0f70df0e6187fd145278246390e5dc76ceabaa695fb36131e",
+          "candidate_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "resolved": false,
+          "resolution_status": "RESOLVED_NO",
+          "native_metrics": {
+            "fail_to_pass": 0,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 2,
+            "pass_to_pass_total": 2,
+            "resolved": false,
+            "resolution_status": "RESOLVED_NO"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        }
+      },
+      "cache_entries": 4
+    },
+    {
+      "instance_id": "pcb-adapted-calc-rs",
+      "methodology_label": "adapted",
+      "methodology_validation_ok": true,
+      "methodology_issues": [],
+      "task_digest": "sha256:173736b80436904dbf981d64b4a05668a867eb7b9f4aabe500a72d1d17c0a1df",
+      "log_parser": "parse_log_cargo",
+      "test_command": "cargo test --offline --no-fail-fast -- --test-threads=1",
+      "fail_to_pass": [
+        "tolerates_trailing_separator"
+      ],
+      "pass_to_pass": [
+        "rejects_unknown_token"
+      ],
+      "protocol_deviations": [
+        "the log parser is Rust libtest output rather than pytest, so status lines are read with parse_log_cargo instead of the native pytest parser",
+        "the pass-to-pass rule treats an ignored test as maintained only when the run reports it as ignored; the native rule treats skipped and ignored results identically, so this port's maintenance count is not the native one"
+      ],
+      "upstream_source_url": null,
+      "graded_candidates": {
+        "reference": {
+          "run_identity": "sha256:dbc7383e4a1d9bd86ee8cee7db8bd8d30ca09ec7375efd9300dcb2afabb0dd82",
+          "candidate_digest": "sha256:271ad09ef3f1102c95f06712f576ec403f0be7c4a9c1449db6a2a2f513427eb0",
+          "resolved": true,
+          "resolution_status": "RESOLVED_FULL",
+          "native_metrics": {
+            "fail_to_pass": 1,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 1,
+            "pass_to_pass_total": 1,
+            "resolved": true,
+            "resolution_status": "RESOLVED_FULL"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        },
+        "alternative": {
+          "run_identity": "sha256:8775971de436015bfb30d0a66c53cd73b47cfa27f18d458537c43d389cc5d490",
+          "candidate_digest": "sha256:6fa38b96ef41c1e3263934d7ec136671e4b8ccb756b8a3a221a926fb83ee2ae6",
+          "resolved": true,
+          "resolution_status": "RESOLVED_FULL",
+          "native_metrics": {
+            "fail_to_pass": 1,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 1,
+            "pass_to_pass_total": 1,
+            "resolved": true,
+            "resolution_status": "RESOLVED_FULL"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        },
+        "faulty": {
+          "run_identity": "sha256:e5c2337589f9bdb7966a8f003431b143edc88abe160cfca8a2b828841df878b8",
+          "candidate_digest": "sha256:5e684b0c8d3472d184ef0ab738dee03515d7b6df644e66b4c005477ab39f0fde",
+          "resolved": false,
+          "resolution_status": "RESOLVED_NO",
+          "native_metrics": {
+            "fail_to_pass": 0,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 1,
+            "pass_to_pass_total": 1,
+            "resolved": false,
+            "resolution_status": "RESOLVED_NO"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        },
+        "no-op": {
+          "run_identity": "sha256:47a48c59d5aab19e950ce9a011072d897421e37b765724737fe5f6287d1a4510",
+          "candidate_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "resolved": false,
+          "resolution_status": "RESOLVED_NO",
+          "native_metrics": {
+            "fail_to_pass": 0,
+            "fail_to_pass_total": 1,
+            "pass_to_pass": 1,
+            "pass_to_pass_total": 1,
+            "resolved": false,
+            "resolution_status": "RESOLVED_NO"
+          },
+          "from_cache": false,
+          "test_edit_overwritten": true
+        }
+      },
+      "cache_entries": 4
+    }
+  ],
+  "report_digest": "sha256:62e2ca8c76cfa81c21271fa866afb6696cbeeda5a90b045c01c5f3ec0a5a2a94"
+}

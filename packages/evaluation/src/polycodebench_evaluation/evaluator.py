@@ -75,6 +75,84 @@ def _path_of(obs: Observation) -> str | None:
     return obs.location.path if obs.location else None
 
 
+def baseline_relations(
+    candidate_issues: list[Observation],
+    baseline_issues: list[Observation],
+    candidate_files: Mapping[str, bytes],
+    baseline_files: Mapping[str, bytes] | None,
+) -> tuple[dict[str, str], list[IssueEvidence]]:
+    """Relation of each candidate canonical issue to the baseline (Technical Spec 12.4).
+
+    ``unchanged_in_scope`` debt sits in a file the candidate actually modified (so the
+    candidate could have fixed it); ``unchanged_out_of_scope`` debt is carried over
+    verbatim from the base revision and remains visible without candidate blame. Keys the
+    candidate no longer reports are ``resolved``; same-family/same-file but different
+    canonical key is ``unknown`` and stays reviewable instead of silently blamed or
+    silently clean.
+
+    Shared by the suite evaluator and the repository-task grader (Prompt 25, PCB-25-3): one
+    baseline-relation vocabulary for every grading path.
+    """
+    base_by_key = {o.issue_key: o for o in baseline_issues if o.issue_key}
+    relations: dict[str, str] = {}
+    resolutions: list[IssueEvidence] = []
+    for obs in candidate_issues:
+        key = obs.issue_key
+        assert key is not None
+        previous = base_by_key.get(key)
+        if previous is not None:
+            if _SEVERITY[obs.severity] > _SEVERITY[previous.severity]:
+                relations[key] = "worsened"
+            else:
+                path = _path_of(obs)
+                same_file = (
+                    path is not None
+                    and path in candidate_files
+                    and baseline_files is not None
+                    and path in baseline_files
+                    and sha256_bytes(candidate_files[path]) != sha256_bytes(baseline_files[path])
+                )
+                relations[key] = "unchanged_in_scope" if same_file else "unchanged_out_of_scope"
+            continue
+        # No exact match: did the same family move location (ambiguous) or is it new?
+        family = _family(key)
+        same_family = [
+            o for o in baseline_issues if o.issue_key and _family(o.issue_key) == family
+        ]
+        same_path = [o for o in same_family if _path_of(o) == _path_of(obs)]
+        if same_path:
+            relations[key] = "unknown"
+        else:
+            relations[key] = "introduced"
+    candidate_keys = {o.issue_key for o in candidate_issues if o.issue_key}
+    for base_obs in baseline_issues:
+        key = base_obs.issue_key
+        if key is None or key in candidate_keys:
+            continue
+        family_moved = any(
+            o.issue_key and _family(o.issue_key) == _family(key) for o in candidate_issues
+        )
+        relations_note: str | None = None
+        if family_moved:
+            relations_note = "same family re-reported elsewhere; mapping ambiguous"
+        resolutions.append(
+            IssueEvidence(
+                issue_key=key,
+                relation="unknown" if family_moved else "resolved",
+                owner=None,
+                severity=base_obs.severity,
+                confidence=base_obs.confidence,
+                path=_path_of(base_obs),
+                start_line=base_obs.location.start_line if base_obs.location else None,
+                end_line=base_obs.location.end_line if base_obs.location else None,
+                tools=tuple(sorted({base_obs.check_id})),
+                ambiguous=family_moved,
+                explanation=relations_note,
+            )
+        )
+    return relations, resolutions
+
+
 @dataclass
 class IssueGroup:
     issue_key: str
@@ -107,74 +185,9 @@ class Evaluator:
         candidate_files: Mapping[str, bytes],
         baseline_files: Mapping[str, bytes] | None,
     ) -> tuple[dict[str, str], list[IssueEvidence]]:
-        """Relation of each candidate canonical issue to the baseline (Technical Spec 12.4).
-
-        ``unchanged_in_scope`` debt sits in a file the candidate actually modified (so the
-        candidate could have fixed it); ``unchanged_out_of_scope`` debt is carried over
-        verbatim from the base revision and remains visible without candidate blame. Keys the
-        candidate no longer reports are ``resolved``; same-family/same-file but different
-        canonical key is ``unknown`` and stays reviewable instead of silently blamed or
-        silently clean.
-        """
-        base_by_key = {o.issue_key: o for o in baseline_issues if o.issue_key}
-        relations: dict[str, str] = {}
-        resolutions: list[IssueEvidence] = []
-        for obs in candidate_issues:
-            key = obs.issue_key
-            assert key is not None
-            previous = base_by_key.get(key)
-            if previous is not None:
-                if _SEVERITY[obs.severity] > _SEVERITY[previous.severity]:
-                    relations[key] = "worsened"
-                else:
-                    path = _path_of(obs)
-                    same_file = (
-                        path is not None
-                        and path in candidate_files
-                        and baseline_files is not None
-                        and path in baseline_files
-                        and sha256_bytes(candidate_files[path])
-                        != sha256_bytes(baseline_files[path])
-                    )
-                    relations[key] = "unchanged_in_scope" if same_file else "unchanged_out_of_scope"
-                continue
-            # No exact match: did the same family move location (ambiguous) or is it new?
-            family = _family(key)
-            same_family = [
-                o for o in baseline_issues if o.issue_key and _family(o.issue_key) == family
-            ]
-            same_path = [o for o in same_family if _path_of(o) == _path_of(obs)]
-            if same_path:
-                relations[key] = "unknown"
-            else:
-                relations[key] = "introduced"
-        candidate_keys = {o.issue_key for o in candidate_issues if o.issue_key}
-        for base_obs in baseline_issues:
-            key = base_obs.issue_key
-            if key is None or key in candidate_keys:
-                continue
-            family_moved = any(
-                o.issue_key and _family(o.issue_key) == _family(key) for o in candidate_issues
-            )
-            relations_note: str | None = None
-            if family_moved:
-                relations_note = "same family re-reported elsewhere; mapping ambiguous"
-            resolutions.append(
-                IssueEvidence(
-                    issue_key=key,
-                    relation="unknown" if family_moved else "resolved",
-                    owner=None,
-                    severity=base_obs.severity,
-                    confidence=base_obs.confidence,
-                    path=_path_of(base_obs),
-                    start_line=base_obs.location.start_line if base_obs.location else None,
-                    end_line=base_obs.location.end_line if base_obs.location else None,
-                    tools=tuple(sorted({base_obs.check_id})),
-                    ambiguous=family_moved,
-                    explanation=relations_note,
-                )
-            )
-        return relations, resolutions
+        return baseline_relations(
+            candidate_issues, baseline_issues, candidate_files, baseline_files
+        )
 
     def _issue_entries(
         self,

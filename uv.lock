@@ -330,6 +330,8 @@ dependencies = [
     { name = "polycodebench-core" },
     { name = "polycodebench-plugins-api" },
     { name = "polycodebench-runner" },
+    { name = "polycodebench-scoring" },
+    { name = "polycodebench-services" },
 ]
 
 [package.metadata]
@@ -337,6 +339,8 @@ requires-dist = [
     { name = "polycodebench-core", editable = "packages/core" },
     { name = "polycodebench-plugins-api", editable = "packages/plugins-api" },
     { name = "polycodebench-runner", editable = "packages/runner" },
+    { name = "polycodebench-scoring", editable = "packages/scoring" },
+    { name = "polycodebench-services", editable = "packages/services" },
 ]
 
 [[package]]

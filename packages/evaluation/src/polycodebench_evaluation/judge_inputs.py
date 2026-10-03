@@ -14,7 +14,7 @@ comment is recorded, so a reviewer can see what the packet contained.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -25,7 +25,7 @@ from polycodebench_core.judge_contracts import (
 )
 from polycodebench_core.models import ScoreDimension  # noqa: F401
 
-from polycodebench_evaluation.evidence import EvaluationEvidence
+from polycodebench_evaluation.evidence import EvaluationEvidence, IssueEvidence
 
 MAX_SPAN_LINES = 120
 MAX_SPANS = 24
@@ -57,6 +57,33 @@ def judge_packet_input(
     read is bounded, and the result is hashed into anchor identities so the same evidence always
     produces the same packet.
     """
+    return judge_packet_input_from(
+        language=context.language,
+        task_statement=context.task_statement,
+        constraints=context.constraints,
+        item_ids=context.item_ids,
+        files=files,
+        issues=evidence.issues,
+        withheld_values=withheld_values,
+    )
+
+
+def judge_packet_input_from(
+    *,
+    language: str,
+    task_statement: str,
+    constraints: tuple[str, ...],
+    item_ids: tuple[str, ...],
+    files: Mapping[str, bytes],
+    issues: Sequence[IssueEvidence],
+    withheld_values: tuple[str, ...] = (),
+) -> JudgePacketInput:
+    """The same bounded, anonymized packet assembly for any grading path (Prompt 25 repo tasks).
+
+    The bounds and the anonymity rules are identical to :func:`judge_packet_input`: candidate
+    bytes and introduced/worsened analyzer findings only, bounded spans and comments, no gate
+    result, no candidate identity, no model identity.
+    """
     spans: list[InputSpan] = []
     comments: list[InputComment] = []
     for path in sorted(files):
@@ -68,14 +95,14 @@ def judge_packet_input(
         comments.extend(_comments(path, text))
         if len(spans) >= MAX_SPANS:
             break
-    spans.extend(_issue_spans(evidence))
+    spans.extend(_issue_spans(issues))
     if not spans:
         raise ValueError("no judge-visible evidence span could be built")
     return JudgePacketInput(
-        language=_language(context.language),
-        task_statement=context.task_statement,
-        constraints=tuple(context.constraints),
-        item_ids=tuple(context.item_ids),
+        language=_language(language),
+        task_statement=task_statement,
+        constraints=tuple(constraints),
+        item_ids=tuple(item_ids),
         spans=tuple(spans[:MAX_SPANS]),
         comments=tuple(comments[:MAX_COMMENTS]),
         withheld_values=tuple(value for value in withheld_values if len(value.strip()) >= 3),
@@ -104,7 +131,7 @@ def _decode(data: bytes) -> str | None:
         return None
 
 
-def _issue_spans(evidence: EvaluationEvidence) -> list[InputSpan]:
+def _issue_spans(issues: Sequence[IssueEvidence]) -> list[InputSpan]:
     """Analyzer findings the candidate introduced or worsened, as cited evidence.
 
     The finding text is the analyzer's own explanation and its file location. Baseline debt is
@@ -112,7 +139,7 @@ def _issue_spans(evidence: EvaluationEvidence) -> list[InputSpan]:
     not the candidate's evidence.
     """
     spans: list[InputSpan] = []
-    for issue in evidence.issues:
+    for issue in issues:
         if issue.relation not in {"introduced", "worsened"} or not issue.path:
             continue
         spans.append(

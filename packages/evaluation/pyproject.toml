@@ -7,6 +7,8 @@ dependencies = [
   "polycodebench-core==0.1.0",
   "polycodebench-plugins-api==0.1.0",
   "polycodebench-runner==0.1.0",
+  "polycodebench-scoring==0.1.0",
+  "polycodebench-services==0.1.0",
 ]
 
 [project.scripts]
@@ -16,6 +18,8 @@ pcb-track-a = "polycodebench_evaluation.track_a_cli:main"
 polycodebench-core = { workspace = true }
 polycodebench-plugins-api = { workspace = true }
 polycodebench-runner = { workspace = true }
+polycodebench-scoring = { workspace = true }
+polycodebench-services = { workspace = true }
 
 [build-system]
 requires = ["uv_build==0.12.15"]

@@ -1,0 +1,140 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: py-configkit-qa-v1
+  version: 1
+  track: B
+  family: repo_qa
+  primary_language: python
+  secondary_languages: []
+  cluster_id: qa-pilot
+  difficulty: standard
+  stratum_id: deepcodebench-inspired
+  output_contract_digest: sha256:e877a81440e74372c1a28a882a9b1548ba5c58c171abc3f6cfb3f52089825c49
+  methodology_label: inspired
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: typed_json
+  allowed_paths: [answer.json]
+  maximum_artifact_bytes: 1000000
+  maximum_file_bytes: 100000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_fixture
+  immutable_revision: polycodebench-authored-fixtures-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: "2026-10-03T00:00:00Z"
+  curated_at: "2026-10-03T00:00:00Z"
+  date_confidence: verified
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-authored-fixtures-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 27 authored repository Q&A fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b
+  language_plugin_id: python
+  language_plugin_version: local-fixture-v1
+  build_recipe_digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+  test_recipe_digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+  resource_class: local-fixture-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids: [qa-facts-v1]
+  hard_condition_ids: [qa-facts-v1]
+  required_outputs: [answer.json]
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions: []
+  evidence_owners: {}
+  required_analyzers: []
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: qa-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: repo-qa-v1
+  allowed_tools: [list_files, read_file, search]
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 20
+  maximum_tool_calls: 60
+  maximum_wall_seconds: 600
+visible_files:
+  - visible/task.md
+  - visible/repo/cfgkit/__init__.py
+  - visible/repo/cfgkit/errors.py
+  - visible/repo/cfgkit/interpolate.py
+  - visible/repo/cfgkit/loader.py
+hidden_files:
+  - hidden/oracle.json
+  - admission/reference/answer.json
+  - admission/alternative/answer.json
+  - admission/wrong-citation/answer.json
+  - admission/contradiction/answer.json
+  - admission/empty/answer.json
+  - admission/repeated/answer.json
+fixtures:
+  - name: reference
+    variant: reference
+    solution_path: admission/reference/answer.json
+    expectation:
+      failing_cases: []
+      expected_issue_families: []
+      expected_failure: null
+  - name: alternative
+    variant: alternative
+    solution_path: admission/alternative/answer.json
+    expectation:
+      failing_cases: []
+      expected_issue_families: []
+      expected_failure: null
+  - name: wrong-citation
+    variant: faulty
+    solution_path: admission/wrong-citation/answer.json
+    expectation:
+      failing_cases: [qa-facts-v1]
+      expected_issue_families: []
+      expected_failure: wrong_behavior
+  - name: contradiction
+    variant: faulty
+    solution_path: admission/contradiction/answer.json
+    expectation:
+      failing_cases: [qa-facts-v1]
+      expected_issue_families: []
+      expected_failure: wrong_behavior
+  - name: empty
+    variant: faulty
+    solution_path: admission/empty/answer.json
+    expectation:
+      failing_cases: [qa-facts-v1]
+      expected_issue_families: []
+      expected_failure: wrong_behavior
+  - name: repeated
+    variant: quality_defective
+    solution_path: admission/repeated/answer.json
+    expectation:
+      failing_cases: []
+      expected_issue_families: [repetition]
+      expected_failure: null
+      expected_quality_only_pass: true

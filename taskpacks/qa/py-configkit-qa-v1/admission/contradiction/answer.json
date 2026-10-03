@@ -1,0 +1,20 @@
+{
+  "answer": "The docs are wrong: a missing variable is silently ignored, and a backslash-escaped \\${NAME} consumes 2 backslashes instead of staying the literal text ${NAME}. load() resolves ${NAME} references from the environment mapping.",
+  "claims": [
+    {
+      "text": "a missing variable is silently ignored, and a backslash-escaped \\${NAME} consumes 2 backslashes instead of staying the literal text ${NAME}",
+      "citations": []
+    },
+    {
+      "text": "load() resolves ${NAME} references from the environment mapping",
+      "citations": [
+        {
+          "path": "cfgkit/loader.py",
+          "start_line": 29,
+          "end_line": 43,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "answer": "load() expands ${NAME}\nreferences from the\nenvironment mapping\n\\${NAME} is left\nas the literal\ntext ${NAME} instead\nof being expanded\nReferencing an undefined\nvariable raises ConfigError\nthat names it",
+  "claims": [
+    {
+      "text": "load() expands ${NAME} references from the environment mapping",
+      "citations": [
+        {
+          "path": "cfgkit/loader.py",
+          "start_line": 29,
+          "end_line": 43,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "\\${NAME} is left as the literal text ${NAME} instead of being expanded",
+      "citations": [
+        {
+          "path": "cfgkit/interpolate.py",
+          "start_line": 19,
+          "end_line": 21,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "Referencing an undefined variable raises ConfigError that names it",
+      "citations": [
+        {
+          "path": "cfgkit/interpolate.py",
+          "start_line": 22,
+          "end_line": 23,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    }
+  ]
+}

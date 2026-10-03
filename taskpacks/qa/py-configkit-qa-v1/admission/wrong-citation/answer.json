@@ -1,0 +1,50 @@
+{
+  "answer": "load() resolves ${NAME}\nreferences from the\nenvironment mapping\nA backslash-escaped \\${NAME}\nstays the literal\ntext ${NAME}\nA missing variable\nraises ConfigError naming\nthe variable",
+  "claims": [
+    {
+      "text": "load() resolves ${NAME} references from the environment mapping",
+      "citations": [
+        {
+          "path": "cfgkit/loader.py",
+          "start_line": 1,
+          "end_line": 9999,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        },
+        {
+          "path": "cfgkit/errors.py",
+          "start_line": 1,
+          "end_line": 9999,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "A backslash-escaped \\${NAME} stays the literal text ${NAME}",
+      "citations": [
+        {
+          "path": "cfgkit/interpolate.py",
+          "start_line": 1,
+          "end_line": 9999,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "A missing variable raises ConfigError naming the variable",
+      "citations": [
+        {
+          "path": "cfgkit/interpolate.py",
+          "start_line": 1,
+          "end_line": 9999,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        },
+        {
+          "path": "cfgkit/errors.py",
+          "start_line": 1,
+          "end_line": 9999,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    }
+  ]
+}

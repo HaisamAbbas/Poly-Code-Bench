@@ -13,6 +13,8 @@ The published benchmark describes 1,144 repository question-and-answer items bui
 
 Preserve fact recall as a separately named native-style measure. Add citation validity, evidence grounding, and unsupported-claim measures only as distinct PolyCodeBench adaptations; do not redefine them as DeepCodeBench metrics. Pin code snapshots and judge prompt/model identity for any implemented adapter.
 
+Prompt 27's repository Q&A fixtures (`taskpacks/qa/py-configkit-qa-v1`) are DeepCodeBench-inspired authored adaptations labelled `inspired`: authored developer questions over pinned authored snapshots with versioned atomic-fact oracles and claim-level citations - never a native reproduction, and no official DeepCodeBench task, dataset item or score is used or comparable. The deviation list against the native Q&A methodology is recorded in `docs/implementation/qa-method.md`.
+
 ## Assets, limitations, and rights
 
 The dataset card reports Apache-2.0 for the dataset artifact; that label alone does not grant rights over the underlying repositories or supersede their individual terms. Confirm the exact artifact revision, repository licenses, attribution, and permitted use before importing. No tasks were downloaded or executed during Prompt 01. Judge calibration is an open prerequisite.

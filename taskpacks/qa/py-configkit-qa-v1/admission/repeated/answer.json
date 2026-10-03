@@ -1,0 +1,60 @@
+{
+  "answer": "load() resolves ${NAME} references from the environment mapping. Every ${NAME} reference is resolved from the environment mapping by load(). When load() runs, it resolves ${NAME} references from the environment mapping. A backslash-escaped \\${NAME} stays the literal text ${NAME}. A missing variable raises ConfigError naming the variable.",
+  "claims": [
+    {
+      "text": "load() resolves ${NAME} references from the environment mapping",
+      "citations": [
+        {
+          "path": "cfgkit/loader.py",
+          "start_line": 29,
+          "end_line": 43,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "Every ${NAME} reference is resolved from the environment mapping by load()",
+      "citations": [
+        {
+          "path": "cfgkit/loader.py",
+          "start_line": 29,
+          "end_line": 43,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "When load() runs, it resolves ${NAME} references from the environment mapping",
+      "citations": [
+        {
+          "path": "cfgkit/loader.py",
+          "start_line": 29,
+          "end_line": 43,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "A backslash-escaped \\${NAME} stays the literal text ${NAME}",
+      "citations": [
+        {
+          "path": "cfgkit/interpolate.py",
+          "start_line": 19,
+          "end_line": 21,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    },
+    {
+      "text": "A missing variable raises ConfigError naming the variable",
+      "citations": [
+        {
+          "path": "cfgkit/interpolate.py",
+          "start_line": 22,
+          "end_line": 23,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ]
+    }
+  ]
+}

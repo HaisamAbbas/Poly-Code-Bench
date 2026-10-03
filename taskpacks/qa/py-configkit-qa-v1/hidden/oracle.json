@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "kind": "qa_oracle",
+  "oracle_id": "configkit-qa-v1",
+  "version": 1,
+  "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "facts": [
+    {
+      "schema_version": 1,
+      "kind": "atomic_fact",
+      "fact_id": "load-resolves-env-references",
+      "weight": 1,
+      "statement": "load() resolves ${NAME} references from the environment mapping",
+      "accepted_paraphrases": [
+        "load() expands ${NAME} references from the environment mapping",
+        "${NAME} references are resolved by load() from the environment mapping"
+      ],
+      "verifying_spans": [
+        {
+          "schema_version": 1,
+          "kind": "code_span",
+          "path": "cfgkit/loader.py",
+          "start_line": 29,
+          "end_line": 43,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ],
+      "exact_values": []
+    },
+    {
+      "schema_version": 1,
+      "kind": "atomic_fact",
+      "fact_id": "escaped-reference-stays-literal",
+      "weight": 1,
+      "statement": "A backslash-escaped \\${NAME} stays the literal text ${NAME}",
+      "accepted_paraphrases": [
+        "\\${NAME} is left as the literal text ${NAME} instead of being expanded"
+      ],
+      "verifying_spans": [
+        {
+          "schema_version": 1,
+          "kind": "code_span",
+          "path": "cfgkit/interpolate.py",
+          "start_line": 19,
+          "end_line": 21,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ],
+      "exact_values": ["1 backslash"]
+    },
+    {
+      "schema_version": 1,
+      "kind": "atomic_fact",
+      "fact_id": "missing-variable-raises-config-error",
+      "weight": 2,
+      "statement": "A missing variable raises ConfigError naming the variable",
+      "accepted_paraphrases": [
+        "Referencing an undefined variable raises ConfigError that names it"
+      ],
+      "verifying_spans": [
+        {
+          "schema_version": 1,
+          "kind": "code_span",
+          "path": "cfgkit/interpolate.py",
+          "start_line": 22,
+          "end_line": 23,
+          "base_digest": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      ],
+      "exact_values": ["ConfigError"]
+    }
+  ]
+}

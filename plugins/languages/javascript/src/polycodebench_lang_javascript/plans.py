@@ -50,11 +50,10 @@ GUEST = f"{GUEST_ROOT}/guest"
 RULES = f"{GUEST_ROOT}/rules"
 MIB = 1024 * 1024
 RUNNER = f"{GUEST}/pcb_js_run.py"
-CAPTURE = f"{GUEST}/pcb_js_capture.py"
 SCAN = f"{GUEST}/pcb_js_scan.py"
 AUDIT = f"{GUEST}/pcb_npm_audit.py"
 VITEST_REPORT = f"{GUEST}/pcb_vitest_report.py"
-# Every dependency binary is addressed by absolute path. The images put them on PATH, but a plan
+VITEST_RUN = f"{GUEST}/pcb_vitest_run.py"
 # that names a bare `vitest` could be resolved against whatever PATH the guest happens to have, and
 # a resolved-differently analyzer is not the tool the recorded identity describes.
 MODULES = "/opt/pcb/js/node_modules"
@@ -68,16 +67,25 @@ TOOL_ERRORS = (2, 126, 127)
 # supervisor's decision to make from a real exit status and not a race between two deadlines.
 RUNNER_MARGIN = 3
 MAX_PLAN_SECONDS = 110
+# The shared contract requires every environment key to match ``^[A-Z_][A-Z0-9_]{0,63}$``
+# (``ExecutionPlan`` validation), and npm reads its configuration from the environment. npm accepts
+# the upper-case spelling, so these keys use it: the lower-case ``npm_config_*`` names made every
+# JavaScript plan fail construction with "invalid plan environment entry", which no task package
+# could reveal while the language had none.
 BASE_ENV = {
     "NODE_ENV": "production",
     "CI": "true",
     "NO_COLOR": "1",
     "FORCE_COLOR": "0",
-    "npm_config_offline": "true",
-    "npm_config_audit": "false",
-    "npm_config_fund": "false",
-    "npm_config_update_notifier": "false",
+    "NPM_CONFIG_OFFLINE": "true",
+    "NPM_CONFIG_AUDIT": "false",
+    "NPM_CONFIG_FUND": "false",
+    "NPM_CONFIG_UPDATE_NOTIFIER": "false",
 }
+
+#: Analyzers that are Python guest scripts baked into the image, not npm packages the recipe's
+#: tool table can name.
+_GUEST_SCANNERS = frozenset({"context", "dependency"})
 
 _ANALYZER_DIMENSIONS: dict[str, tuple[ScoreDimension, ...]] = {
     "eslint": (ScoreDimension.CODE_QUALITY, ScoreDimension.IDIOMATIC),
@@ -155,23 +163,6 @@ def _run(name: str, deadline: int, *command: str, merge: bool = False) -> tuple[
     )
 
 
-def _captured_argv(name: str, *command: str) -> tuple[str, ...]:
-    """Run a tool through the capture helper, which splits stdout/stderr into declared outputs."""
-    return (
-        "python",
-        "-B",
-        CAPTURE,
-        "--name",
-        f"out/{name}",
-        "--stdout",
-        f"out/{name}.out",
-        "--stderr",
-        f"out/{name}.err",
-        "--",
-        *command,
-    )
-
-
 def _base(
     ids: ImageIdentities,
     *,
@@ -233,7 +224,14 @@ def build_plan(ids: ImageIdentities, task: FrozenTask, candidate: Candidate) -> 
     argv = (
         _run("build", timeout, "node", TSC, "--project", "work/tsconfig.json", "--pretty", "false")
         if _is_typescript(sources)
-        else _captured_argv("build", "node", "--check", *sources)
+        # The build lane needs the *runner's* execution record (`out/build.run.json`):
+        # `parse_build` reads it to tell a syntax failure from a harness failure, and
+        # `pcb_js_capture.py` writes no such record, so a capture-wrapped build always reported
+        # `incomplete` (`output_missing`) even when the sources parsed cleanly.
+        #
+        # Sources are staged under `work/`; a bare relative path names a file that does not exist
+        # in the guest.
+        else _run("build", timeout, "node", "--check", *(f"work/{p}" for p in sources), merge=True)
     )
     fields = _base(
         ids,
@@ -268,20 +266,26 @@ def make_test_plan(ids: ImageIdentities, task: FrozenTask) -> TestPlan:
     timeout = min(oracle.suite_timeout_seconds, MAX_PLAN_SECONDS)
     groups: list[TestGroupPlan] = []
     for group in oracle.groups:
+        # vitest resolves a relative --outputFile against --root (`work`), so the wrapper is given
+        # the guest-absolute path; the *declared* output stays relative, which is what the shared
+        # contract requires of every PlanOutput.
         raw = f"out/test.{group.group_id}.raw.json"
+        raw_in_guest = f"/workspace/{raw}"
         argv = _run(
             "test." + group.group_id,
             timeout,
-            "node",
-            VITEST,
-            "run",
-            "--reporter=json",
-            f"--outputFile={raw}",
+            "python",
+            "-B",
+            VITEST_RUN,
+            "--raw",
+            raw_in_guest,
+            "--output",
+            f"out/test.{group.group_id}.jsonl",
             "--root",
             "work",
-            "--testTimeout",
+            "--timeout-ms",
             str(oracle.case_timeout_seconds * 1000),
-            "--passWithNoTests=false",
+            "--",
             *[f"work/{rel}" for rel in group.files],
             merge=True,
         )
@@ -352,7 +356,13 @@ def _analysis(
         ids,
         plan_id=f"javascript.analysis.{analyzer}",
         argv=argv,
-        tool=ids.tool(tool, lock_digest=lock_digest),
+        # A baked-in guest scanner has no npm package to name, so its identity comes from the
+        # pinned guest tree instead of the recipe's tool table.
+        tool=(
+            ids.guest_tool(tool)
+            if tool in _GUEST_SCANNERS
+            else ids.tool(tool, lock_digest=lock_digest)
+        ),
         parser_id=f"javascript-{analyzer}",
         inputs=(
             *_candidate_inputs(sources),
@@ -389,8 +399,12 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
             context,
             analyzer="eslint",
             tool="eslint",
-            argv=_captured_argv(
+            # The runner, not the capture helper: `parse_analysis` reads the supervisor record to
+            # tell a findings exit from a tool error, and `pcb_js_capture.py` writes none, so the
+            # ESLint lane always came back `missing`.
+            argv=_run(
                 "eslint",
+                90,
                 "node",
                 ESLINT,
                 "--config",
@@ -398,9 +412,18 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                 "--format",
                 "json",
                 "--no-error-on-unmatched-pattern",
+                # ESLint's report is the parsed artifact, not its stdout: the host parser reads
+                # `out/eslint.json`, and a plan that only declared the captured stream left that
+                # file absent, so the lane raised FileNotFoundError instead of reporting findings.
+                "-o",
+                "/workspace/out/eslint.json",
                 *work,
+                merge=True,
             ),
-            outputs=_captured("eslint", "json"),
+            outputs=(
+                PlanOutput(path="out/eslint.json", format="json", required=True, max_bytes=4 * MIB),
+                *_captured("eslint", "json"),
+            ),
             semantics=findings_zero,
             output_schema="pcb-eslint-v1",
             timeout=90,
@@ -419,10 +442,20 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                 "--root",
                 "/workspace",
                 "--output",
-                "out/context.json",
+                # Absolute: the scanner's cwd is not the declared output root, so a relative
+                # --output left the report where the runner does not collect it and the lane came
+                # back `missing` for exactly those candidates that produce findings.
+                "/workspace/out/context.json",
                 *work,
             ),
-            outputs=_captured("analysis.context", "text"),
+            # The scanner writes its own report to `out/context.json`; without declaring it here the
+            # runner never collects it and the parser cannot read a file that was produced.
+            outputs=(
+                PlanOutput(
+                    path="out/context.json", format="json", required=True, max_bytes=4 * MIB
+                ),
+                *_captured("analysis.context", "text"),
+            ),
             semantics=ExitSemantics(success=(0,), findings=(1,), error=TOOL_ERRORS),
             output_schema="pcb-js-scan-v1",
             timeout=90,
@@ -473,7 +506,14 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                     "--output",
                     "out/dependency.json",
                 ),
-                outputs=_captured("analysis.dependency", "text"),
+                # Same as the context lane: the audit writes `out/dependency.json` and the parser
+                # reads it, so it must be a declared output or the runner never collects it.
+                outputs=(
+                    PlanOutput(
+                        path="out/dependency.json", format="json", required=True, max_bytes=4 * MIB
+                    ),
+                    *_captured("analysis.dependency", "text"),
+                ),
                 semantics=ExitSemantics(success=(0,), findings=(1,), error=TOOL_ERRORS),
                 output_schema="pcb-npm-audit-v1",
                 lock_digest=quality.package_lock_digest,

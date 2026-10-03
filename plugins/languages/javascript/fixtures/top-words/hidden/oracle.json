@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "js_task_oracle",
+  "oracle_version": "js-oracle-v1",
+  "suite_timeout_seconds": 110,
+  "groups": [
+    {
+      "group_id": "behaviour",
+      "required": true,
+      "classification": "acceptance",
+      "files": ["tests/behaviour.test.js"],
+      "cases": [
+        {"case_id": "top-words countWords returns nothing for empty input", "required": true, "case_kind": "edge"},
+        {"case_id": "top-words countWords refuses null and undefined input", "required": true, "case_kind": "edge"},
+        {"case_id": "top-words countWords refuses a non-positive limit", "required": true, "case_kind": "edge"},
+        {"case_id": "top-words countWords counts a single word once", "required": true, "case_kind": "example"},
+        {"case_id": "top-words countWords folds case", "required": true, "case_kind": "example"},
+        {"case_id": "top-words countWords ranks by descending frequency", "required": true, "case_kind": "example"},
+        {"case_id": "top-words countWords breaks ties alphabetically", "required": true, "case_kind": "example"},
+        {"case_id": "top-words countWords treats digits and punctuation as separators", "required": true, "case_kind": "property"},
+        {"case_id": "top-words countWords returns only the ranked prefix", "required": true, "case_kind": "property"},
+        {"case_id": "top-words countWords adds no word for trailing separators", "required": true, "case_kind": "edge"},
+        {"case_id": "top-words countWords does not mutate its input", "required": true, "case_kind": "property"},
+        {"case_id": "top-words countWords terminates on a heavily repeated word", "required": true, "case_kind": "robustness"}
+      ]
+    },
+    {
+      "group_id": "stress",
+      "required": false,
+      "classification": "quality_only",
+      "files": ["tests/stress.test.js"],
+      "cases": [
+        {"case_id": "top-words stress handles a long input", "required": false, "case_kind": "robustness"},
+        {"case_id": "top-words stress is stable across repeated calls", "required": false, "case_kind": "property"},
+        {"case_id": "top-words stress survives many distinct words", "required": false, "case_kind": "robustness"},
+        {"case_id": "top-words stress caps the result at the limit even when more words exist", "required": false, "case_kind": "property"}
+      ]
+    }
+  ],
+  "hard_conditions": [
+    {"condition_id": "behaviour-group-complete", "group_id": "behaviour"}
+  ],
+  "robustness_scenarios": [
+    {
+      "scenario_id": "long-input",
+      "group_id": "stress",
+      "weight_bp": 4000,
+      "repetitions": 3,
+      "hard_acceptance": false
+    },
+    {
+      "scenario_id": "repeat-stability",
+      "group_id": "stress",
+      "weight_bp": 6000,
+      "repetitions": 3,
+      "hard_acceptance": false
+    }
+  ]
+}

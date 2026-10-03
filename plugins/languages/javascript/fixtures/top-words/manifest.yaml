@@ -1,0 +1,142 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: conformance-js-top-words
+  version: 1
+  track: B
+  family: codegen
+  primary_language: javascript
+  secondary_languages: []
+  cluster_id: conformance-js-top-words-cluster
+  difficulty: introductory
+  stratum_id: conformance-fixtures
+  output_contract_digest: sha256:9918abedf9dcdaac3beb6c4d8088bbd7990159b5fdc1e5d7cde5345af8b5024e
+  methodology_label: independent
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths:
+  - src/index.js
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 50000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_conformance_fixture
+  immutable_revision: polycodebench-js-conformance-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: null
+  curated_at: '2026-10-03T00:00:00Z'
+  date_confidence: estimated
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-js-conformance-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 19 authored conformance fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:0c041d7e278acf0cde8012e13f4d5e93be9136e66591ca0a98f7a41e5f377ca3
+  language_plugin_id: javascript
+  language_plugin_version: 0.1.0
+  build_recipe_digest: sha256:d96d1ead56d8e21a9d261d35e3020db5df8288b95d990fa873f107fdb997b4a4
+  test_recipe_digest: sha256:fd1606e2bda379ca4603a01fbe002cb5bc31912ec00e7920fa729fd4238a2225
+  resource_class: local-development-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids:
+  - behaviour
+  hard_condition_ids:
+  - behaviour-group-complete
+  required_outputs:
+  - src/index.js
+  protected_paths:
+  - package.json
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions:
+  - correctness
+  - code_quality
+  - idiomatic
+  - robustness
+  evidence_owners: {}
+  required_analyzers:
+  - eslint
+  - context
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: js-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 110
+visible_files:
+- visible/repo/package-lock.json
+- visible/repo/package.json
+- visible/repo/src/index.js
+- visible/task.md
+hidden_files:
+- admission/alternative-runs/src/index.js
+- admission/command-injection/src/index.js
+- admission/exposure-rights.json
+- admission/faulty-ties/src/index.js
+- admission/quality-defective/src/index.js
+- admission/timeout-case/src/index.js
+- hidden/oracle.json
+- hidden/quality-plan.yaml
+- hidden/reference/src/index.js
+- hidden/tests/behaviour.test.js
+- hidden/tests/stress.test.js
+fixtures:
+- name: reference
+  variant: reference
+  solution_path: hidden/reference/src/index.js
+  expectation: {}
+- name: faulty-ties
+  variant: faulty
+  solution_path: admission/faulty-ties/src/index.js
+  expectation:
+    failing_cases:
+    - top-words countWords breaks ties alphabetically
+- name: alternative-runs
+  variant: alternative
+  solution_path: admission/alternative-runs/src/index.js
+  expectation: {}
+- name: quality-defective
+  variant: quality_defective
+  solution_path: admission/quality-defective/src/index.js
+  expectation:
+    expected_issue_families:
+    - hardcoded-credential
+- name: timeout-case
+  variant: timeout
+  solution_path: admission/timeout-case/src/index.js
+  expectation:
+    expected_failure: candidate_timeout
+- name: command-injection
+  variant: quality_defective
+  solution_path: admission/command-injection/src/index.js
+  expectation:
+    expected_issue_families:
+    - command-injection

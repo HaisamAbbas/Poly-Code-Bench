@@ -8,7 +8,8 @@ the image digest, the Node version and this digest all match.
 
 This module therefore does three things, and refuses the fourth case:
 
-1. parse ``package-lock.json`` and extract the exact resolution (``name``/``version``/``integrity``);
+1. parse ``package-lock.json`` and extract the exact resolution
+   (``name``/``version``/``integrity``);
 2. compute a *canonical* digest over that resolution, so the digest is stable across formatting,
    key ordering and package ordering in the file, but changes if any resolution changes;
 3. reject a lock that is not actually pinned, because an unpinned lock would let the identity drift
@@ -138,9 +139,7 @@ def parse_package_lock(data: bytes) -> PackageLock:
 
     packages.sort(key=lambda item: (item.name, item.version))
     lines = [f"lock-version={raw_version}"]
-    lines += [
-        f"{item.name} {item.version} {item.integrity or 'path'}" for item in packages
-    ]
+    lines += [f"{item.name} {item.version} {item.integrity or 'path'}" for item in packages]
     return PackageLock(raw_version, tuple(packages), "\n".join(lines))
 
 

@@ -1,0 +1,15 @@
+{
+  "authorship": "Authored for PolyCodeBench Prompt 19 conformance by the implementation agent",
+  "originality_statement": "Original specification written for this fixture; not derived from a published benchmark task or from a third-party codebase.",
+  "first_public_at": null,
+  "public_exposure_review": "Not compared against external corpora; fixture is for conformance only and is never a scored task.",
+  "access_history": [
+    {"party": "implementation agent", "access": "authored", "date": "2026-10-03"}
+  ],
+  "provider_transmission_policy": "never sent to a model provider",
+  "rights": {
+    "license_expression": "CC0-1.0",
+    "status": "authored_fixture",
+    "owner_confirmation": "pending"
+  }
+}

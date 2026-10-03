@@ -169,7 +169,7 @@ def main(argv):
             for directory in options["cleanup"]:
                 _remove(directory)
 
-    for key, path in (("stdout", name + ".out"), ("stderr", name + ".err")):
+    for _stream, path in (("stdout", name + ".out"), ("stderr", name + ".err")):
         _bound(path, options["max_bytes"])
 
     with open(name + ".run.json", "w", encoding="utf-8") as handle:

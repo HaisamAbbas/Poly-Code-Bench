@@ -24,6 +24,7 @@ from polycodebench_core.canonical import parse_json_strict
 from polycodebench_core.models import Digest
 from polycodebench_plugins_api import ToolIdentity
 from pydantic import BaseModel, ConfigDict, Field
+
 PARSER_VERSION = "pcb-js-parsers-1"
 GUEST_ROOT = "/opt/pcb"
 # The value an image record uses for a tool its recipe does not ship.
@@ -124,6 +125,33 @@ class ImageIdentities(_Strict):
             image_digest=record.digest,
             lock_digest=lock_digest or record.recipe_digest,
             rule_bundle_digest=self.rule_bundle_digest,
+            advisory_snapshot_digest=None,
+            parser_version=parser_version,
+        )
+
+    def guest_tool(
+        self,
+        name: str,
+        *,
+        recipe: Recipe = "evaluator",
+        parser_version: str = PARSER_VERSION,
+    ) -> ToolIdentity:
+        """Identity of a scanner *baked into* the image rather than shipped as a package.
+
+        The context scanner is a Python guest script, so it has no entry in a recipe's ``tools``
+        table and no npm version to record. Claiming one would invent a version; refusing to mint an
+        identity would make the analyzer unusable, and this scanner genuinely does run in the
+        evaluator image. Its version is the scanner's own ``scanner_version`` (the value it stamps
+        into every report), and the recipe's guest-and-rules digest rides on the rule bundle, so a
+        change to the scanner's code or its rules still moves this identity.
+        """
+        record = self.images[recipe]
+        return ToolIdentity(
+            name=name,
+            version=parser_version,
+            image_digest=record.digest,
+            lock_digest=record.lock_digest,
+            rule_bundle_digest=record.guest_and_rules_digest,
             advisory_snapshot_digest=None,
             parser_version=parser_version,
         )

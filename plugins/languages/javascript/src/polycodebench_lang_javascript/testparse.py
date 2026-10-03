@@ -143,9 +143,7 @@ def parse_group_report(
         return records, control("harness_failure", "report has no session_finish record")
     runner_status = int(finished[-1]["exitstatus"])
     if runner_status in _RUNNER_FAILURES and not collection_errors:
-        return records, control(
-            "harness_failure", f"vitest exit status {runner_status}"
-        )
+        return records, control("harness_failure", f"vitest exit status {runner_status}")
     if status == "tool_error" and not collection_errors:
         return records, control("harness_failure", f"unexpected exit code {exit_code}")
     return records, control(

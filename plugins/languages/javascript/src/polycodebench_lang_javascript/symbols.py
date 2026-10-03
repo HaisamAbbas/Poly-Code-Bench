@@ -61,7 +61,6 @@ def sanitize(text: str) -> str:
     return _LITERAL.sub(_blank, text)
 
 
-
 def _annotated(token: re.Match[str], group: str) -> bool | None:
     """Whether the matched declaration head carries an explicit return-type annotation.
 
@@ -95,9 +94,7 @@ class _Walk:
         classes = [frame.name for frame in self.frames if frame.kind == "class"]
         return ".".join(part for part in (self.prefix, *classes, name) if part)
 
-    def add(
-        self, symbol_kind: str, name: str, start: int, annotated: bool | None
-    ) -> int:
+    def add(self, symbol_kind: str, name: str, start: int, annotated: bool | None) -> int:
         self.symbols.append(
             Symbol(
                 symbol_kind=symbol_kind,  # type: ignore[arg-type]

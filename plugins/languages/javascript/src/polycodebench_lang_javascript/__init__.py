@@ -6,8 +6,8 @@ One runtime implementation, two plugin identities (Prompt 19, PCB-19-1..4):
   dependency closure, the advisory snapshot and the test runner each image actually ships;
 * ``identities`` / ``locks`` publish the tool identity of every plan, including the task's
   ``package-lock.json`` digest;
-* ``taskspec`` / ``symbols`` / ``plans`` / ``parsers`` / ``testparse`` describe the work and turn the
-  recorded bytes back into evidence without executing anything;
+* ``taskspec`` / ``symbols`` / ``plans`` / ``parsers`` / ``testparse`` describe the work and
+  turn the recorded bytes back into evidence without executing anything;
 * ``profile`` applies the frozen applicability, ownership and token-vs-scanner rules.
 
 ``JavaScriptLanguagePlugin`` and ``TypeScriptLanguagePlugin`` share every module above. They are two

@@ -1,0 +1,18 @@
+{
+  "name": "pcb-js-top-words",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PolyCodeBench JavaScript conformance fixture: top-words.",
+  "license": "CC0-1.0",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "5.0.3"
+  }
+}

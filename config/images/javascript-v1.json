@@ -30,11 +30,11 @@
     "dependency_tree_digest": "sha256:c7a3c34247aa37121c2e7d32d2cb51b45648ae6878a0977a914655c1e90385c7",
     "guest_interpreter": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
     "network": "none",
-    "note": "Local development build. The dependency closure is resolved once by scripts/fetch_js_components.py -- the only step in the JS/TS pipeline that uses a network -- against the committed infra/images/javascript/package-lock.json, and is carried into each image from a pinned components image. Nothing is installed at build time here: every image is built with --network none and npm is configured with offline=true and an unreachable registry, so an install inside a scored run fails loudly instead of downloading something the identity does not know about. The evaluator images carry eslint (and tsc for TypeScript); the runtime and performance images carry neither, so a candidate cannot inspect the analyzers that judge it. Measurement settings live in the Dockerfile's performance profile, not in the task manifest. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
+    "note": "Local development build. The dependency closure is resolved once by scripts/fetch_js_components.py -- the only step in the JS/TS pipeline that uses a network -- against the committed infra/images/javascript/package-lock.json, and is carried into each image from a pinned components image. Nothing is installed at build time here: every image is built with --network none and npm is configured with offline=true and an unreachable registry, so an install inside a scored run fails loudly instead of downloading something the identity does not know about. The evaluator images carry eslint (and tsc for TypeScript only); the runtime and performance images carry neither, so a candidate cannot inspect the analyzers that judge it. Measurement settings live in the Dockerfile's performance profile, not in the task manifest. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
     "offline_install": true,
     "scored_runs_offline": true
   },
-  "guest_digest": "sha256:19ce8d15f923057235331804982e76afa386662a71698e33885d9d84e8fba71f",
+  "guest_digest": "sha256:3aaab4473ed77fe5a45c643a288855e0aa57acadfe58608d866269dbbcaa34e4",
   "images": {
     "evaluator": {
       "components": [
@@ -43,7 +43,7 @@
         "vitest:5.0.3",
         "eslint:10.11.0"
       ],
-      "digest": "sha256:5ff3e2279c5ae9bc930081ada765b168ab4802d3915a9b132510df53f9d0362a",
+      "digest": "sha256:0c041d7e278acf0cde8012e13f4d5e93be9136e66591ca0a98f7a41e5f377ca3",
       "dockerfile_digest": "sha256:f2811264a0c2f2b7e703a3132629b37fb8d6e264d7aadc6d0f46610f1c96600e",
       "expected_tools": [
         "node",
@@ -51,13 +51,13 @@
         "vitest",
         "eslint"
       ],
-      "guest_and_rules_digest": "sha256:5db1351af75fa03efbba656ad81e155a7faca20430e15573bfafb4e0451f446f",
+      "guest_and_rules_digest": "sha256:9a3362ca126a54db1e2bc3fe865388c779183934a52b939d798383ef8a3246e2",
       "lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
       "node": "22.23.2",
       "package_manager": "npm@10.9.8",
       "recipe": "evaluator",
       "recipe_digest": "sha256:37de09d38a64c7171af9ec4e48027a0a84596be9af77bc31dcfbd906749f4f4b",
-      "reference": "pcb-js-javascript-evaluator:v1@sha256:5ff3e2279c5ae9bc930081ada765b168ab4802d3915a9b132510df53f9d0362a",
+      "reference": "pcb-js-javascript-evaluator:v1@sha256:0c041d7e278acf0cde8012e13f4d5e93be9136e66591ca0a98f7a41e5f377ca3",
       "tag": "pcb-js-javascript-evaluator:v1",
       "tools": {
         "eslint": "10.11.0",
@@ -73,20 +73,20 @@
         "npm:10.9.8",
         "vitest:5.0.3"
       ],
-      "digest": "sha256:5525cc983a8f5a4ec5538f04e585f62037abfe49286bd83a3e86a304a15ea258",
+      "digest": "sha256:3c1fe3d91a70e9b7e20836d926edfe3e6f6e42b214999a1ad7effec70cb93954",
       "dockerfile_digest": "sha256:f2811264a0c2f2b7e703a3132629b37fb8d6e264d7aadc6d0f46610f1c96600e",
       "expected_tools": [
         "node",
         "npm",
         "vitest"
       ],
-      "guest_and_rules_digest": "sha256:5db1351af75fa03efbba656ad81e155a7faca20430e15573bfafb4e0451f446f",
+      "guest_and_rules_digest": "sha256:9a3362ca126a54db1e2bc3fe865388c779183934a52b939d798383ef8a3246e2",
       "lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
       "node": "22.23.2",
       "package_manager": "npm@10.9.8",
       "recipe": "performance",
       "recipe_digest": "sha256:37de09d38a64c7171af9ec4e48027a0a84596be9af77bc31dcfbd906749f4f4b",
-      "reference": "pcb-js-javascript-performance:v1@sha256:5525cc983a8f5a4ec5538f04e585f62037abfe49286bd83a3e86a304a15ea258",
+      "reference": "pcb-js-javascript-performance:v1@sha256:3c1fe3d91a70e9b7e20836d926edfe3e6f6e42b214999a1ad7effec70cb93954",
       "tag": "pcb-js-javascript-performance:v1",
       "tools": {
         "eslint": "absent",
@@ -102,20 +102,20 @@
         "npm:10.9.8",
         "vitest:5.0.3"
       ],
-      "digest": "sha256:733dd86c72be881f702771c3648878a9615cf00326391b22777cca74281f7e86",
+      "digest": "sha256:93dfe4065966f47a9e855ebd53fd277d54c5dc279dc80040b6ba3a63657f9acf",
       "dockerfile_digest": "sha256:f2811264a0c2f2b7e703a3132629b37fb8d6e264d7aadc6d0f46610f1c96600e",
       "expected_tools": [
         "node",
         "npm",
         "vitest"
       ],
-      "guest_and_rules_digest": "sha256:5db1351af75fa03efbba656ad81e155a7faca20430e15573bfafb4e0451f446f",
+      "guest_and_rules_digest": "sha256:9a3362ca126a54db1e2bc3fe865388c779183934a52b939d798383ef8a3246e2",
       "lock_digest": "sha256:56fce682cb8b6f28dfc8e74b696f45c9dce59a964ca0291fa2c92490478a0539",
       "node": "22.23.2",
       "package_manager": "npm@10.9.8",
       "recipe": "runtime",
       "recipe_digest": "sha256:37de09d38a64c7171af9ec4e48027a0a84596be9af77bc31dcfbd906749f4f4b",
-      "reference": "pcb-js-javascript-runtime:v1@sha256:733dd86c72be881f702771c3648878a9615cf00326391b22777cca74281f7e86",
+      "reference": "pcb-js-javascript-runtime:v1@sha256:93dfe4065966f47a9e855ebd53fd277d54c5dc279dc80040b6ba3a63657f9acf",
       "tag": "pcb-js-javascript-runtime:v1",
       "tools": {
         "eslint": "absent",

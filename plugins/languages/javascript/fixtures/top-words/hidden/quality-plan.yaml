@@ -1,0 +1,24 @@
+schema_version: 1
+kind: js_task_quality_plan
+# A JavaScript task asks for no typing evidence, and `none` is the honest value here: the evaluator
+# image records tsc as absent, so a typescript analyzer plan would be unsatisfiable and
+# `type_safety`/`type_domain_modeling` opportunities may not be declared at all (taskspec.py
+# valid_items). The TypeScript sibling task sets `required` and does declare them.
+typing_expectation: none
+test_runner: vitest
+opportunity_tags: [async, error-handling, string-processing, immutability]
+opportunities:
+  async_correctness: 2
+  async_error_handling: 2
+  modern_immutability: 3
+  security: 2
+  lint: 3
+  async_composition: 2
+  data_module_api: 2
+  language_constructs: 2
+  restrained_mutation: 2
+required_analyzers: [eslint, context]
+judge_items: [naming_readability, decomposition]
+# No `performance` block: this fixture declares no workload, so `performance_plan` returns None and
+# the admission smoke records "no performance workload declared" rather than a measurement it
+# cannot take. Adding one requires a real perf workload file under hidden/perf/.

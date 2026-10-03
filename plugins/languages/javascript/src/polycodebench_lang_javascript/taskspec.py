@@ -44,9 +44,8 @@ from polycodebench_plugins_api import (
 from polycodebench_plugins_api.testreport import InventoryGroup, inventory_from_document
 from pydantic import Field, ValidationError, model_validator
 
-from polycodebench_lang_javascript.identities import ABSENT_TOOL, load_identities
+from polycodebench_lang_javascript.identities import load_identities
 from polycodebench_lang_javascript.locks import LockError, lock_digest
-from polycodebench_lang_javascript.symbols import sanitize
 
 # The union of both identities' profile items (config/languages/profiles-v1.yaml#profiles), so one
 # validator reads every quality plan; a plugin instance only ever exposes its own language's items.
@@ -66,7 +65,13 @@ IDIOM_ITEMS = (
     "type_domain_modeling",
 )
 ITEMS: dict[str, tuple[str, ...]] = {
-    "javascript": ("async_correctness", "modern_immutability", "security", "async_error_handling", "lint"),
+    "javascript": (
+        "async_correctness",
+        "modern_immutability",
+        "security",
+        "async_error_handling",
+        "lint",
+    ),
     "typescript": (
         "async_correctness",
         "type_safety",
@@ -77,8 +82,18 @@ ITEMS: dict[str, tuple[str, ...]] = {
     ),
 }
 IDIOMS: dict[str, tuple[str, ...]] = {
-    "javascript": ("async_composition", "data_module_api", "language_constructs", "restrained_mutation"),
-    "typescript": ("type_domain_modeling", "async_composition", "data_module_api", "language_constructs"),
+    "javascript": (
+        "async_composition",
+        "data_module_api",
+        "language_constructs",
+        "restrained_mutation",
+    ),
+    "typescript": (
+        "type_domain_modeling",
+        "async_composition",
+        "data_module_api",
+        "language_constructs",
+    ),
 }
 KNOWN_ANALYZERS = ("eslint", "typescript", "context", "dependency")
 # The runner a task selects; both are run by the pinned evaluator image, and a task that names one
@@ -363,7 +378,8 @@ def discover_cases(path: str, source: bytes) -> list[str]:
                     titles[depth] = _title(event.group("string"))
                 else:
                     prefix = " ".join(titles[level] for level in sorted(titles) if level < depth)
-                    found.append(f"{prefix} {event.group('string') and _title(event.group('string'))}".strip())
+                    literal = event.group("string")
+                    found.append(f"{prefix} {_title(literal)}".strip())
             pending = None
         elif event.group("call") is not None:
             pending = str(event.group("callee"))
@@ -433,9 +449,7 @@ def validate_js_task(task: TaskDraft, plugin_id: str = "javascript") -> Validati
     for output in outputs:
         if f"hidden/reference/{output}" not in files:
             issues.append(_issue("missing-reference", "reference for a required output", output))
-    if not any(
-        p.startswith("hidden/tests/") and p.endswith(suffixes) for p in files
-    ):
+    if not any(p.startswith("hidden/tests/") and p.endswith(suffixes) for p in files):
         issues.append(_issue("no-hidden-tests", f"hidden/tests contains no {plugin_id} test file"))
     lock = files.get("visible/repo/package-lock.json")
     if lock is not None:
@@ -572,7 +586,9 @@ def _check_quality(
         issues.append(
             _issue("dependency-without-inventory", "a dependency audit needs an inventory")
         )
-    if plugin_id == "javascript" and any(opps.get(i, 0) for i in ("type_safety", "type_domain_modeling")):
+    if plugin_id == "javascript" and any(
+        opps.get(i, 0) for i in ("type_safety", "type_domain_modeling")
+    ):
         issues.append(
             _issue(
                 "typing-on-javascript",

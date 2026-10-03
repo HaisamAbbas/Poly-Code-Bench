@@ -107,10 +107,23 @@ _LITERAL = re.compile(
 # significant character seen, so a slash after an identifier or a closing bracket stays a division
 # and a slash after `(`, `=`, `,` or a statement keyword is a regex.
 _REGEX_PRECEDERS = frozenset("(,=:[!&|?{};+-*%~^<>")
-_REGEX_KEYWORDS = frozenset((
-    "return", "typeof", "instanceof", "in", "of", "new", "delete", "void", "do", "else", "yield",
-    "await", "case",
-))
+_REGEX_KEYWORDS = frozenset(
+    (
+        "return",
+        "typeof",
+        "instanceof",
+        "in",
+        "of",
+        "new",
+        "delete",
+        "void",
+        "do",
+        "else",
+        "yield",
+        "await",
+        "case",
+    )
+)
 
 _TOKEN = re.compile(
     r"(?P<space>\s+)"
@@ -127,54 +140,232 @@ _TOKEN = re.compile(
 # Tokens after which a `{` opens an object or destructuring literal rather than a block. The
 # comparison and generic operators are deliberately absent: a body brace after `): Promise<T>`
 # follows `>`, and treating that as a literal would swallow the whole function body.
-_LITERAL_BRACE_PUNCT = frozenset((
-    "=", "(", ",", ":", "[", "?", "??", "&&", "||", "!", "...", "+", "-", "*", "/", "%",
-    "+=", "-=", "*=", "??=", "||=", "&&=",
-))
-_LITERAL_BRACE_NAME = frozenset((
-    "default", "export", "import", "return", "from", "of", "in", "typeof", "await", "yield",
-    "new", "delete", "void", "const", "let", "var", "throw",
-))
+_LITERAL_BRACE_PUNCT = frozenset(
+    (
+        "=",
+        "(",
+        ",",
+        ":",
+        "[",
+        "?",
+        "??",
+        "&&",
+        "||",
+        "!",
+        "...",
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "+=",
+        "-=",
+        "*=",
+        "??=",
+        "||=",
+        "&&=",
+    )
+)
+_LITERAL_BRACE_NAME = frozenset(
+    (
+        "default",
+        "export",
+        "import",
+        "return",
+        "from",
+        "of",
+        "in",
+        "typeof",
+        "await",
+        "yield",
+        "new",
+        "delete",
+        "void",
+        "const",
+        "let",
+        "var",
+        "throw",
+    )
+)
 # A statement may continue onto the next line after one of these; anywhere else, a statement
 # keyword on a new line starts a new statement (automatic semicolon insertion).
-_CONTINUATION = frozenset((
-    ".", "?.", "[", "(", ",", ":", "?", "=>", "=", "+", "-", "*", "/", "%", "**", "&&", "||",
-    "??", "&", "|", "^", "==", "!=", "===", "!==", "<", ">", "<=", ">=", "+=", "-=", "*=", "/=",
-    "%=", "&&=", "||=", "??=", "**=", "<<=", ">>=", ">>>=", "...", "++", "--", "!",
-))
-_STATEMENT_STARTERS = frozenset((
-    "if", "for", "while", "do", "switch", "try", "catch", "finally", "else", "return", "throw",
-    "break", "continue", "const", "let", "var", "function", "class", "import", "export", "case",
-    "default", "debugger", "interface", "type", "enum", "namespace", "declare", "abstract",
-))
+_CONTINUATION = frozenset(
+    (
+        ".",
+        "?.",
+        "[",
+        "(",
+        ",",
+        ":",
+        "?",
+        "=>",
+        "=",
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "**",
+        "&&",
+        "||",
+        "??",
+        "&",
+        "|",
+        "^",
+        "==",
+        "!=",
+        "===",
+        "!==",
+        "<",
+        ">",
+        "<=",
+        ">=",
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%=",
+        "&&=",
+        "||=",
+        "??=",
+        "**=",
+        "<<=",
+        ">>=",
+        ">>>=",
+        "...",
+        "++",
+        "--",
+        "!",
+    )
+)
+_STATEMENT_STARTERS = frozenset(
+    (
+        "if",
+        "for",
+        "while",
+        "do",
+        "switch",
+        "try",
+        "catch",
+        "finally",
+        "else",
+        "return",
+        "throw",
+        "break",
+        "continue",
+        "const",
+        "let",
+        "var",
+        "function",
+        "class",
+        "import",
+        "export",
+        "case",
+        "default",
+        "debugger",
+        "interface",
+        "type",
+        "enum",
+        "namespace",
+        "declare",
+        "abstract",
+    )
+)
 _CONTROL_HEADERS = frozenset(("if", "for", "while", "switch", "catch"))
 _DECLARATION_KEYWORDS = frozenset(("const", "let", "var"))
-_ASSIGNMENT_OPERATORS = frozenset((
-    "=", "+=", "-=", "*=", "/=", "%=", "&&=", "||=", "??=", "**=", "<<=", ">>=", ">>>=",
-))
-_BINARY_OPERATORS = frozenset(("+", "-", "*", "/", "%", "==", "!=", "===", "!==", "<", ">", "<=",
-                              ">=", "&&", "||", "??", "&", "|", "^", "**"))
+_ASSIGNMENT_OPERATORS = frozenset(
+    (
+        "=",
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%=",
+        "&&=",
+        "||=",
+        "??=",
+        "**=",
+        "<<=",
+        ">>=",
+        ">>>=",
+    )
+)
+_BINARY_OPERATORS = frozenset(
+    (
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "==",
+        "!=",
+        "===",
+        "!==",
+        "<",
+        ">",
+        "<=",
+        ">=",
+        "&&",
+        "||",
+        "??",
+        "&",
+        "|",
+        "^",
+        "**",
+    )
+)
 _CHAIN_METHODS = ("then", "catch", "finally")
 _CREDENTIAL = re.compile(
     r"(?:^|[^a-z])(?:pass(?:word|wd)?|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|"
     r"credential|bearer)(?:$|[^a-z])",
     re.IGNORECASE,
 )
-_CHILD_PROCESS_CALLS = frozenset((
-    "exec", "execSync", "spawn", "spawnSync", "execFile", "execFileSync",
-))
+_CHILD_PROCESS_CALLS = frozenset(
+    (
+        "exec",
+        "execSync",
+        "spawn",
+        "spawnSync",
+        "execFile",
+        "execFileSync",
+    )
+)
 _TIMER_CALLS = frozenset(("setTimeout", "setInterval"))
-_LISTENER_METHODS = frozenset((
-    "addEventListener", "removeEventListener", "addListener", "prependListener", "once", "on",
-))
+_LISTENER_METHODS = frozenset(
+    (
+        "addEventListener",
+        "removeEventListener",
+        "addListener",
+        "prependListener",
+        "once",
+        "on",
+    )
+)
 _HTML_PROPERTIES = frozenset(("innerHTML", "outerHTML"))
 _PATH_METHODS = frozenset(("join", "resolve", "normalize", "relative"))
 _PATH_RECEIVER = re.compile(r"\A(?:[A-Za-z_$][\w$]*)?[Pp]ath\Z")
 _GUARD_WORDS = ("typeof", "instanceof", "Array", "isArray", "hasOwnProperty", "in", "inArray")
-_SIGNATURE_WORDS = frozenset((
-    "function", "=>", "constructor", "export", "declare", "abstract", "interface", "type",
-    "public", "protected", "private", "readonly", "static", "get", "set", "async", "class",
-))
+_SIGNATURE_WORDS = frozenset(
+    (
+        "function",
+        "=>",
+        "constructor",
+        "export",
+        "declare",
+        "abstract",
+        "interface",
+        "type",
+        "public",
+        "protected",
+        "private",
+        "readonly",
+        "static",
+        "get",
+        "set",
+        "async",
+        "class",
+    )
+)
 _OPENERS, _CLOSERS = ("(", "[", "{"), (")", "]", "}")
 _BRACKET_PAIRS = {")": "(", "]": "[", "}": "{"}
 
@@ -318,8 +509,18 @@ class _Frame:
     """One open brace: what it is, and the bindings and state its body owns."""
 
     __slots__ = (
-        "kind", "async_fn", "open_index", "token", "is_try", "is_catch", "has_catch", "loop_name",
-        "loop_elements", "bindings", "state", "pending_awaits",
+        "kind",
+        "async_fn",
+        "open_index",
+        "token",
+        "is_try",
+        "is_catch",
+        "has_catch",
+        "loop_name",
+        "loop_elements",
+        "bindings",
+        "state",
+        "pending_awaits",
     )
 
     def __init__(self, kind, async_fn, open_index, token):
@@ -444,8 +645,10 @@ def _signature_is_async(statement):
             return True
         if nxt < len(statement) and statement[nxt].value == "(":
             closer = _match(statement, nxt, "(", ")")
-            if closer is not None and closer + 1 < len(statement) and (
-                statement[closer + 1].value == "=>"
+            if (
+                closer is not None
+                and closer + 1 < len(statement)
+                and (statement[closer + 1].value == "=>")
             ):
                 return True
         if nxt < len(statement) and statement[nxt].kind == "name" and statement[-1].value == "=>":
@@ -489,8 +692,14 @@ def _promise_annotation(statement, index):
     cursor = index + 1
     if cursor < len(statement) and statement[cursor].value == "readonly":
         cursor += 1
-    return cursor < len(statement) and statement[cursor].kind == "name" and statement[cursor].value in (
-        "Promise", "PromiseLike",
+    return (
+        cursor < len(statement)
+        and statement[cursor].kind == "name"
+        and statement[cursor].value
+        in (
+            "Promise",
+            "PromiseLike",
+        )
     )
 
 
@@ -525,9 +734,15 @@ def _literal_collection_size(statement, start, stop):
     if stop - start >= 2 and statement[start].value == "[":
         count = _element_count(statement, start, stop)
         return count if count is not None and count > 1 else 0
-    if stop - start >= 5 and statement[start].kind == "name" and statement[start].value == "Array" and (
-        statement[start + 1].value == "." and statement[start + 2].value == "from"
-        and statement[start + 3].value == "("
+    if (
+        stop - start >= 5
+        and statement[start].kind == "name"
+        and statement[start].value == "Array"
+        and (
+            statement[start + 1].value == "."
+            and statement[start + 2].value == "from"
+            and statement[start + 3].value == "("
+        )
     ):
         closer = _match(statement, start + 3, "(", ")")
         if closer is not None and closer == stop - 1:
@@ -626,13 +841,13 @@ class _Scanner:
             head += 1
         if head < count and tokens[head].value == "function":
             closer = _match(tokens, head + 1, "(", ")")
-            if closer is not None and _signature_is_async(tokens[head:closer + 1]):
+            if closer is not None and _signature_is_async(tokens[head : closer + 1]):
                 self.declarations.setdefault(name, (True, promised, tokens[index].line))
             return
         if head < count and tokens[head].value == "(":
             closer = _match(tokens, head, "(", ")")
             if closer is not None and closer + 1 < count and tokens[closer + 1].value == "=>":
-                if _signature_is_async(tokens[head:closer + 1]):
+                if _signature_is_async(tokens[head : closer + 1]):
                     self.declarations.setdefault(name, (True, True, tokens[index].line))
                 elif promised:
                     self.declarations.setdefault(name, (False, True, tokens[index].line))
@@ -695,8 +910,10 @@ class _Scanner:
             if token.value == ";" and token.kind == "punct":
                 self._flush(index)
                 continue
-            if token.kind == "name" and token.value in _STATEMENT_STARTERS and self._starts_statement(
-                index
+            if (
+                token.kind == "name"
+                and token.value in _STATEMENT_STARTERS
+                and self._starts_statement(index)
             ):
                 self._flush(index)
             self._buffer.append(index)
@@ -798,8 +1015,10 @@ class _Scanner:
         if closer is None or closer != len(statement) - 1:
             return 0
         start = opener + 1
-        if start < len(statement) and statement[start].kind == "name" and statement[start].value in (
-            "await",
+        if (
+            start < len(statement)
+            and statement[start].kind == "name"
+            and statement[start].value in ("await",)
         ):
             start += 1
         depth = 0
@@ -847,9 +1066,12 @@ class _Scanner:
                     depth += 1
                 elif value in _CLOSERS:
                     depth -= 1
-                elif depth == 0 and statement[cursor].kind == "name" and (
-                    cursor + 1 < closer
-                    and statement[cursor + 1].value in (":", "?", "=", ",")
+                elif (
+                    depth == 0
+                    and statement[cursor].kind == "name"
+                    and (
+                        cursor + 1 < closer and statement[cursor + 1].value in (":", "?", "=", ",")
+                    )
                 ):
                     names.append((statement[cursor].value, False))
             return names
@@ -898,12 +1120,14 @@ class _Scanner:
                 continue
             if is_any:
                 self._add(
-                    "unsafe-json-parse", token,
+                    "unsafe-json-parse",
+                    token,
                     "`JSON.parse` result is bound to `%s` with no shape check before use" % target,
                 )
             else:
                 self._add(
-                    "unsafe-json-parse", token,
+                    "unsafe-json-parse",
+                    token,
                     "`JSON.parse` of unvalidated input is used without a shape check",
                 )
 
@@ -911,7 +1135,8 @@ class _Scanner:
         for frame, token in self._try_awaits:
             if frame.has_catch:
                 self._add(
-                    "redundant-await-in-try", token,
+                    "redundant-await-in-try",
+                    token,
                     "`return await` inside a `try` that has a `catch`: the surrounding catch sees "
                     "the rejection, so the `await` is redundant",
                 )
@@ -939,7 +1164,8 @@ class _Scanner:
             for outer in reversed(self._stack[:-1]):
                 if outer.kind in ("function", "arrow", "method") and name in outer.bindings:
                     self._add(
-                        "var-redeclaration", name_token,
+                        "var-redeclaration",
+                        name_token,
                         "`var %s` inside a function body is hoisted and shadows the binding already "
                         "in scope" % name,
                     )
@@ -979,8 +1205,11 @@ class _Scanner:
                 expect_name = True
                 cursor += 1
                 continue
-            elif depth == 0 and token.kind == "name" and expect_name and (
-                cursor + 1 >= len(statement) or statement[cursor + 1].value in (",", "=", ";")
+            elif (
+                depth == 0
+                and token.kind == "name"
+                and expect_name
+                and (cursor + 1 >= len(statement) or statement[cursor + 1].value in (",", "=", ";"))
             ):
                 found.append((token.value, token, None))
                 expect_name = False
@@ -1011,14 +1240,16 @@ class _Scanner:
         existing = frame.bindings.get(name)
         if existing == "var":
             self._add(
-                "var-redeclaration", token,
+                "var-redeclaration",
+                token,
                 "`var %s` is already bound by `var` in the same scope" % name,
             )
         else:
             for outer in reversed(self._stack[:-1]):
                 if name in outer.bindings:
                     self._add(
-                        "var-redeclaration", token,
+                        "var-redeclaration",
+                        token,
                         "`var %s` shadows the existing `%s` binding of the same name"
                         % (name, outer.bindings[name]),
                     )
@@ -1039,9 +1270,14 @@ class _Scanner:
                 continue
             end = self._value_end(statement, index + 1)
             key = self._key(statement, index + 1, end)
-            if entry["assignments"] >= 1 and entry["key"] == key and token.line != entry["token"].line:
+            if (
+                entry["assignments"] >= 1
+                and entry["key"] == key
+                and token.line != entry["token"].line
+            ):
                 self._add(
-                    "needless-mutation", statement[index - 1],
+                    "needless-mutation",
+                    statement[index - 1],
                     "`%s` is re-assigned the expression it was declared with" % name,
                 )
             entry["key"] = key
@@ -1057,7 +1293,8 @@ class _Scanner:
             loop = self._enclosing_loop(self._buffer[0] + index)
             if loop is not None:
                 self._add(
-                    "unbounded-sequential-await", token,
+                    "unbounded-sequential-await",
+                    token,
                     "`await` resolves one element at a time over a %d-element literal; the body is "
                     "independent per element, so the calls could have been composed"
                     % loop.loop_elements,
@@ -1091,7 +1328,8 @@ class _Scanner:
             if leaf == "then" and not awaited and not voided:
                 if not self._has_catch_after(statement, index):
                     self._add(
-                        "unhandled-rejection", token,
+                        "unhandled-rejection",
+                        token,
                         "a `.then(` chain with no `catch` downstream: its rejection is unobserved",
                     )
                 continue
@@ -1105,7 +1343,8 @@ class _Scanner:
                     and not self._is_inside_function(statement, index)
                 ):
                     self._add(
-                        "missing-await", token,
+                        "missing-await",
+                        token,
                         "an async call inside another async function is used without `await`, so "
                         "its rejection escapes the caller's control flow",
                     )
@@ -1113,7 +1352,8 @@ class _Scanner:
             if not is_statement:
                 continue
             self._add(
-                "floating-promise", token,
+                "floating-promise",
+                token,
                 "a promise-producing expression used as a bare statement: neither awaited, nor "
                 "`void`ed, nor given a `.catch(`, so a rejection is unobserved",
             )
@@ -1133,8 +1373,10 @@ class _Scanner:
         for offset in (1, 2):
             if index - offset >= 0 and statement[index - offset].value in ("return", "yield", "=>"):
                 return True
-            if index - offset >= 0 and statement[index - offset].value == "(" and (
-                index - offset - 1 >= 0 and statement[index - offset - 1].value == "await"
+            if (
+                index - offset >= 0
+                and statement[index - offset].value == "("
+                and (index - offset - 1 >= 0 and statement[index - offset - 1].value == "await")
             ):
                 return True
         return False
@@ -1162,25 +1404,33 @@ class _Scanner:
         for index, token in enumerate(statement):
             if token.kind != "name" or index + 2 >= len(statement):
                 continue
-            if token.value == "eval" and _is_call_at(statement, index) and statement[
-                index + 2
-            ].kind != "literal":
-                self._add(
-                    "dynamic-eval", token,
-                    "`eval` compiles a value the tool never inspects",
-                )
-            elif token.value == "Function" and index and statement[index - 1].value == "new" and (
-                statement[index + 1].value == "("
+            if (
+                token.value == "eval"
+                and _is_call_at(statement, index)
+                and statement[index + 2].kind != "literal"
             ):
                 self._add(
-                    "dynamic-eval", token,
+                    "dynamic-eval",
+                    token,
+                    "`eval` compiles a value the tool never inspects",
+                )
+            elif (
+                token.value == "Function"
+                and index
+                and statement[index - 1].value == "new"
+                and (statement[index + 1].value == "(")
+            ):
+                self._add(
+                    "dynamic-eval",
+                    token,
                     "`new Function` builds a function from a body assembled at run time",
                 )
             elif token.value in _TIMER_CALLS and _is_call_at(statement, index):
                 argument = statement[index + 2]
                 if argument.kind == "literal" and argument.value in ("string", "template"):
                     self._add(
-                        "dynamic-eval", token,
+                        "dynamic-eval",
+                        token,
                         "`%s` is given a string body, which the engine compiles as code"
                         % token.value,
                     )
@@ -1201,7 +1451,8 @@ class _Scanner:
             if not self._built_command(statement, index + 2, closer):
                 continue
             self._add(
-                "command-injection", token,
+                "command-injection",
+                token,
                 "a `child_process` call with `shell: true` runs a command built from a "
                 "non-literal segment, so a metacharacter in the value becomes a second command",
             )
@@ -1214,7 +1465,9 @@ class _Scanner:
                 depth += 1
             elif value in _CLOSERS:
                 depth -= 1
-            elif depth == 1 and statement[index].kind == "name" and statement[index].value == "shell":
+            elif (
+                depth == 1 and statement[index].kind == "name" and statement[index].value == "shell"
+            ):
                 after = statement[index + 1] if index + 1 < closer else None
                 if after is not None and after.value == ":" and index + 2 < closer:
                     value_token = statement[index + 2]
@@ -1255,7 +1508,8 @@ class _Scanner:
             if name is None or not _CREDENTIAL.search(name):
                 continue
             self._add(
-                "hardcoded-credential", statement[position],
+                "hardcoded-credential",
+                statement[position],
                 "a string literal is assigned to `%s`: the secret ships in the source instead of "
                 "coming from the environment" % name,
             )
@@ -1272,11 +1526,14 @@ class _Scanner:
 
     def _prototype_pollution(self, statement):
         for index, token in enumerate(statement):
-            if token.kind == "name" and token.value == "__proto__" and self._is_target(
-                statement, index
+            if (
+                token.kind == "name"
+                and token.value == "__proto__"
+                and self._is_target(statement, index)
             ):
                 self._add(
-                    "prototype-pollution", token,
+                    "prototype-pollution",
+                    token,
                     "`__proto__` is assigned: the write reaches an object's prototype and every "
                     "object that inherits from it",
                 )
@@ -1287,17 +1544,18 @@ class _Scanner:
                 and self._prototype_chain_target(statement, index)
             ):
                 self._add(
-                    "prototype-pollution", token,
+                    "prototype-pollution",
+                    token,
                     "`constructor.prototype` is assigned: the write reaches the prototype shared "
                     "by every instance",
                 )
                 continue
             if token.kind == "name" and token.value == "[" and self._dynamic_key(statement, index):
                 self._add(
-                    "prototype-pollution", token,
+                    "prototype-pollution",
+                    token,
                     "a dynamic key is written into an object literal's prototype position",
                 )
-
 
     def _prototype_chain_target(self, statement, index):
         """True for ``constructor.prototype.<key> = ...``, which reaches every instance."""
@@ -1308,6 +1566,7 @@ class _Scanner:
         if statement[index + 3].value != "." or statement[index + 4].kind != "name":
             return False
         return index + 5 < len(statement) and statement[index + 5].value in _ASSIGNMENT_OPERATORS
+
     def _is_target(self, statement, index):
         """True when the name at ``index`` is the left-hand side of an assignment."""
         if index + 1 >= len(statement):
@@ -1340,24 +1599,33 @@ class _Scanner:
             if token.value in _HTML_PROPERTIES and statement[index + 1].value == "=":
                 if self._is_unsafe_value(statement, index + 2):
                     self._add(
-                        "unsafe-html", token,
+                        "unsafe-html",
+                        token,
                         "`%s` is assigned a value the document is about to parse as markup"
                         % token.value,
                     )
             elif token.value == "insertAdjacentHTML" and statement[index + 1].value == "(":
                 if self._is_unsafe_value(statement, index + 2):
                     self._add(
-                        "unsafe-html", token,
+                        "unsafe-html",
+                        token,
                         "`insertAdjacentHTML` is given a value the document is about to parse as "
                         "markup",
                     )
-            elif token.value == "write" and index and statement[index - 1].value == "." and (
-                index > 1 and statement[index - 2].kind == "name"
-                and statement[index - 2].value in ("document", "globalThis")
+            elif (
+                token.value == "write"
+                and index
+                and statement[index - 1].value == "."
+                and (
+                    index > 1
+                    and statement[index - 2].kind == "name"
+                    and statement[index - 2].value in ("document", "globalThis")
+                )
             ):
                 if self._is_unsafe_value(statement, index + 1):
                     self._add(
-                        "unsafe-html", token,
+                        "unsafe-html",
+                        token,
                         "`document.write` is given a value the document is about to parse as "
                         "markup",
                     )
@@ -1378,9 +1646,12 @@ class _Scanner:
         for index, token in enumerate(statement):
             if token.kind != "name" or token.value != "JSON":
                 continue
-            if index + 3 >= len(statement) or statement[index + 1].value != "." or statement[
-                index + 2
-            ].value != "parse" or statement[index + 3].value != "(":
+            if (
+                index + 3 >= len(statement)
+                or statement[index + 1].value != "."
+                or statement[index + 2].value != "parse"
+                or statement[index + 3].value != "("
+            ):
                 continue
             closer = _match(statement, index + 3, "(", ")")
             if closer is None:
@@ -1390,30 +1661,56 @@ class _Scanner:
                 continue
             if any(part.kind == "name" and part.value == "in" for part in after):
                 continue
-            if index and statement[index - 1].kind == "name" and statement[index - 1].value in (
-                "await", "yield",
+            if (
+                index
+                and statement[index - 1].kind == "name"
+                and statement[index - 1].value
+                in (
+                    "await",
+                    "yield",
+                )
             ):
                 continue
             bound = None
-            if index and statement[index - 1].value in ("=", ":") and index >= 2 and statement[
-                index - 2
-            ].kind == "name":
+            if (
+                index
+                and statement[index - 1].value in ("=", ":")
+                and index >= 2
+                and statement[index - 2].kind == "name"
+            ):
                 bound = statement[index - 2].value
-            elif index and statement[index - 1].kind == "name" and statement[index - 1].value in (
-                "return", "export", "throw",
+            elif (
+                index
+                and statement[index - 1].kind == "name"
+                and statement[index - 1].value
+                in (
+                    "return",
+                    "export",
+                    "throw",
+                )
             ):
                 bound = None
-            elif after and after[0].value in (",", ")") :
+            elif after and after[0].value in (",", ")"):
                 continue
-            if after and after[0].value == "." and len(after) > 1 and after[1].value in (
-                "forEach", "map", "filter", "reduce",
+            if (
+                after
+                and after[0].value == "."
+                and len(after) > 1
+                and after[1].value
+                in (
+                    "forEach",
+                    "map",
+                    "filter",
+                    "reduce",
+                )
             ):
                 continue
             if self._is_declaration_keyword(statement, 0) and bound is not None:
                 self._json_pending.append((statement[index + 2], bound, False))
                 continue
             self._add(
-                "unsafe-json-parse", statement[index + 2],
+                "unsafe-json-parse",
+                statement[index + 2],
                 "`JSON.parse` of unvalidated input reaches the caller with no shape check",
             )
         del frame
@@ -1437,7 +1734,8 @@ class _Scanner:
             return
         if self._is_unsafe_value(statement, open_index + 1):
             self._add(
-                "unvalidated-path-join", statement[open_index],
+                "unvalidated-path-join",
+                statement[open_index],
                 "a path is built from a non-literal segment: a `..` or separator in that value "
                 "escapes the intended directory",
             )
@@ -1458,7 +1756,8 @@ class _Scanner:
             if left in ("null", "undefined", "NaN") or right in ("null", "undefined", "NaN"):
                 continue
             self._add(
-                "loose-equality", token,
+                "loose-equality",
+                token,
                 "`%s` compares operands of different apparent kinds (%s and %s): the comparison "
                 "coerces one of them" % (token.value, left, right),
             )
@@ -1505,7 +1804,8 @@ class _Scanner:
                 continue
             if self._is_public_any(statement, index):
                 self._add(
-                    "any-escape", token,
+                    "any-escape",
+                    token,
                     "an explicit `any` sits in a public position: the value crosses the type "
                     "boundary unchecked",
                 )
@@ -1515,15 +1815,27 @@ class _Scanner:
         if index == 0 or index + 1 >= len(statement):
             return False
         after = statement[index + 1]
-        if after.value not in (";", ")", ",", "]", "}", "=", "|", "&", ">", "?", "=>", "{", "extends"):
+        if after.value not in (
+            ";",
+            ")",
+            ",",
+            "]",
+            "}",
+            "=",
+            "|",
+            "&",
+            ">",
+            "?",
+            "=>",
+            "{",
+            "extends",
+        ):
             return False
         before = statement[index - 1]
         if before.kind == "name" and before.value in ("as", "satisfies", "is", "extends"):
             return any(part.value == "export" for part in statement[:index])
         if before.value in ("<", ",", "|", "&"):
-            return any(
-                part.kind == "name" and part.value in _SIGNATURE_WORDS for part in statement
-            )
+            return any(part.kind == "name" and part.value in _SIGNATURE_WORDS for part in statement)
         if before.value != ":":
             return False
         # A parameter or return annotation inside any function signature is a public position.
@@ -1540,9 +1852,12 @@ class _Scanner:
         for index, token in enumerate(statement):
             if token.kind != "name" or token.value != "JSON":
                 continue
-            if index + 3 >= len(statement) or statement[index + 1].value != "." or statement[
-                index + 2
-            ].value != "parse" or statement[index + 3].value != "(":
+            if (
+                index + 3 >= len(statement)
+                or statement[index + 1].value != "."
+                or statement[index + 2].value != "parse"
+                or statement[index + 3].value != "("
+            ):
                 continue
             if not self._is_declaration_keyword(statement, 0) or index < 3:
                 continue
@@ -1556,17 +1871,18 @@ class _Scanner:
             for earlier in self._recent[-3:]:
                 if earlier[0].kind == "name" and earlier[0].value in ("return", "export"):
                     self._add(
-                        "any-escape", statement[index + 2],
+                        "any-escape",
+                        statement[index + 2],
                         "an untyped `JSON.parse` result is returned as `%s`, so the value leaves "
                         "the module untyped" % target,
                     )
                     break
                 if any(
-                    part.kind == "name" and part.value in ("return", "export")
-                    for part in earlier
+                    part.kind == "name" and part.value in ("return", "export") for part in earlier
                 ) and any(part.kind == "name" and part.value == target for part in earlier):
                     self._add(
-                        "any-escape", statement[index + 2],
+                        "any-escape",
+                        statement[index + 2],
                         "an untyped `JSON.parse` result bound to `%s` is returned or exported"
                         % target,
                     )
@@ -1577,8 +1893,16 @@ class _Scanner:
 
     def _module_statement(self, statement, frame):
         head = statement[0]
-        if head.kind == "name" and head.value in ("import", "function", "class", "abstract",
-                                                  "interface", "type", "enum", "declare"):
+        if head.kind == "name" and head.value in (
+            "import",
+            "function",
+            "class",
+            "abstract",
+            "interface",
+            "type",
+            "enum",
+            "declare",
+        ):
             return
         if head.kind == "name" and head.value in _DECLARATION_KEYWORDS:
             return
@@ -1593,7 +1917,8 @@ class _Scanner:
                 if part.kind == "name" and part.value in ("let", "var"):
                     for name, name_token, _initialiser in self._declarators(statement, 1):
                         self._add(
-                            "exported-mutable-binding", name_token,
+                            "exported-mutable-binding",
+                            name_token,
                             "`export %s %s` shares one live binding with every importer, so a "
                             "later mutation is visible outside this module" % (part.value, name),
                         )
@@ -1605,22 +1930,34 @@ class _Scanner:
                 return
             return
         for index, token in enumerate(statement):
-            if token.kind == "name" and token.value == "export" and any(
-                part.value in ("let", "var") for part in statement[index :]
+            if (
+                token.kind == "name"
+                and token.value == "export"
+                and any(part.value in ("let", "var") for part in statement[index:])
             ):
                 for name, name_token, _initialiser in self._declarators(statement, index + 1):
                     self._add(
-                        "exported-mutable-binding", name_token,
+                        "exported-mutable-binding",
+                        name_token,
                         "`export %s %s` shares one live binding with every importer"
                         % (statement[index + 1].value, name),
                     )
-        if head.kind == "name" and head.value == "async" and statement[1:2] and statement[1].value == "(":
-            if self._side_effect_call(statement, 1, "an async IIFE at module scope starts work as "
-                                     "soon as the module is imported"):
+        if (
+            head.kind == "name"
+            and head.value == "async"
+            and statement[1:2]
+            and statement[1].value == "("
+        ):
+            if self._side_effect_call(
+                statement,
+                1,
+                "an async IIFE at module scope starts work as soon as the module is imported",
+            ):
                 return
         if head.value == "(":
-            if self._side_effect_call(statement, 0, "a module-scope IIFE runs work as soon as the "
-                                     "module is imported"):
+            if self._side_effect_call(
+                statement, 0, "a module-scope IIFE runs work as soon as the module is imported"
+            ):
                 return
         for index, token in enumerate(statement):
             if token.kind != "name" or not _is_call_at(statement, index):
@@ -1629,21 +1966,24 @@ class _Scanner:
             leaf = members[-1] if members else base
             if leaf in _TIMER_CALLS:
                 self._add(
-                    "import-time-side-effect", token,
+                    "import-time-side-effect",
+                    token,
                     "a timer is registered at module scope, so the callback starts as soon as the "
                     "module is imported",
                 )
                 return
             if leaf in _LISTENER_METHODS and not self._is_inside_function(statement, index):
                 self._add(
-                    "import-time-side-effect", token,
+                    "import-time-side-effect",
+                    token,
                     "an event listener is registered at module scope, so the callback runs as "
                     "soon as the event fires whether or not anything asked for it",
                 )
                 return
             if base == "process" and leaf == "on":
                 self._add(
-                    "import-time-side-effect", token,
+                    "import-time-side-effect",
+                    token,
                     "a process handler is registered at module scope, so the module takes over "
                     "that signal for the whole process",
                 )
@@ -1738,7 +2078,12 @@ def main(argv):
         os.makedirs(parent, exist_ok=True)
     with open(args.output, "w", encoding="utf-8") as handle:
         json.dump(result, handle, sort_keys=True, separators=(",", ":"))
-    return 2 if result["parse_failures"] else 0
+    # The plan declares `findings=(1,)`, so a scan that reported findings must exit 1 and the host
+    # parser treats exit 0 *with* findings as a broken scan ("exit 0 but violations were
+    # reported"). Exiting 0 here made every candidate with a real finding read as `missing`.
+    if result["parse_failures"]:
+        return 2
+    return 1 if result["findings"] else 0
 
 
 if __name__ == "__main__":

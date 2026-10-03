@@ -45,7 +45,9 @@ from polycodebench_plugins_api import (
 from polycodebench_lang_javascript.observations import COLUMN_KEYED_FAMILIES, IssueKeys, slug
 
 PROFILE_VERSIONS = {"javascript": "javascript-profile-v1", "typescript": "typescript-profile-v1"}
-PROFILE_FILES = {language: f"config/languages/{language}-profile-v1.yaml" for language in PROFILE_VERSIONS}
+PROFILE_FILES = {
+    language: f"config/languages/{language}-profile-v1.yaml" for language in PROFILE_VERSIONS
+}
 TOKEN_ONLY = "context-required"
 CONTEXT_SUFFIX = ".context."
 
@@ -95,14 +97,11 @@ def _descriptions(items: Sequence[ProfileItem], known: Mapping[str, str]) -> lis
     missing = [item.item_id for item in items if item.item_id not in known]
     if missing:
         raise ValueError(f"profile items without a description: {', '.join(missing)}")
-    return [
-        item.model_copy(update={"description": known[str(item.item_id)]})
-        for item in items
-    ]
+    return [item.model_copy(update={"description": known[str(item.item_id)]}) for item in items]
 
 
 @lru_cache(maxsize=4)
-def load_profile(language: str, root: str | None = None) -> "JsProfile":
+def load_profile(language: str, root: str | None = None) -> JsProfile:
     """Load one identity's profile: weights from the shared registry, rules from its own file."""
     base = Path(root) if root else _repo_root()
     weights = yaml.safe_load((base / "config/languages/profiles-v1.yaml").read_text("utf-8"))

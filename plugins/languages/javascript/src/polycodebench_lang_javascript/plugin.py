@@ -39,7 +39,6 @@ from polycodebench_plugins_api import (
     LanguageProfile,
     PerformancePlan,
     PropertyEngineIdentity,
-    SymbolIndex,
     TaskDraft,
     TestGroupPlan,
     TestPlan,
@@ -51,10 +50,9 @@ from polycodebench_plugins_api.testreport import GroupControl, InventoryGroup, T
 from polycodebench_lang_javascript import plans
 from polycodebench_lang_javascript.identities import ImageIdentities, load_identities
 from polycodebench_lang_javascript.locks import lock_digest
-from polycodebench_lang_javascript.observations import scan_observation
 from polycodebench_lang_javascript.parsers import PARSERS
 from polycodebench_lang_javascript.profile import JsProfile, load_profile, profile_version
-from polycodebench_lang_javascript.symbols import CANDIDATE_SUFFIXES, index_js_sources
+from polycodebench_lang_javascript.symbols import CANDIDATE_SUFFIXES
 from polycodebench_lang_javascript.taskspec import (
     parse_oracle,
     parse_quality_plan,
@@ -156,9 +154,7 @@ class _NodeLanguagePlugin:
 
     # ----------------------------------------------------- evidence parsing (executable)
 
-    def freeze_view(
-        self, draft: TaskDraft, task_digest: str, task_version: int = 1
-    ) -> FrozenTask:
+    def freeze_view(self, draft: TaskDraft, task_digest: str, task_version: int = 1) -> FrozenTask:
         """The slice of a validated task that plans are built from."""
         oracle = parse_oracle(draft.files["hidden/oracle.json"])
         quality = parse_quality_plan(draft.files["hidden/quality-plan.yaml"])
@@ -211,9 +207,7 @@ class _NodeLanguagePlugin:
         return {f"work/{path}": files[f"visible/repo/{path}"] for path in config}
 
     def inventory(self, task: FrozenTask) -> tuple[InventoryGroup, ...]:
-        return parse_oracle(
-            json.dumps(task.inventory).encode("utf-8")
-        ).inventory()
+        return parse_oracle(json.dumps(task.inventory).encode("utf-8")).inventory()
 
     def parse_build(
         self, plan: object, raw: ArtifactReader
@@ -262,9 +256,7 @@ class _NodeLanguagePlugin:
     def normalize(self, observations: list[Observation]) -> list[Observation]:
         return self._profile.normalize(observations)
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """Vitest is the runner; it has no declared example budget and no seed control.
 
         That is stated rather than borrowed from another language's policy. A runner with no seed

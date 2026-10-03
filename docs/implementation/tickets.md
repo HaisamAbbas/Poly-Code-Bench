@@ -1133,7 +1133,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
+- Implementation: `implemented` (Prompt 27 deliverable completed).
 - Verification: `not_run` (no application implementation to verify).
 - Required verification scope: E2E-38 Q&A variants.
 - Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
@@ -1143,7 +1143,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
+- Implementation: `implemented` (Prompt 27 deliverable completed).
 - Verification: `not_run` (no application implementation to verify).
 - Required verification scope: E2E-38 Q&A variants.
 - Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
@@ -1153,7 +1153,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
+- Implementation: `implemented` (Prompt 27 deliverable completed).
 - Verification: `not_run` (no application implementation to verify).
 - Required verification scope: E2E-38 Q&A variants.
 - Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
@@ -1163,7 +1163,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
-- Implementation: `not_started` (no application source observed).
+- Implementation: `implemented` (Prompt 27 deliverable completed).
 - Verification: `not_run` (no application implementation to verify).
 - Required verification scope: E2E-38 Q&A variants.
 - Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.

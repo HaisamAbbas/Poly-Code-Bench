@@ -831,6 +831,82 @@ never executed from scoring every F2P test as resolved, and the exit-code cross-
 releases graded by different revisions would not be comparable. The evaluator digest covers the
 revision and the upstream entry points the adapter calls, so an upstream change invalidates cached
 grades rather than silently reusing them.
+
+# D-27-01 - Fact recall is the native-style measure; entailment credit is mean-of-three
+
+`qa_contracts` implements Technical Spec 17.3's formula exactly: fact recall =
+100*sum(weight*credit)/sum(weight) over versioned atomic facts. Credit is the mean of the fixed
+three 0/1 entailment votes or an adjudication; missed facts are zero, repetition adds nothing,
+an empty answer recalls zero, and a deterministic exact-value contradiction forces zero credit
+even when votes are generous. The native-style presence aggregation (statement or accepted
+paraphrase substring) is computed with the same formula and preserved in its own field, so a
+difference between aggregations stays visible. Unjudged facts make recall `unknown`, never a
+partial number.
+
+# D-27-02 - Grounding and claim diagnostics are separately named PolyCodeBench adaptations
+
+Citation validity, grounding rate and unsupported/contradicted claim counts and rates are
+recorded as PolyCodeBench diagnostics alongside - never inside - fact recall, and never as
+DeepCodeBench metrics. Claim extraction is the frozen deterministic procedure
+`claim-extraction-v1` (sentence split, bounded at 40 claims) over the prose, so no stated claim
+escapes diagnostics; structured claims carry the citations and must quote the answer text.
+Incomplete extraction or verification yields `unknown` (`None`) for the affected diagnostic -
+it is never recorded as zero. Q&A output is prose: `code_dimensions` is always `not_applicable`
+and no weighted answer-quality index exists in v1.
+
+# D-27-03 - Entailment votes are binary; the half anchor is refused at the frozen conversion
+
+The judge layer's anchor set is 0/0.5/1, but the fixed entailment protocol asks for a binary
+judgment. `entailment_votes` maps `0.000000`/`1.000000` to 0/1 and refuses a half anchor rather
+than rounding it. Rubric item `entailment` (rubric `qa-entailment-rubric-v1`, panel
+`qa-entailment-panel-v1`, unprovisioned like every panel) is the one correctness-dimension judge
+item: the residual-item validator now admits correctness items for Q&A entailment only, and
+entailment credit never enters the six code dimensions or the scorer.
+
+# D-27-04 - Q&A solving is read/search-only over a pinned snapshot
+
+Protocol `repo-qa-v1` allows `list_files`/`read_file`/`search` and nothing else;
+`validate_qa_protocol_tools` refuses any mutating tool, so editing is disabled at the contract
+level. Question inputs pin the base snapshot digest and path inventory; the answer is one frozen
+JSON envelope whose citations must carry that digest, and claims must quote the answer.
+Retrieval context and truncation are logged as `RetrievalRecord` rows (tool, status, truncated,
+original/returned bytes) from the existing tool-result records - the retrieval log is a view of
+what the tools already record, not a second logging channel.
+
+
+## Prompt 29 decisions
+
+- **D-29-01 — Publication contracts must survive a JSON round-trip.** `ContractModel` is
+  strict so a number cannot arrive as a string. Every contract in
+  `polycodebench_publication` is written to and read back from JSON, where a stored
+  ``tuple`` comes back as a list; strict mode rejected that, so a release written in one
+  process could not be read in another. `PublicationModel` now relaxes strictness on
+  sequence shapes only. Unknown fields are still forbidden and instances are still frozen,
+  so the two security-relevant invariants of `ContractModel` are unchanged. Scope:
+  `packages/publication/src/polycodebench_publication/aggregation.py`. No signature,
+  serialization or digest behaviour changes.
+
+- **D-29-02 — The API layer lives in `packages/api`, not `apps/api`.** Technical
+  Specification 2.3 names `apps/{api,web,cli}` as the adapter layer, but this repository's
+  `apps/` directory is a pnpm workspace (`pnpm-workspace.yaml`: `apps/*`), and every Python
+  package already lives under `packages/`. Putting a Python package under `apps/` would
+  either break the JS toolchain's workspace glob or require changing it. The narrowest
+  compatible interpretation is to keep the spec's *role* separation — the module is an
+  adapter and must not be depended on by anything below it — while following the
+  repository's established directory convention. Recorded as a non-breaking implementation
+  clarification under execution contract 4.2; no normative requirement is weakened. The
+  dependency rule from Technical Specification 2.3 is enforced rather than relaxed:
+  `scripts/check_boundaries.py` gives `api` an allowlist of
+  `{core, services, persistence, publication, scoring, orchestration}` and nothing above it.
+
+- **D-29-03 — Public error bodies carry no resource identity.** `PublicError` validates at
+  construction that neither its message nor any detail contains a path separator, an `@`,
+  a `sha256:` digest, `http` or `..`. A route that rejects an unknown public identifier
+  returns the same 404 body as an identifier that exists but is private, so a probe cannot
+  use the error taxonomy to enumerate hidden tasks (E2E-26). This is enforced in the
+  contract layer, not in route code, so a later route cannot reintroduce a leak by
+  interpolating a hidden name into a detail string.
+
 # D-28-01 - Prediction normalization is frozen, parse-failed and unrescuable
 
 Technical Spec 17.4 gives three rules: each task chooses its normalization mode, the rules must be

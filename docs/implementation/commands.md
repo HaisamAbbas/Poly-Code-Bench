@@ -559,3 +559,20 @@ uv run mypy packages/core/src/polycodebench_core/repair_contracts.py packages/co
 
 Operational note: run `grant_permissions.sql` AFTER `alembic upgrade head` on a fresh database -
 migrating first and granting second is what makes the least-privilege role tests pass.
+## Prompt 27 - Repository Q&A as answer evaluation
+
+Pure contracts plus one grading module; entailment judging runs through the real judge services
+with fixture votes (the panel is unprovisioned like every other panel).
+
+```powershell
+uv run pytest -q tests/test_qa_contracts.py tests/test_qa_grading.py tests/test_qa_fixtures.py
+uv run pytest -q tests/test_judging_core.py tests/test_judge_inputs.py tests/test_judge_cli.py tests/test_solve_core.py
+uv run python scripts/export_contract_schemas.py --check
+uv run ruff format --check packages/core/src/polycodebench_core/qa_contracts.py packages/core/src/polycodebench_core/qa_prompts.py packages/evaluation/src/polycodebench_evaluation/qa_grading.py tests/test_qa_contracts.py tests/test_qa_grading.py tests/test_qa_fixtures.py
+uv run ruff check packages/core/src/polycodebench_core/qa_contracts.py packages/core/src/polycodebench_core/qa_prompts.py packages/evaluation/src/polycodebench_evaluation/qa_grading.py tests/test_qa_contracts.py tests/test_qa_grading.py tests/test_qa_fixtures.py
+uv run mypy packages/core/src/polycodebench_core/qa_contracts.py packages/core/src/polycodebench_core/qa_prompts.py packages/evaluation/src/polycodebench_evaluation/qa_grading.py
+```
+
+Entailment evidence in these runs is fixture-class (deterministic fixture votes through the real
+build/parse/aggregate services); no live judge call is made. Prediction-family variants remain
+pending until Prompt 28.

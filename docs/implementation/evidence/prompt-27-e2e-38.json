@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_27_e2e_38_evidence",
+  "prompt": 27,
+  "scenario": "E2E-38 Repository Q&A: fact recall and grounding/unsupported-claim diagnostics",
+  "recorded_at": "2026-10-03",
+  "evidence_classes": {
+    "judge": "FIXTURE judge votes through the real judge services (build_packet / parse_vote / aggregate) with rubric qa-entailment-rubric-v1 and panel qa-entailment-panel-v1; the panel is unprovisioned and no live judge call is made or claimed",
+    "task": "admitted authored fixture pack taskpacks/qa/py-configkit-qa-v1 (family repo_qa, methodology_label inspired, stratum deepcodebench-inspired)",
+    "execution": "local development run; pure contracts and grading plus the strict task-package import pipeline"
+  },
+  "e2e_38_qa_cases": [
+    {
+      "case": "fact recall over atomic facts via three-vote entailment, paraphrases accepted",
+      "tests": "tests/test_qa_grading.py::test_e2e38_fact_recall_uses_entailment_votes_over_paraphrases; tests/test_qa_fixtures.py::test_reference_and_paraphrased_answers_reach_full_recall",
+      "status": "passed",
+      "observed": "Reference (exact wording) and alternative (accepted paraphrase wording) answers over the admitted cross-file fixture both grade 100.000000 fact recall; credits are the mean of three 0/1 entailment votes aggregated by the real judge services."
+    },
+    {
+      "case": "missing facts zero, repeated facts no credit, empty answer recall zero",
+      "tests": "tests/test_qa_grading.py::test_e2e38_missing_facts_zero_repetition_no_credit_and_empty_recall_zero; tests/test_qa_fixtures.py::{test_repetition_adds_no_credit,test_empty_answer_recalls_zero_with_undefined_precision}",
+      "status": "passed",
+      "observed": "One expressed fact of weight 1 of 3 = 33.333333; a triple-asserted fact keeps one credit (repeated fixture grade equals reference grade 100.000000); the empty answer grades 0.000000 recall with undefined claim precision."
+    },
+    {
+      "case": "exact factual contradictions never count as expressed facts",
+      "tests": "tests/test_qa_grading.py::test_e2e38_contradiction_is_not_an_expressed_fact_even_with_generous_votes; tests/test_qa_fixtures.py::test_contradiction_answer_earns_no_credit_and_is_counted",
+      "status": "passed",
+      "observed": "A contradicting claim forces zero fact credit even under unanimous 1.0 votes (contradiction-v1 deterministic check); the admitted contradiction fixture reports contradicted claims >= 1 and recall != 100."
+    },
+    {
+      "case": "wrong citations are invalid and undercut grounding without touching fact recall",
+      "tests": "tests/test_qa_grading.py::test_e2e38_wrong_citations_are_invalid_and_grounding_unsupported_diagnostics_follow; tests/test_qa_fixtures.py::test_wrong_citations_are_flagged_and_grounding_zero",
+      "status": "passed",
+      "observed": "The wrong-citation fixture's 5 citations are all flagged by validate_citations (path/span/digest against the pinned snapshot) and grounding is 0.000000 while fact recall stays 100.000000 - the diagnostics are separately named, never folded into recall."
+    },
+    {
+      "case": "incomplete verification is unknown, not zero",
+      "tests": "tests/test_qa_grading.py::test_e2e38_incomplete_verification_is_unknown_not_zero",
+      "status": "passed",
+      "observed": "With no fact/claim judgments recorded: fact_recall None with status incomplete, unsupported_claims None, unsupported_rate None, grounding None, and named incomplete_verifications entries - never a silent zero."
+    },
+    {
+      "case": "native aggregation preserved separately from entailment aggregation",
+      "tests": "tests/test_qa_grading.py::test_e2e38_native_aggregation_is_preserved_separately_from_entailment",
+      "status": "passed",
+      "observed": "A semantic paraphrase outside the accepted list grades entailment recall 33.333333 while the preserved native presence aggregation records 0.000000 - both retained in QaMetrics as separate fields."
+    },
+    {
+      "case": "six code dimensions N/A; prose receives no invented security/runtime/idiom scores",
+      "tests": "tests/test_qa_fixtures.py::test_six_code_dimensions_stay_not_applicable; tests/test_qa_grading.py::test_e2e38_fact_recall_uses_entailment_votes_over_paraphrases",
+      "status": "passed",
+      "observed": "QaMetrics.code_dimensions is always not_applicable and the metrics field set contains no security/runtime/idiom/robustness/efficiency score of any kind."
+    },
+    {
+      "case": "execution disabled for the Q&A protocol (read/search-only)",
+      "tests": "tests/test_qa_contracts.py::test_qa_protocols_are_read_search_only; config/protocols/repo-qa-v1.yaml",
+      "status": "passed",
+      "observed": "repo-qa-v1 allows list_files/read_file/search only; apply_patch and run_command are refused by validate_qa_protocol_tools (editing disabled at the contract level)."
+    }
+  ],
+  "adversarial_citation_judge_fixtures": [
+    {
+      "case": "half-anchor entailment vote refused",
+      "test": "tests/test_qa_grading.py::test_adversarial_half_anchor_entailment_votes_are_refused",
+      "status": "passed",
+      "observed": "A 0.500000 vote passes the judge layer (declared anchor) but the frozen entailment conversion raises 'entailment votes are 0/1' - no silent rounding."
+    },
+    {
+      "case": "entailment packet is fixed and blinded",
+      "test": "tests/test_qa_grading.py::test_entailment_packet_is_fixed_and_blinded",
+      "status": "passed",
+      "observed": "The packet carries the stated fact and candidate text only: item_ids ('entailment',), no withheld values, no oracle weight or identity in the rendered packet."
+    },
+    {
+      "case": "envelope ambiguity and malformed submissions refused",
+      "test": "tests/test_qa_contracts.py::test_envelope_parsing_refuses_malformed_and_ambiguous_submissions",
+      "status": "passed",
+      "observed": "Malformed JSON, ambiguous multi-fence envelopes, extra envelope keys, foreign citation digests and claims that do not quote the answer are all refused - never repaired and never chosen between."
+    },
+    {
+      "case": "citations bind to the pinned base snapshot",
+      "test": "tests/test_qa_contracts.py::test_citations_reference_the_base_snapshot_only",
+      "status": "passed",
+      "observed": "Foreign digests, absent paths and out-of-bounds spans are each flagged against the pinned snapshot."
+    }
+  ],
+  "admitted_fixture_matrix": {
+    "pack": "taskpacks/qa/py-configkit-qa-v1 (cross-file: facts verified in cfgkit/loader.py and cfgkit/interpolate.py; oracle hidden/oracle.json versioned with base_digest sha256:9f86d081...)",
+    "reference": "all 3 facts exact wording, correct verifying-span citations; recall 100.000000",
+    "alternative": "all 3 facts via accepted paraphrases, correct citations; recall 100.000000",
+    "wrong-citation": "3 facts expressed, 5 citations all wrong spans, all flagged; grounding 0.000000",
+    "contradiction": "semantic + numeric contradiction plus one correct fact; contradicted count >= 1, no full recall",
+    "empty": "recall 0.000000, claim precision undefined",
+    "repeated": "fact asserted 3x with correct citations; recall equal to reference (no extra credit)"
+  },
+  "not_claimed": [
+    "no live judge or model call (panels unprovisioned)",
+    "no official DeepCodeBench task, dataset item or score; the fixture is an authored DeepCodeBench-inspired adaptation labelled inspired",
+    "prediction-family variants (execution/output prediction, test-output prediction) remain pending until Prompt 28"
+  ]
+}

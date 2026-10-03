@@ -1,9 +1,9 @@
 {
     "schema_version":  1,
     "project":  "PolyCodeBench",
-    "last_completed_prompt":  "26",
-    "active_prompt":  "26",
-    "active_scope":  "Prompt 26 (self-repair as an explicitly versioned candidate protocol) complete: RepairProtocol/RepairLimits with public-only RepairFeedback, ordered immutable rounds retaining candidate/prompt/feedback/cost, protocol-selected final artifact (never hidden-score best-of), durable round-boundary checkpoints with redelivery rows, and E2E-37 passed (fixture model replies over the real gateway; real PostgreSQL 17.6 + SeaweedFS 4.48). Prior: Prompt 25 realistic repository tasks (two admitted CursorBench-inspired packs; E2E-36 Prompt 25 subcases pass) and Prompt 24 SWE-bench-style suite adapter (pinned upstream evaluator swebench==5.0.2; E2E-36 passed at the local-fixture tier; no official dataset instance imported - rights are unrecorded blockers, so no task claims a native label).",
+    "last_completed_prompt":  "27",
+    "active_prompt":  "27",
+    "active_scope":  "Prompt 27 (repository Q&A as answer evaluation with repository evidence) complete: pinned repo/question inputs with read/search-only protocol repo-qa-v1 (mutating tools refused), structured answers/citations bound to the base snapshot, versioned atomic-fact oracles with fixed three-vote entailment judging and the native presence aggregation preserved separately, grounding/unsupported-contradicted diagnostics with explicit unknown states (never zero), and the admitted DeepCodeBench-inspired cross-file fixture taskpacks/qa/py-configkit-qa-v1. E2E-38 Q&A subcases passed and the full E2E-38 is now recorded across both families: prediction subcases (Prompt 28, recorded by a concurrent session in evidence/prompt-28-e2e38.json - not independently re-verified here) and Q&A subcases (Prompt 27, evidence/prompt-27-e2e-38.json). No live-model or live-judge run is claimed; panels remain unprovisioned. Prior: Prompt 26 self-repair (E2E-37), Prompt 25 realistic repository tasks (E2E-36 Prompt 25 subcases), Prompt 24 SWE-bench-style suite adapter (E2E-36; no official dataset instance imported - rights are unrecorded blockers, so no task claims a native label).",
     "phase_status":  {
                          "phase_0":  "done",
                          "phase_1":  "done",
@@ -118,7 +118,7 @@
                                                      "dependency_lock_check":  "passed"
                                                  }
                          },
-    "exact_next_action":  "Next: Prompt 27 - Implement repository understanding and factual Q&A.",
+    "exact_next_action":  "Next: Prompt 29 - Implement the complete public API and projections. (Prompt 28 prediction suites were implemented by a concurrent session; their subcases are recorded in evidence/prompt-28-e2e38.json and were not independently re-verified by this session.)",
     "prompt_statuses":  {
                             "00":  "done",
                             "01":  "done",
@@ -825,6 +825,31 @@
                                              "E2E-37":  "passed (local development tier, fixture model replies)"
                                          },
                                  "execution_environment":  "real PostgreSQL 17.6 + SeaweedFS 4.48 (compose) with scripted fixture model replies",
+                                 "no_live_provider_human_calibration_or_publication_actions":  true
+                             },
+    "prompt_27_completion":  {
+                                 "date":  "2026-10-03",
+                                 "status":  "done",
+                                 "report":  "docs/implementation/reports/prompt-27.md",
+                                 "method_doc":  "docs/implementation/qa-method.md",
+                                 "fixture_pack":  "taskpacks/qa/py-configkit-qa-v1",
+                                 "evidence":  "docs/implementation/evidence/prompt-27-e2e-38.json",
+                                 "protocol":  {
+                                                  "protocol_id":  "repo-qa-v1",
+                                                  "prompt_policy":  "pcb-qa-v1",
+                                                  "judge_rubric":  "qa-entailment-rubric-v1",
+                                                  "judge_panel":  "qa-entailment-panel-v1"
+                                              },
+                                 "tickets":  {
+                                                 "PCB-27-1":  "implemented and verified: pinned repo/question inputs, read/search-only protocol, structured answers/citations, retrieval logging",
+                                                 "PCB-27-2":  "implemented and verified: atomic-fact oracles, accepted paraphrases, fixed three-vote entailment judging, native aggregation preserved separately",
+                                                 "PCB-27-3":  "implemented and verified: citation validity, grounding and unsupported/contradicted diagnostics with explicit unknown states; prose gets no invented code-dimension scores",
+                                                 "PCB-27-4":  "implemented and verified: cross-file fixture with verifying spans, paraphrase, wrong citations, contradictions and versioned facts; DeepCodeBench-inspired method records"
+                                             },
+                                 "e2e":  {
+                                             "E2E-38":  "passed (Q&A subcases, Prompt 27; prediction subcases recorded by Prompt 28)"
+                                         },
+                                 "judge_evidence_class":  "fixture_judge_votes through the real judge services; panel unprovisioned",
                                  "no_live_provider_human_calibration_or_publication_actions":  true
                              }
 }

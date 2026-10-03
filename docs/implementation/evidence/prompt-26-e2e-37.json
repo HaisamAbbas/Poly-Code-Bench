@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "prompt_26_e2e_37_evidence",
+  "prompt": 26,
+  "scenario": "E2E-37 Self-repair task with allowed public feedback and hidden failing case",
+  "recorded_at": "2026-10-03",
+  "evidence_classes": {
+    "execution": "local development run: real PostgreSQL 17.6 and SeaweedFS 4.48 (compose), real model gateway with ScriptedTransport fixture replies",
+    "model": "FIXTURE model replies (deterministic scripted OpenAI-compatible responses); no live provider call is made or claimed",
+    "task": "admitted authored fixture pack taskpacks/self-repair/py-listsort-v1 (methodology_label: adapted, LiveCodeBench-inspired)"
+  },
+  "fixture_matrix_observed": {
+    "note": "Independently re-run with per-variant workdirs; observed pass/fail per case",
+    "initial_scaffold": {
+      "public-test_public_basic": "pass",
+      "public-test_public_order_insensitive": "fail",
+      "public-test_public_stability": "pass",
+      "hidden-test_hidden_mixed_case": "fail",
+      "hidden-test_hidden_stability": "fail"
+    },
+    "reference": {"public": "3/3 pass", "hidden": "2/2 pass"},
+    "alternative": {"public": "3/3 pass", "hidden": "2/2 pass"},
+    "faulty": {"public": "3/3 pass", "hidden": "test_hidden_mixed_case pass, test_hidden_stability FAIL"},
+    "quality_defective": {"public": "3/3 pass", "hidden": "2/2 pass"}
+  },
+  "e2e_37_cases": [
+    {
+      "case": "hidden-failure feedback isolation",
+      "test": "tests/test_repair_session.py::test_e2e37_only_public_feedback_reaches_the_model",
+      "status": "passed",
+      "observed": "Round 1's request carries public-test_public_order_insensitive: fail and contains none of test_hidden_mixed_case / test_hidden_stability / tests_hidden; hidden evaluation runs after selection (initial hidden 0/2, final hidden 2/2) and never appears in any prompt."
+    },
+    {
+      "case": "hidden outcome cannot cause another model call",
+      "test": "tests/test_repair_session.py::test_e2e37_hidden_outcomes_cannot_cause_another_model_call",
+      "status": "passed",
+      "observed": "Two runs with identical public evidence and different hidden outcomes produced identical model-call counts (2), identical prompt digests and identical selection."
+    },
+    {
+      "case": "exhausted round budget",
+      "test": "tests/test_repair_session.py::test_e2e37_exhausted_round_budget_stops_without_extra_calls",
+      "status": "passed",
+      "observed": "With maximum_repair_rounds=1 the loop stopped at 2 model calls; two extra scripted replies remained unconsumed (ScriptedTransport raises on any extra send)."
+    },
+    {
+      "case": "restart during a repair round",
+      "test": "tests/test_repair_session.py::test_e2e37_restart_during_a_repair_round_grants_no_extra_round",
+      "status": "passed",
+      "observed": "Crash before the round-boundary commit; restart resumed at the same frontier, consumed the persisted response once (still 2 provider sends total), completed rounds [0,1], selected round 1, and kept recorded spend (model_calls 2, tokens 240/60)."
+    }
+  ],
+  "shared_grading_cases": [
+    {
+      "case": "protocol-selected final artifact, never hidden-score best-of",
+      "test": "tests/test_repair_contracts.py::test_final_selection_is_protocol_rule_not_hidden_best_of",
+      "status": "passed",
+      "observed": "select_final has no hidden-result input; initial/final native correctness are recorded separately from cumulative cost in RepairMetrics."
+    },
+    {
+      "case": "round-boundary checkpoint and redelivery semantics",
+      "test": "tests/test_repair_state_postgres.py (5 cases)",
+      "status": "passed",
+      "observed": "Round rows are immutable (DB trigger); CAS prevents stale frontier advance; redelivery adds one delivery row and grows spend without a round (durable run repair-11aa9abe shows deliveries=2, redeliveries=1, rounds_committed=1)."
+    },
+    {
+      "case": "hidden feedback rejected at construction",
+      "test": "tests/test_repair_contracts.py::test_hidden_results_cannot_become_feedback",
+      "status": "passed",
+      "observed": "feedback_from_public and assert_public_feedback raise HiddenFeedbackRejected for non-public case ids; rounds cannot report hidden cases."
+    }
+  ],
+  "repair_run_records": [
+    {
+      "repair_run_id": "repair-e2e37-restart-c714370b",
+      "protocol_digest": "sha256:169f17c4e4949349563b87bddd7bcb9833caa25ba1d5057cb207e37c7e216dcf",
+      "selection_rule": "final_round",
+      "state": "complete",
+      "rounds": [
+        {
+          "round_index": 0,
+          "candidate_revision": 1,
+          "candidate_digest": "sha256:6445fdedc6280f1a026c2e33381e52f02a3f88798d311f31ddf11504622983e4",
+          "prompt_digest": "sha256:d2da5f1ba1340cd0c88f9541772e1386b517a98f56adfa6c13c25a84879c3ddc",
+          "request_digest": "sha256:85a335d0539fa702c891902a134e0a7fead32e8b9753333f50432277006ad46e",
+          "feedback_digest": null,
+          "public_results": "public-basic pass, public-order-insensitive FAIL (visible feedback), public-stability pass"
+        },
+        {
+          "round_index": 1,
+          "candidate_revision": 2,
+          "candidate_digest": "sha256:3d6cc6071f7ab70282bd35d37adfdb5013844b002f9459c3c59ad72faaec4b08",
+          "prompt_digest": "sha256:45d55e77de821b125e860a3791d8b5df63fe88ea1a6867f830d2a2c89e28ff15",
+          "request_digest": "sha256:7423efc46a7ff76a18952d7e45221e1c6dada6c63be5305ee9b4f27140d44552",
+          "feedback_digest": "sha256:72619a458caf48d577d626636ec7150a6808bcd0a53f15b7bbd55454eeced2e9",
+          "public_results": "all three public cases pass"
+        }
+      ],
+      "spend": {"model_calls": 2, "redeliveries": 0, "input_tokens": 240, "output_tokens": 60, "cost_micros": 0, "active_ms": 8343},
+      "selected_round_index": 1,
+      "selection_uses_public_results_only": true,
+      "metrics_note": "initial_native_correct/final_native_correct are filled by the evaluation stage after selection (observed in-test: initial hidden 0/2 = false, final hidden 2/2 = true); cost_micros reflects reported cost only - the fixture provider reports no cost and no price is invented"
+    },
+    {
+      "repair_run_id": "repair-11aa9abe",
+      "state": "open",
+      "rounds_committed": 1,
+      "redelivery_observation": "round 0 with deliveries=2, spend.redeliveries=1, tokens 107/53: infrastructure redelivery recorded against the same frontier with no extra round and no erased spend"
+    }
+  ],
+  "not_claimed": [
+    "no live model or judge call",
+    "no official LiveCodeBench task, test or score; the fixture is an authored adaptation labelled adapted",
+    "no production-worker execution tier"
+  ]
+}

@@ -723,6 +723,45 @@ subset of the repository's written conventions; whether a construct communicates
 duplication is acceptable stays with the frozen residual rubric items, each carrying a residual
 reason.
 
+# D-26-01 - Self-repair is one explicitly versioned protocol document, layered on single-shot rounds
+
+`RepairProtocol` (core `repair_contracts.py`) freezes the base single-shot solve protocol, the
+public-only feedback policy, the selection rule and the limits (rounds, model calls, tokens, time,
+cumulative reported cost) in one versioned document whose digest binds every run, round and
+checkpoint. Repair rounds are single model calls with rendered feedback (prompt policy
+`pcb-repair-v1`), never an interactive agent: a different repair shape is a new protocol version,
+not a silent extension. The protocol fixes both stop conditions and the final artifact, so neither
+is ever decided per candidate.
+
+# D-26-02 - Hidden results are structurally absent from repair feedback and selection
+
+`RepairFeedback` constructors accept only the frozen public case inventory and raise
+`HiddenFeedbackRejected` otherwise; `select_final` takes no hidden-result parameter at all; the
+`RepairSession` has no hidden evaluator - hidden evaluation runs after selection in the evaluation
+stage and feeds `RepairMetrics.initial_native_correct`/`final_native_correct` only. The E2E-37
+case proves two runs with identical public evidence and different hidden outcomes make identical
+model calls. Model-failed rounds freeze no candidate and end the loop rather than being "repaired"
+again under a new discretionary call.
+
+# D-26-03 - Round-boundary checkpointing rides the run row; redelivery is an immutable delivery row
+
+The `repair_run` row (spend, frontier, selection, digest) updated in the same transaction as the
+round insert IS the round-boundary checkpoint, under a compare-and-swap on `rounds_committed`;
+`repair_round` and `repair_delivery` are insert-only (DB triggers, like `candidate`). Infrastructure
+recovery is exactly `record_redelivery`: one more delivery row and more spend at the same frontier.
+Restart re-reads the run, reissues the in-flight round's logical call (`repair-round-N`) and the
+model ledger's stored-response rule consumes a persisted response exactly once. Recorded spend is
+monotonic: recovery never erases it, and a round commits with its first delivery before any
+redelivery is recorded (enforced in the repository).
+
+# D-26-04 - Self-repair fixtures are authored adaptations; cost evidence is reported-or-tokens
+
+The `py-listsort-v1` pack is labelled `adapted` (LiveCodeBench-inspired shape, custom problem,
+PolyCodeBench feedback loop) with the native-versus-adapted record in
+`docs/implementation/self-repair-method.md`; no official task/test/score is claimed. Round cost
+records `reported_cost_micro_usd` verbatim (0 when the provider reports none - no price is ever
+invented) alongside the conservative token charges.
+
 # D-25-04 - Repo-task scoring applicability is code_quality at this pilot step
 
 The repo-task quality plan declares `applicable_dimensions: [code_quality]`, so the scorer's

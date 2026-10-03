@@ -535,3 +535,27 @@ uv run mypy packages/evaluation/src/polycodebench_evaluation/repo_task_grading.p
 Judge evidence in these runs is fixture-class (deterministic fixture votes through the real
 build/parse/aggregate services); the judge panel is unprovisioned and no live judge call is made.
 Execution evidence is `local_fixture` tier.
+## Prompt 26 - Self-repair protocol, durable rounds and E2E-37
+
+The repair protocol is pure core contracts plus one orchestration driver; rounds persist through
+the standard alembic migration chain and the model gateway. Local infrastructure: the compose
+PostgreSQL 17.6 (127.0.0.1:55432) with a dedicated test database, the SeaweedFS object store
+(127.0.0.1:8333), the repo's role provisioning, and fixture model replies.
+
+```powershell
+docker exec -i polycodebench-local-postgres-1 psql -U polycodebench -d polycodebench_test -f - < packages/persistence/sql/provision_roles.sql
+docker exec -i polycodebench-local-postgres-1 psql -U polycodebench -d polycodebench_test -f - < packages/persistence/sql/grant_permissions.sql
+$env:PCB_MIGRATION_DATABASE_URL="postgresql+psycopg://polycodebench:local-development-only@127.0.0.1:55432/polycodebench_test"
+uv run python -m alembic -c packages/persistence/alembic.ini upgrade head
+uv run pytest -q tests/test_repair_contracts.py
+$env:PCB_TEST_DATABASE_URL="postgresql+psycopg://polycodebench:local-development-only@127.0.0.1:55432/polycodebench_test"; $env:PCB_OBJECT_STORE_ENDPOINT="http://127.0.0.1:8333"; $env:AWS_ACCESS_KEY_ID="local-development-only"; $env:AWS_SECRET_ACCESS_KEY="local-development-only"
+uv run pytest -q tests/test_repair_session.py tests/test_repair_state_postgres.py
+uv run pytest -q tests/test_solve_sessions.py tests/test_persistence_postgres.py tests/test_solve_core.py tests/test_judging_core.py
+uv run python -m alembic -c packages/persistence/alembic.ini downgrade -1
+uv run python -m alembic -c packages/persistence/alembic.ini upgrade head
+uv run ruff check packages/core/src/polycodebench_core/repair_contracts.py packages/core/src/polycodebench_core/repair_prompts.py packages/persistence/src/polycodebench_persistence/repair_state.py packages/orchestration/src/polycodebench_orchestration/repair tests/test_repair_contracts.py tests/test_repair_state_postgres.py tests/test_repair_session.py
+uv run mypy packages/core/src/polycodebench_core/repair_contracts.py packages/core/src/polycodebench_core/repair_prompts.py packages/persistence/src/polycodebench_persistence/repair_state.py
+```
+
+Operational note: run `grant_permissions.sql` AFTER `alembic upgrade head` on a fresh database -
+migrating first and granting second is what makes the least-privilege role tests pass.

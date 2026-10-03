@@ -1,9 +1,9 @@
 {
     "schema_version":  1,
     "project":  "PolyCodeBench",
-    "last_completed_prompt":  "25",
-    "active_prompt":  "25",
-    "active_scope":  "Prompt 25 (executed on explicit user request; Prompt 24 remains not_started and its unmet dependency is preserved): realistic repository tasks implemented - authoring/import with sealed acceptance contracts, executable acceptance plus bounded rubric items through the judge services with structural gate precedence, baseline-aware quality evidence for patch/workspace artifacts, two admitted CursorBench-inspired packs and methodology boundary docs. E2E-36 is partial (Prompt 25 subcases pass; native/adapted suite-adapter subcases belong to Prompt 24).",
+    "last_completed_prompt":  "26",
+    "active_prompt":  "26",
+    "active_scope":  "Prompt 26 (self-repair as an explicitly versioned candidate protocol) complete: RepairProtocol/RepairLimits with public-only RepairFeedback, ordered immutable rounds retaining candidate/prompt/feedback/cost, protocol-selected final artifact (never hidden-score best-of), durable round-boundary checkpoints with redelivery rows, and E2E-37 passed (fixture model replies over the real gateway; real PostgreSQL 17.6 + SeaweedFS 4.48). Prior: Prompt 25 realistic repository tasks (two admitted CursorBench-inspired packs; E2E-36 Prompt 25 subcases pass) and Prompt 24 SWE-bench-style suite adapter (pinned upstream evaluator swebench==5.0.2; E2E-36 passed at the local-fixture tier; no official dataset instance imported - rights are unrecorded blockers, so no task claims a native label).",
     "phase_status":  {
                          "phase_0":  "done",
                          "phase_1":  "done",
@@ -15,8 +15,8 @@
                          "phase_7":  "not_started",
                          "phase_8":  "not_started"
                      },
-    "implementation_status":  "Prompt 25 realistic repository-task suite implemented and admitted at local_fixture tier (2 packs, 12/12 admission checks each). WP-20 is partial: Prompt 24 suite adapter and Prompts 26-28 remain not_started.",
-    "verification_status":  "30 repo-task tests passed (11 authoring, 11 grading/matrix, 8 admission); 150 regression tests passed over evaluator/judge-inputs/judging/suite-admission/scoring; both admission reports and both grading-matrix reports recorded with fixture-class judge evidence.",
+    "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20 parts 1-3 done (Prompts 24-26); Q&A and prediction remain not_started.",
+    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prior: Prompt 25 30 repo-task tests + 150 regression; Prompt 24 23 swebench suite tests.",
     "source_manifest":  "docs/implementation/source-manifest.json",
     "blockers_or_open_inputs":  [
                                     "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
@@ -118,7 +118,7 @@
                                                      "dependency_lock_check":  "passed"
                                                  }
                          },
-    "exact_next_action":  "Next: Prompt 26 - Implement self-repair. Prompt 24 (native/adapted suite adapter, E2E-36 native subcases) remains not_started and is preserved as an unmet dependency of the full E2E-36 scenario.",
+    "exact_next_action":  "Next: Prompt 27 - Implement repository understanding and factual Q&A.",
     "prompt_statuses":  {
                             "00":  "done",
                             "01":  "done",
@@ -732,6 +732,29 @@
                                          },
                                  "judge_evidence_class":  "fixture_judge_votes",
                                  "execution_tier":  "local_fixture",
+                                 "no_live_provider_human_calibration_or_publication_actions":  true                             },
+    "prompt_26_completion":  {
+                                 "date":  "2026-10-03",
+                                 "status":  "done",
+                                 "report":  "docs/implementation/reports/prompt-26.md",
+                                 "method_doc":  "docs/implementation/self-repair-method.md",
+                                 "fixture_pack":  "taskpacks/self-repair/py-listsort-v1",
+                                 "evidence":  "docs/implementation/evidence/prompt-26-e2e-37.json",
+                                 "protocol":  {
+                                                  "protocol_id":  "self-repair-v1",
+                                                  "prompt_policy":  "pcb-repair-v1",
+                                                  "migration":  "e5f6a7b8c9d0_repair_runs_and_rounds"
+                                              },
+                                 "tickets":  {
+                                                 "PCB-26-1":  "implemented and verified: rounds retain candidate/prompt/feedback/cost; frozen limits fix when rounds stop",
+                                                 "PCB-26-2":  "implemented and verified: protocol-selected final artifact, no hidden-result input, initial/final/cumulative distinct",
+                                                 "PCB-26-3":  "implemented and verified: round-boundary checkpoints, redelivery grants no rounds and erases no spend, restart mid-round",
+                                                 "PCB-26-4":  "implemented and verified: admitted adapted fixture with visible-feedback repair; hidden outcomes cannot cause another model call"
+                                             },
+                                 "e2e":  {
+                                             "E2E-37":  "passed (local development tier, fixture model replies)"
+                                         },
+                                 "execution_environment":  "real PostgreSQL 17.6 + SeaweedFS 4.48 (compose) with scripted fixture model replies",
                                  "no_live_provider_human_calibration_or_publication_actions":  true
                              }
 }

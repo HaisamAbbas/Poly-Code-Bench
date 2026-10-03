@@ -1,0 +1,25 @@
+schema_version: 1
+kind: judge_rubric
+rubric_id: qa-entailment-rubric-v1
+version: 1
+status: frozen_pilot
+languages: [python, rust]
+source: >-
+  PolyCodeBench-Technical-Implementation-Spec-v1.md 17.3: a fixed judge packet assesses whether
+  a text expresses a stated atomic fact, using the three-vote protocol. Votes are binary
+  entailment judgments (0 or 1) aggregated as fact credit; they are never a quality score and
+  never enter the six code dimensions.
+prompt_template_version: judge-prompt-v1
+items:
+  - item_id: entailment
+    dimension: correctness
+    question: >-
+      Does the candidate text express the stated fact, including reasonable paraphrases, without
+      contradicting it? Answer 1 if the fact is expressed, 0 if it is missing or contradicted.
+    residual_reason: >-
+      Whether a paraphrase expresses a stated fact is a textual entailment judgment that no exact
+      match can make; this item is a correctness judgment (fact credit), not a quality score.
+    anchors:
+      - {value: "0.000000", meaning: "The fact is absent from the text, or the text contradicts it."}
+      - {value: "0.500000", meaning: "Not a valid entailment vote; a binary judgment is required."}
+      - {value: "1.000000", meaning: "The text expresses the stated fact, including by paraphrase."}

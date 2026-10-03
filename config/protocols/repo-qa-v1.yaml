@@ -1,0 +1,29 @@
+schema_version: 1
+kind: solve_protocol
+protocol_id: repo-qa-v1
+version: 1
+mode: standard_agent
+# Read/search-only Q&A solving (Technical Spec 17.2: editing is off for this protocol). Any
+# mutating tool is a protocol violation, enforced again in qa_contracts.validate_qa_protocol_tools.
+tools: [list_files, read_file, search]
+public_test_feedback: false
+single_shot_extraction: null
+context:
+  schema_version: 1
+  kind: context_policy
+  retain_recent_turns: 8
+  max_input_context_tokens: 60000
+  token_counter: utf8_bytes_div4_v1
+  summarizer: none
+budget:
+  schema_version: 1
+  kind: solve_budget
+  model_turns: 20
+  tool_calls: 60
+  active_solve_seconds: 600
+  per_command_seconds: 60  # no command tool exists in this read/search-only protocol; the frozen
+  # solver budget validator requires the field for agent modes, and the cap can never bind.
+  input_tokens: 250000
+  output_tokens: 30000
+freeze_on_budget_exhaustion: false
+prompt_policy: pcb-qa-v1

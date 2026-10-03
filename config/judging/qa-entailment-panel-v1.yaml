@@ -1,0 +1,35 @@
+schema_version: 1
+kind: judge_panel
+panel_id: qa-entailment-panel-v1
+version: 1
+status: frozen_pilot
+# Entailment judging follows the same provisioning rule as every other panel: no approved judge
+# endpoint exists in this workspace, so live entailment runs are refused and fixture votes carry
+# the recorded runs. A live panel registration is a deployment input, not something to invent.
+effective_for_scoring: false
+calibration_status: pending
+judge_model_config_id: null
+judge_revision: unprovisioned
+provider_kind: unprovisioned
+rubric_id: qa-entailment-rubric-v1
+rubric_version: 1
+votes_required: 3
+distinct_seeds: true
+inference:
+  temperature: "0.000000"
+  max_output_tokens: 2000
+  response_schema_name: judge_vote_v1
+  request_timeout_ms: 120000
+repair:
+  replacement_deliveries_per_vote: 2
+  instruction_id: schema-repair-v1
+disagreement:
+  anchor_spread_levels: 2
+  conflicting_facts: true
+  unsupported_citations: true
+  untrusted_comment_only: true
+  audit_sample_percent: 10
+  audit_seed: judge-audit-v1
+blinded_fields: [candidate_identity, provider, rank, cost, expected_score]
+tools: []
+excluded_candidate_model_config_ids: []

@@ -604,3 +604,29 @@ The E2E command passes four Prompt 30 browser cases. Playwright JSON results and
 profile/error screenshots are in `docs/implementation/evidence/prompt-30/`. E2E-39 and E2E-40 remain
 partial overall: comparison/task/methodology, the seventh page and large-task-list/load variants
 belong to Prompts 31/32.
+
+## Prompt 31 - Public comparison and explanation workflows
+
+Prompt 31's development releases are generated through the local publication lifecycle and marked
+`synthetic_internal`. Authored values and interval endpoints exist only to test the UI; they are not
+benchmark results. `test:e2e` is pinned to Prompt 30 cases, while Prompt 31 has an isolated config
+and writes browser results/screenshots to its own evidence directory.
+
+```powershell
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web test:e2e:prompt31
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web test:e2e
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web build
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web typecheck
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web lint
+uv run --locked --group dev pytest -q tests/test_public_api_prompt30.py tests/test_public_api_prompt31.py tests/test_public_api_projections.py tests/test_publication_releases.py -p no:cacheprovider
+uv run --locked --group dev ruff check packages/api/src/polycodebench_api/dev_fixture.py packages/api/src/polycodebench_api/public_routes.py packages/publication/src/polycodebench_publication/projections.py packages/publication/src/polycodebench_publication/projections_query.py packages/publication/src/polycodebench_publication/releases.py tests/test_public_api_prompt30.py tests/test_public_api_prompt31.py tests/test_public_api_projections.py
+uv run --locked --group dev ruff format --check packages/api/src/polycodebench_api/dev_fixture.py packages/api/src/polycodebench_api/public_routes.py packages/publication/src/polycodebench_publication/projections.py packages/publication/src/polycodebench_publication/projections_query.py packages/publication/src/polycodebench_publication/releases.py tests/test_public_api_prompt30.py tests/test_public_api_prompt31.py tests/test_public_api_projections.py
+git diff --check
+```
+
+Prompt 31's three browser cases pass, including the leaderboard → model → comparison → task →
+scorecard journey, API/UI scalar equality, budget/protocol incompatibility, private-ID/export probes,
+withdrawal/successor navigation, keyboard activation, lazy payloads, responsive viewports and the
+64-task paginated list. Prompt 30 regression cases also pass 4/4. Current run artifacts are under
+`docs/implementation/evidence/prompt-31/`. E2E-26 remains partial for binary artifact-download
+routing and production IAM validation; E2E-40 submission-page variants remain Prompt 32 scope.

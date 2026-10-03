@@ -1,9 +1,9 @@
 {
     "schema_version":  1,
     "project":  "PolyCodeBench",
-    "last_completed_prompt":  "27",
-    "active_prompt":  "27",
-    "active_scope":  "Prompt 27 (repository Q&A as answer evaluation with repository evidence) complete: pinned repo/question inputs with read/search-only protocol repo-qa-v1 (mutating tools refused), structured answers/citations bound to the base snapshot, versioned atomic-fact oracles with fixed three-vote entailment judging and the native presence aggregation preserved separately, grounding/unsupported-contradicted diagnostics with explicit unknown states (never zero), and the admitted DeepCodeBench-inspired cross-file fixture taskpacks/qa/py-configkit-qa-v1. E2E-38 Q&A subcases passed and the full E2E-38 is now recorded across both families: prediction subcases (Prompt 28, recorded by a concurrent session in evidence/prompt-28-e2e38.json - not independently re-verified here) and Q&A subcases (Prompt 27, evidence/prompt-27-e2e-38.json). No live-model or live-judge run is claimed; panels remain unprovisioned. Prior: Prompt 26 self-repair (E2E-37), Prompt 25 realistic repository tasks (E2E-36 Prompt 25 subcases), Prompt 24 SWE-bench-style suite adapter (E2E-36; no official dataset instance imported - rights are unrecorded blockers, so no task claims a native label).",
+    "last_completed_prompt":  "30",
+    "active_prompt":  "31",
+    "active_scope":  "Prompt 30 complete: release-backed leaderboard, language diagnostics and model profile built from published projections; four Prompt 30 browser cases and the focused API/projection suite pass. Full E2E-39/40 remain partial pending Prompt 31/32 comparison, task, methodology, seventh-page and large-list/load variants.",
     "phase_status":  {
                          "phase_0":  "done",
                          "phase_1":  "done",
@@ -116,9 +116,25 @@
                                                      "targeted_mypy":  "19 files passed",
                                                      "java_recipe_check":  "passed",
                                                      "dependency_lock_check":  "passed"
-                                                 }
-                         },
-    "exact_next_action":  "Next: Prompt 29 - Implement the complete public API and projections. (Prompt 28 prediction suites were implemented by a concurrent session; their subcases are recorded in evidence/prompt-28-e2e38.json and were not independently re-verified by this session.)",
+                                                 },
+                             "prompt_30": {
+                                     "report": "docs/implementation/reports/prompt-30.md",
+                                     "browser_results": "docs/implementation/evidence/prompt-30/browser-results.json",
+                                     "screenshots": [
+                                         "docs/implementation/evidence/prompt-30/leaderboard-desktop.png",
+                                         "docs/implementation/evidence/prompt-30/leaderboard-mobile.png",
+                                         "docs/implementation/evidence/prompt-30/javascript-profile.png",
+                                         "docs/implementation/evidence/prompt-30/model-code-profile.png",
+                                         "docs/implementation/evidence/prompt-30/model-answer-only.png",
+                                         "docs/implementation/evidence/prompt-30/model-not-found.png"
+                                     ],
+                                     "e2e_status": {
+                                         "E2E-39": "partial; Prompt 30 release, filter, language, model and scorecard subcases passed; comparison/task journey pending Prompts 31/32",
+                                         "E2E-40": "partial; Prompt 30 statuses, answer-only, keyboard and viewport subcases passed; all-seven-page and large-list/load cases pending Prompts 31/32"
+                                     }
+                                 }
+},
+    "exact_next_action":  "Next: Prompt 31 ? Build comparison, task explorer and methodology pages.",
     "prompt_statuses":  {
                             "00":  "done",
                             "01":  "done",
@@ -150,7 +166,7 @@
                             "27":  "not_started",
                             "28":  "done",
                             "29":  "not_started",
-                            "30":  "not_started",
+                            "30":  "done",
                             "31":  "not_started",
                             "32":  "not_started",
                             "33":  "not_started",
@@ -404,7 +420,7 @@
                                                          ],
                                     "no_paid_or_remote_product_actions":  true
                                 },
-    "latest_done_prompt":  "16",
+    "latest_done_prompt":  "30",
     "prompt_08":  {
                       "date":  "2026-09-30",
                       "migration":  "9d3a71c05e24",
@@ -851,5 +867,25 @@
                                          },
                                  "judge_evidence_class":  "fixture_judge_votes through the real judge services; panel unprovisioned",
                                  "no_live_provider_human_calibration_or_publication_actions":  true
-                             }
+                             },
+    "prompt_30_completion": {
+    "date": "2026-10-03",
+    "status": "done",
+    "report": "docs/implementation/reports/prompt-30.md",
+    "browser_results": "docs/implementation/evidence/prompt-30/browser-results.json",
+    "tickets": {
+        "PCB-30-1": "implemented and verified: shared layout, release/filter URL state and accessible typed states",
+        "PCB-30-2": "implemented and verified: leaderboard scope, sortable metrics, source-linked intervals, coverage, cost and missingness",
+        "PCB-30-3": "implemented and verified: language profiles retain per-language dimensions, diagnostics, opportunities and tool coverage",
+        "PCB-30-4": "implemented and verified: code-only model radar/heatmap, source-linked cost/latency and no invented answer-only dimensions"
+    },
+    "e2e": {
+        "E2E-39": "Prompt 30 browser subcases passed; complete scenario remains partial",
+        "E2E-40": "Prompt 30 browser subcases passed; complete scenario remains partial"
+    },
+    "pending": [
+        "Prompt 31/32 comparison/task/methodology/seventh page and large-task-list/load browser variants"
+    ],
+    "no_live_benchmark_results_claimed": true
+}
 }

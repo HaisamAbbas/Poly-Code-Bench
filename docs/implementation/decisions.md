@@ -932,3 +932,14 @@ different protocol by construction (`prediction-v1` carries zero tools and zero 
 oracle whose expected value was derived by running the target records that fact
 (`execution_required` plus a `reason`) instead of hiding it - the model still cannot run anything.
 
+
+## Prompt 30 decisions
+
+- **D-30-01 - Public pages preserve the release projection as their source of truth.** The web
+  adapter takes metric labels, domains, directions and statuses from the selected API release and
+  derives language choices from that release's entries. It sorts and formats reported values but
+  adds no scoring formula or language registry. Language profiles stay per configuration, and
+  model radar/heatmap cells are emitted only for published code dimensions; absent combinations
+  render as “Not tested.” Development releases are built through the real publication lifecycle
+  and carry `fixture_kind=synthetic_internal`, with the interface and screenshots stating that
+  they are not live benchmark results. No specification discrepancy was required.

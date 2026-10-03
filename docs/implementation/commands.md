@@ -1,4 +1,4 @@
-# Verified command registry - Prompts 00-07
+# Verified command registry - Prompts 00-30
 
 The registry preserves Prompt 00 inspection history and records commands actually verified in each later prompt. Planned commands are not listed as working.
 
@@ -535,6 +535,8 @@ uv run mypy packages/evaluation/src/polycodebench_evaluation/repo_task_grading.p
 Judge evidence in these runs is fixture-class (deterministic fixture votes through the real
 build/parse/aggregate services); the judge panel is unprovisioned and no live judge call is made.
 Execution evidence is `local_fixture` tier.
+
+
 ## Prompt 26 - Self-repair protocol, durable rounds and E2E-37
 
 The repair protocol is pure core contracts plus one orchestration driver; rounds persist through
@@ -559,6 +561,8 @@ uv run mypy packages/core/src/polycodebench_core/repair_contracts.py packages/co
 
 Operational note: run `grant_permissions.sql` AFTER `alembic upgrade head` on a fresh database -
 migrating first and granting second is what makes the least-privilege role tests pass.
+
+
 ## Prompt 27 - Repository Q&A as answer evaluation
 
 Pure contracts plus one grading module; entailment judging runs through the real judge services
@@ -576,3 +580,27 @@ uv run mypy packages/core/src/polycodebench_core/qa_contracts.py packages/core/s
 Entailment evidence in these runs is fixture-class (deterministic fixture votes through the real
 build/parse/aggregate services); no live judge call is made. Prediction-family variants remain
 pending until Prompt 28.
+
+
+## Prompt 30 - Release-backed public pages
+
+The browser fixture creates `synthetic_internal` releases through the local draft, validate, review,
+approve and publish lifecycle. Its measurements and confidence-interval strings are display fixtures,
+not benchmark results. The supported web runtime is Node 24; this host's global Node 25 is outside
+the repository engine range, so web commands below used a temporary Node 24.21.0 runtime.
+
+```powershell
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web test:e2e
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web build
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web typecheck
+npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web lint
+uv run --locked --group dev pytest -q tests/test_public_api_prompt30.py tests/test_public_api_projections.py tests/test_publication_releases.py -p no:cacheprovider
+uv run --locked --group dev ruff check packages/api/src/polycodebench_api/app.py packages/api/src/polycodebench_api/dev_fixture.py packages/api/src/polycodebench_api/documents.py packages/api/src/polycodebench_api/envelope.py packages/api/src/polycodebench_api/public_routes.py packages/publication/src/polycodebench_publication/projections.py packages/publication/src/polycodebench_publication/projections_query.py packages/publication/src/polycodebench_publication/releases.py tests/test_public_api_prompt30.py
+uv run --locked --group dev ruff format --check packages/api/src/polycodebench_api/app.py packages/api/src/polycodebench_api/dev_fixture.py packages/api/src/polycodebench_api/documents.py packages/api/src/polycodebench_api/envelope.py packages/api/src/polycodebench_api/public_routes.py packages/publication/src/polycodebench_publication/projections.py packages/publication/src/polycodebench_publication/projections_query.py packages/publication/src/polycodebench_publication/releases.py tests/test_public_api_prompt30.py
+git diff --check
+```
+
+The E2E command passes four Prompt 30 browser cases. Playwright JSON results and six desktop/mobile/
+profile/error screenshots are in `docs/implementation/evidence/prompt-30/`. E2E-39 and E2E-40 remain
+partial overall: comparison/task/methodology, the seventh page and large-task-list/load variants
+belong to Prompts 31/32.

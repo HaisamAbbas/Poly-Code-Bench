@@ -1253,40 +1253,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `30`.
 - Dependencies: public API/client ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-39/40 page variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (shared responsive layout/navigation, release selector, URL-persisted release/language/sort state, typed API resource states and accessible table/chart components).
+- Verification: `passed` for Prompt 30 page variants; full E2E-39/40 remain partial across later prompts.
+- Required verification scope: Prompt 30 browser subcases of E2E-39/40; cross-page comparison/task/load variants remain with Prompts 31/32.
+- Evidence: `docs/implementation/reports/prompt-30.md`; `docs/implementation/evidence/prompt-30/browser-results.json`, `leaderboard-desktop.png`, `leaderboard-mobile.png`. API metric definitions and language choices are consumed from release responses.
 - Acceptance criteria: — Implement shared layout/navigation, release selection, shareable URL filter state, typed loading/error/empty states and accessible table/chart primitives. DoD: no frontend scoring formula or hardcoded language registry diverges from the API.
 
 ## PCB-30-2 - Prompt 30: — Build leaderboard, language and model pages
 
 - Owner prompt: `30`.
 - Dependencies: public API/client ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-39/40 page variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (leaderboard displays release scope, run mode/budget, sortable API metrics, confidence intervals, coverage, pass rate, cost/latency and release limitations/notices).
+- Verification: `passed` for Prompt 30 page variants; full E2E-39/40 remain partial across later prompts.
+- Required verification scope: Prompt 30 missingness, interval, source-link and release-notice subcases of E2E-39/40.
+- Evidence: `docs/implementation/reports/prompt-30.md`; `docs/implementation/evidence/prompt-30/browser-results.json`, `leaderboard-desktop.png`, `model-code-profile.png`. Gated zero, N/A, missing and pending review render as separate labeled states.
 - Acceptance criteria: — Implement leaderboard scope/mode/budget labels, sortable metrics, confidence intervals, coverage, pass rate/cost and release notices. DoD: failed/gated zero, missing, N/A and pending-review states remain visually and semantically distinct.
 
 ## PCB-30-3 - Prompt 30: — Build leaderboard, language and model pages
 
 - Owner prompt: `30`.
 - Dependencies: public API/client ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-39/40 page variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (language-specific leaderboard and per-configuration diagnostics, opportunity counts, declared tool coverage and tested-dimension charts).
+- Verification: `passed` for Prompt 30 page variants; full E2E-39/40 remain partial across later prompts.
+- Required verification scope: Prompt 30 language filter/profile and language-to-dimension evidence subcases of E2E-39/40.
+- Evidence: `docs/implementation/reports/prompt-30.md`; `docs/implementation/evidence/prompt-30/browser-results.json`, `javascript-profile.png`. JavaScript uses its own release dimensions; untested dimension cells say “Not tested.”
 - Acceptance criteria: — Implement language leaderboards and diagnostic profile views with opportunity counts/tool coverage. DoD: graphs do not imply evidence for untested language features or reuse inappropriate TS metrics on JS.
 
 ## PCB-30-4 - Prompt 30: — Build leaderboard, language and model pages
 
 - Owner prompt: `30`.
 - Dependencies: public API/client ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
-- Required verification scope: E2E-39/40 page variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Implementation: `implemented` (model profile with code-only measured-dimension radar, language/dimension heatmap, source-linked cost/latency/coverage and measured-data-only factual summary).
+- Verification: `passed` for Prompt 30 page variants; full E2E-39/40 remain partial across later prompts.
+- Required verification scope: Prompt 30 model-profile, source evidence and answer-only subcases of E2E-39/40.
+- Evidence: `docs/implementation/reports/prompt-30.md`; `docs/implementation/evidence/prompt-30/browser-results.json`, `model-code-profile.png`, `model-answer-only.png`. Answer-only models show no code radar or invented code dimensions.
 - Acceptance criteria: — Implement model profiles with code-only radar, language/dimension heatmap, generation cost/latency and factual supported summaries. DoD: answer-only tasks receive no invented code dimensions; all displayed numbers link to source scores/evidence.
 
 ## PCB-31-1 - Prompt 31: — Build comparison, task explorer and methodology pages

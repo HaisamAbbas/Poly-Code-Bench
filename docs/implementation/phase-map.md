@@ -104,7 +104,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 27 | Prompt 27 | — Implement repository understanding and factual Q&A | WP-20, part 4 | Repository Q&A and fact-based grading | not_started |
 | 28 | Prompt 28 | — Implement prediction suites and close Track B coverage | WP-20, part 5 | Output/test prediction and complete suite coverage audit | done (E2E-38 prediction subcases passed at the local fixture tier; the seven-family coverage audit closes WP-20 on real entrypoints, with the repo_qa evidence pointer provisional until Prompt 27 completes) |
 | 29 | Prompt 29 | — Implement the complete public API and projections | WP-21 | Complete public projections/API and generated client | not_started |
-| 30 | Prompt 30 | — Build leaderboard, language and model pages | WP-22, part 1 | Leaderboard, language view and model profile | not_started |
+| 30 | Prompt 30 | — Build leaderboard, language and model pages | WP-22, part 1 | Leaderboard, language view and model profile | done (PCB-30-1..4 implemented; Prompt 30 E2E-39/40 browser subcases pass against an explicitly synthetic published test release; full E2E-39/40 remain partial across Prompts 31/32) |
 | 31 | Prompt 31 | — Build comparison, task explorer and methodology pages | WP-22, part 2 | Comparison, task explorer and methodology pages | not_started |
 | 32 | Prompt 32 | — Implement reviewed model submissions and close the public product phase | WP-22, part 3; WP-23 | Seventh page plus model-submission approval workflow | not_started |
 | 33 | Prompt 33 | — Harden deployment and rehearse operations | WP-24 | Production IaC, operational drills and runbooks | not_started |

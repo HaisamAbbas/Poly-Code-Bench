@@ -17,6 +17,7 @@ dev = [
   "mypy-boto3-s3==1.43.93",
   "pytest==9.0.2",
   "ruff==0.16.8",
+  "types-PyYAML==6.0.12.20250915",
 ]
 
 [tool.ruff]
@@ -54,6 +55,11 @@ select = ["E", "F", "I", "UP", "B"]
 "plugins/languages/javascript/src/polycodebench_lang_javascript/guest/*.py" = ["UP031", "E501"]
 "plugins/languages/java/src/polycodebench_lang_java/guest/*.py" = ["UP031", "E501"]
 "plugins/languages/go/src/polycodebench_lang_go/guest/*.py" = ["UP031", "E501"]
+"plugins/languages/c/src/polycodebench_lang_c/guest/*.py" = ["UP031", "E501"]
+# `BASE_DOCKERFILE`/`DOCKERFILE` are hashed into `config/images/go-components.json` as
+# `dockerfile_digest`, so re-wrapping one of these literals would invalidate a recorded digest and
+# require rebuilding both Go component images. Line length must not change them.
+"scripts/fetch_go_components.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

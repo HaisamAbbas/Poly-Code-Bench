@@ -121,6 +121,22 @@ def variant_files(
     }
 
 
+def _declared(plugin: object, name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    """A plugin declaration, resolved whether it is a class attribute or a property.
+
+    One plugin class can serve two language identities and still declare per-language values, which
+    it can only do through ``@property``. Reading such a declaration with a bare ``getattr`` returns
+    the property object, and because ``str.endswith`` accepts any object the mismatch is silent:
+    the value simply never matches, and every path it was supposed to select is dropped.
+    """
+    value = getattr(plugin, name, default)
+    if isinstance(value, property):
+        value = value.fget(plugin)  # type: ignore[misc]
+    if not isinstance(value, (tuple, list)):
+        return default
+    return tuple(str(item) for item in value)
+
+
 def _families(observations: list[Observation]) -> set[str]:
     return {
         obs.issue_key.split(".")[1]
@@ -165,7 +181,12 @@ class SuiteAdmission:
         self._gate = asyncio.Semaphore(MAX_PARALLEL)
         # Language-specific layout comes from the plugin; the defaults are the Python layout.
         self._prefix: str = getattr(plugin, "overlay_prefix", "")
-        self._suffixes: tuple[str, ...] = tuple(getattr(plugin, "candidate_suffixes", (".py",)))
+        # Resolved, not read raw: a plugin may declare `candidate_suffixes` as a `@property` (the
+        # JavaScript/TypeScript plugin does, because one class serves both identities), and a bare
+        # `getattr` then yields the property object rather than its value. `str.endswith` accepts
+        # any object, so no error surfaced - the suffix tuple silently matched nothing, every
+        # candidate path list came out empty, and the analyzers scanned no source at all.
+        self._suffixes: tuple[str, ...] = tuple(_declared(plugin, "candidate_suffixes", (".py",)))
         # Which directories under ``hidden/`` hold overlay files (tests, workloads). A language
         # whose hidden tests must live inside the package directory - Go's `_test.go` files need
         # the package's own identifiers - cannot use the Python ``hidden/tests/`` layout, so the
@@ -173,7 +194,7 @@ class SuiteAdmission:
         self._overlay_roots: tuple[str, ...] = tuple(
             getattr(plugin, "overlay_roots", ("hidden/tests/", "hidden/perf/"))
         )
-        self._overlay_suffixes: tuple[str, ...] = tuple(getattr(plugin, "overlay_suffixes", ()))
+        self._overlay_suffixes: tuple[str, ...] = _declared(plugin, "overlay_suffixes", ())
         self._trusted: Any = getattr(plugin, "trusted_inputs", None)
 
     # ----------------------------------------------------------------- evaluation
@@ -337,8 +358,15 @@ class SuiteAdmission:
         overlay: Mapping[str, bytes],
         config: Mapping[str, bytes] | None = None,
     ) -> tuple[bool, str]:
-        """Run the smallest workload once on the reference: proves the workload is runnable and
-        its verifier accepts the reference. (Paired timing is the Prompt 13 stage.)"""
+        """Run the smallest workload once on the reference: proves the workload is runnable
+        under the pinned recipe. (Paired timing is the Prompt 13 stage.)
+
+        What counts as proof is read from the plan's own declared outputs rather than assumed to be
+        one document. Python's iteration runs a perf driver that writes ``out/perf.json`` with a
+        verifier verdict and a duration; C compiles a workload that prints a checksum and declares
+        ``out/perf.build.json`` plus the captured stdout. Hard-coding the Python shape made this
+        check unsatisfiable for every other language - C could never emit a file no C plan builds.
+        """
         plan = self._plugin.performance_plan(view)
         if plan is None:
             return True, "no performance workload declared"
@@ -354,14 +382,43 @@ class SuiteAdmission:
         )
         async with self._gate:
             run = await self._runner.run(iteration, files, stage_id="adm-perf-smoke")
-        if run.record.exit_code != 0 or "out/perf.json" not in run.outputs:
-            return False, f"iteration exit {run.record.exit_code}: {run.record.stderr_tail[-160:]}"
-        record = json.loads(run.outputs["out/perf.json"])
-        ok = bool(record.get("verified")) and int(record.get("elapsed_ns", 0)) > 0
+        declared = {output.path for output in plan.iteration_plan.outputs}
+        if run.record.exit_code != 0:
+            detail = (run.record.stderr_tail or "").strip()[-200:]
+            stdout = next(
+                (body for path, body in sorted(run.outputs.items()) if path.endswith(".out")),
+                b"",
+            )
+            return (
+                False,
+                f"iteration exit {run.record.exit_code}: stderr={detail!r} "
+                f"stdout={stdout[-200:]!r} outputs={sorted(run.outputs)}",
+            )
+        missing = sorted(
+            path
+            for path in declared
+            # The captured runner triplet is produced by the supervisor wrapper, not the workload.
+            if not path.endswith((".out", ".err"))
+            and not path.endswith(".run.json")
+            and path not in run.outputs
+        )
+        if missing:
+            return False, f"iteration produced no {', '.join(missing)}"
+        if "out/perf.json" in run.outputs:
+            record = json.loads(run.outputs["out/perf.json"])
+            ok = bool(record.get("verified")) and int(record.get("elapsed_ns", 0)) > 0
+            return (
+                ok,
+                f"scale={workload.scale} elapsed_ns={record.get('elapsed_ns')} "
+                f"verified={record.get('verified')}",
+            )
+        # No perf driver: the workload ran to a clean exit and printed the checksum it declares.
+        checksum = (run.outputs.get("out/perf.out") or "").strip().splitlines()
+        ok = bool(checksum) and checksum[-1].strip().isdigit()
         return (
             ok,
-            f"scale={workload.scale} elapsed_ns={record.get('elapsed_ns')} "
-            f"verified={record.get('verified')}",
+            f"scale={workload.scale} outputs={sorted(run.outputs)} "
+            f"checksum={checksum[-1].strip() if checksum else None!r}",
         )
 
     # ------------------------------------------------------------------ admission
@@ -498,16 +555,26 @@ class SuiteAdmission:
             ),
             "five identical outcome inventories required",
         )
-        faulty = by_variant.get("faulty", [])
+        # A faulty fixture whose declared failure is a crash or a build error never reaches a test
+        # case, so it has no failing cases to compare; `crash-and-build-fixtures-rejected` gates it.
+        # Reading `failing_cases` unconditionally made such a fixture crash the report instead.
+        faulty = [
+            (f, r)
+            for f, r in by_variant.get("faulty", [])
+            if f["expectation"].get("expected_failure") not in {"candidate_crash", "build_error"}
+        ]
+
+        def matches_declared_fault(fixture: Mapping[str, Any], result: CandidateEvaluation) -> bool:
+            expected_cases = fixture["expectation"].get("failing_cases") or ()
+            return (
+                set(result.gates) == {"fail"}
+                and bool(expected_cases)
+                and set(expected_cases) <= set(result.failed_cases)
+            )
+
         check(
             "known-fault-rejection",
-            bool(faulty)
-            and all(
-                set(r.gates) == {"fail"}
-                and bool(f["expectation"]["failing_cases"])
-                and set(f["expectation"]["failing_cases"]) <= set(r.failed_cases)
-                for f, r in faulty
-            ),
+            bool(faulty) and all(matches_declared_fault(f, r) for f, r in faulty),
             "faulty variants must fail their declared cases",
         )
         check("alternative-solution-acceptance", all_gate("alternative", "pass"))

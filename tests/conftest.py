@@ -3,8 +3,10 @@
 Two kinds of import need the repository tree on ``sys.path`` before any test module (and its
 import sorting) can depend on them:
 
-* Language plugins that are workspace members rather than installed packages in every
-  development environment.
+* Language plugins and suite adapters that are workspace members rather than installed packages
+  in every development environment.
+* This suite's own fixture support modules, which the suite tests import the way the language
+  plugin tests import theirs.
 * First-class repository tooling under ``scripts``, which some tests import to exercise the real
   command rather than a copy of it. CI runs a bare ``pytest``, which - unlike ``python -m pytest``
   - does not put the working directory on the import path, so without this the same test passes
@@ -23,9 +25,13 @@ PLUGIN_SRC_DIRS = (
     ROOT / "plugins" / "languages" / "go" / "src",
     ROOT / "plugins" / "languages" / "cpp" / "src",
 )
+SUITE_SRC_DIRS = (
+    ROOT / "plugins" / "suites" / "swebench" / "src",
+    ROOT / "plugins" / "suites" / "swebench" / "tests",
+)
 
 # The repository root comes first so ``scripts`` resolves as a namespace package.
-for _import_root in (ROOT, *PLUGIN_SRC_DIRS):
+for _import_root in (ROOT, *PLUGIN_SRC_DIRS, *SUITE_SRC_DIRS):
     _path = str(_import_root)
     if _path not in sys.path:
         sys.path.insert(0, _path)

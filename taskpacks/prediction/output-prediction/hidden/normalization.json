@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "kind": "prediction_normalization",
+  "mode": "exact_bytes"
+}

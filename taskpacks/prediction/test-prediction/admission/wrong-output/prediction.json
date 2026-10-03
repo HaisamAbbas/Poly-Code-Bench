@@ -1,0 +1,1 @@
+clamp('7', upper=100) raises TypeError with the received type in the message, so the pytest.raises context succeeds and the test passes; derived at authoring time

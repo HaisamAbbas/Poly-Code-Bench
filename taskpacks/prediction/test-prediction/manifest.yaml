@@ -1,0 +1,123 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: pcb-test-prediction-clamp
+  version: 1
+  track: B
+  family: test_prediction
+  primary_language: python
+  secondary_languages: []
+  cluster_id: prediction-pilot
+  difficulty: standard
+  stratum_id: livecodebench-inspired
+  output_contract_digest: sha256:0cdb5879a6d6144d07dae0586acf12759c3f00565df1765a25b8c8a87049d3cf
+  methodology_label: adapted
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: typed_json
+  allowed_paths: [prediction.json]
+  maximum_artifact_bytes: 100000
+  maximum_file_bytes: 100000
+  maximum_files: 1
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_fixture
+  immutable_revision: polycodebench-authored-fixtures-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-authored-fixtures
+  first_public_at: "2026-10-03T00:00:00Z"
+  curated_at: "2026-10-03T00:00:00Z"
+  date_confidence: verified
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-authored-fixtures-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 28 authored test-prediction fixture
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b
+  language_plugin_id: python
+  language_plugin_version: local-fixture-v1
+  build_recipe_digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+  test_recipe_digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+  resource_class: local-fixture-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids: [prediction-oracle-v1]
+  hard_condition_ids: [prediction-oracle-v1]
+  required_outputs: [prediction.json]
+  protected_paths: []
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  # Answer-only family (Technical Spec 17.2): a textual prediction carries no code-quality score,
+  # so the six generated-code dimensions are absent rather than zero.
+  applicable_dimensions: []
+  evidence_owners: {}
+  required_analyzers: []
+  performance_policy_id: null
+  judge_policy_id: null
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: prediction-oracle-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: prediction-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 120
+visible_files:
+  - visible/task.md
+  - visible/repo/bounds.py
+  - visible/repo/tests/test_clamp.py
+hidden_files:
+  - hidden/oracle.json
+  - admission/reference/prediction.json
+  - admission/faulty/prediction.json
+  - admission/wrong-output/prediction.json
+  - admission/no-op/prediction.json
+  - admission/empty/prediction.json
+fixtures:
+  - name: reference
+    variant: reference
+    solution_path: admission/reference/prediction.json
+    input_path: null
+    expected_output_path: null
+    expectation:
+      failing_cases: []
+      expected_issue_families: []
+      expected_failure: null
+  - name: wrong-test-id
+    variant: faulty
+    solution_path: admission/faulty/prediction.json
+    input_path: null
+    expected_output_path: null
+    expectation:
+      failing_cases: [prediction-match]
+      expected_issue_families: []
+      expected_failure: wrong_behavior
+  - name: empty-answer
+    variant: alternative
+    solution_path: admission/empty/prediction.json
+    input_path: null
+    expected_output_path: null
+    expectation:
+      failing_cases: [prediction-match]
+      expected_issue_families: []
+      expected_failure: wrong_behavior

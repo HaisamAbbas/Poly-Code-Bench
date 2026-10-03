@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "prediction_oracle",
+  "normalization": {
+    "schema_version": 1,
+    "kind": "prediction_normalization",
+    "mode": "exact_bytes"
+  },
+  "expected": "1=3 | 2=6 | 3=12 | 4=24 | 5=40",
+  "reason": "derived by executing run(3) at authoring time; the oracle is frozen and never shipped to the solver"
+}

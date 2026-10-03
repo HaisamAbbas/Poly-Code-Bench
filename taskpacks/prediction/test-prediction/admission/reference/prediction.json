@@ -1,0 +1,1 @@
+passed tests/test_clamp.py::test_clamp_rejects_non_int

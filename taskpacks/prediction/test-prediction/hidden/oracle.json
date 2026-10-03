@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "kind": "prediction_oracle",
+  "normalization": {
+    "schema_version": 1,
+    "kind": "prediction_normalization",
+    "mode": "exact_bytes"
+  },
+  "expected": "passed tests/test_clamp.py::test_clamp_rejects_non_int",
+  "reason": "clamp('7', upper=100) raises TypeError with the received type in the message, so the pytest.raises context succeeds and the test passes; derived at authoring time",
+  "declared_test_id": "tests/test_clamp.py::test_clamp_rejects_non_int",
+  "scenario": "test_clamp_rejects_non_int calls clamp(\"7\", upper=100) inside pytest.raises(TypeError), then asserts the message names the received type."
+}

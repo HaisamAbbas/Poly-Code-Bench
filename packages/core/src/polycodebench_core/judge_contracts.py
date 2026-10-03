@@ -233,8 +233,13 @@ class RubricItem(JudgeModel):
 
     @model_validator(mode="after")
     def residual_item_is_declarable(self) -> RubricItem:
-        if self.dimension not in RESIDUAL_DIMENSIONS:
-            raise ValueError("judges only score residual quality, idiom and robustness items")
+        # Quality judgements stay residual (no reliable check owns them). Correctness items are
+        # the Q&A entailment judgements of Technical Spec 17.3: whether a text expresses a stated
+        # atomic fact, scored 0/1 and aggregated as fact credit, never as a six-dimension score.
+        if self.dimension not in RESIDUAL_DIMENSIONS + (ScoreDimension.CORRECTNESS,):
+            raise ValueError(
+                "judges score residual quality, idiom and robustness items, or Q&A entailment"
+            )
         values = {anchor.value for anchor in self.anchors}
         if len(values) != len(self.anchors):
             raise ValueError("rubric anchor values must be unique within an item")

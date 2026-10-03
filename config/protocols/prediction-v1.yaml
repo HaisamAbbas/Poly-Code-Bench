@@ -1,0 +1,32 @@
+schema_version: 1
+kind: solve_protocol
+protocol_id: prediction-v1
+version: 1
+mode: single_shot
+# Answer-only prediction (Technical Spec 17.2/17.4): the model reads the target source and its
+# input and predicts the output. No command, test or patch tool exists in this protocol, so the
+# evaluated model cannot run the target code - the restriction is structural, not an instruction.
+# The context budget is sized to hold the whole target module, which is what prediction needs.
+# Changing any value here creates a new protocol version and a different cohort.
+tools: []
+public_test_feedback: false
+single_shot_extraction: json_envelope
+freeze_on_budget_exhaustion: false
+prompt_policy: pcb-prediction-v1
+context:
+  schema_version: 1
+  kind: context_policy
+  retain_recent_turns: 4
+  max_input_context_tokens: 48000
+  token_counter: utf8_bytes_div4_v1
+  summarizer: none
+budget:
+  schema_version: 1
+  kind: solve_budget
+  model_turns: 1
+  tool_calls: 0
+  active_solve_seconds: 120
+  per_command_seconds: 60  # no command tool exists in this protocol; the field is required for the
+  # frozen budget validator and can never bind.
+  input_tokens: 48000
+  output_tokens: 2000

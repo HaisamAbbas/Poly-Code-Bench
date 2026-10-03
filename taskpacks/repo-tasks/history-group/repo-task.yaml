@@ -1,0 +1,84 @@
+schema_version: 1
+kind: repo_task_authoring
+task_id: history-group
+inspiration:
+  source_family: cursorbench
+  source_url: https://cursor.com/blog/cursorbench
+  statement: >-
+    The task shape - one real developer request spanning several modules of a working
+    repository - is inspired by the public CursorBench methodology description. The request,
+    repository fixture and acceptance contract are independently curated by PolyCodeBench; no
+    private task set, grader or score is used and nothing is reproduced.
+request:
+  text: >-
+    Our HISTORY.md entries are written as "- area: title" or "- title", but the summary we
+    publish for releases should group them. render_summary() should group entries under their
+    area: entries with an area render under a heading line with just the area, entries without
+    an area render under "other", groups appear in the order the areas first occur and entries
+    keep their order within a group, groups are separated by one blank line and empty input
+    renders as the empty string. parse_entries() keeps its current behaviour exactly, including
+    HistoryError on lines that are neither headings nor entries. Follow CONTRIBUTING.md and
+    keep the change limited to what this needs.
+  scope_paths:
+    - histkit/render.py
+    - histkit/group.py
+  conventions:
+    - CONTRIBUTING.md
+allowed_changes:
+  allowed_paths:
+    - histkit/render.py
+    - histkit/group.py
+  protected_paths:
+    - histkit/parser.py
+    - histkit/errors.py
+    - CONTRIBUTING.md
+    - README.md
+acceptance:
+  - criterion_id: grouping
+    summary: Entries render under their area heading and ungrouped entries render under other.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [groups-by-area, unprefixed-to-other]
+  - criterion_id: order-and-empty
+    summary: Group and entry order follow the input and empty input renders as the empty string.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [preserves-order, empty-input]
+  - criterion_id: parser-compat
+    summary: parse_entries keeps its behaviour exactly, including HistoryError on bad lines.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [parser-api-unchanged]
+  - criterion_id: request-honored
+    summary: The change addresses the request as stated, with no unrelated edits or scope drift.
+    evidence_method: judge_rubric
+    required_gate: true
+    rubric_item_ids: [minimal_relevant_scope]
+    minimum_gate_score: "0.500000"
+    residual_reason: >-
+      Allowed paths are enforced mechanically; whether the request as written is honoured
+      without scope drift requires reading the request against the diff, which no executable
+      or static check can decide.
+  - criterion_id: readability-and-shape
+    summary: The change reads like the surrounding code and splits at the repository's natural boundary.
+    evidence_method: judge_rubric
+    required_gate: false
+    rubric_item_ids: [naming_readability, decomposition, unnecessary_complexity]
+    residual_reason: >-
+      Whether these identifiers communicate in histkit's own vocabulary, where the module
+      boundary belongs, and which indirection is earned here are comparisons against the frozen
+      repository context that no executable or static check can decide.
+  - criterion_id: style-and-duplication
+    summary: The change follows CONTRIBUTING.md's conventions and copies no existing in-scope logic.
+    evidence_method: judge_rubric
+    required_gate: false
+    rubric_item_ids: [repository_style_consistency, duplication]
+    residual_reason: >-
+      The convention scan reports mechanical rule breaches; whether an unusual construct matches
+      this repository's conventions, and whether repetition is required by the task, is a
+      judgement against the declared request and surrounding code.
+convention_rules:
+  - bare-except
+  - mutable-default-arg
+  - duplicated-block
+baseline_penalty_relations: [introduced, worsened]

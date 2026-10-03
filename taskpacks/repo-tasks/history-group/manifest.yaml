@@ -1,0 +1,118 @@
+schema_version: 1
+kind: task_package
+task:
+  task_id: history-group
+  version: 1
+  track: B
+  family: repo_task
+  primary_language: python
+  secondary_languages: []
+  cluster_id: repo-task-release-notes
+  difficulty: standard
+  stratum_id: cursorbench-inspired
+  output_contract_digest: sha256:238fa58bbadf1da319ebd1c4910d34f3db6b9b642df69f463bd736cb55f46b6b
+  methodology_label: inspired
+output_contract:
+  schema_version: 1
+  kind: task_output_contract
+  submission_kind: files
+  allowed_paths: [histkit/render.py, histkit/group.py]
+  maximum_artifact_bytes: 1000000
+  maximum_file_bytes: 100000
+  maximum_files: 2
+  findings_limit: null
+source:
+  schema_version: 1
+  kind: task_source
+  source_kind: authored_fixture
+  immutable_revision: polycodebench-repo-tasks-v1
+  issue_or_cve: null
+  rights_record_id: polycodebench-repo-tasks
+  first_public_at: "2026-10-03T00:00:00Z"
+  curated_at: "2026-10-03T00:00:00Z"
+  date_confidence: verified
+rights:
+  license_expression: CC0-1.0
+  source_url: null
+  source_revision: polycodebench-repo-tasks-v1
+  redistribution_status: authored_fixture
+  attribution: PolyCodeBench Prompt 25 independently curated repository task
+  review_reference: local-authorship
+runtime:
+  schema_version: 1
+  kind: task_runtime
+  image_digest: sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b
+  language_plugin_id: python
+  language_plugin_version: local-fixture-v1
+  build_recipe_digest: sha256:2222222222222222222222222222222222222222222222222222222222222222
+  test_recipe_digest: sha256:3333333333333333333333333333333333333333333333333333333333333333
+  resource_class: local-fixture-small
+acceptance:
+  schema_version: 1
+  kind: task_acceptance
+  required_test_group_ids: [acceptance-v1]
+  hard_condition_ids: [grouping, order-and-empty, parser-compat, request-honored]
+  required_outputs: [histkit/render.py]
+  protected_paths: [histkit/parser.py, histkit/errors.py, CONTRIBUTING.md, README.md]
+quality_plan:
+  schema_version: 1
+  kind: task_quality_plan
+  applicable_dimensions: [code_quality]
+  evidence_owners: {}
+  required_analyzers: [repotask-convention]
+  performance_policy_id: null
+  judge_policy_id: judge-rubric-v1
+oracle:
+  schema_version: 1
+  kind: task_oracle
+  test_version: repo-task-acceptance-v1
+  ground_truth_version: null
+  reference_version: reference-v1
+protocol_constraints:
+  schema_version: 1
+  kind: protocol_constraints
+  protocol_id: single-shot-v1
+  allowed_tools: []
+  public_test_feedback: false
+  hidden_feedback: false
+  network_policy: disabled
+  dependency_inventory_digest: null
+  maximum_model_turns: 1
+  maximum_tool_calls: 0
+  maximum_wall_seconds: 30
+visible_files:
+  - visible/task.md
+  - visible/repo/README.md
+  - visible/repo/CONTRIBUTING.md
+  - visible/repo/histkit/__init__.py
+  - visible/repo/histkit/errors.py
+  - visible/repo/histkit/parser.py
+  - visible/repo/histkit/render.py
+hidden_files:
+  - hidden/acceptance_runner.py
+  - admission/reference/histkit/group.py
+  - admission/reference/histkit/render.py
+  - admission/alternative/histkit/render.py
+  - admission/faulty/histkit/render.py
+  - admission/quality-defective/histkit/render.py
+fixtures:
+  - name: reference
+    variant: reference
+    solution_path: admission/reference/histkit/render.py
+    expectation: {expected_quality_only_pass: null}
+  - name: alternative
+    variant: alternative
+    solution_path: admission/alternative/histkit/render.py
+    expectation: {expected_quality_only_pass: null}
+  - name: faulty
+    variant: faulty
+    solution_path: admission/faulty/histkit/render.py
+    expectation:
+      failing_cases: [unprefixed-to-other]
+      expected_failure: wrong_behavior
+  - name: quality-defective
+    variant: quality_defective
+    solution_path: admission/quality-defective/histkit/render.py
+    expectation:
+      expected_quality_only_pass: true
+      expected_issue_families: [convention, duplication]

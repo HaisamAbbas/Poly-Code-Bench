@@ -1,0 +1,89 @@
+schema_version: 1
+kind: repo_task_authoring
+task_id: ini-interpolate
+inspiration:
+  source_family: cursorbench
+  source_url: https://cursor.com/blog/cursorbench
+  statement: >-
+    The task shape - one real developer request spanning several modules of a working
+    repository - is inspired by the public CursorBench methodology description. The request,
+    repository fixture and acceptance contract are independently curated by PolyCodeBench; no
+    private task set, grader or score is used and nothing is reproduced.
+request:
+  text: >-
+    Our deploy configs repeat the same host paths in every environment file. load() should
+    resolve environment references in values before it returns. A value may reference an
+    environment variable as ${NAME}; several references in one value all expand and surrounding
+    text is kept. A backslash escapes a reference: \${NAME} stays the literal text ${NAME}
+    (backslash consumed). A missing variable fails with ConfigError naming the variable.
+    parse() must keep returning raw values exactly as today, and section names and keys are
+    never interpolated. Keep the public API and error shapes our callers rely on and follow
+    CONTRIBUTING.md.
+  scope_paths:
+    - cfgkit/loader.py
+    - cfgkit/schema.py
+    - cfgkit/interpolate.py
+  conventions:
+    - CONTRIBUTING.md
+allowed_changes:
+  allowed_paths:
+    - cfgkit/loader.py
+    - cfgkit/schema.py
+    - cfgkit/interpolate.py
+  protected_paths:
+    - cfgkit/errors.py
+    - cfgkit/legacy_report.py
+    - CONTRIBUTING.md
+    - README.md
+acceptance:
+  - criterion_id: interpolation
+    summary: Values expand ${NAME} references from the environment mapping, singly and repeatedly.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [expands-single-var, expands-multiple-vars]
+  - criterion_id: escape-literals
+    summary: A backslash-escaped reference stays the literal text ${NAME} whatever the environment holds.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [escaped-stays-literal]
+  - criterion_id: error-contract
+    summary: A missing variable fails with ConfigError naming the variable, like other validation errors.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [missing-var-raises]
+  - criterion_id: compat-preserved
+    summary: parse() stays raw and section names and keys are never interpolated.
+    evidence_method: executable
+    required_gate: true
+    case_ids: [keys-untouched, parse-unchanged]
+  - criterion_id: readability-and-shape
+    summary: The change reads like the surrounding code and splits at the repository's natural boundary.
+    evidence_method: judge_rubric
+    required_gate: false
+    rubric_item_ids: [naming_readability, decomposition, unnecessary_complexity]
+    residual_reason: >-
+      Whether these identifiers communicate in cfgkit's own vocabulary, where the module
+      boundary belongs, and which indirection is earned here are comparisons against the frozen
+      repository context that no executable or static check can decide.
+  - criterion_id: style-and-duplication
+    summary: The change follows CONTRIBUTING.md's conventions and copies no existing in-scope logic.
+    evidence_method: judge_rubric
+    required_gate: false
+    rubric_item_ids: [repository_style_consistency, duplication]
+    residual_reason: >-
+      The convention scan reports mechanical rule breaches; whether an unusual construct matches
+      this repository's conventions, and whether repetition is required by the task, is a
+      judgement against the declared request and surrounding code.
+  - criterion_id: change-scope
+    summary: The change is limited to what the request requires, with no unrelated edits or noise.
+    evidence_method: judge_rubric
+    required_gate: false
+    rubric_item_ids: [minimal_relevant_scope]
+    residual_reason: >-
+      Allowed paths are enforced mechanically; whether an in-scope edit is relevant to the
+      request, or a comment or log line is noise, requires reading the request against the diff.
+convention_rules:
+  - bare-except
+  - mutable-default-arg
+  - duplicated-block
+baseline_penalty_relations: [introduced, worsened]

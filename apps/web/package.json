@@ -7,6 +7,7 @@
     "build": "next build",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:prompt31": "playwright test --config=playwright.prompt31.config.ts",
+    "test:e2e:prompt32": "playwright test --config=playwright.prompt32.config.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },

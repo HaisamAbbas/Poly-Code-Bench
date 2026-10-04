@@ -23,6 +23,7 @@ export function AppHeader() {
         <a href="/leaderboard#language-filter">Languages</a>
         <Link href="/compare">Compare</Link>
         <Link href="/tasks">Tasks</Link>
+        <Link href="/model-submissions">Submit model</Link>
       </nav>
       <span className="header-caption">Public release explorer</span>
     </header>

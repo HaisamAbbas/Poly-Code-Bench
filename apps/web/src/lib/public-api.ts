@@ -329,6 +329,37 @@ export type ReleaseContext = {
   readonly releases: readonly ReleaseSummary[];
 };
 
+export type ModelSubmissionRequest = {
+  readonly kind: "model_submission_input";
+  readonly model_name: string;
+  readonly provider: string;
+  readonly organization?: string;
+  readonly contact_email: string;
+  readonly endpoint_url: string;
+  readonly source_url: string;
+  readonly source_license: string;
+  readonly permission_attested: boolean;
+};
+
+export type ModelSubmissionStatus = {
+  readonly kind: "model_submission";
+  readonly submission_id: string;
+  readonly status: "pending" | "rejected" | "approved";
+  readonly model_name: string;
+  readonly provider: string;
+  readonly organization: string | null;
+  readonly contact_email: string;
+  readonly endpoint_url: string;
+  readonly source_url: string;
+  readonly source_license: string;
+  readonly permission_attested: boolean;
+  readonly submitted_at: string;
+  readonly row_version: number;
+  readonly rejection_reason: string | null;
+  readonly resulting_run_id: string | null;
+  readonly run_status: string | null;
+};
+
 export async function loadReleaseContext(requestedRelease?: string): Promise<Resource<ReleaseContext>> {
   const index = await publicApi<ApiEnvelope<readonly ReleaseSummary[]>>("/releases?limit=200");
   if (index.state !== "ready") return index;
@@ -364,10 +395,88 @@ export type Resource<T> =
 
 type ErrorEnvelope = {
   readonly error?: {
+    readonly code?: string;
     readonly message?: string;
     readonly request_id?: string;
   };
 };
+
+export async function sendModelSubmission(
+  token: string,
+  idempotencyKey: string,
+  submission: ModelSubmissionRequest,
+): Promise<Resource<ApiEnvelope<ModelSubmissionStatus>>> {
+  return authenticatedSubmissionApi<ApiEnvelope<ModelSubmissionStatus>>(
+    "/api/model-submissions",
+    token,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": idempotencyKey },
+      body: JSON.stringify(submission),
+    },
+  );
+}
+
+export async function loadModelSubmissionStatus(
+  token: string,
+  submissionId: string,
+): Promise<Resource<ApiEnvelope<ModelSubmissionStatus>>> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) {
+    return { state: "error", title: "Request ID is invalid", message: "Enter the request ID returned after submission." };
+  }
+  return authenticatedSubmissionApi<ApiEnvelope<ModelSubmissionStatus>>(
+    `/api/model-submissions/${encodeURIComponent(submissionId)}`,
+    token,
+    { method: "GET" },
+  );
+}
+
+async function authenticatedSubmissionApi<T>(
+  path: string,
+  token: string,
+  init: RequestInit,
+): Promise<Resource<T>> {
+  if (!token.trim() || token.length > 4096 || /[\r\n]/.test(token)) {
+    return { state: "error", title: "Verified account sign-in required", message: "Provide the short lived access token for your verified account. Provider credentials are never requested." };
+  }
+  try {
+    const headers = new Headers(init.headers);
+    headers.set("accept", "application/json");
+    headers.set("authorization", `Bearer ${token.trim()}`);
+    const response = await fetch(path, {
+      ...init,
+      cache: "no-store",
+      headers,
+      signal: AbortSignal.timeout(9000),
+    });
+    const body: unknown = await response.json();
+    if (!response.ok) {
+      const error = body as ErrorEnvelope;
+      const code = error.error?.code;
+      return {
+        state: "error",
+        title: code === "FORBIDDEN" ? "Verified account could not be confirmed" : "Submission request failed",
+        message: code === "RATE_LIMITED"
+          ? "Too many new requests. Wait for the limit window to pass, then try again."
+          : code === "NOT_FOUND"
+            ? "No request with that ID belongs to this verified account."
+            : error.error?.message ?? `The API returned HTTP ${response.status}.`,
+        requestId: error.error?.request_id,
+      };
+    }
+    if (typeof body !== "object" || body === null || !("data" in body)) {
+      return { state: "error", title: "Unexpected API response", message: "The model-submission response did not match its contract." };
+    }
+    return { state: "ready", value: body as T };
+  } catch (error) {
+    const timeout = error instanceof DOMException && error.name === "TimeoutError";
+    return {
+      state: "error",
+      title: timeout ? "Submission request timed out" : "Submission service unavailable",
+      message: timeout ? "Check request status before trying again." : "Could not reach the submission service. Try again later.",
+    };
+  }
+}
 
 export function combineResources<A, B>(first: Resource<A>, second: Resource<B>): Resource<readonly [A, B]> {
   if (first.state !== "ready") return first;

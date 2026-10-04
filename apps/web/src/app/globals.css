@@ -294,6 +294,40 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
 .withdrawal-panel { background: #fff6f2; border: 1px solid #e3bfad; margin-top: 12px; padding: 13px; }
 .withdrawal-panel h3 { color: #793e28; font-size: .8rem; margin: 0; }
 .withdrawal-panel p { color: #5a514b; font-size: .73rem; line-height: 1.45; margin: 6px 0 0; }
+.submission-release { margin: 14px 0 20px; }
+.submission-release > h2 { font-size: .86rem; margin: 0 0 8px; }
+.submission-release > p { color: #68736c; font-size: .72rem; }
+.submission-layout { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); }
+.submission-form-card, .submission-status-card { min-width: 0; }
+.submission-form-card > .section-heading, .submission-status-card > .section-heading { margin-bottom: 13px; }
+.submission-form-card .section-heading p, .submission-status-card .section-heading p { color: #68736c; font-size: .7rem; margin: 4px 0 0; }
+.submission-fields { display: grid; gap: 11px 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.submission-field { display: grid; gap: 5px; min-width: 0; }
+.submission-field > span { color: #30443a; font-size: .68rem; font-weight: 720; }
+.submission-field input { background: #fff; border: 1px solid #cbd6ce; border-radius: 3px; color: var(--ink); font: inherit; font-size: .73rem; min-height: 38px; min-width: 0; padding: 8px 9px; width: 100%; }
+.submission-field small { color: #6a766e; font-size: .62rem; line-height: 1.4; }
+.submission-field-wide { grid-column: 1 / -1; }
+.submission-optional { color: #818c84; font-size: .59rem; font-weight: 500; }
+.submission-attestation { align-items: start; display: flex; gap: 9px; }
+.submission-attestation input { accent-color: #29694d; height: 17px; margin: 1px 0 0; width: 17px; }
+.submission-attestation span { color: #3f5146; font-size: .68rem; line-height: 1.45; }
+.submission-field-wide > button, .submission-track-form > button { min-height: 40px; }
+.submission-help, .submission-safety-note { color: #647168; font-size: .64rem; line-height: 1.5; margin: 7px 0 12px; }
+.submission-safety-note { border-top: 1px solid #e4e9e5; margin: 13px 0 0; padding-top: 11px; }
+.submission-track-form { display: grid; gap: 12px; }
+.submission-status { background: #f4f7f4; border: 1px solid #d6e0d8; margin-top: 13px; padding: 12px; }
+.submission-status.status-pending { background: #faf7e9; border-color: #e6d9a9; }
+.submission-status.status-approved { background: #eef7f0; border-color: #c5dec9; }
+.submission-status.status-rejected { background: #fcf1ee; border-color: #e7c9c0; }
+.submission-status-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 11px; justify-content: space-between; }
+.submission-status-heading strong { font-size: .78rem; text-transform: capitalize; }
+.submission-status-heading span { color: #56655c; font-size: .67rem; }
+.submission-status > p { color: #4f5d54; font-size: .68rem; line-height: 1.48; overflow-wrap: anywhere; }
+.submission-status dl { display: grid; gap: 6px 9px; grid-template-columns: max-content minmax(0, 1fr); margin: 10px 0 0; }
+.submission-status dt { color: #68746c; font-size: .61rem; }
+.submission-status dd { font-size: .62rem; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.submission-error { background: #fcf1ee; border: 1px solid #e7c9c0; color: #783a2d; font-size: .69rem; line-height: 1.45; margin: 12px 0 0; overflow-wrap: anywhere; padding: 10px; }
+.submission-status code { overflow-wrap: anywhere; }
 .section-card a:focus-visible, .site-header a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #bf9128; outline-offset: 2px; }
 
 @media (max-width: 920px) {
@@ -305,7 +339,7 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
 }
 @media (max-width: 560px) {
   .site-header { align-items: start; flex-direction: column; gap: 13px; padding: 14px 18px 12px; }
-  .primary-nav { gap: 18px; }
+  .primary-nav { flex-wrap: wrap; gap: 10px 16px; max-width: 100%; }
   .page-shell { padding: 24px 15px 44px; }
   .site-footer { flex-direction: column; gap: 7px; padding: 15px; }
   .page-toolbar { align-items: stretch; }
@@ -334,6 +368,9 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
   .compare-filters { grid-template-columns: 1fr; }
   .task-filters { grid-template-columns: 1fr; }
   .task-filters > a { grid-column: auto; }
+  .submission-layout { grid-template-columns: 1fr; }
+  .submission-fields { grid-template-columns: 1fr; }
+  .submission-field-wide { grid-column: auto; }
   .identity-list { grid-template-columns: minmax(100px, .36fr) minmax(0, 1fr); }
   .lazy-evidence-heading button { width: 100%; }
   .pagination { justify-content: flex-start; }

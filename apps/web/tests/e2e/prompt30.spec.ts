@@ -103,7 +103,7 @@ test("E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API 
 
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "PolyCodeBench home" })).toBeFocused();
-  for (let index = 0; index < 5; index += 1) await page.keyboard.press("Tab");
+  for (let index = 0; index < 6; index += 1) await page.keyboard.press("Tab");
   await expect(page.locator("#release-select")).toBeFocused();
   const releaseOptions = await page.locator("#release-select option").evaluateAll((nodes) =>
     nodes.map((node) => (node as HTMLOptionElement).value),

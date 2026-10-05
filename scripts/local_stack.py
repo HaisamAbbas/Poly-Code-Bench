@@ -341,7 +341,9 @@ SELECT format('CREATE ROLE {LOCAL_API_ROLE} LOGIN PASSWORD %L', '{password}')
 WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_API_ROLE}')
 \\gexec
 ALTER ROLE {LOCAL_API_ROLE} WITH LOGIN PASSWORD '{password}';
-GRANT pcb_public_reader, pcb_submitter, pcb_reviewer TO {LOCAL_API_ROLE};
+GRANT pcb_public_reader, pcb_submitter, pcb_submission_reviewer,
+      pcb_submission_approver, pcb_endpoint_administrator TO {LOCAL_API_ROLE};
+REVOKE pcb_reviewer, pcb_operator, pcb_administrator FROM {LOCAL_API_ROLE};
 GRANT CONNECT ON DATABASE {db_name} TO {LOCAL_API_ROLE};
 SELECT format('CREATE ROLE {LOCAL_PUBLISHER_ROLE} LOGIN PASSWORD %L', '{publisher_password}')
 WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_PUBLISHER_ROLE}')

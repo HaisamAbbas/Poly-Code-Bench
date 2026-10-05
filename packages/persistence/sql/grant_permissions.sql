@@ -12,14 +12,20 @@ GRANT SELECT ON public_published_release, public_release_entry,
     public_release_document, public_release_pointer TO pcb_public_reader;
 
 GRANT USAGE ON SCHEMA public TO
-    pcb_public_reader, pcb_submitter, pcb_curator, pcb_operator, pcb_reviewer,
+    pcb_public_reader, pcb_submitter, pcb_submission_reviewer, pcb_submission_approver,
+    pcb_endpoint_administrator, pcb_curator, pcb_operator, pcb_reviewer,
     pcb_publisher, pcb_scheduler, pcb_solve_supervisor, pcb_evaluator,
     pcb_scorer, pcb_artifact_finalizer, pcb_administrator;
 
 GRANT SELECT, INSERT ON model_submission TO pcb_submitter;
 GRANT SELECT, INSERT, UPDATE, DELETE ON idempotency_record TO pcb_submitter;
 GRANT INSERT ON audit_event TO pcb_submitter;
-GRANT SELECT ON model_submission TO pcb_reviewer, pcb_administrator;
+GRANT SELECT ON model_submission TO
+    pcb_submission_reviewer, pcb_submission_approver, pcb_reviewer, pcb_administrator;
+GRANT UPDATE (status, reviewer_subject, rejection_reason, row_version)
+    ON model_submission TO pcb_submission_reviewer;
+GRANT UPDATE (status, reviewer_subject, approval_document, approval_digest, resulting_run_id, row_version)
+    ON model_submission TO pcb_submission_approver;
 GRANT UPDATE (status, reviewer_subject, rejection_reason, resulting_run_id, row_version)
     ON model_submission TO pcb_reviewer, pcb_administrator;
 ALTER TABLE model_submission ENABLE ROW LEVEL SECURITY;
@@ -32,6 +38,25 @@ CREATE POLICY model_submission_submitter_scope ON model_submission
 DROP POLICY IF EXISTS model_submission_reviewer_scope ON model_submission;
 CREATE POLICY model_submission_reviewer_scope ON model_submission
     FOR ALL TO pcb_reviewer, pcb_administrator USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS model_submission_public_review_scope ON model_submission;
+CREATE POLICY model_submission_public_review_scope ON model_submission
+    FOR ALL TO pcb_submission_reviewer, pcb_submission_approver
+    USING (true) WITH CHECK (true);
+GRANT INSERT ON audit_event TO pcb_submission_reviewer;
+
+-- The public API's approval path has permission only to validate one bounded run plan,
+-- create its queued run and attempts, and expose that run's lifecycle summary to its owner.
+GRANT SELECT ON campaign, task_set, task_set_member, task_version, config_document,
+    model_revision, endpoint_registration, run, attempt, budget_account
+    TO pcb_submission_approver;
+GRANT INSERT, SELECT ON run, attempt TO pcb_submission_approver;
+GRANT SELECT, INSERT, UPDATE, DELETE ON idempotency_record TO pcb_submission_approver;
+GRANT SELECT, INSERT ON budget_account, budget_resource TO pcb_submission_approver;
+GRANT INSERT ON audit_event TO pcb_submission_approver;
+
+-- MFA-gated endpoint administration is isolated from general database administration.
+GRANT SELECT, INSERT, UPDATE ON endpoint_registration TO pcb_endpoint_administrator;
+GRANT INSERT ON audit_event TO pcb_endpoint_administrator;
 
 GRANT SELECT, INSERT, UPDATE ON task TO pcb_curator, pcb_administrator;
 GRANT SELECT, INSERT ON task_version, task_set_member TO pcb_curator, pcb_administrator;
@@ -39,7 +64,7 @@ GRANT SELECT, INSERT, UPDATE ON task_set TO pcb_curator, pcb_administrator;
 
 GRANT SELECT ON task_set, task_set_member, task_version, config_document, model_revision, campaign TO pcb_operator;
 GRANT INSERT, SELECT ON run, attempt, idempotency_record TO pcb_operator;
-GRANT UPDATE ON idempotency_record TO pcb_operator;
+GRANT UPDATE, DELETE ON idempotency_record TO pcb_operator;
 GRANT INSERT ON audit_event TO pcb_operator;
 
 GRANT SELECT, INSERT, UPDATE ON stage_job, capacity_slot, worker_registration TO pcb_scheduler;

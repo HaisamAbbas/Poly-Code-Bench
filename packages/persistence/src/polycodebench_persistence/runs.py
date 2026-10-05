@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Literal, cast
 from uuid import UUID, uuid4
 
 from polycodebench_core.application_errors import (
@@ -44,12 +46,21 @@ MAX_ATTEMPTS_PER_RUN = 100_000
 
 
 class PostgresRunRepository:
-    def __init__(self, engine: Engine) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        *,
+        database_role: Literal["pcb_operator", "pcb_submission_approver"] | None = None,
+    ) -> None:
+        if database_role not in {None, "pcb_operator", "pcb_submission_approver"}:
+            raise ValueError("unsupported database role for run repository")
         self._engine = engine
+        self._database_role = database_role
 
     def get_run_summary(self, run_id: UUID) -> Mapping[str, object] | None:
         """Return only lifecycle counters and budget state suitable for the owning submitter."""
         with self._engine.connect() as connection:
+            self._set_database_role(connection)
             status = connection.execute(
                 select(run.c.status).where(run.c.id == run_id)
             ).scalar_one_or_none()
@@ -101,6 +112,7 @@ class PostgresRunRepository:
         record_id = uuid4()
         try:
             with self._engine.begin() as connection:
+                self._set_database_role(connection)
                 claimed = connection.execute(
                     pg_insert(idempotency_record)
                     .values(
@@ -208,6 +220,11 @@ class PostgresRunRepository:
             mapped = map_database_error(error)
             raise mapped from None
 
+    def _set_database_role(self, connection: Connection) -> None:
+        if self._database_role is not None:
+            # The value is constrained to this module's fixed compile-time role allowlist.
+            connection.exec_driver_sql(f"SET LOCAL ROLE {self._database_role}")
+
     @staticmethod
     def _create_run_and_attempts(
         connection: Connection,
@@ -301,7 +318,7 @@ class PostgresRunRepository:
         if max_cost is not None:
             PostgresRunRepository._validate_approved_submission_plan(
                 connection,
-                campaign_row=campaign_row,
+                campaign_row=cast(Mapping[str, object], campaign_row),
                 run_config=config_document_value,
                 revision_id=model_revision_id,
                 endpoint_id=UUID(str(request["endpoint_registration_id"])),
@@ -423,7 +440,7 @@ class PostgresRunRepository:
         if not isinstance(model_doc, dict):
             raise InvalidState("pinned model configuration is unavailable")
         try:
-            model_config = ModelConfig.model_validate(model_doc)
+            model_config = ModelConfig.model_validate_json(json.dumps(model_doc), strict=True)
             bound = cost_bound(
                 model_config,
                 model_config.declared_capabilities,

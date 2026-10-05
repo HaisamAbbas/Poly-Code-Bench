@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from polycodebench_core.application_errors import (
@@ -26,7 +26,7 @@ from polycodebench_core.model_contracts import (
     ProviderKind,
 )
 from sqlalchemy import insert, select, update
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import DBAPIError
 
 from polycodebench_persistence.errors import map_database_error
@@ -37,8 +37,16 @@ NO_SECRET = "none"
 
 
 class PostgresEndpointRepository:
-    def __init__(self, engine: Engine) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        *,
+        database_role: Literal["pcb_endpoint_administrator"] | None = None,
+    ) -> None:
+        if database_role not in {None, "pcb_endpoint_administrator"}:
+            raise ValueError("unsupported database role for endpoint repository")
         self._engine = engine
+        self._database_role = database_role
 
     def register(
         self,
@@ -67,6 +75,7 @@ class PostgresEndpointRepository:
         endpoint_id = uuid4()
         try:
             with self._engine.begin() as connection:
+                self._set_database_role(connection)
                 connection.execute(
                     insert(endpoint_registration).values(
                         id=endpoint_id,
@@ -103,6 +112,7 @@ class PostgresEndpointRepository:
         now = datetime.now(UTC)
         try:
             with self._engine.begin() as connection:
+                self._set_database_role(connection)
                 row = (
                     connection.execute(
                         select(endpoint_registration)
@@ -161,6 +171,7 @@ class PostgresEndpointRepository:
 
     def _load(self, endpoint_id: UUID) -> tuple[RegisteredEndpoint, str]:
         with self._engine.connect() as connection:
+            self._set_database_role(connection)
             row = (
                 connection.execute(
                     select(endpoint_registration).where(endpoint_registration.c.id == endpoint_id)
@@ -182,6 +193,11 @@ class PostgresEndpointRepository:
             ),
         )
         return endpoint, str(row["approval_status"])
+
+    def _set_database_role(self, connection: Connection) -> None:
+        if self._database_role is not None:
+            # The value is constrained to this module's fixed compile-time role allowlist.
+            connection.exec_driver_sql(f"SET LOCAL ROLE {self._database_role}")
 
 
 def _audit(connection: Any, actor: str, action: str, endpoint_id: UUID) -> None:

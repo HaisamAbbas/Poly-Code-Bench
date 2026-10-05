@@ -158,7 +158,14 @@ def test_registered_plugins_publish_the_shared_profile_and_property_engine_contr
         assert hasattr(plugin_type, "language_profile")
         assert callable(plugin_type.property_engine)
         fixture_root = ROOT / "plugins/languages" / language / "fixtures"
-        assert not tuple(fixture_root.rglob("manifest.yaml"))
+        # JavaScript now has an authored package
+        # (docs/implementation/evidence/prompt-19-js-admission.json).
+        # TypeScript shares the JavaScript plugin and has no package of its own yet - which is what
+        # this asserts, so the gap stays explicit instead of being forgotten.
+        if language == "javascript":
+            assert (fixture_root / "top-words" / "manifest.yaml").is_file()
+        else:
+            assert not tuple(fixture_root.rglob("manifest.yaml"))
 
 
 def test_c_and_cpp_authored_tasks_validate_and_build_typed_plans() -> None:

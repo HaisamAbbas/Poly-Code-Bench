@@ -247,9 +247,7 @@ class CppLanguagePlugin:
         """Publish the language-neutral resolver/scorer under the shared protocol name."""
         return self._profile
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """C++ tasks use deterministic PCB_CHECK examples, not a generated property engine."""
         del task, raw
         return PropertyEngineIdentity(

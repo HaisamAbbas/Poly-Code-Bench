@@ -241,9 +241,7 @@ class RustLanguagePlugin:
     def language_profile(self) -> RustProfile:
         return self._profile
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """Rust evidence comes from fixed Cargo test cases, not a generated property engine."""
         del task, raw
         return PropertyEngineIdentity(

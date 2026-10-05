@@ -208,9 +208,7 @@ class PythonLanguagePlugin:
     def language_profile(self) -> PythonProfile:
         return self._profile
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """Report the Hypothesis/pytest versions and deterministic example policy from the run."""
         from polycodebench_lang_python.taskspec import oracle_from_mapping
 
@@ -236,7 +234,9 @@ class PythonLanguagePlugin:
                 break
         return PropertyEngineIdentity(
             engine="hypothesis" if version else "pytest",
-            engine_version=version or pytest_version or self._identities.runtime.tools.get("pytest"),
+            engine_version=version
+            or pytest_version
+            or self._identities.runtime.tools.get("pytest"),
             deterministic_policy="derandomized-fixed-example-budget",
             examples_pinned=examples,
         )

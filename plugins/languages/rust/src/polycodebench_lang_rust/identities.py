@@ -98,8 +98,10 @@ class ImageIdentities(_Strict):
             rule_bundle_digest=self.rule_bundle_digest,
             advisory_snapshot_digest=advisory_snapshot_digest,
             advisory_snapshot_state=(
-                "pinned" if advisory_snapshot_digest is not None
-                else "absent" if name == "dependency-check"
+                "pinned"
+                if advisory_snapshot_digest is not None
+                else "absent"
+                if name == "dependency-check"
                 else "not_applicable"
             ),
             parser_version=parser_version,

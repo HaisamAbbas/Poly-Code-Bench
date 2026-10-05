@@ -22,13 +22,13 @@ import yaml  # type: ignore[import-untyped]
 from polycodebench_core.models import Confidence, MeasurementStatus, Observation
 from polycodebench_plugins_api import (
     LanguageProfile,
-    PluginModel,
     ProfileItem,
-    ProfileItemResult as ItemResult,
     ProfileResult,
     RuleMapping,
 )
-from pydantic import Field
+from polycodebench_plugins_api import (
+    ProfileItemResult as ItemResult,
+)
 
 from polycodebench_lang_python.observations import issue_key
 

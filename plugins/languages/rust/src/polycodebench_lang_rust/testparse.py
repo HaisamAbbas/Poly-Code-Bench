@@ -49,9 +49,7 @@ _ERROR_AT = re.compile(
     re.MULTILINE,
 )
 _SIGNAL = re.compile(r"process didn't exit successfully: .*\(signal: (?P<signal>\d+)")
-_PANIC = re.compile(
-    r"thread '(?P<name>[^']*)' panicked at [^\r\n]*:\r?\n(?P<message>[^\r\n]*)"
-)
+_PANIC = re.compile(r"thread '(?P<name>[^']*)' panicked at [^\r\n]*:\r?\n(?P<message>[^\r\n]*)")
 _FAILURE_HEAD = re.compile(r"^---- (?P<name>\S+) stdout ----\r?$", re.MULTILINE)
 _NOISE = ("could not compile", "aborting due to", "test failed", "unused", "warning")
 

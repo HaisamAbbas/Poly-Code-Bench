@@ -1,6 +1,6 @@
 ﻿# Language extension coverage audit
 
-Date: 2026-10-03  
+Date: 2026-10-05
 Status: PARTIAL  
 Scope: Prompt 23 / WP-19. This report separates local contracts, historical container evidence, current development-sandbox admission, and missing task-backed paths. All authored fixture runs are internal engineering evidence, not model benchmark results.
 
@@ -8,7 +8,7 @@ Scope: Prompt 23 / WP-19. This report separates local contracts, historical cont
 
 Java, C, Go and JavaScript have current development-sandbox executable admissions. All eight language plugin entry points and image identity sets are recorded in the administrative allowlist; that registration does not certify end-to-end language support. The audit test confirms the JavaScript task manifest exists and TypeScript still has none.
 
-E2E-15 and E2E-35 remain partial. C++ has local task/profile/plan checks but no current sandbox admission. JavaScript and TypeScript have distinct profiles and images; JavaScript has one admitted fixture pack while TypeScript has no pack of its own. The Go admission is current, while its prior conformance report had one invalid benign-code sample; the corrected conformance run is in progress. Python and Rust evidence is reused from earlier prompts and is identified as historical.
+E2E-15 and E2E-35 remain partial. C++ has local task/profile/plan checks but no current sandbox admission. JavaScript and TypeScript have distinct profiles and images; JavaScript has one admitted fixture pack while TypeScript has no pack of its own. Go executable admission remains current, but the latest saved Go conformance artifact is 17/18 and fails the benign-sample gate. The fixture source was changed after the prior attempt; a corrected passing conformance result is not available. Python and Rust evidence is reused from earlier prompts and is identified as historical.
 
 ## Profiles, toolchains, image identities, and task counts
 
@@ -38,7 +38,7 @@ The Java variants are reference, wrong-ties, stream-alternative, null-unsafe, le
 | Python | Historical Prompt 10 report: 14/14 container conformance cases, docs/implementation/evidence/prompt-10-conformance.json. Reused; not represented as a fresh run against every current host-adapter edit. |
 | Rust | Historical Prompt 11 report: 16/16 container conformance cases, docs/implementation/evidence/prompt-11-conformance.json. Reused; not represented as a fresh run against every current host-adapter edit. |
 | JavaScript | Current Prompt 19 executable admission: 25/25 checks, six authored variants, both required analyzers measured, development sandbox; docs/implementation/evidence/prompt-19-js-admission.json. Quality admission and curator approval remain pending. |
-| Go | Current Prompt 22 executable admission: 24/24 checks, six variants, development sandbox, docs/implementation/evidence/prompt-22-go-admission.json. The prior 17/18 conformance artifact is preserved as prompt-22-go-conformance-first-attempt.json; its only failure was the benign sample calling Close on strings.Reader. The sample is corrected to use io.NopCloser and bufio.Reader, and the rerun is in progress. |
+| Go | Current Prompt 22 executable admission: 24/24 checks, six variants, development sandbox, docs/implementation/evidence/prompt-22-go-admission.json. Latest saved conformance: 17/18, `passed: false`, report digest `sha256:667ca47e3b463859198c89055264e9fb9908a56ba45cbdb752d483f3fcf0ecdc`. Its sole failure is `defer-close-wrapped-error-errors-is-and-joined-goroutine-are-not-penalised`: the clean-profile score is 10000 with no measured findings, but the candidate gate is `fail`. The earlier invalid Close-on-strings.Reader report remains preserved separately. |
 | Java | Current executable admission: 26/26 checks passed in the development sandbox. Five identical reference outcomes; the alternative passes; wrong-output and null variants fail; resource and unsafe-publication defects pass the correctness gate but fail their quality-only behavioral probes; the timeout is a candidate failure. All five required scans are measured on the reference. Evidence: docs/implementation/evidence/prompt-23-java-admission.json, package sha256:1c400f3de8065d6d1a332fc799bf8124b3c9b964922e85b4ff32c88eab25a762. The reference also records one unused-import finding; no Java scorecard or baseline-delta score is claimed here. |
 | C | Current executable admission: 29/29 checks passed in the pinned C images on 2026-10-03, nine authored variants, development sandbox. Five identical reference outcomes; the alternative passes; the faulty variant fails exactly its three declared cases; bounds, shift, leak, quality, timeout and compile-error variants all produce their intended outcome; all seven required scans are measured on the reference and the performance workload executes to a checksum. Evidence: docs/implementation/evidence/prompt-20-c-admission.json, report sha256:bd0cef3b6966b583a76bb010306b5bad44945197eaf16a9cce107ce63d345d0b. Quality admission is still `pending` and no C scorecard or baseline-delta score is claimed. |
 | C++ | Current task manifests and profiles pass local validation and typed plan tests. No current full sandbox admission is claimed. The C++ builder was changed to preserve every language in the allowlist; Cppcheck is verified as 2.10. |
@@ -57,7 +57,7 @@ The language audit also fixed a C++ image-builder defect: its allowlist writer r
 - Java performance is unmeasured. The modes, warmup counts and flags are fixed in the performance image and validated, but no performance workload or comparison was run.
 - Java quality admission remains pending; the fixture admission is executable implementation evidence, not curator approval or a score.
 - C++ needs real task admission. JavaScript has current executable admission, but its generic evaluator/scoring/replay, quality admission and curator freeze remain pending; TypeScript needs its own task pack and admission.
-- Go's corrected conformance rerun is in progress. Its image identity also has a gosec version-reporting gap and a go-vet metadata mismatch.
+- Go's latest saved conformance report fails 1/18 on the benign sample's candidate gate; it must be rerun in a working sandbox after the cause is fixed. Its image identity also has a gosec version-reporting gap and a go-vet metadata mismatch.
 - Python/Rust records are historical; current local integration contracts pass, but the full language-extension E2E matrix is still partial.
 - No model calls, production workers, human review, public deployment, or public ranking are represented.
 

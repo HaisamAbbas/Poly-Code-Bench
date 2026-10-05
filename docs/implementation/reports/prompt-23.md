@@ -14,14 +14,14 @@
    - After adding an explicit JS/TS zero-manifest guard, uv run pytest -q tests/test_language_extension_audit.py: PASS, 7 tests.
    - uv run pytest -q tests/test_c_plugin.py: PASS, 29 tests. uv run pytest -q tests/test_cpp_profile.py tests/test_cpp_locks.py: PASS, 78 tests.
    - Ruff over the changed Java/C++/audit paths: PASS. Ruff over scripts/go_conformance.py and tests/test_language_extension_audit.py: PASS. uv run mypy plugins/languages/java/src/polycodebench_lang_java: PASS, 16 source files. Java pinned recipe/JIT check: PASS.
-   - The prior Go conformance report was 17/18 because its benign sample called Close on strings.Reader. That invalid fixture is corrected and its full rerun is in progress; the prior report is preserved at docs/implementation/evidence/prompt-22-go-conformance-first-attempt.json.
+   - The prior Go conformance report was 17/18 because its benign sample called Close on strings.Reader and remains preserved at docs/implementation/evidence/prompt-22-go-conformance-first-attempt.json. The latest saved report is also 17/18: its sole failure is the benign sample candidate gate (`gate=fail score=10000 measured=[]`). The fixture changed, but no passing corrected rerun is available. Go admission remains separately 24/24.
    - Reused, explicitly historical evidence: Python 14/14 at docs/implementation/evidence/prompt-10-conformance.json and Rust 16/16 at docs/implementation/evidence/prompt-11-conformance.json. They were not rerun because the pinned image work is expensive; current adapter contracts are covered by the local suite.
-   - Not run: current C/C++ full sandbox admissions (local task/plan contracts pass); JavaScript/TypeScript task admission (both have zero task manifests); Java performance measurement (the fixture declares no performance workload); full-workspace pytest and production-worker execution. No model calls or publication occurred.
+   - Not run: current C++ full sandbox admission (local task/plan contracts pass); a TypeScript task admission (no TypeScript task pack exists); Java performance measurement (the fixture declares no performance workload); full-workspace pytest and production-worker execution. Current JavaScript (25/25) and C (29/29) development-sandbox admission artifacts are recorded separately in Prompt 19/20 reports. No model calls or publication occurred.
 
 3. Acceptance gates
    - Satisfied: PCB-23-1 pinned recipes, offline dependency closure and fixed JVM modes; PCB-23-2 Java analyzers and probe outcomes through shared runner/observation contracts; PCB-23-3 Java profile and all eight declared fixture variants admitted. Java executable evidence is development-sandbox evidence, not a scored benchmark result.
-   - Partial: PCB-23-4 / WP-19. C and C++ lack current sandbox admission; JavaScript and TypeScript lack task packs; the corrected Go conformance result is pending. Plugin registration and image identities are not counted as task conformance.
-   - E2E-15: PARTIAL. Historical Python/Rust evidence, current Go admission, and current Java admission exist; C/C++ execution and JS/TS task paths remain unverified.
+   - Partial: PCB-23-4 / WP-19. C++ lacks current sandbox admission; TypeScript lacks a task pack; latest Go conformance fails 1/18 although Go admission passes 24/24. Plugin registration and image identities are not counted as task conformance.
+   - E2E-15: PARTIAL. Historical Python/Rust evidence, current Go/JavaScript/C/Java admission exist; C++ execution and the TypeScript task path remain unverified, and the latest Go conformance artifact fails 1/18.
    - E2E-35: PARTIAL. Java's profile and contextual probes pass, and JS/TS applicability is distinct locally; required language/variant coverage is incomplete.
    - Phase 4 aggregate gate: BLOCKED on complete current language conformance.
    - Phase 2 aggregate gate remains BLOCKED: 144 expected attempts, 0 completed, 0 model-failed, 144 infrastructure/pre-dispatch-blocked, 0 provider deliveries. Missing provider authorization/configurations, an active hard budget, distinct calibrated judges, production workers and a run-start route remain recorded in prompt-17-preflight.json.
@@ -31,7 +31,7 @@
    - The Java reference reports one existing Checkstyle unused-import finding; admission preserves it as evidence. This fixture run does not generate a scorecard or claim a baseline-delta score.
 
 5. Exact next command or numbered prompt
-   - Next: Auxiliary R1 — finish current Go conformance rerun; obtain current C/C++ task admission; author JavaScript and TypeScript task packs and run them through admission, solve, grading, scoring and replay; then re-enter Prompt 23. Prompt 24 remains gated until WP-19 and the Phase 4 aggregate gate pass.
+   - Next: Auxiliary R1 — resolve and rerun the failed Go conformance case; obtain C++ task admission; author a TypeScript task pack and run the remaining language paths through admission, solve, grading, scoring and replay; then re-enter Prompt 23. Prompt 24 remains gated until WP-19 and the Phase 4 aggregate gate pass.
 
 ## Audit correction — 2026-10-05
 

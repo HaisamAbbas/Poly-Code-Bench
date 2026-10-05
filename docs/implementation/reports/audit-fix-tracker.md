@@ -13,8 +13,8 @@ Started 2026-10-05 after the cross-prompt audit. Fix items in this order, verify
 - [x] Comparison query scope: `GET /compare` now labels release aggregate metrics/deltas separately from the common-task intersection, returns the applied language/family/difficulty filters, and the page renders that API scope. Focused API/projection tests pass.
 - [x] Strict publication validation: `PublicationModel` retains strict scalar validation and converts JSON arrays only for tuple-annotated fields, including nested tuple collections. A release-content JSON round trip and scalar rejection test pass; publication aggregation and public projection tests pass.
 - [x] Prompt 09 budget consistency: the solve loader requires an installed run profile whose full budget exactly matches the protocol; all four configured protocols have named profiles. Missing/mismatched-profile regressions pass. Database-backed loader cases remain skipped without `PCB_TEST_DATABASE_URL`.
-- [ ] Submission identity: the public request page still relies on a pasted bearer token rather than an established sign-in flow.
-- [ ] Implementation ledgers: reconcile phase/prompt statuses, missing Prompt 19/20/29 reports, contradictory language coverage, stale tickets/E2E references, and claims unsupported by fresh runs.
+- [x] Submission identity: public requests now use verified generic OIDC sessions and a submitter-only BFF assertion; focused API, browser, build, lint and type checks passed. PostgreSQL integration and production OIDC deployment remain external gates.
+- [x] Implementation ledgers: added Prompt 19/20/29 reports, synchronized current language coverage and Phase 4 status, updated Prompt 22/23 and PCB-19/22/23/29 references, and retained the historical Prompt 23 audit JSON as an explicitly superseded snapshot. The latest Go conformance failure is reported as failed, not as a pending rerun.
 - [ ] Fresh aggregate verification: rerun the affected E2E, database, build and deployment gates after code fixes; current audit verification was static/focused only.
 
 ## External blockers to retain

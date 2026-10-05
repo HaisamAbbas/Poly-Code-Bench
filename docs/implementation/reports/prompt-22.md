@@ -102,6 +102,11 @@ stages and on curator approval, not on anything in this prompt's scope.
 
 - `docs/implementation/evidence/prompt-22-go-conformance.json` — seven conformance categories plus
   the instrumentation-lane case.
+- Audit status (2026-10-05): the latest saved conformance artifact is 17/18, `passed: false`,
+  digest `sha256:667ca47e3b463859198c89055264e9fb9908a56ba45cbdb752d483f3fcf0ecdc`. Its sole
+  failure is the benign sample candidate gate (`gate=fail score=10000 measured=[]`). The earlier
+  failure from calling `Close` on `strings.Reader` remains preserved in
+  `prompt-22-go-conformance-first-attempt.json`; the changed sample has no saved passing rerun.
 - `tests/test_go_plugin.py` `test_a_clean_staticcheck_run_is_measured_zero_not_missing` and
   `test_an_analyzer_that_died_before_reporting_is_still_missing` — mutation-checked: removing the
   `empty_report` handling from the parsers makes the first fail.

@@ -61,7 +61,7 @@ EXPECTED_TOOLS = {
         "staticcheck",
         "gosec",
     ),
-    "performance": ("go-build", "go-test", "gofmt"),
+    "performance": ("go-build", "go-test", "gofmt", "go-vet"),
 }
 ALL_TOOLS = ("go-build", "go-test", "gofmt", "go-vet", "go-test-race", "staticcheck", "gosec")
 IGNORED_DIRS = frozenset({"__pycache__", ".git", "target"})
@@ -160,9 +160,11 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
         "go-build": ["go", "version"],
         "go-test": ["go", "version"],
         "gofmt": ["gofmt", "-h"],
-        "go-vet": ["go", "tool", "vet", "-h"],
+        "go-vet": ["go", "tool", "vet", "-V=full"],
         "staticcheck": ["staticcheck", "-version"],
-        "gosec": ["gosec", "--version"],
+        # gosec's CLI reports `Version: dev` for module installs. Go embeds the exact module
+        # version in the executable's build info, which is the version bound to this image.
+        "gosec": ["go", "version", "-m", "/opt/pcb/bin/gosec"],
     }[tool]
     result = run(
         [
@@ -182,6 +184,9 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
     text = (result.stdout + result.stderr).strip()
     if not text:
         return "unknown"
+    if tool == "gosec":
+        match = re.search(r"(?m)^\s*mod\s+github\.com/securego/gosec/v2\s+(v\S+)", text)
+        return match.group(1) if match else "unknown"
     if tool == "gofmt":
         # gofmt has no version flag: the image digest plus the recorded base digest is its
         # identity, and its presence is proven by the flag being accepted.
@@ -230,6 +235,28 @@ def require_distinct(records: dict[str, dict[str, Any]]) -> None:
     problems: list[str] = []
     evaluator_tools = records["evaluator"]["tools"]
     assert isinstance(evaluator_tools, dict)
+    expected_gosec = next(
+        (
+            component.partition(":")[2]
+            for component in recipe_components()["evaluator"]
+            if component.startswith("gosec:")
+        ),
+        None,
+    )
+    if not expected_gosec or evaluator_tools.get("gosec") != expected_gosec:
+        problems.append(
+            f"evaluator gosec identity {evaluator_tools.get('gosec')!r} does not match "
+            f"the pinned module {expected_gosec!r}"
+        )
+    for recipe in RECIPES:
+        tools = records[recipe]["tools"]
+        assert isinstance(tools, dict)
+        if "go-vet" in EXPECTED_TOOLS[recipe] and tools.get("go-vet") in {
+            None,
+            "absent",
+            "unknown",
+        }:
+            problems.append(f"{recipe} image does not identify its bundled go vet tool")
     for tool in ("staticcheck", "gosec"):
         if evaluator_tools.get(tool) == "absent":
             problems.append(f"evaluator image cannot run {tool}")

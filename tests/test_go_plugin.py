@@ -14,6 +14,7 @@ from polycodebench_core.identity import new_entity_id
 from polycodebench_core.models import Candidate, MeasurementStatus
 from polycodebench_lang_go import GoLanguagePlugin
 from polycodebench_lang_go import plans as go_plans
+from polycodebench_lang_go.identities import load_identities
 from polycodebench_lang_go.taskspec import discover_cases
 from polycodebench_plugins_api import AnalysisContext, DictArtifactReader
 
@@ -63,6 +64,13 @@ def concurrent_view(plugin: GoLanguagePlugin, view):  # type: ignore[no-untyped-
 
 
 # ------------------------------------------------------------------------------ validation
+
+
+def test_recorded_image_tools_identify_go_vet_and_gosec() -> None:
+    identities = load_identities()
+    for record in identities.images.values():
+        assert record.tools["go-vet"] == record.go
+    assert identities.evaluator.tools["gosec"] == "v2.29.0"
 
 
 def test_the_authored_fixture_validates(plugin: GoLanguagePlugin) -> None:

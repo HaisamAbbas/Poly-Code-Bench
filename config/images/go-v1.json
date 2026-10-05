@@ -47,9 +47,9 @@
         "go-build": "1.26.8",
         "go-test": "1.26.8",
         "go-test-race": "supported",
-        "go-vet": "absent",
+        "go-vet": "1.26.8",
         "gofmt": "bundled-abe4f87f354c",
-        "gosec": "Version: dev",
+        "gosec": "v2.29.0",
         "staticcheck": "2026.2.1"
       }
     },
@@ -65,7 +65,8 @@
       "expected_tools": [
         "go-build",
         "go-test",
-        "gofmt"
+        "gofmt",
+        "go-vet"
       ],
       "go": "1.26.8",
       "guest_and_rules_digest": "sha256:cb947600f7250261c96641321b4fd154f1e763703e321e1917ba172805d8bab1",
@@ -78,7 +79,7 @@
         "go-build": "1.26.8",
         "go-test": "1.26.8",
         "go-test-race": "supported",
-        "go-vet": "absent",
+        "go-vet": "1.26.8",
         "gofmt": "bundled-abe4f87f354c",
         "gosec": "absent",
         "staticcheck": "absent"
@@ -112,7 +113,7 @@
         "go-build": "1.26.8",
         "go-test": "1.26.8",
         "go-test-race": "supported",
-        "go-vet": "absent",
+        "go-vet": "1.26.8",
         "gofmt": "bundled-abe4f87f354c",
         "gosec": "absent",
         "staticcheck": "absent"

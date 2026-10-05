@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -70,6 +71,49 @@ def sha256_file(path: Path) -> str:
 
 def tool_version(tag: str, digest: str, argv: list[str]) -> str:
     """A version reported by a built image itself, so the record comes from the real artifact."""
+    if argv == ["staticcheck", "-version"]:
+        result = run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--pull=never",
+                "--network",
+                "none",
+                f"{tag}@{digest}",
+                "/opt/pcb/tools/staticcheck",
+                "-version",
+            ],
+            check=False,
+        )
+        if result.returncode != 0:
+            return "absent"
+        match = re.search(r"\bstaticcheck\s+(\d+\.\d+\.\d+)", result.stdout)
+        return match.group(1) if match else "unknown"
+    if argv == ["gosec", "--version"]:
+        result = run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--pull=never",
+                "--network",
+                "none",
+                f"{tag}@{digest}",
+                "go",
+                "version",
+                "-m",
+                "/opt/pcb/tools/gosec",
+            ],
+            check=False,
+        )
+        if result.returncode != 0:
+            return "absent"
+        match = re.search(
+            r"(?m)^\s*mod\s+github\.com/securego/gosec/v2\s+(v\S+)",
+            result.stdout + result.stderr,
+        )
+        return match.group(1) if match else "unknown"
     result = run(
         ["docker", "run", "--rm", "--pull=never", "--network", "none", f"{tag}@{digest}", *argv],
         check=False,

@@ -20,8 +20,8 @@
     "tag": "pcb-go-components:v1",
     "tools": {
       "go": "go version go1.26.8 linux/amd64",
-      "gosec": "absent",
-      "staticcheck": "absent"
+      "gosec": "v2.29.0",
+      "staticcheck": "2026.2.1"
     }
   },
   "kind": "go_components_images",

@@ -2,14 +2,18 @@
   "name": "@polycodebench/web",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=24 <25" },
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "build": "next build",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:prompt31": "playwright test --config=playwright.prompt31.config.ts",
     "test:e2e:prompt32": "playwright test --config=playwright.prompt32.config.ts",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "api:types": "openapi-typescript ../../packages/api/openapi.v1.json --output src/lib/generated-public-api.ts --immutable --default-non-nullable=false",
+    "api:types:check": "openapi-typescript ../../packages/api/openapi.v1.json --output src/lib/generated-public-api.ts --immutable --default-non-nullable=false --check"
   },
   "dependencies": {
     "echarts": "6.1.0",
@@ -25,6 +29,7 @@
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.1",
     "eslint-config-next": "16.3.7",
+    "openapi-typescript": "7.13.0",
     "typescript": "5.9.3"
   }
 }

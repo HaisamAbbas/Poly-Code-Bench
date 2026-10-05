@@ -9,6 +9,10 @@
     "contracts:build": "pnpm --filter @polycodebench/contracts build",
     "contracts:test": "pnpm --filter @polycodebench/contracts test:contracts",
     "contracts:typecheck": "pnpm --filter @polycodebench/contracts typecheck",
+    "api:types": "pnpm api:openapi:generate && pnpm --filter @polycodebench/web api:types",
+    "api:types:check": "pnpm api:openapi:check && pnpm --filter @polycodebench/web api:types:check",
+    "api:openapi:generate": "uv run --locked --all-packages python scripts/export_public_api_openapi.py",
+    "api:openapi:check": "uv run --offline --locked --all-packages python scripts/export_public_api_openapi.py --check",
     "lint": "pnpm --filter @polycodebench/web lint",
     "typecheck": "pnpm --filter @polycodebench/web typecheck"
   }

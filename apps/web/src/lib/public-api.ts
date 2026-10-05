@@ -1,373 +1,69 @@
-export type MetricStatus =
-  | "measured"
-  | "gated_zero"
-  | "not_applicable"
-  | "insufficient_information"
-  | "missing"
-  | "needs_review";
+import type { components, paths } from "./generated-public-api";
 
-export type PublicMetric = {
-  readonly kind: "public_metric";
-  readonly metric_id: string;
-  readonly label: string;
-  readonly unit: string;
-  readonly direction: "higher" | "lower";
-  readonly status: MetricStatus;
-  readonly value: string | null;
-  readonly interval_low: string | null;
-  readonly interval_high: string | null;
-  readonly coverage: string | null;
-  readonly conditional_on_pass: boolean;
-  readonly reason: string | null;
-};
+type ApiSchema<Name extends keyof components["schemas"]> = components["schemas"][Name];
+type PublicPath = Exclude<
+  Extract<keyof paths, `/v1/${string}`>,
+  `/v1/admin/${string}` | `/v1/model-submissions${string}`
+>;
+type GetOperation<Path extends keyof paths> = paths[Path] extends { readonly get: infer Operation }
+  ? Operation
+  : never;
+type SuccessEnvelope<Operation> = Operation extends { readonly responses: infer Responses }
+  ? Responses extends { readonly 200: infer Response }
+    ? Response extends { readonly content: { readonly "application/json": infer Body } }
+      ? Body
+      : never
+    : never
+  : never;
+type PublicReadEnvelope = SuccessEnvelope<GetOperation<PublicPath>>;
+type SubmissionEnvelope = ApiSchema<"ApiEnvelope_ModelSubmission_">;
 
-export type Coverage = {
-  readonly kind: "coverage";
-  readonly tasks: number;
-  readonly samples: number;
-  readonly independent_clusters: number;
-};
-
-export type DimensionBreakdown = {
-  readonly kind: "dimension_breakdown";
-  readonly dimension: string;
-  readonly metric: PublicMetric;
-  readonly applicable_tasks: number;
-  readonly opportunity_count: number;
-};
-
-export type LanguageEntryProfile = {
-  readonly kind: "language_entry_profile";
-  readonly language_id: string;
-  readonly model_config_id: string;
-  readonly label: string;
-  readonly dimensions: readonly DimensionBreakdown[];
-  readonly diagnostics: readonly DimensionBreakdown[];
-  readonly tool_coverage: readonly (readonly [string, string])[];
-  readonly evidence_url: string;
-};
-
-export type MetricDefinition = {
-  readonly kind: "metric_definition";
-  readonly metric_id: string;
-  readonly label: string;
-  readonly unit: string;
-  readonly direction: "higher" | "lower";
-  readonly domain: readonly [string, string];
-  readonly applicability_rule: string;
-  readonly sample_aggregation: "mean";
-  readonly task_aggregation: "weighted_mean" | "micro_f1";
-  readonly missingness_policy: "block";
-  readonly formatter: string;
-  readonly uncertainty_method: string;
-  readonly source_score_item_ids: readonly string[];
-  readonly conditional_on_pass: boolean;
-};
-
-export type ReleaseSummary = {
-  readonly kind: "release_summary";
-  readonly release_id: string;
-  readonly version: number;
-  readonly state: "published" | "withdrawn";
-  readonly scope: "exploratory" | "ranked_eligible";
-  readonly fixture_kind: string;
-  readonly cohort_digest: string;
-  readonly published_at: string | null;
-  readonly limitations: readonly string[];
-  readonly withdrawal_reason: string | null;
-  readonly replacement_release_id: string | null;
-  readonly methodology_url: string;
-  readonly methodology_version: string;
-};
-
-export type LeaderboardEntry = {
-  readonly kind: "leaderboard_entry";
-  readonly model_config_id: string;
-  readonly label: string;
-  readonly rank: number | null;
-  readonly ranking_label: "exploratory" | "ranked_eligible";
-  readonly metrics: readonly PublicMetric[];
-  readonly coverage: Coverage;
-  readonly languages: readonly string[];
-  readonly run_mode: string | null;
-  readonly budget_profile_id: string | null;
-  readonly generation_cost_micros: string | null;
-  readonly latency_ms_p50: number | null;
-  readonly latency_ms_p95: number | null;
-  readonly evidence_url: string;
-};
-
+export type MetricStatus = ApiSchema<"PublicMetric">["status"];
+export type PublicMetric = ApiSchema<"PublicMetric">;
+export type Coverage = ApiSchema<"Coverage">;
+export type DimensionBreakdown = ApiSchema<"DimensionBreakdown">;
+export type LanguageEntryProfile = ApiSchema<"LanguageEntryProfile">;
+export type MetricDefinition = ApiSchema<"MetricDefinition">;
+export type ReleaseSummary = ApiSchema<"ReleaseSummary">;
+export type LeaderboardEntry = ApiSchema<"LeaderboardEntry">;
 export type LeaderboardData = {
   readonly release: ReleaseSummary;
   readonly entries: readonly LeaderboardEntry[];
   readonly languages: readonly string[];
   readonly metric_definitions: readonly MetricDefinition[];
 };
-
-export type LanguageProfile = {
-  readonly kind: "language_profile";
-  readonly language_id: string;
-  readonly release_id: string;
-  readonly dimensions: readonly DimensionBreakdown[];
-  readonly diagnostics: readonly DimensionBreakdown[];
-  readonly tool_coverage: readonly (readonly [string, string])[];
-  readonly metrics: readonly PublicMetric[];
-  readonly coverage: Coverage | null;
-  readonly entries: readonly LanguageEntryProfile[];
-};
-
-export type ModelProfile = {
-  readonly kind: "model_profile";
-  readonly model_config_id: string;
-  readonly label: string;
-  readonly release_id: string;
-  readonly capabilities: readonly string[];
-  readonly dimensions: readonly DimensionBreakdown[];
-  readonly language_profiles: readonly LanguageEntryProfile[];
-  readonly languages: readonly string[];
-  readonly run_mode: string | null;
-  readonly budget_profile_id: string | null;
-  readonly generation_cost_micros: string | null;
-  readonly latency_ms_p50: number | null;
-  readonly latency_ms_p95: number | null;
-  readonly metrics: readonly PublicMetric[];
-  readonly coverage: Coverage | null;
-  readonly evidence_url: string;
-};
-
+export type LanguageProfile = ApiSchema<"LanguageProfile">;
+export type ModelProfile = ApiSchema<"ModelProfile">;
 export type LanguageData = {
   readonly release: ReleaseSummary;
   readonly profile: LanguageProfile;
   readonly entries: readonly LeaderboardEntry[];
   readonly metric_definitions: readonly MetricDefinition[];
 };
-
 export type ModelData = {
   readonly release: ReleaseSummary;
   readonly profile: ModelProfile;
   readonly metric_definitions: readonly MetricDefinition[];
 };
-
-export type ApiEnvelope<T> = {
+export type ApiEnvelope<T> = Omit<ApiSchema<"ApiEnvelope_ReleaseSummary_">, "data"> & {
   readonly data: T;
-  readonly meta: {
-    readonly request_id?: string;
-    readonly release_id?: string | null;
-    readonly release_digest: string;
-    readonly exploratory?: boolean | null;
-    readonly total?: number | null;
-    readonly returned?: number | null;
-    readonly limit?: number | null;
-    readonly next_cursor?: string | null;
-    readonly sort?: string | null;
-    readonly filters?: readonly string[];
-    readonly current_release_id?: string | null;
-    readonly registry?: {
-      readonly policy_digest: string;
-      readonly definitions: readonly MetricDefinition[];
-    } | null;
-  };
 };
-
-export type Incompatibility = {
-  readonly kind: "incompatibility";
-  readonly code: string;
-  readonly model_config_id: string | null;
-  readonly detail: string;
-};
-
-export type ComparisonTaskRef = {
-  readonly kind: "comparison_task_ref";
-  readonly task_id: string;
-  readonly task_version: number;
-  readonly language_id: string;
-  readonly family: string;
-  readonly difficulty: string;
-  readonly scorecards: readonly {
-    readonly kind: "comparison_scorecard_ref";
-    readonly model_config_id: string;
-    readonly scorecard_id: string;
-    readonly evidence_url: string;
-  }[];
-};
-
-export type PairedTaskDelta = {
-  readonly kind: "paired_task_delta";
-  readonly task_id: string;
-  readonly task_version: number;
-  readonly metric_id: string;
-  readonly label: string;
-  readonly baseline_model_config_id: string;
-  readonly candidate_model_config_id: string;
-  readonly baseline_scorecard_id: string;
-  readonly candidate_scorecard_id: string;
-  readonly baseline_value: string | null;
-  readonly candidate_value: string | null;
-  readonly delta_value: string | null;
-  readonly interval_low: string | null;
-  readonly interval_high: string | null;
-  readonly interval_method: "reported_interval_difference_bounds" | "unavailable";
-  readonly status: MetricStatus;
-  readonly reason: string | null;
-};
-
-export type PairedDelta = {
-  readonly kind: "paired_delta";
-  readonly metric_id: string;
-  readonly label: string;
-  readonly baseline_model_config_id: string;
-  readonly candidate_model_config_id: string;
-  readonly delta_value: string | null;
-  readonly interval_low: string | null;
-  readonly interval_high: string | null;
-  readonly interval_method: "reported_interval_difference_bounds" | "unavailable";
-  readonly status: MetricStatus;
-  readonly reason: string | null;
-};
-
-export type ComparisonResult = {
-  readonly kind: "comparison_result";
-  readonly release_id: string;
-  readonly cohort_digest: string;
-  readonly scope: "exploratory" | "ranked_eligible";
-  readonly release_metric_scope: "full_release_aggregate";
-  readonly task_pair_scope: "common_task_intersection_after_filters";
-  readonly applied_filters: {
-    readonly kind: "comparison_filters";
-    readonly languages: readonly string[];
-    readonly families: readonly string[];
-    readonly difficulties: readonly string[];
-  };
-  readonly common_tasks: number;
-  readonly common_independent_clusters: number | null;
-  readonly entries: readonly LeaderboardEntry[];
-  readonly deltas: readonly PairedDelta[];
-  readonly common_task_refs: readonly ComparisonTaskRef[];
-  readonly paired_task_deltas: readonly PairedTaskDelta[];
-  readonly incompatibilities: readonly Incompatibility[];
-  readonly limitations: readonly string[];
-};
-
-export type TaskSummary = {
-  readonly kind: "task_summary";
-  readonly task_id: string;
-  readonly version: number;
-  readonly language_id: string;
-  readonly family: string;
-  readonly difficulty: string;
-  readonly statement_summary: string;
-  readonly evidence_url: string;
-  readonly source_version_count: number;
-  readonly patch_count: number;
-  readonly finding_count: number;
-};
-
-export type PublicTaskContent = {
-  readonly kind: "public_task_content";
-  readonly task_id: string;
-  readonly task_version: number;
-  readonly statement: string;
-  readonly source_versions: readonly {
-    readonly source_id: string;
-    readonly version_label: string;
-    readonly path: string;
-    readonly language_id: string;
-    readonly source_text: string;
-  }[];
-  readonly submitted_patches: readonly {
-    readonly patch_id: string;
-    readonly model_config_id: string;
-    readonly scorecard_id: string;
-    readonly summary: string;
-    readonly diff_text: string;
-  }[];
-  readonly tool_findings: readonly {
-    readonly finding_id: string;
-    readonly model_config_id: string;
-    readonly scorecard_id: string;
-    readonly source_id: string;
-    readonly tool_id: string;
-    readonly rule_id: string;
-    readonly severity: "critical" | "high" | "medium" | "low" | "info";
-    readonly line: number | null;
-    readonly message: string;
-  }[];
-};
-
-export type PublicScorecard = {
-  readonly kind: "public_scorecard";
-  readonly scorecard_id: string;
-  readonly release_id: string;
-  readonly model_config_id: string;
-  readonly task_id: string;
-  readonly task_version: number;
-  readonly formula_version: string;
-  readonly policy_digest: string;
-  readonly gating_status: "scored" | "gated_zero" | "needs_review";
-  readonly metrics: readonly PublicMetric[];
-  readonly contributions: readonly {
-    readonly item_id: string;
-    readonly dimension: string;
-    readonly nominal_weight_bp: number;
-    readonly effective_weight_bp: number;
-    readonly presentation_weight_bp: number;
-    readonly arithmetic: string;
-    readonly evidence_refs: readonly string[];
-    readonly value: string | null;
-  }[];
-  readonly evidence_url: string;
-  readonly redacted_evidence_count: number;
-};
-
-export type Methodology = {
-  readonly kind: "methodology";
-  readonly version: string;
-  readonly methods: readonly string[];
-  readonly formulas: readonly string[];
-  readonly tools: readonly string[];
-  readonly deviations: readonly string[];
-  readonly native_benchmarks: readonly (readonly [string, string])[];
-  readonly correction_history: readonly string[];
-  readonly limitations: readonly string[];
-};
-
+export type Incompatibility = ApiSchema<"Incompatibility">;
+export type ComparisonTaskRef = ApiSchema<"ComparisonTaskRef">;
+export type PairedTaskDelta = ApiSchema<"PairedTaskDelta">;
+export type PairedDelta = ApiSchema<"PairedDelta">;
+export type ComparisonResult = ApiSchema<"ComparisonResult">;
+export type TaskSummary = ApiSchema<"TaskSummary">;
+export type PublicTaskContent = ApiSchema<"PublicTaskContent">;
+export type PublicScorecard = ApiSchema<"PublicScorecard">;
+export type Methodology = ApiSchema<"Methodology">;
 export type ReleaseContext = {
   readonly releaseId: string;
   readonly summary: ReleaseSummary;
   readonly releases: readonly ReleaseSummary[];
 };
-
-export type ModelSubmissionRequest = {
-  readonly kind: "model_submission_input";
-  readonly model_name: string;
-  readonly provider: string;
-  readonly organization?: string;
-  readonly contact_email: string;
-  readonly endpoint_url: string;
-  readonly source_url: string;
-  readonly source_license: string;
-  readonly permission_attested: boolean;
-};
-
-export type ModelSubmissionStatus = {
-  readonly kind: "model_submission";
-  readonly submission_id: string;
-  readonly status: "pending" | "rejected" | "approved";
-  readonly model_name: string;
-  readonly provider: string;
-  readonly organization: string | null;
-  readonly contact_email: string;
-  readonly endpoint_url: string;
-  readonly source_url: string;
-  readonly source_license: string;
-  readonly permission_attested: boolean;
-  readonly submitted_at: string;
-  readonly row_version: number;
-  readonly rejection_reason: string | null;
-  readonly resulting_run_id: string | null;
-  readonly run_status: string | null;
-};
-
+export type ModelSubmissionRequest = ApiSchema<"ModelSubmissionInput">;
+export type ModelSubmissionStatus = ApiSchema<"ModelSubmission">;
 export async function loadReleaseContext(requestedRelease?: string): Promise<Resource<ReleaseContext>> {
   const index = await publicApi<ApiEnvelope<readonly ReleaseSummary[]>>("/releases?limit=200");
   if (index.state !== "ready") return index;
@@ -435,7 +131,7 @@ export async function loadModelSubmissionStatus(
   );
 }
 
-async function submissionApi<T>(
+async function submissionApi<T extends SubmissionEnvelope>(
   path: string,
   init: RequestInit,
 ): Promise<Resource<T>> {
@@ -491,7 +187,7 @@ export function combineResources<A, B>(first: Resource<A>, second: Resource<B>):
 
 const apiBase = (process.env.PCB_PUBLIC_API_URL ?? "http://127.0.0.1:8000/v1").replace(/\/$/, "");
 
-export async function publicApi<T>(path: string): Promise<Resource<T>> {
+export async function publicApi<T extends PublicReadEnvelope>(path: string): Promise<Resource<T>> {
   try {
     const response = await fetch(`${apiBase}${path}`, {
       cache: "no-store",

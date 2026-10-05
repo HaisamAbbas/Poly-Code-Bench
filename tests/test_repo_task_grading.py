@@ -140,9 +140,7 @@ def test_patch_and_workspace_artifacts_grade_identically() -> None:
 
 
 def test_patch_that_touches_protected_or_unknown_paths_is_rejected() -> None:
-    protected = reference_patch("ini-interpolate").replace(
-        "cfgkit/loader.py", "cfgkit/errors.py"
-    )
+    protected = reference_patch("ini-interpolate").replace("cfgkit/loader.py", "cfgkit/errors.py")
     with pytest.raises(CandidateRejected, match="protected"):
         grade_patch("ini-interpolate", protected)
     outside = reference_patch("ini-interpolate").replace("cfgkit/loader.py", "setup.py")
@@ -195,9 +193,7 @@ def test_judge_backed_gate_criterion_can_fail_but_not_pass_by_override() -> None
         "history-group",
         "quality-defective",
         {
-            item.item_id: (
-                "0.000000" if item.item_id == "minimal_relevant_scope" else "1.000000"
-            )
+            item.item_id: ("0.000000" if item.item_id == "minimal_relevant_scope" else "1.000000")
             for item in rubric().items
             if item.dimension.value == "code_quality"
         },

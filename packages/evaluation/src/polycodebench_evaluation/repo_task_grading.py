@@ -464,9 +464,7 @@ def assemble_workspace(
         raise CandidateRejected(f"unsupported submission kind {submission_kind!r}")
 
     changed = {
-        path
-        for path in set(merged) | set(baseline)
-        if merged.get(path) != baseline.get(path)
+        path for path in set(merged) | set(baseline) if merged.get(path) != baseline.get(path)
     }
     return WorkspaceResult(
         files=merged,
@@ -475,17 +473,14 @@ def assemble_workspace(
     )
 
 
-def _check_path(
-    path: str, allowed_paths: Sequence[str], protected_paths: Sequence[str]
-) -> None:
+def _check_path(path: str, allowed_paths: Sequence[str], protected_paths: Sequence[str]) -> None:
     if any(
         path == protected or path.startswith(protected.rstrip("/") + "/")
         for protected in protected_paths
     ):
         raise CandidateRejected(f"{path}: protected path may not be changed")
     if not any(
-        path == allowed or path.startswith(allowed.rstrip("/") + "/")
-        for allowed in allowed_paths
+        path == allowed or path.startswith(allowed.rstrip("/") + "/") for allowed in allowed_paths
     ):
         raise CandidateRejected(f"{path}: outside the allowed change set")
 
@@ -581,8 +576,7 @@ def run_hidden_acceptance(
             harness_ok=False,
             harness_detail=(
                 "acceptance runner reported a different case inventory than the frozen "
-                "contract: "
-                + repr(sorted(reported))
+                "contract: " + repr(sorted(reported))
             ),
         )
     return AcceptanceRun(cases=tuple(cases), harness_ok=True)
@@ -767,9 +761,7 @@ def grade_repo_task(
             expected_case_ids=binding.hidden_case_ids,
         )
     else:
-        run = acceptance(
-            workspace=workspace.files, expected_case_ids=binding.hidden_case_ids
-        )
+        run = acceptance(workspace=workspace.files, expected_case_ids=binding.hidden_case_ids)
 
     means = judged_means(judgement) if judgement is not None else None
     criteria = evaluate_criteria(authoring, run, means=means)
@@ -778,9 +770,7 @@ def grade_repo_task(
     judge_incomplete: tuple[str, ...] = ()
     if judgement is not None:
         judge_failing, judge_incomplete = judge_gate_failures(criteria, means or {})
-    gate = combine_gate(
-        executable_status, executable_conditions, judge_failing, judge_incomplete
-    )
+    gate = combine_gate(executable_status, executable_conditions, judge_failing, judge_incomplete)
 
     if judgement is not None:
         disposition: JudgeDisposition = "used"

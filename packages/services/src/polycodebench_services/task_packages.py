@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_core.identity import validate_relative_path
 from polycodebench_core.models import (
@@ -26,7 +26,7 @@ from polycodebench_core.models import (
 )
 from polycodebench_core.tasksets import package_snapshot_digest
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from yaml.constructor import ConstructorError  # type: ignore[import-untyped]
+from yaml.constructor import ConstructorError
 
 _SECRET_MARKERS = (
     re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
@@ -36,7 +36,7 @@ _SECRET_MARKERS = (
 _HIDDEN_ROOTS = {"hidden", "admission"}
 
 
-class _UniqueKeyLoader(yaml.SafeLoader):  # type: ignore[misc]
+class _UniqueKeyLoader(yaml.SafeLoader):
     pass
 
 
@@ -46,7 +46,9 @@ def _construct_unique_mapping(
     loader.flatten_mapping(node)
     result: dict[object, object] = {}
     for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
+        # PyYAML's own `construct_object` is untyped in types-PyYAML; the loader is our subclass and
+        # the call is correct, so the suppression names exactly this one untyped boundary.
+        key: object = loader.construct_object(key_node, deep=deep)  # type: ignore[no-untyped-call]
         if key in result:
             raise ConstructorError(
                 "while parsing task manifest",
@@ -54,7 +56,7 @@ def _construct_unique_mapping(
                 f"duplicate key: {key!r}",
                 key_node.start_mark,
             )
-        result[key] = loader.construct_object(value_node, deep=deep)
+        result[key] = loader.construct_object(value_node, deep=deep)  # type: ignore[no-untyped-call]
     return result
 
 
@@ -111,9 +113,9 @@ class FixtureExpectation(StrictModel):
 
     failing_cases: tuple[str, ...] = ()
     expected_issue_families: tuple[str, ...] = ()
-    expected_failure: Literal[
-        "wrong_behavior", "candidate_timeout", "candidate_crash", "build_error"
-    ] | None = None
+    expected_failure: (
+        Literal["wrong_behavior", "candidate_timeout", "candidate_crash", "build_error"] | None
+    ) = None
     # Analyzer id -> finding families that analyzer must report, e.g. ``{asan: (resource-leak,)}``.
     expected_lane_findings: dict[str, tuple[str, ...]] = Field(default_factory=dict)
     # Some language plugins refine the shared fixture role (for example Java's null, resource,

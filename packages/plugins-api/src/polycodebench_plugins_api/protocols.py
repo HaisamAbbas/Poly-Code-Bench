@@ -112,9 +112,7 @@ class ExecutableLanguagePlugin(LanguagePlugin, Protocol):
         """The diagnostic/idiom profile this identity publishes: one attribute, any language."""
         ...
 
-    def property_engine(
-        self, task: FrozenTask, raw: Mapping[str, bytes]
-    ) -> PropertyEngineIdentity:
+    def property_engine(self, task: FrozenTask, raw: Mapping[str, bytes]) -> PropertyEngineIdentity:
         """Identity of the property-test engine that produced ``raw`` for ``task``.
 
         Stated by the plugin rather than derived by the supervisor from ``primary_language``, so

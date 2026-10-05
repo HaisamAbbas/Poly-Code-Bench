@@ -191,9 +191,7 @@ class RepoTaskAuthoring(StrictModel):
             for criterion in self.acceptance
         ):
             raise ValueError("a repository task needs at least one mandatory executable criterion")
-        cases = [
-            case_id for criterion in self.acceptance for case_id in criterion.case_ids
-        ]
+        cases = [case_id for criterion in self.acceptance for case_id in criterion.case_ids]
         if len(set(cases)) != len(cases):
             raise ValueError("each hidden case is owned by exactly one criterion")
         if len(set(self.convention_rules)) != len(self.convention_rules):
@@ -262,9 +260,7 @@ def load_repo_task_authoring(path: Path) -> RepoTaskAuthoring:
 
 
 def case_inventory_digest(case_ids: tuple[str, ...]) -> str:
-    return canonical_digest(
-        {"kind": "hidden_case_inventory", "case_ids": sorted(case_ids)}
-    )
+    return canonical_digest({"kind": "hidden_case_inventory", "case_ids": sorted(case_ids)})
 
 
 def acceptance_contract_digest(
@@ -278,9 +274,7 @@ def acceptance_contract_digest(
         {
             "kind": "repo_task_acceptance_contract",
             "task_id": authoring.task_id,
-            "criteria": [
-                criterion.model_dump(mode="json") for criterion in authoring.acceptance
-            ],
+            "criteria": [criterion.model_dump(mode="json") for criterion in authoring.acceptance],
             "rubric_id": rubric.rubric_id,
             "rubric_version": rubric.version,
             "rubric_digest": rubric.digest(),
@@ -342,9 +336,7 @@ def verify_acceptance_contract(
     frozen_contract_digest: str,
 ) -> None:
     """Grading entry check: the contract is still the one sealed before any candidate was seen."""
-    current = acceptance_contract_digest(
-        authoring, rubric=rubric, hidden_case_ids=hidden_case_ids
-    )
+    current = acceptance_contract_digest(authoring, rubric=rubric, hidden_case_ids=hidden_case_ids)
     if current != frozen_contract_digest:
         raise AcceptanceContractDrift(
             "the acceptance contract changed after sealing; hidden requirements cannot be "

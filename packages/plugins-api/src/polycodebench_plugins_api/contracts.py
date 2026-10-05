@@ -436,7 +436,6 @@ class ProfileResult(PluginModel):
     complete: bool
 
 
-
 class PropertyEngineIdentity(PluginModel):
     """Which property-test engine produced this run's evidence, and under what determinism policy.
 

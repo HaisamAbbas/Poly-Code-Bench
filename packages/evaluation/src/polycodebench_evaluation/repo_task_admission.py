@@ -136,9 +136,7 @@ def variant_submission(
     """One variant's submission: its overlay tree, or a single patch when it ships one."""
     prefix = f"admission/{fixture_name}/"
     overlay = {
-        path[len(prefix) :]: data
-        for path, data in package_files.items()
-        if path.startswith(prefix)
+        path[len(prefix) :]: data for path, data in package_files.items() if path.startswith(prefix)
     }
     patches = {path: data for path, data in overlay.items() if path.endswith(".patch")}
     if patches:
@@ -152,9 +150,7 @@ def variant_submission(
 
 
 def _outcome_digest(cases: tuple[CaseOutcome, ...]) -> str:
-    return canonical_digest(
-        [{"case_id": case.case_id, "outcome": case.outcome} for case in cases]
-    )
+    return canonical_digest([{"case_id": case.case_id, "outcome": case.outcome} for case in cases])
 
 
 def admit_repo_task(
@@ -233,9 +229,7 @@ def admit_repo_task(
             for finding in findings
             if relations.get(finding.issue_key) == "introduced"
         }
-        expected_families = (
-            tuple(expectation.expected_issue_families) if expectation else ()
-        )
+        expected_families = tuple(expectation.expected_issue_families) if expectation else ()
         variants.append(
             VariantAdmission(
                 name=fixture.name,
@@ -277,8 +271,7 @@ def admit_repo_task(
     )
     quality_functional = bool(quality and quality.functional_pass)
     quality_detected = bool(
-        quality
-        and set(quality.expected_issue_families) <= set(quality.observed_issue_families)
+        quality and set(quality.expected_issue_families) <= set(quality.observed_issue_families)
     )
     label_check = (
         package.task.methodology_label == "inspired"

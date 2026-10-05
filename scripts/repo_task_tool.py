@@ -130,12 +130,13 @@ def fixture_judgement(
         )
     from polycodebench_core.judge_contracts import JudgeDelivery
 
-    return aggregate(
+    result: JudgementResult = aggregate(
         packet=packet,
         panel=panel,
         votes=votes,
         deliveries=[JudgeDelivery.model_validate(entry) for entry in deliveries],
     )
+    return result
 
 
 def _scorer_digest() -> str:
@@ -236,7 +237,7 @@ def grade_with_fixture_judgement(
 
 
 def command_digest(path: Path) -> int:
-    import yaml
+    import yaml  # type: ignore[import-untyped,unused-ignore]
 
     document = yaml.safe_load((path / "manifest.yaml").read_text(encoding="utf-8"))
     contract = TaskOutputContract.model_validate(document["output_contract"])
@@ -354,13 +355,11 @@ def diff_against(baseline: dict[str, bytes], overlay: dict[str, bytes]) -> str:
         allowed_paths=sorted(overlay),
         protected_paths=(),
     )
-    chunks = []
+    chunks: list[str] = []
     for path in sorted(workspace.changed_files):
         old = baseline.get(path, b"").decode("utf-8").splitlines(keepends=True)
         new = workspace.files[path].decode("utf-8").splitlines(keepends=True)
-        chunks.extend(
-            difflib.unified_diff(old, new, fromfile=f"a/{path}", tofile=f"b/{path}")
-        )
+        chunks.extend(difflib.unified_diff(old, new, fromfile=f"a/{path}", tofile=f"b/{path}"))
     return "".join(chunks)
 
 

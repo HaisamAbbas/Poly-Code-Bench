@@ -123,9 +123,7 @@ class _Collector(ast.NodeVisitor):
                 )
                 break
         if len(node.body) >= DUPLICATION_MIN_STATEMENTS:
-            self.blocks.append(
-                (self._path, node.name, node.lineno, _block_fingerprint(node.body))
-            )
+            self.blocks.append((self._path, node.name, node.lineno, _block_fingerprint(node.body)))
         self._symbols.append(node.name)
         self.generic_visit(node)
         self._symbols.pop()

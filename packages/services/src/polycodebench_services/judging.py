@@ -22,7 +22,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_core.identity import utc_timestamp
 from polycodebench_core.judge_calibration import CalibrationPolicy

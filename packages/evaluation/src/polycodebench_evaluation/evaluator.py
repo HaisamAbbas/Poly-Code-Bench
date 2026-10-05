@@ -116,9 +116,7 @@ def baseline_relations(
             continue
         # No exact match: did the same family move location (ambiguous) or is it new?
         family = _family(key)
-        same_family = [
-            o for o in baseline_issues if o.issue_key and _family(o.issue_key) == family
-        ]
+        same_family = [o for o in baseline_issues if o.issue_key and _family(o.issue_key) == family]
         same_path = [o for o in same_family if _path_of(o) == _path_of(obs)]
         if same_path:
             relations[key] = "unknown"

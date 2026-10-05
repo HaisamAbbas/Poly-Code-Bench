@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 from polycodebench_core.canonical import canonical_document_digest
 from polycodebench_core.solve_contracts import SolveProtocol
 

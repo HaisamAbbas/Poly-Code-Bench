@@ -715,7 +715,7 @@
                                                  "PCB-23-1":  "implemented and verified: offline Java recipes, fixed JIT modes, identities and executable admission",
                                                  "PCB-23-2":  "implemented and verified: five reference scans measured; analyzer and behavioral probe contracts exercised",
                                                  "PCB-23-3":  "implemented and verified: eight Java variants admitted; stream/record/SOLID presence earns no points",
-                                                 "PCB-23-4":  "partial: current Java/Go evidence and eight-language local audit; C/C++ admissions and JS/TS task packs are missing; Go conformance rerun pending"
+                                                 "PCB-23-4":  "partial: current Java/JavaScript/C/Go admissions and eight-language local audit; C++ admission and TypeScript task pack are missing; latest saved Go conformance is 17/18 and fails its benign-sample candidate gate"
                                              },
                                  "e2e":  {
                                              "E2E-15":  "partial",

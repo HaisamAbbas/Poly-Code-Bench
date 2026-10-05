@@ -801,80 +801,80 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
-- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
+- Implementation: `implemented` (`config/images/javascript-v1.json`, `config/images/typescript-v1.json`, `scripts/build_js_images.py`, `scripts/fetch_js_components.py`, `plugins/languages/javascript/{pyproject.toml,src/polycodebench_lang_javascript/{identities.py,locks.py}}`, `rules/advisories/snapshot.json`; both plugins registered in `config/plugins/allowlist-v1.yaml` with three distinct image digests each).
+- Verification: `partial`: the saved JavaScript development-sandbox admission passes 25/25 checks (2026-10-03); TypeScript has a distinct toolchain/image identity but no task pack. The offline-install DoD is not established for both language paths.
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
+- Evidence: `tests/test_language_extension_audit.py`, `config/plugins/allowlist-v1.yaml`, `docs/implementation/reports/language-coverage.md`, and `docs/implementation/evidence/prompt-19-js-admission.json`. JavaScript has one admitted fixture pack (25/25); TypeScript retains distinct profiles/images but no task manifest. The original blanket no-task-manifest note was corrected 2026-10-05.
 - Acceptance criteria: — Build pinned Node/package-manager/runtime/test images with offline dependencies and locked recipes. DoD: dependency/advisory snapshots and test-runner identity are recorded and no online installation occurs during scored execution.
 
 ## PCB-19-2 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
-- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
+- Implementation: `implemented` (`plugins/languages/javascript/src/polycodebench_lang_javascript/{plans.py,parsers.py,symbols.py,observations.py,taskspec.py}`, guest tools `pcb_js_run.py`, `pcb_vitest_report.py`, `pcb_js_scan.py`, `pcb_npm_audit.py`, `pcb_js_capture.py`, rules `tsconfig.base.json` / `tsconfig.strict.json`, `config/languages/{javascript,typescript}-profile-v1.yaml`).
+- Verification: `partial`: the admitted JavaScript pack exercises its pinned build/test and analyzer plans; TypeScript has no executed candidate/reference path. Task-specific strictness behavior is not demonstrated across both languages.
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
+- Evidence: `tests/test_language_extension_audit.py`, `docs/implementation/reports/language-coverage.md` (records the JavaScript evaluator image as `tsc: absent` and TypeScript as `7.0.2` — the separation is real). Corrected 2026-10-03; see the PCB-19-1 note on the stale original text.
 - Acceptance criteria: — Implement build/test/symbol/analysis plans, ESLint, applicable security/dependency checks and strict TypeScript checks where the task requires them. DoD: JavaScript is not penalized for lacking TypeScript types; task-specific strictness passes the reference.
 
 ## PCB-19-3 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
-- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
+- Implementation: `implemented` (`config/languages/javascript-profile-v1.yaml`, `config/languages/typescript-profile-v1.yaml` with distinct `kind` values `javascript_profile` / `typescript_profile`, applicability and ownership mappings; `observations.py`).
+- Verification: `partial`: separate JS/TS profile semantics are asserted and one JavaScript pack is admitted, but the saved task evidence does not cover every async/error/concurrency/type-safety rule; TypeScript has no fixture pack.
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
+- Evidence: `tests/test_language_extension_audit.py`, `config/languages/javascript-profile-v1.yaml`, `config/languages/typescript-profile-v1.yaml`. Corrected 2026-10-03; see the PCB-19-1 note.
 - Acceptance criteria: — Implement async/error/concurrency/typing/idiom applicability and ownership mappings. DoD: floating promises and real async errors have evidence, unused concurrency opportunities are N/A, and stylistic modern syntax is not an automatic bonus.
 
 ## PCB-19-4 - Prompt 19: — Add JavaScript and TypeScript support
 
 - Owner prompt: `19`.
 - Dependencies: accepted pilot/plugin contracts ·.
-- Implementation: partial (separate JavaScript/TypeScript profile definitions exist; executable plugins, fixtures, graders, images and registration are absent).
-- Verification: partial (profile semantics only; language core paths and E2E-15/35 unverified).
+- Implementation: `implemented` for JavaScript (`plugins/languages/javascript/fixtures/top-words/`: task statement, `package.json`, a lock that genuinely pins, a 16-case oracle, 12 acceptance + 5 quality-only Vitest cases, quality plan, exposure-rights record and six authored variants; plus `scripts/js_task_tool.py` with seal/validate/admit). TypeScript still has no package of its own.
+- Verification: `passed` for JavaScript executable admission — real Docker in the pinned evaluator image, 25/25 checks, `docs/implementation/evidence/prompt-19-js-admission.json` (`executable_admission_passed: true`, report `sha256:c10b77ad603bcd5a4f5605578eb212ca0cc7e1bc73680ce5b3a0575cb73e89e9`), run 2026-10-03. Reference passes five gates identically across repetitions, the faulty variant fails exactly its declared case, the alternative passes, quality-defective passes the functional gate while reporting `hardcoded-credential`, the timeout variant fails as a candidate timeout, and command-injection reports `command-injection`. **Quality admission remains `pending`.**
 - Required verification scope: E2E-15, E2E-35.
-- Evidence: See `tests/test_language_extension_audit.py` profile checks and `docs/implementation/reports/language-coverage.md`; no JS/TS execution evidence.
+- Evidence: `docs/implementation/evidence/prompt-19-js-admission.json`; `scripts/js_task_tool.py`. Eight latent defects surfaced only because a task pack finally exercised the language: every JS plan failed to construct (`npm_config_*` keys violate the environment-key contract); the build plan used unstaged paths; `pcb_js_capture.py` was passed an unsupported `--name`; build and ESLint were wrapped by a helper that writes no supervisor record both parsers require; three analyzer reports were written but never declared as outputs; the vitest report was never converted to the shared jsonl contract; the wrapper used `sys.executable`, which is the bundled interpreter that cannot start (`GLIBC_2.38 not found` - the same latent defect still present in the Rust images, so D-11-10 is not actually fixed); the vitest wrapper carried a competing internal deadline that turned a candidate hang into an infrastructure error; and `candidate_suffixes` is a `@property` on the JS plugin while `SuiteAdmission` read it with a bare `getattr`, so the property object was compared with `str.endswith` and no candidate path ever matched. TypeScript task packs, curator approval and owner rights confirmation remain open.
 - Acceptance criteria: — Admit runnable JS/TS fixture tasks and run the shared language/evaluation conformance suite. DoD: valid, wrong, alternative-valid, security/async/type-defective and timeout fixtures produce the intended evidence through real entrypoints.
 
 ## PCB-20-1 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
-- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
+- Implementation: `implemented` (pinned recipes and four distinct images - runtime, evaluator, instrumented, performance - rebuilt 2026-10-03; `ImageIdentities.require_release_recipe` refuses a measurement when the recorded performance image ever declared instrumentation).
+- Verification: `passed` — image identities re-recorded in `config/images/c-v1.json`, the guest/rules digest re-derived and the allowlist rewritten by `scripts/build_c_images.py`; the instrumented lane reports ASan+UBSan while runtime/evaluator/performance report `instrumentation: none`.
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
+- Evidence: `config/images/c-v1.json`, `docs/implementation/evidence/prompt-20-c-admission.json`. Corrected 2026-10-03: this entry previously said "fresh image build/admission was not run"; both have now run.
 - Acceptance criteria: — Build pinned compiler/standard/dependency recipes and separate release/instrumented images. DoD: flags and hardware identities are frozen; sanitizer/Valgrind timing never masquerades as release performance.
 
 ## PCB-20-2 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
-- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
+- Implementation: `implemented` (pinned recipes and four distinct images - runtime, evaluator, instrumented, performance - rebuilt 2026-10-03; `ImageIdentities.require_release_recipe` refuses a measurement when the recorded performance image ever declared instrumentation).
+- Verification: `passed` — image identities re-recorded in `config/images/c-v1.json`, the guest/rules digest re-derived and the allowlist rewritten by `scripts/build_c_images.py`; the instrumented lane reports ASan+UBSan while runtime/evaluator/performance report `instrumentation: none`.
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
+- Evidence: `config/images/c-v1.json`, `docs/implementation/evidence/prompt-20-c-admission.json`. Corrected 2026-10-03: this entry previously said "fresh image build/admission was not run"; both have now run.
 - Acceptance criteria: — Implement compilation, tests, clang-tidy/cppcheck and applicable ASan/UBSan/Valgrind plans/parsers. DoD: build errors, sanitizer findings, unsupported checks and infrastructure failures are classified distinctly.
 
 ## PCB-20-3 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
-- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
+- Implementation: `implemented` (pinned recipes and four distinct images - runtime, evaluator, instrumented, performance - rebuilt 2026-10-03; `ImageIdentities.require_release_recipe` refuses a measurement when the recorded performance image ever declared instrumentation).
+- Verification: `passed` — image identities re-recorded in `config/images/c-v1.json`, the guest/rules digest re-derived and the allowlist rewritten by `scripts/build_c_images.py`; the instrumented lane reports ASan+UBSan while runtime/evaluator/performance report `instrumentation: none`.
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
+- Evidence: `config/images/c-v1.json`, `docs/implementation/evidence/prompt-20-c-admission.json`. Corrected 2026-10-03: this entry previously said "fresh image build/admission was not run"; both have now run.
 - Acceptance criteria: — Implement ownership/error-checking/portability/UB/memory profile mappings. DoD: baseline warning debt and task-specific warning policy are respected; blanket -Werror does not silently invalidate otherwise admitted legacy tasks.
 
 ## PCB-20-4 - Prompt 20: — Add C support
 
 - Owner prompt: `20`.
 - Dependencies: WP-19: WP-17.
-- Implementation: partial (C plugin, plans, fixtures and declared image records exist; fresh image build/admission was not run).
-- Verification: partial (local manifest/plan/shared output-score-replay checks; Docker E2E unverified).
+- Implementation: `implemented` (C plugin, typed build/test/analysis/performance plans, four pinned images, profile and the `top-words` fixture with nine authored variants).
+- Verification: `passed` for executable admission — real Docker in the pinned images, 29/29 checks, `docs/implementation/evidence/prompt-20-c-admission.json` (`executable_admission_passed: true`, report `sha256:bd0cef3b6966b583a76bb010306b5bad44945197eaf16a9cce107ce63d345d0b`), re-run green on 2026-10-03. **Quality admission remains `pending`.**
 - Required verification scope: E2E-15, E2E-35 plus instrumented/runtime cases.
-- Evidence: See `docs/implementation/evidence/prompt-23-language-audit.json` and `docs/implementation/reports/language-coverage.md`.
+- Evidence: `docs/implementation/evidence/prompt-20-c-admission.json`; `tests/fixtures/c_tool_output/` re-recorded from real toolchain output. Three defects were fixed to reach this, all found by running the real thing: (1) `normalize_rule` never rewrote clang-tidy's `module-check` ids to the profile's `module.check` spelling, so every reviewed mapping missed and canonical families fell back to the raw check tail - one unbounded copy filed under two keys across tools; (2) `workload_smoke` hardcoded Python's `out/perf.json`, a document no C plan can produce, making the check unsatisfiable for every non-Python language; (3) the C performance iteration only *built* its workload and never executed it, and its `--run-arg` values were emitted as one flag instead of one flag per value. Pending gates are listed in the report: generic evaluator stage (Prompt 12), performance baseline/canary (13), judge anchors (14), scoring replay (15), production worker (Prompt 06), curator approval/freeze and owner rights confirmation.
 - Acceptance criteria: — Admit real conformance fixtures for correct/alternative code, wrong output, bounds/UB/resource defects and timeouts. DoD: instrumentation detects intended executed defects while reports acknowledge coverage limits; no blanket claim of proven memory safety.
 
 ## PCB-21-1 - Prompt 21: — Add C++ support
@@ -955,7 +955,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `22`.
 - Dependencies: WP-19: WP-17.
 - Implementation: implemented (six fixture variants: reference, alternative-heaps, faulty-ties, quality-defective, race-defective and timeout-case).
-- Verification: passed (executable admission: reference passes 5/5 repetitions, alternative-heaps passes, faulty-ties fails its declared case, timeout-case fails as a candidate timeout, and quality-defective passes the gate while showing its intended families).
+- Verification: executable admission passed (reference 5/5 repetitions; valid alternative; intended faulty-ties and timeout failures; quality-defective gate passes and shows declared families). Latest saved conformance separately fails 1/18 on the benign-sample candidate gate (`gate=fail score=10000 measured=[]`); do not mark conformance complete until fixed and rerun.
 - Required verification scope: E2E-15, E2E-35.
 - Note: the Go fixtures are pinned to LF via a new `.gitattributes`; under `core.autocrlf` they arrived as CRLF and `gofmt` (a scored required analyzer) charged the reference solution a formatting finding. See D-22-13.
 - Evidence: `docs/implementation/evidence/prompt-22-go-admission.json`, `docs/implementation/evidence/prompt-22-go-conformance.json`, `tests/test_go_plugin.py`, `tests/test_go_guest.py`, `tests/test_go_profile.py`, `tests/test_go_locks.py`, `tests/test_go_docker.py` and `docs/implementation/reports/prompt-22.md`.
@@ -1004,7 +1004,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
 - Implementation: partial (all eight plugin/image identities are audited, JS and TS semantics are distinct, and an allowlist writer that dropped languages plus a C++ analyzer identity defect were fixed).
-- Verification: partial (Java/Go have current development-sandbox evidence, but C/C++ lack current task admission and JavaScript/TypeScript have zero task manifests; E2E-15 and E2E-35 remain partial).
+- Verification: partial (JavaScript, C, Go and Java have current development-sandbox admissions; C++ lacks current sandbox admission and TypeScript has no task pack; latest Go conformance is 17/18 with one failed benign-sample gate; E2E-15 and E2E-35 remain partial).
 - Required verification scope: E2E-15, E2E-35 for all required languages.
 - Evidence: See `tests/test_language_extension_audit.py`, `docs/implementation/reports/language-coverage.md`, and `docs/implementation/evidence/prompt-23-language-audit.json`.
 - Acceptance criteria: — Audit Python, Rust, JS, TS, C, C++, Go and Java end to end through plugin registration, task admission, solve output contracts, grading, scoring, replay and capability metadata. DoD: every required language has actual conformance evidence, separate JS/TS semantics, and no missing core path hidden by a capability label.
@@ -1213,40 +1213,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (release listing/current metadata, leaderboard, model/language, compare, public task, scorecard, evidence and methodology routes read published release projections in `packages/api/src/polycodebench_api/public_routes.py` and `packages/publication/src/polycodebench_publication/`).
+- Verification: `partial` (routes and projections are exercised by Prompt 30-32 API/browser suites; a standalone full Prompt 29 route matrix was not recorded).
 - Required verification scope: E2E-25/26/28/39 API variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-29.md`, `tests/test_public_api_prompt30.py`, `tests/test_public_api_prompt31.py`, `tests/test_public_api_prompt32.py`, `tests/test_public_api_projections.py`, and `tests/test_publication_releases.py`.
 - Acceptance criteria: — Implement release, leaderboard, model, language, comparison, public task, scorecard, artifact and methodology endpoints with typed metric definitions. DoD: responses come from actual published projections, never worker/hidden tables or hardcoded demo arrays.
 
 ## PCB-29-2 - Prompt 29: — Implement the complete public API and projections
 
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (release-bound filters, pagination, stable sorting, decimal responses, ETags/cache policy, comparison compatibility and common-task pairing are implemented; comparison scope is explicit for release aggregates versus the filtered paired-task intersection).
+- Verification: `partial` (focused API and browser coverage exists in Prompt 30-32; complete E2E-28 cohort variants are not recorded as a fresh Prompt 29 run).
 - Required verification scope: E2E-25/26/28/39 API variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-29.md`, `docs/implementation/reports/prompt-31.md`, `tests/test_public_api_prompt31.py`, `tests/test_public_api_projections.py`, and `tests/test_publication_releases.py`.
 - Acceptance criteria: — Implement release/filter-bound pagination, stable sorting, decimal serialization, ETags/cache policy and common-cohort comparisons for 2–4 configurations. DoD: incompatible protocols/coverage return the specified typed reasons; filtered denominators and uncertainty reflect the actual cohort.
 
 ## PCB-29-3 - Prompt 29: — Implement the complete public API and projections
 
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (public/private route access controls and privacy projections are implemented; held-out references are redacted and released evidence is allowlisted by published content).
+- Verification: `partial` (local API ownership/privacy variants are exercised; PostgreSQL integration and production artifact-bucket/IAM denial remain unverified).
 - Required verification scope: E2E-25/26/28/39 API variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-29.md`, `docs/implementation/reports/prompt-31.md`, `docs/implementation/reports/prompt-32.md`, and their public API/browser tests.
 - Acceptance criteria: — Complete administrative/API authorization, idempotency, optimistic concurrency, error taxonomy and publication/read access controls. DoD: permissions are enforced on every route/artifact; private identity probes cannot reveal hidden data or useful download tokens.
 
 ## PCB-29-4 - Prompt 29: — Implement the complete public API and projections
 
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `partial` (API schemas, test-release fixtures and a maintained typed browser API client exist; generated OpenAPI/TypeScript client parity is not verified).
+- Verification: `partial` (typed client and release fixtures are exercised downstream; generator/server parity and full E2E-26 artifact/privacy cases remain open).
 - Required verification scope: E2E-25/26/28/39 API variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-29.md`, `apps/web/src/lib/public-api.ts`, public API schemas and `tests/test_public_api_projections.py`.
 - Acceptance criteria: — Generate and validate OpenAPI/TypeScript clients and safe public response fixtures. DoD: schemas/client/server agree, and fixtures originate from real test-release generation with explicitly synthetic labels where appropriate.
 
 ## PCB-30-1 - Prompt 30: — Build leaderboard, language and model pages

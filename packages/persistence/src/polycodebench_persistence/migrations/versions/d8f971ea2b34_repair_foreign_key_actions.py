@@ -13,6 +13,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    # Bound lock waits and validation scans; timeout rolls back the atomic FK replacement.
+    op.execute("SET LOCAL lock_timeout = '5s'")
+    op.execute("SET LOCAL statement_timeout = '30s'")
     op.drop_constraint(
         "fk_repair_delivery_repair_round_id_repair_round",
         "repair_delivery",

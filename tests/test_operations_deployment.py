@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import base64
 import copy
 import json
@@ -241,6 +242,7 @@ def test_expand_only_check_flags_destructive_changes(tmp_path: Path) -> None:
         "b2",
         "    op.drop_column('scorecard', 'composite')\n"
         "    op.execute('TRUNCATE audit_event')\n"
+        "    op.execute('ALTER TABLE repair_run DROP CONSTRAINT fk_repair_run_attempt')\n"
         "    op.alter_column('t', 'c', nullable=False)",
     )
     policy = {
@@ -251,9 +253,155 @@ def test_expand_only_check_flags_destructive_changes(tmp_path: Path) -> None:
     }
     report = migrations.check_expand_only(policy, tmp_path)
     assert report.checked == ["b2", "c3"] and report.head == "c3"
-    assert len(report.violations) == 3
+    assert len(report.violations) == 4
     approved = {**policy, "approved_contract_migrations": {"c3": {"retention_plan": "RP-1"}}}
     assert migrations.check_expand_only(approved, tmp_path).violations == []
+
+
+def _safe_fk_replacement_rule(**overrides: object) -> dict[str, object]:
+    return {
+        "constraint": "fk_child_parent",
+        "table": "child",
+        "referenced_table": "parent",
+        "local_columns": ["parent_id"],
+        "referenced_columns": ["id"],
+        "previous_ondelete": "NO ACTION",
+        "replacement_ondelete": "RESTRICT",
+        "rationale": "Preserves immediate delete protection without changing data.",
+        **overrides,
+    }
+
+
+def test_expand_only_check_allows_only_exact_safe_fk_action_replacement(tmp_path: Path) -> None:
+    _write_revision(tmp_path, "a1", None, "    op.create_table('parent')")
+    _write_revision(
+        tmp_path,
+        "b2",
+        "a1",
+        "    op.drop_constraint('fk_child_parent', 'child', type_='foreignkey')\n"
+        "    op.create_foreign_key('fk_child_parent', 'child', 'parent', "
+        "['parent_id'], ['id'], ondelete='RESTRICT')",
+    )
+    policy = {
+        "schema_version": 1,
+        "released_revision": "a1",
+        "approved_contract_migrations": {},
+        "safe_fk_action_replacements": {"b2": [_safe_fk_replacement_rule()]},
+    }
+
+    report = migrations.check_expand_only(policy, tmp_path)
+
+    assert report.violations == []
+
+
+@pytest.mark.parametrize(
+    "create_call",
+    [
+        "op.create_foreign_key('fk_child_parent', 'child', 'parent', "
+        "['parent_id'], ['id'], ondelete='CASCADE')",
+        "op.create_foreign_key('fk_child_parent', 'child', 'parent', "
+        "['other_id'], ['id'], ondelete='RESTRICT')",
+    ],
+)
+def test_expand_only_check_rejects_weakened_or_mismatched_fk_replacement(
+    tmp_path: Path, create_call: str
+) -> None:
+    _write_revision(tmp_path, "a1", None, "    op.create_table('parent')")
+    _write_revision(
+        tmp_path,
+        "b2",
+        "a1",
+        "    op.drop_constraint('fk_child_parent', 'child', type_='foreignkey')\n"
+        f"    {create_call}",
+    )
+    policy = {
+        "schema_version": 1,
+        "released_revision": "a1",
+        "approved_contract_migrations": {},
+        "safe_fk_action_replacements": {"b2": [_safe_fk_replacement_rule()]},
+    }
+
+    report = migrations.check_expand_only(policy, tmp_path)
+
+    assert any("drops a constraint" in item for item in report.violations)
+    assert any("not an exact pair" in item for item in report.violations)
+
+
+def test_safe_fk_replacement_does_not_exempt_another_drop_on_the_same_line(
+    tmp_path: Path,
+) -> None:
+    _write_revision(tmp_path, "a1", None, "    op.create_table('parent')")
+    _write_revision(
+        tmp_path,
+        "b2",
+        "a1",
+        "    op.drop_constraint('fk_child_parent', 'child', type_='foreignkey'); "
+        "op.drop_constraint('unlisted', 'scorecard', type_='check')\n"
+        "    op.create_foreign_key('fk_child_parent', 'child', 'parent', "
+        "['parent_id'], ['id'], ondelete='RESTRICT')",
+    )
+    policy = {
+        "schema_version": 1,
+        "released_revision": "a1",
+        "approved_contract_migrations": {},
+        "safe_fk_action_replacements": {"b2": [_safe_fk_replacement_rule()]},
+        "provenance_tables": ["scorecard"],
+    }
+
+    report = migrations.check_expand_only(policy, tmp_path)
+
+    assert len(report.violations) == 1
+    assert "drops a constraint" in report.violations[0]
+
+
+def test_committed_migration_policy_covers_the_exact_repair_fk_replacements() -> None:
+    policy = migrations.load_policy()
+    report = migrations.check_expand_only(policy)
+
+    replacements = policy["safe_fk_action_replacements"]["d8f971ea2b34"]
+    assert len(replacements) == 3
+    assert report.head == "b390a26f17cd"
+    assert report.violations == []
+
+    released_source = migrations.VERSIONS / "e5f6a7b8c9d0_repair_runs_and_rounds.py"
+    tree = ast.parse(released_source.read_text(encoding="utf-8"))
+    tables = {
+        ast.literal_eval(node.args[0]): node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "create_table"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    }
+    for rule in replacements:
+        table = tables[rule["table"]]
+        columns = [
+            node
+            for node in ast.walk(table)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "Column"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and node.args[0].value == rule["local_columns"][0]
+        ]
+        foreign_keys = [
+            foreign_key
+            for column in columns
+            for foreign_key in ast.walk(column)
+            if isinstance(foreign_key, ast.Call)
+            and isinstance(foreign_key.func, ast.Attribute)
+            and foreign_key.func.attr == "ForeignKey"
+            and foreign_key.args
+            and ast.literal_eval(foreign_key.args[0])
+            == f"{rule['referenced_table']}.{rule['referenced_columns'][0]}"
+        ]
+        assert len(foreign_keys) == 1
+        assert not {"ondelete", "deferrable", "initially"} & {
+            keyword.arg for keyword in foreign_keys[0].keywords
+        }
 
 
 def test_branched_history_is_refused(tmp_path: Path) -> None:

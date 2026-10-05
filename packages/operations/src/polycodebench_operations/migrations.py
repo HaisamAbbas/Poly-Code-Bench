@@ -45,7 +45,8 @@ _DESTRUCTIVE_OPS = {
     "drop_constraint": "drops a constraint",
 }
 _DESTRUCTIVE_SQL = re.compile(
-    r"\b(DROP\s+TABLE|DROP\s+COLUMN|TRUNCATE|DELETE\s+FROM|ALTER\s+TABLE\s+\S+\s+RENAME)\b",
+    r"\b(DROP\s+TABLE|DROP\s+COLUMN|DROP\s+CONSTRAINT|TRUNCATE|DELETE\s+FROM|"
+    r"ALTER\s+TABLE\s+\S+\s+RENAME)\b",
     re.IGNORECASE,
 )
 
@@ -110,7 +111,9 @@ def linear_chain(found: dict[str, Revision]) -> list[str]:
     return chain
 
 
-def _upgrade_violations(path: Path, provenance: set[str]) -> list[str]:
+def _upgrade_violations(
+    path: Path, provenance: set[str], safe_fk_rules: list[Any] | None = None
+) -> list[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     upgrade = next(
         (
@@ -123,12 +126,14 @@ def _upgrade_violations(path: Path, provenance: set[str]) -> list[str]:
     if upgrade is None:
         return [f"{path.name}: no upgrade()"]
     problems: list[str] = []
+    safe_replacements = _safe_fk_action_replacements(path, upgrade, safe_fk_rules or [])
     for node in ast.walk(upgrade):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
             continue
         name = node.func.attr
         if name in _DESTRUCTIVE_OPS:
-            problems.append(f"{path.name}:{node.lineno}: upgrade {_DESTRUCTIVE_OPS[name]}")
+            if name != "drop_constraint" or id(node) not in safe_replacements[0]:
+                problems.append(f"{path.name}:{node.lineno}: upgrade {_DESTRUCTIVE_OPS[name]}")
         if name == "alter_column":
             keywords = {keyword.arg for keyword in node.keywords}
             if {"type_", "new_column_name"} & keywords:
@@ -160,7 +165,117 @@ def _upgrade_violations(path: Path, provenance: set[str]) -> list[str]:
                             problems.append(
                                 f"{path.name}:{node.lineno}: drops provenance table {table}"
                             )
-    return problems
+    return [*problems, *safe_replacements[1]]
+
+
+def _literal_argument(call: ast.Call, index: int, keyword: str | None = None) -> Any:
+    try:
+        node = (
+            call.args[index]
+            if keyword is None
+            else next(item.value for item in call.keywords if item.arg == keyword)
+        )
+        return ast.literal_eval(node)
+    except (IndexError, StopIteration, ValueError, TypeError):
+        return None
+
+
+def _safe_fk_action_replacements(
+    path: Path, upgrade: ast.FunctionDef, rules: list[Any]
+) -> tuple[set[int], list[str]]:
+    """Allow only exact, paired NO ACTION -> RESTRICT FK replacements.
+
+    PostgreSQL applies both actions immediately when the constraint is non-deferrable (the
+    default used by our migrations). Replacing the action does not delete rows. A table/name/
+    column-specific policy declaration is required, and both DDL calls must appear in one
+    migration transaction.
+    """
+
+    if not rules:
+        return set(), []
+
+    calls = [
+        node
+        for node in ast.walk(upgrade)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    ]
+    drops = [call for call in calls if call.func.attr == "drop_constraint"]
+    creates = [call for call in calls if call.func.attr == "create_foreign_key"]
+    safe_calls: set[int] = set()
+    problems: list[str] = []
+    declared: set[tuple[str, str]] = set()
+
+    for rule in rules:
+        if not isinstance(rule, dict):
+            problems.append(f"{path.name}: invalid safe FK action replacement policy entry")
+            continue
+        name = rule.get("constraint")
+        table = rule.get("table")
+        referenced_table = rule.get("referenced_table")
+        local_columns = rule.get("local_columns")
+        referenced_columns = rule.get("referenced_columns")
+        if (
+            not isinstance(name, str)
+            or not isinstance(table, str)
+            or not isinstance(referenced_table, str)
+            or not isinstance(local_columns, list)
+            or not local_columns
+            or not all(isinstance(item, str) for item in local_columns)
+            or not isinstance(referenced_columns, list)
+            or len(referenced_columns) != len(local_columns)
+            or not all(isinstance(item, str) for item in referenced_columns)
+            or rule.get("previous_ondelete") != "NO ACTION"
+            or rule.get("replacement_ondelete") != "RESTRICT"
+            or not isinstance(rule.get("rationale"), str)
+            or not rule["rationale"].strip()
+        ):
+            problems.append(f"{path.name}: incomplete or unsupported safe FK action replacement")
+            continue
+        identity = (table, name)
+        if identity in declared:
+            problems.append(f"{path.name}: duplicate safe FK action replacement for {table}.{name}")
+            continue
+        declared.add(identity)
+
+        matching_drops = [
+            call
+            for call in drops
+            if _literal_argument(call, 0) == name
+            and _literal_argument(call, 1) == table
+            and _literal_argument(call, 0, "type_") == "foreignkey"
+        ]
+        identity_creates = [
+            call
+            for call in creates
+            if _literal_argument(call, 0) == name
+            and _literal_argument(call, 1) == table
+        ]
+        matching_creates = [
+            call
+            for call in identity_creates
+            if _literal_argument(call, 2) == referenced_table
+            and _literal_argument(call, 3) == local_columns
+            and _literal_argument(call, 4) == referenced_columns
+            and _literal_argument(call, 0, "ondelete") == "RESTRICT"
+        ]
+        if (
+            len(matching_drops) != 1
+            or len(identity_creates) != 1
+            or len(matching_creates) != 1
+        ):
+            problems.append(
+                f"{path.name}: safe FK replacement for {table}.{name} is not an exact pair"
+            )
+            continue
+        drop, create = matching_drops[0], matching_creates[0]
+        if create.lineno <= drop.lineno:
+            problems.append(
+                f"{path.name}: safe FK replacement for {table}.{name} must recreate after drop"
+            )
+            continue
+        safe_calls.add(id(drop))
+
+    return safe_calls, problems
 
 
 def check_expand_only(
@@ -174,10 +289,22 @@ def check_expand_only(
         raise ValueError(f"released revision {released} is not in the migration chain")
     report = ExpandReport(released_revision=released, head=chain[-1])
     approved = policy.get("approved_contract_migrations") or {}
+    safe_fk_replacements = policy.get("safe_fk_action_replacements") or {}
+    if not isinstance(safe_fk_replacements, dict):
+        raise ValueError("safe_fk_action_replacements must be a revision mapping")
+    unknown_safe_fk_revisions = set(safe_fk_replacements) - set(found)
+    if unknown_safe_fk_revisions:
+        raise ValueError(
+            "safe FK action replacement policy references unknown revisions: "
+            + ", ".join(sorted(unknown_safe_fk_revisions))
+        )
     provenance = set(policy.get("provenance_tables") or ())
     for revision in chain[chain.index(released) + 1 :]:
         report.checked.append(revision)
-        problems = _upgrade_violations(found[revision].path, provenance)
+        rules = safe_fk_replacements.get(revision) or []
+        if not isinstance(rules, list):
+            raise ValueError(f"safe FK action replacements for {revision} must be a list")
+        problems = _upgrade_violations(found[revision].path, provenance, rules)
         if problems and not (
             isinstance(approved.get(revision), dict) and approved[revision].get("retention_plan")
         ):

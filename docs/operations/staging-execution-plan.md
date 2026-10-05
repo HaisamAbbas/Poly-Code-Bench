@@ -28,7 +28,7 @@ Every command is **[S]**: not executed. Run them as the named role.
 ```bash
 # 0. Pre-flight (local, already passing)
 uv run --offline --locked --all-packages pcb-ops env validate
-uv run --offline --locked --all-packages pcb-ops migrate check     # must pass: resolve D-33-03 and the Prompt 32 branch first
+uv run --offline --locked --all-packages pcb-ops migrate check     # current local tree passes
 
 # 1. State + plan + apply (platform owner)
 cd infra/terraform/environments/staging

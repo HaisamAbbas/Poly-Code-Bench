@@ -22,12 +22,24 @@ pcb-ops migrate rehearse --admin-url <admin dsn> --persistence-root <release wor
                                  # [V-local] empty->head and previous->head must give identical schemas
 ```
 
-Prompt 33 results:
+Prompt 33's original migration snapshot (superseded by the fixes below):
 
-- `migrate rehearse` against the committed tree: both upgrade paths succeed and the schemas are identical (1,032 objects). However, `alembic check` **fails** on pre-existing model/schema drift in the Prompt 26 `repair_*` tables. That is discrepancy D-33-03; fix it before the first deployment.
-- `migrate check` on the working tree fails with "migration history has branches". The concurrent Prompt 32 migration `a20c4e619d32` chains from `f17b6b04a237` rather than `e5f6a7b8c9d0`.
+- The first rehearsal had pre-existing model/schema drift in the Prompt 26 `repair_*` tables (D-33-03).
+- The concurrent Prompt 32 migration initially created a second head (D-33-04).
 
-The gate behaved correctly in both cases. Do not deploy until both pass.
+Current local validation:
+
+- `migrate check` passes at head `b390a26f17cd`. The only constraint replacements are the three
+  policy-listed `NO ACTION` to `RESTRICT` changes for repair tables. The checker allows only exact
+  table, constraint, and column matches recreated with `RESTRICT`; unmatched, weakened, and raw
+  SQL constraint drops remain blocked. The migration bounds lock waits at five seconds and each
+  DDL statement at 30 seconds; PostgreSQL rolls the FK replacement back as one transaction on
+  timeout.
+- PostgreSQL migration rehearsal passes from an empty schema and from `b9e04c7a1f38` to head;
+  `alembic check` passes and both resulting schemas match (1,064 objects).
+- `pcb-ops doctor --profile dev` passes. Staging remains a template with 29 unresolved
+  owner-supplied inputs and requires a verified AWS principal; no staging resource has been
+  provisioned.
 
 ## Procedure (expand / contract)
 

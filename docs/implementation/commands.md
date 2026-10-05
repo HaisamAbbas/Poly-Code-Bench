@@ -649,7 +649,7 @@ docker run --rm -v "$PWD/infra:/infra" aquasec/trivy:0.67.2 config /infra/terraf
 # Manifests, migrations, alerts
 uv run --offline --locked --all-packages pcb-ops env validate
 uv run --offline --locked --all-packages pcb-ops doctor --profile staging      # exit 3: template
-uv run --offline --locked --all-packages pcb-ops migrate check               # exit 1 until D-33-04
+uv run --offline --locked --all-packages pcb-ops migrate check               # passes: exact FK action repairs are policy-checked
 uv run --offline --locked --all-packages pcb-ops migrate rehearse --admin-url <admin dsn> --persistence-root <worktree>/packages/persistence
 uv run --offline --locked --all-packages pcb-ops alerts check
 

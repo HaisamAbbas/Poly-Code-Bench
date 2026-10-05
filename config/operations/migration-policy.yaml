@@ -9,6 +9,41 @@ previous_revision: b9e04c7a1f38
 # Contract (destructive) migrations are allowed only when listed here with an approved
 # retention/migration plan reference. Revisions at or before released_revision are history.
 approved_contract_migrations: {}
+# These exact FK action replacements are safe because the released constraints used PostgreSQL's
+# immediate, non-deferrable NO ACTION default; RESTRICT preserves the same delete protection.
+# The checker requires each listed FK to be dropped and recreated with the same identity/columns.
+safe_fk_action_replacements:
+  d8f971ea2b34:
+    - constraint: fk_repair_delivery_repair_round_id_repair_round
+      table: repair_delivery
+      referenced_table: repair_round
+      local_columns: [repair_round_id]
+      referenced_columns: [id]
+      previous_ondelete: NO ACTION
+      replacement_ondelete: RESTRICT
+      rationale: >-
+        Keeps the immediate parent-delete restriction on append-only repair evidence while making
+        the model action explicit; the replacement is atomic in the PostgreSQL migration transaction.
+    - constraint: fk_repair_round_repair_run_id_repair_run
+      table: repair_round
+      referenced_table: repair_run
+      local_columns: [repair_run_id]
+      referenced_columns: [id]
+      previous_ondelete: NO ACTION
+      replacement_ondelete: RESTRICT
+      rationale: >-
+        Keeps the immediate parent-delete restriction on append-only repair evidence while making
+        the model action explicit; the replacement is atomic in the PostgreSQL migration transaction.
+    - constraint: fk_repair_run_attempt_id_attempt
+      table: repair_run
+      referenced_table: attempt
+      local_columns: [attempt_id]
+      referenced_columns: [id]
+      previous_ondelete: NO ACTION
+      replacement_ondelete: RESTRICT
+      rationale: >-
+        Keeps the immediate parent-delete restriction on durable repair state while making the
+        model action explicit; the replacement is atomic in the PostgreSQL migration transaction.
 # Tables holding published provenance; no migration may drop or truncate them.
 provenance_tables:
   - artifact

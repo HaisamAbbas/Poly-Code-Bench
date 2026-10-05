@@ -71,7 +71,18 @@ try {
   await page.screenshot({ path: resolve(artifactDirectory, "submission-form-mobile.png"), fullPage: true });
 
   await page.getByRole("button", { name: "Send for review" }).click();
-  await page.getByText("Pending review. No endpoint has been contacted and no run or charge exists.").waitFor();
+  const submissionFeedback = page.locator(".submission-status, .submission-error").first();
+  await submissionFeedback.waitFor();
+  const submissionError = page.locator(".submission-error");
+  assert.equal(
+    await submissionError.count(),
+    0,
+    `the metadata request should be accepted: ${await submissionError.textContent().catch(() => "no error details")}`,
+  );
+  assert.match(
+    await page.locator(".submission-status").innerText(),
+    /Pending review\. No endpoint has been contacted and no run or charge exists\./,
+  );
   assert.equal(unexpectedEndpointRequests.length, 0, "submitting metadata must not contact the provider endpoint");
   await page.getByRole("button", { name: "Check status" }).click();
   await page.waitForFunction(() => Array.from(document.querySelectorAll("button")).some(

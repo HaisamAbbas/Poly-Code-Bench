@@ -26,6 +26,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 import yaml
 
@@ -125,7 +126,7 @@ def recipe_components() -> dict[tuple[str, str], list[str]]:
     }
 
 
-def components_record() -> dict[str, object]:
+def components_record() -> dict[str, Any]:
     """The recorded components identities; this script refuses to guess them."""
     if not COMPONENTS.is_file():
         raise SystemExit(
@@ -135,10 +136,10 @@ def components_record() -> dict[str, object]:
     for tag in (COMPONENTS_BASE_TAG, COMPONENTS_TYPESCRIPT_TAG, COMPONENTS_EVALUATOR_TAG):
         if tag not in document["images"]:
             raise SystemExit(f"{COMPONENTS.relative_to(ROOT)} records no {tag}")
-    return document
+    return cast("dict[str, Any]", document)
 
 
-def require_components_pinned(record: dict[str, object]) -> None:
+def require_components_pinned(record: dict[str, Any]) -> None:
     """Fail unless the local components images are exactly the ones that were recorded.
 
     The recorded digests are what the identity files claim the closure was built from; a tag that
@@ -240,7 +241,7 @@ def require_distinct(records: dict[tuple[str, str], dict[str, object]]) -> None:
 
 
 def build(
-    language: str, recipe: str, components: dict[str, object], components_tag: str
+    language: str, recipe: str, components: dict[str, Any], components_tag: str
 ) -> dict[str, object]:
     context = build_context(language, recipe)
     tag = f"pcb-js-{language}-{recipe}:v1"
@@ -303,7 +304,7 @@ def build(
 def document_for(
     language: str,
     images: dict[str, dict[str, object]],
-    components: dict[str, object],
+    components: dict[str, Any],
 ) -> dict[str, object]:
     return {
         "schema_version": 1,
@@ -433,7 +434,7 @@ def main() -> int:
         output_file(language).write_text(
             json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
-        recorded[language] = document["images"]
+        recorded[language] = cast("dict[str, dict[str, object]]", document["images"])
     refresh_allowlist(recorded)
     written = ", ".join(str(output_file(name).relative_to(ROOT)) for name in LANGUAGES)
     print(f"wrote {written}")

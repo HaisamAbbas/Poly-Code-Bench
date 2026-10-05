@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
@@ -29,6 +29,7 @@ from polycodebench_plugins_api.admission import (
     ConformanceReport,
     make_conformance_report,
 )
+from polycodebench_plugins_api.protocols import ExecutableLanguagePlugin
 from polycodebench_runner.provider import LocalDockerSandboxProvider
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -207,7 +208,7 @@ def _concurrent_view(
             **opportunities,
         },
     }
-    analyzers = list(view.quality["required_analyzers"])
+    analyzers = list(cast("Sequence[str]", view.quality["required_analyzers"]))
     if race == "required":
         analyzers = sorted({*analyzers, "race"})
     else:
@@ -231,8 +232,14 @@ async def run_conformance() -> ConformanceReport:
         operation_timeout_seconds=120,
     )
     runner = PlanRunner(provider, lane="admission")
+    # ``GoProfile.evaluate`` returns the Go plugin's own ``ProfileResult`` model, whose fields are a
+    # superset of the shared ``plugins-api`` one, so the plugin really is an
+    # ``ExecutableLanguagePlugin``; only the nominal return type differs. Verified against the
+    # protocol's resolve/owner/evaluate by importing the plugin.
     engine = SuiteAdmission(
-        plugin, runner, image_digests=(ids.runtime.digest, ids.evaluator.digest)
+        cast("ExecutableLanguagePlugin", plugin),
+        runner,
+        image_digests=(ids.runtime.digest, ids.evaluator.digest),
     )
     files = _files()
     manifest = yaml.safe_load((FIXTURE / "manifest.yaml").read_text(encoding="utf-8"))
@@ -262,7 +269,7 @@ async def run_conformance() -> ConformanceReport:
         )
 
     def solution(path: str) -> dict[str, bytes]:
-        return cast("dict[str, bytes]", variant_files(files, path, ALLOWED))
+        return variant_files(files, path, ALLOWED)
 
     async def analyze(  # type: ignore[no-untyped-def]
         name: str, candidate: dict[str, bytes], task: Any = None

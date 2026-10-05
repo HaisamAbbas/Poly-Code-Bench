@@ -20,7 +20,7 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from polycodebench_core.canonical import canonical_digest, canonical_document_digest
@@ -30,6 +30,7 @@ from polycodebench_evaluation.plan_runner import PlanRunner
 from polycodebench_evaluation.suite_admission import SuiteAdmission
 from polycodebench_lang_go import GoLanguagePlugin
 from polycodebench_plugins_api import TaskDraft
+from polycodebench_plugins_api.protocols import ExecutableLanguagePlugin
 from polycodebench_runner.provider import LocalDockerSandboxProvider
 from polycodebench_services.task_packages import TaskPackageImporter
 
@@ -181,8 +182,12 @@ async def admit(root: Path, report_path: Path) -> int:
             f"status={rights['redistribution_status']}; license={rights['license_expression']}",
         ),
     }
+    # ``GoProfile.evaluate`` returns the Go plugin's own ``ProfileResult`` model, whose fields are a
+    # superset of the shared ``plugins-api`` one, so the plugin really is an
+    # ``ExecutableLanguagePlugin``; only the nominal return type differs. Verified against the
+    # protocol's resolve/owner/evaluate by importing the plugin.
     engine = SuiteAdmission(
-        plugin,
+        cast("ExecutableLanguagePlugin", plugin),
         PlanRunner(provider, lane="admission"),
         image_digests=(ids.runtime.digest, ids.evaluator.digest),
     )

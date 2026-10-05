@@ -161,9 +161,7 @@ def main() -> int:
     if base_context.exists():
         shutil.rmtree(base_context)
     base_context.mkdir(parents=True)
-    (base_context / "Dockerfile").write_text(
-        BASE_DOCKERFILE, encoding="utf-8", newline="\n"
-    )
+    (base_context / "Dockerfile").write_text(BASE_DOCKERFILE, encoding="utf-8", newline="\n")
     digest = build(COMPONENTS_TAG, CONTEXTS, network="default")
     base_digest = build(COMPONENTS_BASE_TAG, base_context, network="none")
     document = {

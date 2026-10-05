@@ -1,6 +1,6 @@
 """Build the prebuilt JavaScript/TypeScript components images (Prompt 19, PCB-19-1).
 
-    .venv/Scripts/python.exe scripts/fetch_js_components.py            # build against the committed lock
+    .venv/Scripts/python.exe scripts/fetch_js_components.py   # build against the committed lock
     .venv/Scripts/python.exe scripts/fetch_js_components.py --refresh-lock
 
 **This is the only step in the entire JavaScript/TypeScript pipeline that uses a network.**
@@ -60,7 +60,8 @@ COMPONENT_TARGETS = {
 }
 REGISTRY = "https://registry.npmjs.org"
 
-DOCKERFILE = """# Prebuilt JS/TS components images (Prompt 19, PCB-19-1). Built ONCE, with network, by
+DOCKERFILE = """# Prebuilt JS/TS components images (Prompt 19, PCB-19-1). Built ONCE, with \
+network, by
 # scripts/fetch_js_components.py -- the only step in the JS/TS pipeline that uses one. The six real
 # images are then built with --network none by copying the resolved node_modules out of these.
 # Four targets, because the recipe distinction has to be real: a candidate must not be able to run
@@ -87,12 +88,15 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS typescript
 WORKDIR /opt/pcb/components
 COPY package.json package-lock.json ./
-# Runtime dependencies plus the TypeScript compiler. A TypeScript candidate must be able to type-check
+# Runtime dependencies plus the TypeScript compiler. A TypeScript candidate must be able to \
+type-check
 # its own solution inside the image it solves in, so this target installs the full closure and keeps
 # the compiler while dropping eslint, which belongs only in the evaluator images.
 RUN npm ci --no-audit --no-fund && rm -rf /root/.npm \
     && node_modules/.bin/tsc --version \
-    && rm -rf node_modules/eslint node_modules/.bin/eslint node_modules/@eslint node_modules/@eslint-community node_modules/@humanwhocodes node_modules/@eslint/js node_modules/@humanfs node_modules/@humanwho
+    && rm -rf node_modules/eslint node_modules/.bin/eslint node_modules/@eslint \
+node_modules/@eslint-community node_modules/@humanwhocodes node_modules/@eslint/js \
+node_modules/@humanfs node_modules/@humanwho
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS lint
 WORKDIR /opt/pcb/components
@@ -239,9 +243,8 @@ def advisory_report(context: Path) -> dict[str, object]:
         "endpoint": "/-/npm/v1/security/audits/quick",
         "database": "npm advisory database (GitHub Advisory Database feed)",
         "vulnerabilities": report["metadata"]["vulnerabilities"],
-        "report_digest": "sha256:" + hashlib.sha256(
-            json.dumps(report, sort_keys=True).encode()
-        ).hexdigest(),
+        "report_digest": "sha256:"
+        + hashlib.sha256(json.dumps(report, sort_keys=True).encode()).hexdigest(),
     }
 
 
@@ -339,10 +342,10 @@ def main() -> int:
         "schema_version": 1,
         "kind": "js_components_images",
         "note": (
-            "Prebuilt component images and the ONLY step in the JS/TS pipeline that uses a network. "
-            "build_js_images.py builds the six recipe images from these with --network none. The "
-            "base image carries no analyzers, which is what keeps the runtime and performance "
-            "recipes genuinely distinct from the evaluator recipe."
+            "Prebuilt component images and the ONLY step in the JS/TS pipeline that uses a "
+            "network. build_js_images.py builds the six recipe images from these with --network "
+            "none. The base image carries no analyzers, which is what keeps the runtime and "
+            "performance recipes genuinely distinct from the evaluator recipe."
         ),
         "base_image": {"reference": BASE_IMAGE, "digest": BASE_DIGEST},
         "lock": {

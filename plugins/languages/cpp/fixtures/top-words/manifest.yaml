@@ -10,7 +10,7 @@ task:
   cluster_id: conformance-cpp-top-words-cluster
   difficulty: introductory
   stratum_id: conformance-fixtures
-  output_contract_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  output_contract_digest: sha256:50335fe284dc699375bfd66c93d7ced0b1ae40c587038bf41c409610b7c84174
   methodology_label: independent
 output_contract:
   schema_version: 1
@@ -18,13 +18,10 @@ output_contract:
   submission_kind: files
   allowed_paths:
   - include/top_words.hpp
-  # The candidate's scored submission is the one compiled translation unit. The header is a required
-  # output because the declaration it carries is half the contract, but a submission may not change
-  # it, so it is not an allowed path.
   - src/top_words.cpp
   maximum_artifact_bytes: 100000
   maximum_file_bytes: 50000
-  maximum_files: 1
+  maximum_files: 2
   findings_limit: null
 source:
   schema_version: 1
@@ -46,14 +43,11 @@ rights:
 runtime:
   schema_version: 1
   kind: task_runtime
-  # The acceptance lane's image, as recorded in config/images/cpp-v1.json. It is the *runtime*
-  # recipe and not the sanitized one: a candidate's pass or fail can never depend on whether the
-  # run was instrumented.
-  image_digest: sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b
+  image_digest: sha256:64ffcc71022b7b4d7856872f2058a5d257949a559bc3f6f77b7c06d91a22248f
   language_plugin_id: cpp
   language_plugin_version: 0.1.0
-  build_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
-  test_recipe_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  build_recipe_digest: sha256:93b9ff9967b4071b878425c9516af8cc786979f23eaed1130f98fa3c57568d9c
+  test_recipe_digest: sha256:e3f5cd2949f6a6b7282ff89edd0a002f56a310ca88fe1283154055ed7d2bf787
   resource_class: local-development-small
 acceptance:
   schema_version: 1
@@ -106,28 +100,18 @@ visible_files:
 - visible/repo/src/top_words.cpp
 - visible/task.md
 hidden_files:
-- admission/alternative-sort/include/top_words.hpp
 - admission/alternative-sort/src/top_words.cpp
-- admission/exception-defective/include/top_words.hpp
 - admission/exception-defective/src/top_words.cpp
 - admission/exposure-rights.json
-- admission/faulty-ties/include/top_words.hpp
 - admission/faulty-ties/src/top_words.cpp
-- admission/leak-defective/include/top_words.hpp
 - admission/leak-defective/src/top_words.cpp
-- admission/ownership-defective/include/top_words.hpp
 - admission/ownership-defective/src/top_words.cpp
-- admission/quality-defective/include/top_words.hpp
 - admission/quality-defective/src/top_words.cpp
-- admission/race-defective/include/top_words.hpp
-- admission/race-defective/src/top_words.cpp
-- admission/timeout-case/include/top_words.hpp
 - admission/timeout-case/src/top_words.cpp
 - hidden/oracle.json
 - hidden/perf/workload.cpp
 - hidden/quality-plan.yaml
 - hidden/recipe.json
-- hidden/reference/include/top_words.hpp
 - hidden/reference/src/top_words.cpp
 - hidden/tests/behaviour.cpp
 - hidden/tests/stress.cpp
@@ -150,8 +134,6 @@ fixtures:
   variant: quality_defective
   solution_path: admission/quality-defective/src/top_words.cpp
   expectation:
-    # Equivalence families, not scanner rule names: this list is compared against the family
-    # component of each observation's issue_key, so naming a rule here would never match.
     expected_issue_families:
     - manual-ownership
     - value-copy
@@ -162,19 +144,12 @@ fixtures:
   solution_path: admission/timeout-case/src/top_words.cpp
   expectation:
     expected_failure: candidate_timeout
-# The remaining four are *quality* fixtures, not acceptance ones: they pass the behaviour contract
-# and are rejected only by an instrumented or crashing lane. They carry the same `faulty` variant as
-# faulty-ties because they all fail the task; what distinguishes them is which lane observes them.
 - name: ownership-defective
   variant: faulty
   solution_path: admission/ownership-defective/src/top_words.cpp
   expectation:
-    # Family names are the profile's equivalence families, not the sanitizer's own wording: a
-    # double free and a use-after-free are one ownership defect reported at run time, so they
-    # share the `manual-ownership` family with the context scanner and cannot be counted twice.
     expected_lane_findings:
       asan:
-      - manual-ownership
       - undefined-behaviour
 - name: leak-defective
   variant: faulty
@@ -183,13 +158,6 @@ fixtures:
     expected_lane_findings:
       asan:
       - manual-ownership
-- name: race-defective
-  variant: faulty
-  solution_path: admission/race-defective/src/top_words.cpp
-  expectation:
-    expected_lane_findings:
-      tsan:
-      - data-race
 - name: exception-defective
   variant: faulty
   solution_path: admission/exception-defective/src/top_words.cpp

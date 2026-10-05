@@ -8,8 +8,8 @@ image that already contains every pinned package at the exact version the toolch
 This script builds two such images **with** network:
 
 ``pcb-cpp-components-runtime:v1``
-    ``clang`` and ``libstdc++-12-dev``: the compiler and the ASan/UBSan/TSan runtimes. No
-    analyzer, so the runtime recipe stays analyzer-free.
+    ``clang``, ``llvm-14`` and ``libstdc++-12-dev``: the compiler, source symbolizer and
+    ASan/UBSan/TSan runtimes. No analyzer, so the runtime recipe stays analyzer-free.
 ``pcb-cpp-components-evaluator:v1``
     the runtime plus ``clang-tidy`` and ``cppcheck``.
 
@@ -61,7 +61,6 @@ RUN set -eu; \\
     apt-get install -y --no-install-recommends __PACKAGES__; \\
     rm -rf /var/lib/apt/lists/*
 """
-
 
 
 def run(args: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -117,6 +116,7 @@ def tool_versions(tag: str, digest: str) -> dict[str, str]:
         "clang++": ask(["clang++", "--version"]),
         "clang-tidy": ask(["clang-tidy", "--version"]),
         "cppcheck": ask(["cppcheck", "--version"]),
+        "llvm-symbolizer": ask(["llvm-symbolizer-14", "--version"]),
     }
 
 
@@ -145,6 +145,8 @@ def build(recipe: str) -> dict[str, object]:
     digest = run(["docker", "image", "inspect", tag, "--format", "{{.Id}}"]).stdout.strip()
     versions = tool_versions(tag, digest)
     if recipe == "runtime":
+        if versions["llvm-symbolizer"] == "absent":
+            raise SystemExit("the runtime components image must ship llvm-symbolizer-14")
         for analyzer in ("clang-tidy", "cppcheck"):
             if versions[analyzer] != "absent":
                 raise SystemExit(
@@ -181,7 +183,8 @@ def main() -> int:
     OUTPUT.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     for recipe in RECIPES:
         record = images[recipe]
-        print(recipe, record["digest"], record["tool_versions"]["clang++"])
+        tool_versions = cast("dict[str, str]", record["tool_versions"])
+        print(recipe, record["digest"], tool_versions["clang++"])
     print(f"wrote {OUTPUT.relative_to(ROOT)}")
     return 0
 

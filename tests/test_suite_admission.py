@@ -147,6 +147,34 @@ def test_a_faulty_variant_must_fail_for_its_declared_reason() -> None:
     assert "known-fault-rejection" in failed(report(mutate("faulty", evaluation(("incomplete",)))))
 
 
+def test_a_faulty_fixture_without_declared_failing_cases_fails_cleanly() -> None:
+    faulty = copy.deepcopy(next(f for f in MANIFEST["fixtures"] if f["variant"] == "faulty"))
+    faulty["name"] = "faulty-without-failure-list"
+    faulty["expectation"] = {}
+    files = variant_files(FILES, faulty["solution_path"])
+    outcomes = good_outcomes() + [
+        (faulty, files, evaluation(("fail",), failed=("tests/unexpected.py::test",)))
+    ]
+
+    assert "known-fault-rejection" in failed(report(outcomes))
+
+
+def test_a_build_error_fixture_is_gated_by_its_own_check_not_by_failing_cases() -> None:
+    """A build failure reaches no test case; reading `failing_cases` used to crash the report."""
+    build_error = {
+        "name": "compile-error",
+        "variant": "faulty",
+        "solution_path": MANIFEST["fixtures"][0]["solution_path"],
+        "expectation": {"expected_failure": "build_error"},
+    }
+    files = variant_files(FILES, build_error["solution_path"])
+    rejected = evaluation(("fail",), reasons=("build:src/x.c:1: error",))
+    result = report(good_outcomes() + [(build_error, files, rejected)])
+    assert failed(result) == set()
+    escaped = report(good_outcomes() + [(build_error, files, evaluation(("pass",)))])
+    assert failed(escaped) == {"crash-and-build-fixtures-rejected"}
+
+
 def test_an_alternative_valid_solution_must_pass() -> None:
     assert "alternative-solution-acceptance" in failed(
         report(mutate("alternative", evaluation(("fail",))))

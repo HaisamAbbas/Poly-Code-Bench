@@ -167,6 +167,7 @@ def _archive(options, compiled, workdir, err):
 def main(argv):
     options = _parse(argv)
     if options["root"]:
+        os.makedirs(options["root"], exist_ok=True)
         os.chdir(options["root"])
     name = options["name"]
     parent = os.path.dirname(name)

@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
+import yaml  # type: ignore[import-untyped,unused-ignore]
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGES = ROOT / "infra" / "images" / "cpp"
@@ -46,11 +46,11 @@ COMPONENTS_FOR_RECIPE = {
 PYTHON_IMAGE = "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b"
 # Tools every recipe is probed for, so a recipe that does not ship one records "absent" instead of
 # silently omitting it.
-ALL_TOOLS = ("clang++", "clang-tidy", "cppcheck")
+ALL_TOOLS = ("clang++", "clang-tidy", "cppcheck", "llvm-symbolizer")
 EXPECTED_TOOLS = {
-    "runtime": ("clang++",),
-    "evaluator": ("clang++", "clang-tidy", "cppcheck"),
-    "performance": ("clang++",),
+    "runtime": ("clang++", "llvm-symbolizer"),
+    "evaluator": ("clang++", "clang-tidy", "cppcheck", "llvm-symbolizer"),
+    "performance": ("clang++", "llvm-symbolizer"),
 }
 IGNORED_DIRS = frozenset({"__pycache__", ".git"})
 
@@ -120,6 +120,7 @@ def tool_version(recipe: str, image_digest: str, tool: str) -> str:
         "clang++": ["clang++", "--version"],
         "clang-tidy": ["clang-tidy", "--version"],
         "cppcheck": ["cppcheck", "--version"],
+        "llvm-symbolizer": ["llvm-symbolizer-14", "--version"],
     }[tool]
     result = run(
         [
@@ -167,8 +168,13 @@ def require_distinct(records: dict[str, dict[str, object]]) -> None:
             if tools.get(tool) != "absent":
                 problems.append(f"{recipe} image unexpectedly provides {tool}")
     for recipe in RECIPES:
-        if records[recipe]["tools"].get("clang++") == "absent":  # type: ignore[union-attr]
-            problems.append(f"{recipe} image cannot compile anything")
+        tools = records[recipe]["tools"]
+        assert isinstance(tools, dict)
+        for tool in ALL_TOOLS:
+            if tool in EXPECTED_TOOLS[recipe] and tools.get(tool) == "absent":
+                problems.append(f"{recipe} image cannot run {tool}")
+            if tool not in EXPECTED_TOOLS[recipe] and tools.get(tool) != "absent":
+                problems.append(f"{recipe} image unexpectedly provides {tool}")
     if records["performance"]["release_flags"] != release_flags():
         problems.append("the performance image does not bake the pinned release flags")
     for recipe in ("runtime", "evaluator"):

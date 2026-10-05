@@ -67,10 +67,9 @@ MAX_PLAN_SECONDS = 110
 TOOL_ERRORS = (2, 126, 127)
 SANITIZER_TOOL_ERRORS = (126, 127)
 COMPILE_FAILED = 1
-# The sanitizer wrapper reserves exit 2 for a runtime that refused to judge the task. The JSON
-# verdict distinguishes that from a candidate defect; other C++ plans continue to treat exit 2 as
-# a tool/usage error.
-UNSUPPORTED = 2
+# Exit 2 is a wrapper usage error. The sanitizer wrapper uses exit 3 when a runtime cannot judge;
+# its structured report distinguishes that from a candidate defect.
+UNSUPPORTED = 3
 SOURCE_SUFFIXES = (".cpp", ".cc", ".cxx")
 # `ToolIdentity.name` is a slug, so the compiler is recorded as `clang-c++`.
 COMPILER_TOOL = tool_identity_name("clang++")
@@ -197,7 +196,7 @@ def build_plan(
         "-B",
         f"{GUEST}/pcb_cpp_build.py",
         "--name",
-        "out/build",
+        f"{OUTPUTS}/build",
         "--deadline",
         str(timeout - RUNNER_MARGIN),
         "--root",
@@ -288,9 +287,13 @@ def make_test_plan(ids: ImageIdentities, lock: ToolchainLock, task: FrozenTask) 
                         outputs=_captured(group.group_id, "text"),
                         scope=task.required_outputs,
                         timeout=timeout,
-                        # A test binary that reports a failing case is a completed run with
-                        # findings, not a broken tool.
-                        semantics=ExitSemantics(success=(0, COMPILE_FAILED), error=TOOL_ERRORS),
+                        # A failing case or candidate signal is evidence about the solution. The
+                        # parser cross-checks abnormal exits against the supervisor record.
+                        semantics=ExitSemantics(
+                            success=(0,),
+                            findings=(COMPILE_FAILED, *range(129, 193)),
+                            error=TOOL_ERRORS,
+                        ),
                         recipe="runtime",
                     )
                 ),
@@ -469,10 +472,7 @@ def _scan_context(
         analyzer="context",
         tool_name="context-scan",
         argv=argv,
-        outputs=(
-            PlanOutput(path="out/context.json", format="json"),
-            PlanOutput(path="out/context.run.json", format="json"),
-        ),
+        outputs=(PlanOutput(path="out/context.json", format="json"),),
         semantics=ExitSemantics(success=(0,), findings=(COMPILE_FAILED,), error=TOOL_ERRORS),
         output_schema="pcb-cpp-scan-v1",
         timeout=60,
@@ -531,7 +531,6 @@ def _instrumented(
             PlanOutput(
                 path=f"out/{analyzer}.err", format="text", required=False, max_bytes=4 * MIB
             ),
-            PlanOutput(path=f"out/{analyzer}.run.json", format="json"),
         ),
         # A measured defect and a runtime that refused to judge both exit non-zero; only the
         # report says which one it was.
@@ -569,16 +568,21 @@ def analysis_plans(
         _scan_context(ids, lock, context),
     ]
     if quality.runs_sanitizers:
-        chosen = tuple(quality.sanitizers)
         oracle = oracle_from_mapping(task.inventory)
-        for analyzer, needed in SANITIZER_REQUIREMENTS.items():
-            if set(chosen) & set(needed):
-                plans.append(
-                    _instrumented(
-                        ids, lock, context, analyzer=analyzer, sanitizers=chosen, oracle=oracle
+        for chosen in quality.instrumentation_lanes:
+            for analyzer, needed in SANITIZER_REQUIREMENTS.items():
+                if set(chosen) & set(needed):
+                    plans.append(
+                        _instrumented(
+                            ids,
+                            lock,
+                            context,
+                            analyzer=analyzer,
+                            sanitizers=tuple(chosen),
+                            oracle=oracle,
+                        )
                     )
-                )
-                break
+                    break
     return plans
 
 

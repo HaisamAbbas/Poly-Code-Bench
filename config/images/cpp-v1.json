@@ -12,7 +12,7 @@
     "scored_runs_offline": true,
     "toolchain_lock": "config/languages/cpp-toolchain-v1.json"
   },
-  "guest_digest": "sha256:91a051cc320e97f069fa3fcf848682780cd862ba0d634fcfa2517532a440200b",
+  "guest_digest": "sha256:840bc0f718c1f188e1e2c7db0a5ae64e631f15820c6244366d485e441e5a9dfb",
   "images": {
     "evaluator": {
       "clang": "14.0.6",
@@ -20,75 +20,84 @@
         "clang=1:14.0-55.7~deb12u1",
         "clang-tidy=1:14.0-55.7~deb12u1",
         "cppcheck=2.10-2",
+        "llvm-14=1:14.0.6-12",
         "libstdc++-12-dev=12.2.0-14+deb12u1"
       ],
-      "digest": "sha256:6d4220370dd351538b8a48c35db2e195d91dfd9557b13c068fed73d61b8ced71",
-      "dockerfile_digest": "sha256:6f0151de26a2e33f0b6b3dd3dabbf98b1d87c744917b88194d89360c8dbdeb91",
+      "digest": "sha256:fd3dc4e4010da8c40122eb7d6307bca8d922a204cb438867969494f5e24fb6b6",
+      "dockerfile_digest": "sha256:d9b7f0f484dde6d196e1e396dc4baca024c2eff9e20d4781b6d7b84742dd1c6a",
       "expected_tools": [
         "clang++",
         "clang-tidy",
-        "cppcheck"
+        "cppcheck",
+        "llvm-symbolizer"
       ],
-      "guest_and_rules_digest": "sha256:2a566523366ebb7c8ef12f0b327c7997ff99de4fae06b9301a1ccbac414274eb",
+      "guest_and_rules_digest": "sha256:ce914ab680ce66d8a7306722cf3348e70d6f5456b7c9969a5761a6d66ab8be02",
       "recipe": "evaluator",
-      "recipe_digest": "sha256:b60f1d35023cd388e24d14d4e23ffcd71a2c6698f2e458946a0bde409b2584a6",
-      "reference": "pcb-cpp-evaluator@sha256:6d4220370dd351538b8a48c35db2e195d91dfd9557b13c068fed73d61b8ced71",
+      "recipe_digest": "sha256:d6d48d09352644bcc97ac675c58392f129e488c6e1603e4bad33a5887b9a5932",
+      "reference": "pcb-cpp-evaluator@sha256:fd3dc4e4010da8c40122eb7d6307bca8d922a204cb438867969494f5e24fb6b6",
       "release_flags": "",
       "tag": "pcb-cpp-evaluator:v1",
       "tools": {
         "clang++": "14.0.6",
         "clang-tidy": "14.0.6",
-        "cppcheck": "2.10"
+        "cppcheck": "2.10",
+        "llvm-symbolizer": "14.0.6"
       }
     },
     "performance": {
       "clang": "14.0.6",
       "components": [
         "clang=1:14.0-55.7~deb12u1",
+        "llvm-14=1:14.0.6-12",
         "libstdc++-12-dev=12.2.0-14+deb12u1"
       ],
-      "digest": "sha256:6d793711bf2e80acd4913326f5f1660c7b66a76877ebf0909907f29427c7419b",
-      "dockerfile_digest": "sha256:6f0151de26a2e33f0b6b3dd3dabbf98b1d87c744917b88194d89360c8dbdeb91",
+      "digest": "sha256:2a46ae5cd9042eeaa4f88c6fdee9ff1d1cffc0e26eb09e92b172fc8bbf39ec30",
+      "dockerfile_digest": "sha256:d9b7f0f484dde6d196e1e396dc4baca024c2eff9e20d4781b6d7b84742dd1c6a",
       "expected_tools": [
-        "clang++"
+        "clang++",
+        "llvm-symbolizer"
       ],
-      "guest_and_rules_digest": "sha256:2a566523366ebb7c8ef12f0b327c7997ff99de4fae06b9301a1ccbac414274eb",
+      "guest_and_rules_digest": "sha256:ce914ab680ce66d8a7306722cf3348e70d6f5456b7c9969a5761a6d66ab8be02",
       "recipe": "performance",
-      "recipe_digest": "sha256:b60f1d35023cd388e24d14d4e23ffcd71a2c6698f2e458946a0bde409b2584a6",
-      "reference": "pcb-cpp-performance@sha256:6d793711bf2e80acd4913326f5f1660c7b66a76877ebf0909907f29427c7419b",
+      "recipe_digest": "sha256:d6d48d09352644bcc97ac675c58392f129e488c6e1603e4bad33a5887b9a5932",
+      "reference": "pcb-cpp-performance@sha256:2a46ae5cd9042eeaa4f88c6fdee9ff1d1cffc0e26eb09e92b172fc8bbf39ec30",
       "release_flags": "-O3 -DNDEBUG -fno-omit-frame-pointer",
       "tag": "pcb-cpp-performance:v1",
       "tools": {
         "clang++": "14.0.6",
         "clang-tidy": "absent",
-        "cppcheck": "absent"
+        "cppcheck": "absent",
+        "llvm-symbolizer": "14.0.6"
       }
     },
     "runtime": {
       "clang": "14.0.6",
       "components": [
         "clang=1:14.0-55.7~deb12u1",
+        "llvm-14=1:14.0.6-12",
         "libstdc++-12-dev=12.2.0-14+deb12u1"
       ],
-      "digest": "sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b",
-      "dockerfile_digest": "sha256:6f0151de26a2e33f0b6b3dd3dabbf98b1d87c744917b88194d89360c8dbdeb91",
+      "digest": "sha256:64ffcc71022b7b4d7856872f2058a5d257949a559bc3f6f77b7c06d91a22248f",
+      "dockerfile_digest": "sha256:d9b7f0f484dde6d196e1e396dc4baca024c2eff9e20d4781b6d7b84742dd1c6a",
       "expected_tools": [
-        "clang++"
+        "clang++",
+        "llvm-symbolizer"
       ],
-      "guest_and_rules_digest": "sha256:2a566523366ebb7c8ef12f0b327c7997ff99de4fae06b9301a1ccbac414274eb",
+      "guest_and_rules_digest": "sha256:ce914ab680ce66d8a7306722cf3348e70d6f5456b7c9969a5761a6d66ab8be02",
       "recipe": "runtime",
-      "recipe_digest": "sha256:b60f1d35023cd388e24d14d4e23ffcd71a2c6698f2e458946a0bde409b2584a6",
-      "reference": "pcb-cpp-runtime@sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b",
+      "recipe_digest": "sha256:d6d48d09352644bcc97ac675c58392f129e488c6e1603e4bad33a5887b9a5932",
+      "reference": "pcb-cpp-runtime@sha256:64ffcc71022b7b4d7856872f2058a5d257949a559bc3f6f77b7c06d91a22248f",
       "release_flags": "",
       "tag": "pcb-cpp-runtime:v1",
       "tools": {
         "clang++": "14.0.6",
         "clang-tidy": "absent",
-        "cppcheck": "absent"
+        "cppcheck": "absent",
+        "llvm-symbolizer": "14.0.6"
       }
     }
   },
   "kind": "cpp_images",
-  "rule_bundle_digest": "sha256:32fbaf3b4034d540fd24b836e16dad706782062fbfeecc75f18636c41238f1f2",
+  "rule_bundle_digest": "sha256:6b780b0d41d601e48afd69c906ad8eb759b9144d8e9ef23a25f40465f0ba3259",
   "schema_version": 1
 }

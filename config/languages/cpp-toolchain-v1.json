@@ -5,11 +5,12 @@
   "status": "pilot_parameters_unvalidated",
   "effective_for_scoring": false,
   "note": "The pinned C++ contract. A task may choose a standard, a compiler and a build profile from this document and nothing else; a recipe that names anything absent here is rejected at task validation. Release measurement and sanitizer instrumentation are separate build profiles, so an instrumented binary can never be timed as if it were release code.",
-  "apt_components_note": "libclang-rt-14-dev carries libclang_rt.asan/ubsan/tsan. Without it an instrumented build links against nothing and every sanitizer plan fails for the wrong reason, so the sanitizer runtimes are part of the pinned contract rather than an assumed consequence of installing clang.",
+  "apt_components_note": "libclang-rt-14-dev carries libclang_rt.asan/ubsan/tsan and llvm-14 supplies the pinned llvm-symbolizer-14 binary. Both are required for source-attributed sanitizer evidence, so runtimes and symbolization are part of the pinned contract rather than assumed consequences of installing clang.",
   "base_image": "debian@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251",
   "apt_components": {
     "runtime": [
       "clang=1:14.0-55.7~deb12u1",
+      "llvm-14=1:14.0.6-12",
       "libclang-rt-14-dev=1:14.0.6-12",
       "libstdc++-12-dev=12.2.0-14+deb12u1"
     ],
@@ -17,11 +18,13 @@
       "clang=1:14.0-55.7~deb12u1",
       "clang-tidy=1:14.0-55.7~deb12u1",
       "cppcheck=2.10-2",
+      "llvm-14=1:14.0.6-12",
       "libclang-rt-14-dev=1:14.0.6-12",
       "libstdc++-12-dev=12.2.0-14+deb12u1"
     ],
     "performance": [
       "clang=1:14.0-55.7~deb12u1",
+      "llvm-14=1:14.0.6-12",
       "libclang-rt-14-dev=1:14.0.6-12",
       "libstdc++-12-dev=12.2.0-14+deb12u1"
     ]
@@ -83,6 +86,7 @@
       "runtime": "asan",
       "environment": {
         "ASAN_OPTIONS": "detect_leaks=1:allocator_may_return_null=0:abort_on_error=0:log_path=stderr",
+        "ASAN_SYMBOLIZER_PATH": "/usr/bin/llvm-symbolizer-14",
         "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
       }
     },
@@ -92,6 +96,7 @@
       "runtime": "asan",
       "environment": {
         "ASAN_OPTIONS": "detect_leaks=1:allocator_may_return_null=0:abort_on_error=0:log_path=stderr",
+        "ASAN_SYMBOLIZER_PATH": "/usr/bin/llvm-symbolizer-14",
         "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
       }
     },

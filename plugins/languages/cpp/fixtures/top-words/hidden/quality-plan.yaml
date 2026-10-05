@@ -9,7 +9,8 @@ kind: cpp_task_quality_plan
 # boundary, and the returned vector is a value the caller owns. The performance workload is the
 # measured-cost opportunity, and the sanitizers are the memory-safety one.
 instrumentation: supported
-sanitizers: [address, undefined]
+sanitizer_lanes:
+  - [address, undefined]
 opportunity_tags: [ownership, values, stl, exceptions, modern, performance, memory]
 opportunities:
   raii_ownership: 2

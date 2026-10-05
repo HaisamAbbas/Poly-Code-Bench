@@ -1,24 +1,3 @@
-# Pinned cppcheck suppressions (config/languages/cpp-toolchain-v1.json, analyzer_invocations.cppcheck).
-#
-# One `id[:file]` per line; `--inline-suppr` is on, so a candidate's own `// cppcheck-suppress`
-# lines are honoured too. A suppression may only hide a check whose finding says nothing about the
-# candidate's own code. Nothing here may hide a defect the profile scores
-# (cpp.cppcheck.passedbyvalue, usestlalgorithm, usevectorpushback, constparameterreference,
-# useauthtype, uninitvar, nullptr, invalidfunctionarg, arrayindexoutofbounds): suppressing one of
-# those would let a defect pass as a clean scan, which is exactly the failure mode the C++ profile
-# forbids.
-#
-# `missingIncludeSystem` and `unusedFunction` are also passed as --suppress flags by the pinned
-# invocation; listing them here keeps this file the single readable statement of why the noise is
-# noise.
-
-# The C++ standard library is not installed as headers cppcheck can resolve, so every include of
-# <vector>, <string>, <memory> ... is "missing" and every inline template function is "unused".
-# Those are properties of the toolchain, not of the candidate.
 missingIncludeSystem:*
 unusedFunction:*
-
-# cppcheck 2.10 expands every #if branch of the standard library headers it cannot resolve and then
-# reports one "too many #include configurations" per translation unit. The finding carries no
-# source location the candidate can act on.
 toomanyconfigs:*

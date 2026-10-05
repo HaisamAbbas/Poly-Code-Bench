@@ -11,7 +11,6 @@ flag anywhere in its argv, and ``address``+``thread`` is refused at task validat
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -22,8 +21,7 @@ from polycodebench_lang_cpp import CppLanguagePlugin
 from polycodebench_lang_cpp.locks import LockError, load_lock
 from polycodebench_lang_cpp.plugin import recipe_digest_of
 from polycodebench_lang_cpp.taskspec import CppRecipe, parse_recipe
-from polycodebench_plugins_api import AnalysisContext, DictArtifactReader
-from polycodebench_plugins_api import API_VERSION
+from polycodebench_plugins_api import API_VERSION, AnalysisContext, DictArtifactReader
 from polycodebench_plugins_api.protocols import ExecutableLanguagePlugin, LanguagePlugin
 
 plugin = CppLanguagePlugin()
@@ -88,19 +86,20 @@ def test_a_wrong_primary_language_is_refused() -> None:
 def test_a_standard_the_pinned_toolchain_does_not_carry_is_refused() -> None:
     """A recipe naming c++23 cannot be built by the pinned clang, so it is rejected at authoring."""
     files = package_files()
-    files["hidden/recipe.json"] = (
-        files["hidden/recipe.json"].replace(b'"c++20"', b'"c++23"')
-    )
+    files["hidden/recipe.json"] = files["hidden/recipe.json"].replace(b'"c++20"', b'"c++23"')
     assert "recipe-invalid" in codes(files)
 
 
 @pytest.mark.parametrize("pair", [("address", "thread"), ("undefined", "thread")])
-def test_an_incompatible_instrumentation_pair_is_refused_at_validation(pair: tuple[str, str]) -> None:
+def test_an_incompatible_instrumentation_pair_is_refused_at_validation(
+    pair: tuple[str, str],
+) -> None:
     files = package_files()
-    plan = files["hidden/quality-plan.yaml"].decode()
-    files["hidden/quality-plan.yaml"] = (
-        plan.replace("sanitizers: [address, undefined]", f"sanitizers: [{', '.join(pair)}]")
-    ).encode()
+    import yaml
+
+    plan = yaml.safe_load(files["hidden/quality-plan.yaml"])
+    plan["sanitizer_lanes"] = [list(pair)]
+    files["hidden/quality-plan.yaml"] = yaml.safe_dump(plan).encode()
     assert "quality-plan-invalid" in codes(files)
 
 
@@ -118,7 +117,7 @@ def test_a_missing_reference_solution_is_refused() -> None:
     del files["hidden/reference/src/top_words.cpp"]
     assert "reference-missing" in codes(files)
     files = package_files()
-    del files["hidden/reference/include/top_words.hpp"]
+    del files["visible/repo/include/top_words.hpp"]
     assert "reference-missing" in codes(files)
 
 
@@ -147,7 +146,9 @@ def test_a_case_the_test_file_runs_but_the_oracle_does_not_declare_is_refused() 
 
 
 def test_case_discovery_reads_the_harness_macros_and_ignores_comments_and_strings() -> None:
-    """The same macro call is the static declaration, so the inventory cannot drift from the file."""
+    """The same macro call is the static declaration, so the inventory cannot drift
+    from the file.
+    """
     from polycodebench_lang_cpp.taskspec import discover_cases
 
     source = b"""
@@ -187,20 +188,23 @@ def test_an_invalid_exposure_rights_record_is_refused() -> None:
 def test_an_analyzer_with_no_declaration_sanitizer_is_refused() -> None:
     """`asan` is required, so the task must declare the sanitizer it needs."""
     files = package_files()
-    plan = files["hidden/quality-plan.yaml"].decode()
-    files["hidden/quality-plan.yaml"] = plan.replace(
-        "sanitizers: [address, undefined]", "sanitizers: []"
-    ).encode()
+    import yaml
+
+    plan = yaml.safe_load(files["hidden/quality-plan.yaml"])
+    plan.pop("sanitizer_lanes")
+    plan["sanitizers"] = []
+    files["hidden/quality-plan.yaml"] = yaml.safe_dump(plan).encode()
     assert "quality-plan-invalid" in codes(files)
 
 
 def test_a_required_analyzer_the_task_never_declares_is_refused() -> None:
     files = package_files()
     plan = files["hidden/quality-plan.yaml"].decode()
-    files["hidden/quality-plan.yaml"] = plan.replace(
-        "required_analyzers: [clang_tidy, cppcheck, context, asan]",
-        "required_analyzers: [clang_tidy, cppcheck, context, asan, klock]",
-    ).encode()
+    import yaml
+
+    data = yaml.safe_load(plan)
+    data["required_analyzers"].append("klock")
+    files["hidden/quality-plan.yaml"] = yaml.safe_dump(data).encode()
     assert "quality-plan-invalid" in codes(files)
 
 
@@ -222,9 +226,7 @@ def test_a_fixture_pointing_at_a_missing_solution_is_refused() -> None:
 
     data = yaml.safe_load((TOP_WORDS / "manifest.yaml").read_text(encoding="utf-8"))
     data["fixtures"][0]["solution_path"] = "hidden/reference/src/absent.cpp"
-    report = plugin.validate_task(
-        draft(files=files).model_copy(update={"manifest": data})
-    )
+    report = plugin.validate_task(draft(files=files).model_copy(update={"manifest": data}))
     assert "fixture-file-missing" in {issue.code for issue in report.issues}
 
 
@@ -297,13 +299,13 @@ def test_trusted_inputs_returns_exactly_the_pinned_recipe_and_nothing_else() -> 
 
     staged = materialize_inputs(
         plugin.build_plan(view, candidate()),
-            {
-                "candidate": {
-                    "src/top_words.cpp": b"x",
-                    "include/top_words.hpp": b"header",
-                },
-                "config": trusted,
+        {
+            "candidate": {
+                "src/top_words.cpp": b"x",
+                "include/top_words.hpp": b"header",
             },
+            "config": trusted,
+        },
     )
     assert staged["work/pcb_recipe.json"] == canonical
 
@@ -327,7 +329,6 @@ def test_the_candidate_lane_runs_in_the_runtime_image_which_carries_no_analyzers
     assert ids.images["runtime"].tools["clang-tidy"] == "absent"
     assert ids.images["runtime"].tools["cppcheck"] == "absent"
     assert build.image_digest != ids.evaluator.digest
-
 
 
 def test_the_inventory_is_the_oracles_and_its_digest_moves_with_it() -> None:
@@ -360,6 +361,7 @@ def test_the_inventory_is_the_oracles_and_its_digest_moves_with_it() -> None:
 def test_every_plan_is_a_typed_argument_vector_pinned_to_its_recipe_image() -> None:
     view = frozen(plugin)
     ids = plugin.identities
+    declared = {record.reference: record.digest for record in ids.images.values()}
     plans: list[Any] = [plugin.build_plan(view, candidate())]
     plans += [group.plan for group in plugin.test_plan(view).groups]
     plans += analysis(view)
@@ -369,6 +371,7 @@ def test_every_plan_is_a_typed_argument_vector_pinned_to_its_recipe_image() -> N
     for plan in plans:
         assert plan.argv[0] == "python"
         assert "-c" not in plan.argv and "sh" not in plan.argv
+        assert declared.get(plan.image) == plan.image_digest, plan.plan_id
         assert plan.resources.network == "none"
         assert plan.resources.timeout_seconds <= 110  # the local driver caps one exec at 120s
         assert plan.scope
@@ -392,12 +395,15 @@ def test_the_build_and_the_candidate_lane_run_in_the_runtime_image_not_the_analy
 
 def test_the_build_plan_carries_the_pinned_standard_and_the_recipes_build_profile() -> None:
     view = frozen(plugin)
-    argv = list(plugin.build_plan(view, candidate()).argv)
+    plan = plugin.build_plan(view, candidate())
+    argv = list(plan.argv)
     flags = [argv[i + 1] for i, token in enumerate(argv) if token == "--cxxflag"]
     profile = LOCK.build_profile("debug")
     assert flags == [LOCK.standard_flag("c++20"), *profile.cxxflags]
     assert argv[argv.index("--compiler") + 1] == LOCK.compiler("clang").binary
+    assert argv[argv.index("--name") + 1] == "/workspace/out/build"
     assert argv[argv.index("--archive") + 1].endswith("libpcb.a")
+    assert "out/build.run.json" in {output.path for output in plan.outputs}
     assert argv[argv.index("--deadline") + 1] == str(
         plugin.build_plan(view, candidate()).resources.timeout_seconds - 3
     )
@@ -464,6 +470,7 @@ def test_analysis_plans_follow_the_quality_plan_and_the_task_applicability() -> 
     unsupported = with_quality(
         view,
         sanitizers=[],
+        sanitizer_lanes=[],
         required_analyzers=["clang_tidy", "cppcheck", "context"],
         opportunities={**view.quality["opportunities"], "undefined_behavior_memory_safety": 0},
     )
@@ -476,6 +483,7 @@ def test_analysis_plans_follow_the_quality_plan_and_the_task_applicability() -> 
     threaded = with_quality(
         view,
         sanitizers=["thread"],
+        sanitizer_lanes=[],
         required_analyzers=["clang_tidy", "cppcheck", "context", "tsan"],
     )
     threaded_plans = {plan.analyzer_id: plan for plan in analysis(threaded)}
@@ -485,15 +493,31 @@ def test_analysis_plans_follow_the_quality_plan_and_the_task_applicability() -> 
     assert "-fsanitize=address,undefined" not in threaded_plans["tsan"].argv
 
 
+def test_incompatible_sanitizers_are_planned_as_separate_lanes() -> None:
+    view = frozen(plugin)
+    dual = with_quality(
+        view,
+        sanitizers=[],
+        sanitizer_lanes=[["address", "undefined"], ["thread"]],
+        required_analyzers=["clang_tidy", "cppcheck", "context", "asan", "tsan"],
+    )
+    plans = {plan.analyzer_id: plan for plan in analysis(dual)}
+    assert {"asan", "tsan"} <= set(plans)
+    assert "-fsanitize=address,undefined" in plans["asan"].argv
+    assert "-fsanitize=thread" in plans["tsan"].argv
+
+
 def test_the_analyzer_plans_use_the_pinned_invocations_and_the_pinned_environment() -> None:
     view = frozen(plugin)
     plans = {plan.analyzer_id: plan for plan in analysis(view)}
     tidy = LOCK.analyzer("clang_tidy")
-    assert plans["clang_tidy"].argv[plans["clang_tidy"].argv.index("--") + 1 :] [: len(tidy.flags) + 1] == (
+    assert plans["clang_tidy"].argv[plans["clang_tidy"].argv.index("--") + 1 :][
+        : len(tidy.flags) + 1
+    ] == (
         tidy.binary,
         *tidy.flags,
     )
-    assert f"--config-file=/opt/pcb/rules/.clang-tidy" in plans["clang_tidy"].argv
+    assert "--config-file=/opt/pcb/rules/.clang-tidy" in plans["clang_tidy"].argv
     cppcheck = LOCK.analyzer("cppcheck")
     assert plans["cppcheck"].argv[plans["cppcheck"].argv.index("--") + 1] == cppcheck.binary
     assert "--xml" in plans["cppcheck"].argv
@@ -548,11 +572,7 @@ def test_an_exit_semantics_never_places_one_code_in_two_groups() -> None:
         assert set().union(*groups), plan.plan_id
         # And the classification agrees: no exit code gets two different readings.
         for code in set().union(*groups):
-            readings = {
-                semantics.classify(code, timed_out=False)
-                for code in {code}
-                if (group := next((g for g in groups if code in g), None)) is not None
-            }
+            readings = {semantics.classify(code, timed_out=False)}
             assert len(readings) == 1, (plan.plan_id, code, readings)
 
 
@@ -613,7 +633,9 @@ def test_the_performance_plan_declares_the_tasks_workloads_and_a_bounded_deadlin
 
 
 def test_a_release_recipe_is_refused_for_a_candidate_but_the_release_profile_still_works() -> None:
-    """The two halves of the rule: never build a candidate with release flags, never time without."""
+    """The two halves of the rule: never build a candidate with release flags,
+    never time without.
+    """
     recipe = parse_recipe((TOP_WORDS / "hidden/recipe.json").read_bytes())
     with pytest.raises(LockError, match="release measurement profile"):
         recipe.model_copy(update={"build_profile": "release"}).check(LOCK)
@@ -637,7 +659,9 @@ def test_analyzer_capabilities_declare_the_right_check_ids_and_dimensions() -> N
         assert capabilities.languages == ("cpp",)
         assert capabilities.check_ids
         declared = {mapping.check_id for mapping in cpp_profile.rule_mappings if mapping.check_id}
-        prefixes = {mapping.check_prefix for mapping in cpp_profile.rule_mappings if mapping.check_prefix}
+        prefixes = {
+            mapping.check_prefix for mapping in cpp_profile.rule_mappings if mapping.check_prefix
+        }
         for check in capabilities.check_ids:
             # Either the id is written out in the profile, or it is the `.<tool>.all` summary of
             # the tool's own catch-all prefix mapping.
@@ -698,9 +722,7 @@ def test_an_analyzer_declares_the_same_plan_the_plugin_builds() -> None:
         declared = plugin.analyzer(plan.analyzer_id).plan(context)
         assert declared.plan_id == plan.plan_id
         assert declared.argv == plan.argv
-        assert declared.exit_semantics.classify(1, False) == plan.exit_semantics.classify(
-            1, False
-        )
+        assert declared.exit_semantics.classify(1, False) == plan.exit_semantics.classify(1, False)
 
 
 def _context(view: Any) -> AnalysisContext:

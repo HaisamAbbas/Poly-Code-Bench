@@ -15,9 +15,9 @@ plugins:
   api_version: 1
   plugin_version: 0.1.0
   image_digests:
-  - sha256:6d4220370dd351538b8a48c35db2e195d91dfd9557b13c068fed73d61b8ced71
-  - sha256:6d793711bf2e80acd4913326f5f1660c7b66a76877ebf0909907f29427c7419b
-  - sha256:f66c97026ae70d0d005d610d3af14fa2d7b084908d28d00ed64c819446502c8b
+  - sha256:2a46ae5cd9042eeaa4f88c6fdee9ff1d1cffc0e26eb09e92b172fc8bbf39ec30
+  - sha256:64ffcc71022b7b4d7856872f2058a5d257949a559bc3f6f77b7c06d91a22248f
+  - sha256:fd3dc4e4010da8c40122eb7d6307bca8d922a204cb438867969494f5e24fb6b6
 - plugin_id: go
   entry_point: polycodebench_lang_go.plugin:GoLanguagePlugin
   api_version: 1

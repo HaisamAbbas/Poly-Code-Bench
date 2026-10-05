@@ -73,8 +73,11 @@ _UNSUPPORTED = re.compile(
 )
 # A crash with no sanitizer verdict at all.
 _CRASH = re.compile(r"(Segmentation fault|SIGSEGV|SIGABRT|Bus error|Aborted \(core dumped\))")
-# One stack frame: `#0 0x55... in f /path/file.cpp:21:5` or `#0  0x... (/path/file.cpp:21:5)`.
-_FRAME = re.compile(r"#\d+\s+(?:0x[0-9a-fA-F]+\s+)?(?:in\s+\S+\s+)?([^\s():]+):(\d+)(?::(\d+))?")
+# One symbolized stack frame. C++ function names can contain spaces, notably
+# `(anonymous namespace)`, so parse the source path by its C/C++ suffix rather than one token.
+_FRAME = re.compile(
+    r"#\d+\s+(?:0x[0-9a-fA-F]+\s+)?(?:in\s+.*?)?\(?([^\s():]+\.(?:cpp|cc|cxx|hpp|hh|hxx|h|c|ipp)):(\d+)(?::(\d+))?"
+)
 # A UBSan line: `src/top_words.cpp:12:5: runtime error: ...`
 _UBSAN_LINE = re.compile(
     # The path group must not swallow preceding text on the same line: it is anchored to the

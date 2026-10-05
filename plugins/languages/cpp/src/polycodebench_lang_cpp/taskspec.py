@@ -252,6 +252,7 @@ class CppQualityPlan(PluginModel):
     schema_version: Literal[1] = 1
     instrumentation: Instrumentation = "supported"
     sanitizers: tuple[Sanitizer, ...] = ()
+    sanitizer_lanes: tuple[tuple[Sanitizer, ...], ...] = ()
     opportunity_tags: tuple[str, ...] = ()
     opportunities: dict[str, int] = Field(default_factory=dict)
     required_analyzers: tuple[str, ...] = ()
@@ -270,11 +271,33 @@ class CppQualityPlan(PluginModel):
         unknown = [a for a in self.required_analyzers if a not in KNOWN_ANALYZERS]
         if unknown:
             raise ValueError(f"unknown required analyzer(s): {unknown}")
-        # Instrumentation compatibility belongs to the pinned toolchain, so the lock decides it,
-        # not the task author: ASan and TSan are refused before the task can be frozen.
-        load_lock().check_sanitizers(tuple(self.sanitizers))
+        # Incompatible tools run as separate instrumented lanes. AddressSanitizer and
+        # ThreadSanitizer cannot share one process, but a task may require evidence from both.
+        if self.sanitizers and self.sanitizer_lanes:
+            raise ValueError("declare sanitizers or sanitizer_lanes, not both")
+        lanes = self.instrumentation_lanes
+        lock = load_lock()
+        for lane in lanes:
+            if not lane:
+                raise ValueError("a sanitizer lane must declare at least one sanitizer")
+            lock.check_sanitizers(tuple(lane))
+        lane_analyzers = [
+            next(
+                (
+                    analyzer
+                    for analyzer, needed in SANITIZER_REQUIREMENTS.items()
+                    if set(needed) & set(lane)
+                ),
+                None,
+            )
+            for lane in lanes
+        ]
+        if len(lane_analyzers) != len(set(lane_analyzers)):
+            raise ValueError("each sanitizer analyzer may be declared in only one lane")
         for analyzer, needed in SANITIZER_REQUIREMENTS.items():
-            if analyzer in self.required_analyzers and not set(needed) & set(self.sanitizers):
+            if analyzer in self.required_analyzers and not any(
+                set(needed) & set(lane) for lane in lanes
+            ):
                 raise ValueError(
                     f"{analyzer} is a required analyzer but the task declares no "
                     f"{' or '.join(needed)} sanitizer"
@@ -290,7 +313,7 @@ class CppQualityPlan(PluginModel):
                     "undefined_behavior_memory_safety opportunities need an instrumentation "
                     "applicability of supported"
                 )
-        if self.instrumentation == "supported" and not self.sanitizers:
+        if self.instrumentation == "supported" and not lanes:
             if self.opportunities.get("undefined_behavior_memory_safety", 0):
                 raise ValueError(
                     "undefined_behavior_memory_safety opportunities need at least one sanitizer"
@@ -299,7 +322,13 @@ class CppQualityPlan(PluginModel):
 
     @property
     def runs_sanitizers(self) -> bool:
-        return self.instrumentation != "unsupported" and bool(self.sanitizers)
+        return self.instrumentation != "unsupported" and bool(self.instrumentation_lanes)
+
+    @property
+    def instrumentation_lanes(self) -> tuple[tuple[Sanitizer, ...], ...]:
+        if self.sanitizer_lanes:
+            return self.sanitizer_lanes
+        return (self.sanitizers,) if self.sanitizers else ()
 
 
 # -------------------------------------------------------------------- exposure rights
@@ -687,11 +716,15 @@ def validate_cpp_task(draft: TaskDraft, plugin_id: str = "cpp") -> ValidationRep
                     path=f"visible/repo/{path}",
                 )
             )
-        if f"hidden/reference/{path}" not in draft.files:
+        public_header_is_starter = path.endswith((".h", ".hh", ".hpp", ".hxx")) and (
+            f"visible/repo/{path}" in draft.files
+        )
+        if f"hidden/reference/{path}" not in draft.files and not public_header_is_starter:
             issues.append(
                 _issue(
                     "reference-missing",
-                    f"the reference solution does not supply required output {path!r}",
+                    "neither the reference solution nor a public starter header supplies required "
+                    f"output {path!r}",
                     path=f"hidden/reference/{path}",
                 )
             )

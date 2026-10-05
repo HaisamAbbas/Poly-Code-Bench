@@ -100,12 +100,14 @@ def variant_files(
     solution_path: str,
     allowed: list[str] | None = None,
 ) -> dict[str, bytes]:
-    """Candidate files of one variant: the files beside its declared solution path.
+    """Candidate files of one variant, with unchanged declared outputs from the visible starter.
 
     When the output contract's ``allowed`` paths are given and the solution path ends with one of
     them (``hidden/reference/src/lib.rs`` ends with ``src/lib.rs``), the variant root is what
     precedes it, so a crate keeps its ``src/`` layout. Otherwise the root is the solution file's
-    own directory (single-module languages).
+    own directory (single-module languages). Required outputs absent from that variant can reuse
+    their public starter bytes from ``visible/repo``; this avoids duplicating public support files
+    into the hidden archive while keeping the fixture candidate complete.
     """
     base = solution_path.rsplit("/", 1)[0] if "/" in solution_path else ""
     for path in sorted(allowed or (), key=len, reverse=True):
@@ -116,9 +118,15 @@ def variant_files(
             base = solution_path[: -len(path) - 1]
             break
     prefix = base + "/" if base else ""
-    return {
+    selected = {
         path[len(prefix) :]: data for path, data in package_files.items() if path.startswith(prefix)
     }
+    for path in allowed or ():
+        if path not in selected:
+            starter_path = f"visible/repo/{path}"
+            if starter_path in package_files:
+                selected[path] = package_files[starter_path]
+    return selected
 
 
 def _declared(plugin: object, name: str, default: tuple[str, ...]) -> tuple[str, ...]:
@@ -412,13 +420,33 @@ class SuiteAdmission:
                 f"scale={workload.scale} elapsed_ns={record.get('elapsed_ns')} "
                 f"verified={record.get('verified')}",
             )
-        # No perf driver: the workload ran to a clean exit and printed the checksum it declares.
-        checksum = (run.outputs.get("out/perf.out") or "").strip().splitlines()
-        ok = bool(checksum) and checksum[-1].strip().isdigit()
+        # No separate perf driver: the workload ran to a clean exit and printed its checksum or
+        # metric record. C++ workloads emit JSON metrics, while several other languages use an
+        # integer checksum.
+        checksum_bytes = run.outputs.get("out/perf.out") or b""
+        checksum = checksum_bytes.decode("utf-8", "replace").strip().splitlines()
+        value = checksum[-1].strip() if checksum else ""
+        valid_integer = value.isdigit()
+        valid_metrics = False
+        if value.startswith("{") and plan.metric_ids:
+            try:
+                metrics = json.loads(value)
+            except ValueError:
+                metrics = None
+            valid_metrics = (
+                isinstance(metrics, dict)
+                and all(
+                    isinstance(metrics.get(metric), (int, float))
+                    and not isinstance(metrics.get(metric), bool)
+                    and metrics[metric] > 0
+                    for metric in plan.metric_ids
+                )
+            )
+        ok = valid_integer or valid_metrics
         return (
             ok,
             f"scale={workload.scale} outputs={sorted(run.outputs)} "
-            f"checksum={checksum[-1].strip() if checksum else None!r}",
+            f"checksum={value if value else None!r}",
         )
 
     # ------------------------------------------------------------------ admission
@@ -555,13 +583,13 @@ class SuiteAdmission:
             ),
             "five identical outcome inventories required",
         )
-        # A faulty fixture whose declared failure is a crash or a build error never reaches a test
-        # case, so it has no failing cases to compare; `crash-and-build-fixtures-rejected` gates it.
-        # Reading `failing_cases` unconditionally made such a fixture crash the report instead.
+        # Only wrong-answer fixtures declare `failing_cases`; crash/build fixtures and
+        # analyzer-only fixtures are checked by their own gates below.
         faulty = [
             (f, r)
             for f, r in by_variant.get("faulty", [])
             if f["expectation"].get("expected_failure") not in {"candidate_crash", "build_error"}
+            and not f["expectation"].get("expected_lane_findings")
         ]
 
         def matches_declared_fault(fixture: Mapping[str, Any], result: CandidateEvaluation) -> bool:

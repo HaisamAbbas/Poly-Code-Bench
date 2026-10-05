@@ -13,12 +13,15 @@
 # Format: <package>=<apt version>, exactly as the lock's apt_components lists them.
 runtime:
   - clang=1:14.0-55.7~deb12u1
+  - llvm-14=1:14.0.6-12
   - libstdc++-12-dev=12.2.0-14+deb12u1
 evaluator:
   - clang=1:14.0-55.7~deb12u1
   - clang-tidy=1:14.0-55.7~deb12u1
   - cppcheck=2.10-2
+  - llvm-14=1:14.0.6-12
   - libstdc++-12-dev=12.2.0-14+deb12u1
 performance:
   - clang=1:14.0-55.7~deb12u1
+  - llvm-14=1:14.0.6-12
   - libstdc++-12-dev=12.2.0-14+deb12u1

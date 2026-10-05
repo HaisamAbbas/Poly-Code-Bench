@@ -174,7 +174,7 @@ def parse_group_report(
     """Recorded group execution -> case records plus how the run itself ended."""
     plan = group.plan
     group_id = group.group_id
-    status, _record = plan_status(plan, raw)
+    status, supervisor_record = plan_status(plan, raw)
     identity = f"{plan.tool.name}-{plan.tool.version}@{plan.image_digest[:19]}"
     run = _run_json(raw, group_id)
     if run is None:
@@ -245,6 +245,23 @@ def parse_group_report(
             detail="the group did not compile",
             candidate_errors=candidate_errors,
             harness_errors=() if candidate_errors else harness_errors,
+        )
+    run_exit = _int(run, "exit_code")
+    if (
+        str(run.get("phase")) == "run"
+        and 129 <= run_exit <= 192
+        and supervisor_record is not None
+        and supervisor_record.exit_code == run_exit
+    ):
+        in_flight = next(
+            (case_id for case_id in reversed(started) if case_id not in completed), None
+        )
+        return records, _control(
+            group_id,
+            repetition,
+            "candidate_killed",
+            detail="the candidate process terminated abnormally",
+            in_flight_case=in_flight,
         )
     if status in {"tool_error", "output_missing"}:
         return records, _control(

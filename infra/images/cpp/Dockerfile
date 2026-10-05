@@ -2,7 +2,7 @@
 #
 # Three recipes are built from two *components* images, and the recipe distinction is real:
 #
-#   runtime     - components-runtime: clang++ and libstdc++ only. Build plans, test plans, the
+#   runtime     - components-runtime: clang++, llvm-symbolizer and libstdc++. Build plans, test plans, the
 #                 solve guest and the instrumented analyzer runs. No clang-tidy, no cppcheck: a
 #                 candidate must not be able to read, from inside the image it is scored in, the
 #                 exact lints and suppressions that will judge it. Everything the evaluator knows,
@@ -46,7 +46,7 @@ RUN set -eu; \
 # A sanitizer plan sets ASAN_OPTIONS/TSAN_OPTIONS itself (toolchain lock, instrumentation.*), so the
 # image fixes the *file* settings a plan cannot choose: symbolization on, and no interactive
 # prompt that could hang a scored run waiting for input that never comes.
-ENV ASAN_OPTIONS_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-14 \
+ENV ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-14 \
     UBSAN_OPTIONS_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-14 \
     PCB_RECIPE=${RECIPE}
 # The release flags are baked, never read from a candidate-controlled file, and they are the exact

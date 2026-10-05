@@ -219,9 +219,11 @@ def _context(raw: ArtifactReader, plan: AnalysisPlan, profile: CppProfile) -> li
         raise ValueError(f"context scanner wrote schema {document.get('schema')!r}")
     if not document.get("complete"):
         raise ValueError("the context scanner did not parse every file it was given")
-    run = json.loads(raw.read("out/context.run.json").decode("utf-8"))
+    _status, execution = plan_status(plan, raw)
+    if execution is None:
+        raise ValueError("the supervisor recorded no context-scan execution")
     violations = sum(1 for item in document["findings"] if item.get("verdict") == "violation")
-    if int(run.get("exit_code", 0)) != 0 and violations == 0:
+    if execution.exit_code != 0 and violations == 0:
         raise ValueError("the context scanner failed without recording a violation")
     scope = _scope(plan)
     found: list[Observation] = []

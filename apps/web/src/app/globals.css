@@ -144,6 +144,7 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
 .stat-card strong { font-size: 1.28rem; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
 .stat-card small { color: var(--muted); font-size: .7rem; }
 .profile-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); margin: 20px 0; }
+.profile-grid > * { min-width: 0; }
 .chart-panel { min-width: 0; padding: 17px; }
 .chart-title-row { align-items: end; display: flex; gap: 15px; justify-content: space-between; margin-bottom: 12px; }
 .chart-title-row p { color: var(--muted); font-size: .73rem; line-height: 1.45; margin: 0; max-width: 260px; }
@@ -159,7 +160,7 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
 .dimension-table { min-width: 540px; }
 .heatmap-table { min-width: 620px; }
 .profile-stack { display: grid; gap: 14px; margin-top: 16px; }
-.profile-card { padding: 18px; }
+.profile-card { min-width: 0; padding: 18px; }
 .profile-card-heading { align-items: start; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 14px; }
 .profile-card-heading p { color: var(--muted); font-size: .76rem; margin: 4px 0 0; }
 .diagnostic-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) minmax(190px, .45fr); margin-top: 16px; }

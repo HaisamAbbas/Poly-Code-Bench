@@ -14,10 +14,11 @@ import argparse
 import asyncio
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-import yaml
+import yaml  # type: ignore[import-untyped,unused-ignore]
 from polycodebench_core.models import MeasurementStatus
 from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
 from polycodebench_evaluation.suite_admission import SuiteAdmission, variant_files
@@ -179,7 +180,7 @@ async def run_conformance() -> ConformanceReport:
         if o.status == MeasurementStatus.MEASURED and o.issue_key
     }
     result = plugin.python_profile.evaluate(
-        opportunities=dict(view.quality["opportunities"]),  # type: ignore[arg-type]
+        opportunities=dict(cast("Mapping[str, int]", view.quality["opportunities"])),
         observations=observed,
         required_tools=("ruff", "context"),
     )

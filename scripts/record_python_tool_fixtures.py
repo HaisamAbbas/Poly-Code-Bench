@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
 from polycodebench_lang_python import PythonLanguagePlugin
@@ -79,7 +81,7 @@ def _view(plugin: PythonLanguagePlugin, typed: bool):  # type: ignore[no-untyped
         for p in (BASE / area).rglob("*")
         if p.is_file()
     }
-    import yaml
+    import yaml  # type: ignore[import-untyped,unused-ignore]
 
     manifest = yaml.safe_load((BASE / "manifest.yaml").read_text(encoding="utf-8"))
     draft = TaskDraft(
@@ -91,8 +93,11 @@ def _view(plugin: PythonLanguagePlugin, typed: bool):  # type: ignore[no-untyped
             **view.quality,
             "typing_expectation": "required",
             "required_analyzers": ["ruff", "bandit", "context", "mypy"],
-            "opportunities": {**view.quality["opportunities"], "type_hints": 1},
-        }  # type: ignore[dict-item]
+            "opportunities": {
+                **cast("Mapping[str, int]", view.quality["opportunities"]),
+                "type_hints": 1,
+            },
+        }
         view = view.model_copy(
             update={"quality": quality, "required_analyzers": ("ruff", "bandit", "context", "mypy")}
         )

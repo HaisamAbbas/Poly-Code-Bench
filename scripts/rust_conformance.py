@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
 
-import yaml
+import yaml  # type: ignore[import-untyped,unused-ignore]
 from polycodebench_core.models import MeasurementStatus
 from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
 from polycodebench_evaluation.suite_admission import SuiteAdmission, variant_files
@@ -28,6 +28,7 @@ from polycodebench_plugins_api.admission import (
     ConformanceReport,
     make_conformance_report,
 )
+from polycodebench_plugins_api.protocols import ExecutableLanguagePlugin
 from polycodebench_runner.provider import LocalDockerSandboxProvider
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -129,8 +130,14 @@ async def run_conformance() -> ConformanceReport:
         operation_timeout_seconds=120,
     )
     runner = PlanRunner(provider, lane="admission")
+    # ``RustProfile.evaluate`` returns the Rust plugin's own ``ProfileResult`` model, whose fields
+    # are a superset of the shared ``plugins-api`` one, so the plugin really is an
+    # ``ExecutableLanguagePlugin``; only the nominal return type differs. Verified against the
+    # protocol's resolve/owner/evaluate by importing the plugin.
     engine = SuiteAdmission(
-        plugin, runner, image_digests=(ids.runtime.digest, ids.evaluator.digest)
+        cast("ExecutableLanguagePlugin", plugin),
+        runner,
+        image_digests=(ids.runtime.digest, ids.evaluator.digest),
     )
     files = _files()
     manifest = yaml.safe_load((FIXTURE / "manifest.yaml").read_text(encoding="utf-8"))

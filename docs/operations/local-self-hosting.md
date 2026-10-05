@@ -52,4 +52,24 @@ To stop the containers, use `docker compose --profile local-auth down`. This doe
 
 The local stack validates public projections, OIDC submitter sessions, metadata-only request persistence, ownership checks, and reviewer API authorization. Approval still requires an explicit endpoint registration and finite reviewed run plan. This stack does not include production sandbox isolation, public DNS, or public HTTPS.
 
-The current production Terraform path is AWS-specific and has no approved account or spend cap. A later internet deployment needs an owner-provided Linux host or hosting account, public domain/DNS, HTTPS configuration, hardened identity and secret storage, backups, monitoring, and a durable shared release-projection store. The production API currently reads a file-backed SQLite `ReleaseStore`; that storage path is not suitable for multiple ephemeral API tasks until a durable shared backend or immutable release loader is implemented.
+For a no-cloud setup, Docker Compose, PostgreSQL, SeaweedFS and Keycloak are open-source local components; no paid AWS account is needed. The local development API continues to read the explicitly synthetic SQLite fixture. Staging/production mode now requires a shared PostgreSQL public-release catalog, so multiple API tasks do not depend on a writable local file. A publisher mirrors a source SQLite publication only after the release signature and typed public document verify:
+
+```powershell
+uv run --locked --all-packages pcb-ops releases sync-publication `
+  --store .local/ops-rehearsal/source/releases.db `
+  --keyring .local/ops-rehearsal/source/keyring.json `
+  --target staging:test-board
+```
+
+For a local rehearsal, load `.env` and point the CLI at its separately scoped publisher DSN:
+
+```powershell
+. .\scripts\load-local-env.ps1
+$env:PCB_DATABASE_URL = $env:PCB_PUBLISHER_DATABASE_URL
+uv run --locked --all-packages pcb-ops releases sync-publication `
+  --store .local/ops-rehearsal/source/releases.db `
+  --keyring .local/ops-rehearsal/source/keyring.json `
+  --target local:test-board
+```
+
+The command copies only public release fields and publication timestamps; review, validation and approval records stay private. Replays are idempotent, published documents are immutable apart from a withdrawal notice, and the release pointer only advances. The Terraform task definition injects the API's database DSN and cursor key through Secrets Manager references. No live DNS, internet endpoint, cloud resource, or benchmark spend has been provisioned; an internet deployment still needs a host/account, a domain, HTTPS, and owner-approved operating limits.

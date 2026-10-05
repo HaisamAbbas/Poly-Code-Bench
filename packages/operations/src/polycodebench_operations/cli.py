@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
+from polycodebench_core.application_errors import InvalidState
 from polycodebench_core.deployment import DeploymentRefused, placeholders
 from polycodebench_core.telemetry import REQUIRED_METRICS, MetricsRegistry, configure_logging
 
@@ -156,6 +157,16 @@ def _parser() -> argparse.ArgumentParser:
     verify_release = keys_sub.add_parser("verify", help="verify a release manifest")
     verify_release.add_argument("--keyring", type=Path, required=True)
     verify_release.add_argument("--manifest", type=Path, required=True)
+
+    releases = commands.add_parser("releases", help="public release catalog")
+    releases_sub = releases.add_subparsers(dest="action", required=True)
+    sync_releases = releases_sub.add_parser(
+        "sync-publication", help="verify and mirror signed public release snapshots"
+    )
+    sync_releases.add_argument("--store", type=Path, required=True)
+    sync_releases.add_argument("--keyring", type=Path, required=True)
+    sync_releases.add_argument("--target", required=True)
+    sync_releases.add_argument("--source-target", default="local:board")
 
     alerts = commands.add_parser("alerts", help="alert rules")
     alerts_sub = alerts.add_subparsers(dest="action", required=True)
@@ -528,6 +539,40 @@ def _keys(args: argparse.Namespace) -> int:
     return 0
 
 
+def _sync_publication(args: argparse.Namespace) -> int:
+    from polycodebench_persistence.public_releases import PostgresPublicReleaseCatalog
+    from polycodebench_publication.keyring import Keyring, KeyringError
+    from polycodebench_publication.releases import ReleaseStore
+
+    from polycodebench_operations.release_sync import sync_publication
+
+    database = None
+    try:
+        keyring = Keyring.from_document(json.loads(args.keyring.read_text(encoding="utf-8")))
+        source = ReleaseStore(args.store)
+        database = _database()
+        result = sync_publication(
+            source,
+            PostgresPublicReleaseCatalog(database.engine),
+            keyring=keyring,
+            target=args.target,
+            source_target=args.source_target,
+        )
+    except (KeyringError, InvalidState, ValueError, OSError) as error:
+        _emit({"synced": False, "error": type(error).__name__, "reason": str(error)[:300]})
+        return 1
+    except Exception:
+        # Driver diagnostics can include connection details. Keep credentials and SQL out of the
+        # operator's terminal output; the structured service log carries the request context.
+        _emit({"synced": False, "error": "ReleaseSyncUnavailable"})
+        return 1
+    finally:
+        if database is not None:
+            database.dispose()
+    _emit({"synced": True, "target": args.target, **result})
+    return 0
+
+
 def check_alert_rules(path: Path = ALERT_RULES) -> list[str]:
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
     names = {spec.name for spec in REQUIRED_METRICS}
@@ -600,6 +645,8 @@ def main(argv: list[str] | None = None) -> int:
             return _restore(args, registry)
         if args.command == "keys":
             return _keys(args)
+        if args.command == "releases" and args.action == "sync-publication":
+            return _sync_publication(args)
         if args.command != "alerts":
             raise AssertionError(f"unhandled command {args.command!r}")
         problems = check_alert_rules()

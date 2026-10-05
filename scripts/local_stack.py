@@ -13,6 +13,7 @@ import sys
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +23,7 @@ REALM_IMPORT_DIR = ROOT / ".cache" / "keycloak-import"
 IDENTITY_PATH = ROOT / ".cache" / "polycodebench-local-identities.json"
 LOCAL_DATABASE = "pcb_local_web_test"
 LOCAL_API_ROLE = "pcb_local_api"
+LOCAL_PUBLISHER_ROLE = "pcb_local_publisher"
 LOCAL_ADMIN_DSN = "postgresql+psycopg://polycodebench:local-development-only@127.0.0.1:55432/"
 REQUIRED_ENV = {
     "KEYCLOAK_ADMIN_USERNAME",
@@ -34,6 +36,7 @@ REQUIRED_ENV = {
     "PCB_CURSOR_SIGNING_KEY",
     "PCB_LOCAL_API_PASSWORD",
     "PCB_DATABASE_URL",
+    "PCB_PUBLISHER_DATABASE_URL",
     "PCB_MIGRATION_DATABASE_URL",
     "PCB_RELEASE_STORE_PATH",
     "PCB_OIDC_ISSUER",
@@ -62,13 +65,24 @@ def prepare() -> dict[str, str]:
     if ENV_PATH.exists():
         values = read_env()
         missing = sorted(REQUIRED_ENV - values.keys())
-        if missing:
+        publisher_url_key = "PCB_PUBLISHER_DATABASE_URL"
+        if missing == [publisher_url_key]:
+            publisher_password = secrets.token_urlsafe(32)
+            publisher_url = (
+                f"postgresql+psycopg://{LOCAL_PUBLISHER_ROLE}:{publisher_password}"
+                f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+            )
+            with ENV_PATH.open("a", encoding="utf-8", newline="\n") as stream:
+                stream.write(f"{publisher_url_key}={publisher_url}\n")
+            values[publisher_url_key] = publisher_url
+        elif missing:
             raise RuntimeError(
                 ".env already exists and was not changed; add the missing local settings: "
                 + ", ".join(missing)
             )
     else:
         api_password = secrets.token_urlsafe(32)
+        publisher_password = secrets.token_urlsafe(32)
         values = {
             "KEYCLOAK_ADMIN_USERNAME": "pcb-local-admin",
             "KEYCLOAK_ADMIN_PASSWORD": secrets.token_urlsafe(32),
@@ -81,6 +95,10 @@ def prepare() -> dict[str, str]:
             "PCB_LOCAL_API_PASSWORD": api_password,
             "PCB_DATABASE_URL": (
                 f"postgresql+psycopg://{LOCAL_API_ROLE}:{api_password}"
+                f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+            ),
+            "PCB_PUBLISHER_DATABASE_URL": (
+                f"postgresql+psycopg://{LOCAL_PUBLISHER_ROLE}:{publisher_password}"
                 f"@127.0.0.1:55432/{LOCAL_DATABASE}"
             ),
             "PCB_MIGRATION_DATABASE_URL": f"{LOCAL_ADMIN_DSN}{LOCAL_DATABASE}",
@@ -258,6 +276,10 @@ def bootstrap_database(values: dict[str, str] | None = None) -> None:
     run_compose_psql(db_name, grants_sql)
 
     password = values["PCB_LOCAL_API_PASSWORD"].replace("'", "''")
+    publisher_password = urlsplit(values["PCB_PUBLISHER_DATABASE_URL"]).password
+    if publisher_password is None:
+        raise RuntimeError("local publisher database URL is invalid")
+    publisher_password = unquote(publisher_password).replace("'", "''")
     role_sql = f"""\
 SELECT format('CREATE ROLE {LOCAL_API_ROLE} LOGIN PASSWORD %L', '{password}')
 WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_API_ROLE}')
@@ -265,6 +287,12 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_API_
 ALTER ROLE {LOCAL_API_ROLE} WITH LOGIN PASSWORD '{password}';
 GRANT pcb_public_reader, pcb_submitter, pcb_reviewer TO {LOCAL_API_ROLE};
 GRANT CONNECT ON DATABASE {db_name} TO {LOCAL_API_ROLE};
+SELECT format('CREATE ROLE {LOCAL_PUBLISHER_ROLE} LOGIN PASSWORD %L', '{publisher_password}')
+WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_PUBLISHER_ROLE}')
+\\gexec
+ALTER ROLE {LOCAL_PUBLISHER_ROLE} WITH LOGIN PASSWORD '{publisher_password}';
+GRANT pcb_publisher TO {LOCAL_PUBLISHER_ROLE};
+GRANT CONNECT ON DATABASE {db_name} TO {LOCAL_PUBLISHER_ROLE};
 """
     run_compose_psql(db_name, role_sql)
     print(f"Local API database is migrated and scoped roles are configured: {db_name}.")

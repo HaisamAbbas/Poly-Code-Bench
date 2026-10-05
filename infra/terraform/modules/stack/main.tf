@@ -142,7 +142,21 @@ module "control_services" {
   access_log_bucket           = module.artifacts.bucket_names["logs"]
   task_execution_role_arn     = module.identity.task_execution_role_arn
   task_role_arns              = module.identity.service_role_arns
-  services                    = var.services
+  services = {
+    for name, service in var.services : name => merge(service, {
+      # Database credentials are passed as secret references owned by this stack, never as
+      # plaintext environment variables in a tfvars file or task definition.
+      secrets = merge(
+        try(service.secrets, {}),
+        contains(keys(module.keys.database_secret_arns), service.role) ? {
+          PCB_DATABASE_URL = module.keys.database_secret_arns[service.role]
+        } : {},
+        service.role == "api" ? {
+          PCB_CURSOR_SIGNING_KEY = module.keys.cursor_secret_arn
+        } : {}
+      )
+    })
+  }
   schedules                   = var.schedules
   otel_endpoint               = "http://127.0.0.1:4318"
   otel_collector_image        = var.otel_collector_image

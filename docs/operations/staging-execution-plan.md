@@ -72,7 +72,7 @@ aws logs filter-log-events --log-group-name /pcb/staging/scheduler --filter-patt
 | Alerts | Trigger each test condition above | Each required alert reaches the SNS topic |
 | Load | Run `scripts/ops_load_rehearsal.py` pointed at the CDN URL, or k6 with the same mix | Record cached p95. The 300 ms target is met only if measured |
 
-The staging seed is the same synthetic rehearsal source, labelled `synthetic_internal`, published to `staging:test-board` only. **Nothing is published to a public board, and no benchmark result is published.**
+The staging seed is the same synthetic rehearsal source, labelled `synthetic_internal`, published to `staging:test-board` only. **Nothing is published to a public board, and no benchmark result is published.** The API service uses `PCB_PUBLIC_RELEASE_BACKEND=postgres` and `PCB_PUBLICATION_TARGET=staging:test-board`; `pcb-ops releases sync-publication` verifies the local signed source release with the public keyring before mirroring the sanitized snapshots and pointer into PostgreSQL. The task definition supplies the API DSN and cursor-signing key only as Secrets Manager references. This staging path has not been provisioned or exercised against AWS.
 
 Production-only steps not executed and not planned in staging: production Multi-AZ failover, backup vault compliance lock, capacity reservation for the performance class, public DNS cut-over.
 

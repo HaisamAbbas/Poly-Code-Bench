@@ -47,6 +47,7 @@ from polycodebench_api.documents import (
 )
 from polycodebench_api.envelope import (
     IMMUTABLE_CACHE,
+    REVALIDATE_CACHE,
     SHORT_CACHE,
     ResponseMeta,
     envelope,
@@ -144,19 +145,19 @@ def list_releases(
         filters=filters.labels(),
         next_cursor=next_cursor,
     )
-    return respond(request, envelope(window, meta), cache=SHORT_CACHE)
+    return respond(request, envelope(window, meta), cache=REVALIDATE_CACHE)
 
 
 @router.get("/releases/{release_id}")
 def get_release(request: Request, release_id: str) -> Response:
     services = services_of(request)
-    resolved, document, pinned = load_public_document(services, release_id)
+    resolved, document, _pinned = load_public_document(services, release_id)
     summary = release_summary(document)
     published_at = publication_times(services).get(resolved)
     if published_at:
         summary = summary.model_copy(update={"published_at": published_at})
     meta = single_meta(resolved, release_digest(document), is_exploratory(document))
-    return respond(request, envelope(summary, meta), cache=_cache(pinned))
+    return respond(request, envelope(summary, meta), cache=REVALIDATE_CACHE)
 
 
 # --------------------------------------------------------------------------- leaderboard

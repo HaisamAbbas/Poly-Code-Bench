@@ -1,8 +1,8 @@
 """The ``{data, meta}`` envelope, ETag identity and cache policy (Technical Specification 20.1).
 
 Every public response carries the release digest in ``meta`` plus an ``ETag`` over the canonical
-response body. Responses resolved from an explicit release are immutable and cache long-term; the
-mutable ``latest`` pointer surface gets a short cache lifetime.
+response body. Immutable release payloads can be cached long-term. Mutable release-state metadata
+and the ``latest`` pointer surface must be revalidated before reuse.
 """
 
 from __future__ import annotations
@@ -18,11 +18,14 @@ from polycodebench_publication.projections import MetricRegistry
 from pydantic import Field
 from starlette.responses import Response
 
-#: An explicit release is immutable history: cache indefinitely (Technical Specification 20.1).
+#: Stable content pinned to a release can be cached long-term (Technical Specification 20.1).
 IMMUTABLE_CACHE = "public, max-age=31536000, immutable"
 
 #: The mutable ``latest`` pointer can move: cache only briefly.
 SHORT_CACHE = "public, max-age=60"
+
+#: Release status and withdrawal metadata can change after publication; always revalidate it.
+REVALIDATE_CACHE = "public, no-cache, must-revalidate"
 
 #: Token-bearing or caller-specific responses are never cached.
 NO_STORE = "private, no-store"
@@ -80,6 +83,7 @@ def respond(
 __all__ = [
     "IMMUTABLE_CACHE",
     "NO_STORE",
+    "REVALIDATE_CACHE",
     "SHORT_CACHE",
     "ResponseMeta",
     "body_etag",

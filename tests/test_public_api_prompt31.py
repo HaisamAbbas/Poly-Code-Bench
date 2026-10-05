@@ -123,31 +123,63 @@ def test_prompt31_withdrawal_keeps_original_method_and_names_successor(tmp_path:
     store = ReleaseStore(tmp_path / "prompt31-history.sqlite3")
     old_id = create_synthetic_release(store)
     new_id = create_synthetic_release(store)
-    old = store.get(old_id)
-    pointer = store.current()
-    store.withdraw(
-        principal=ReleasePrincipal(
-            subject_id="prompt31-reviewer", roles=frozenset({"administrator"})
-        ),
-        release_id=old_id,
-        reason="Successor corrects the public release record.",
-        expected_version=int(old["version"]),
-        expected_generation=int(pointer["generation"]),
-        request_id="prompt31-withdraw",
-        replacement_release_id=new_id,
-    )
     app = create_app(store=store, cursor_key=b"prompt31-history-cursor-key-0000")
 
     async def verify() -> None:
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            listing_before = await client.get("/v1/releases")
+            assert listing_before.headers["cache-control"] == "public, no-cache, must-revalidate"
+            old_listing_etag = listing_before.headers["etag"]
+            notice_before = await client.get(f"/v1/releases/{old_id}")
+            assert notice_before.json()["data"]["state"] == "published"
+            assert notice_before.headers["cache-control"] == "public, no-cache, must-revalidate"
+            old_notice_etag = notice_before.headers["etag"]
+
             response = await client.get(f"/v1/methodology/synthetic-ui-fixture-v1?release={old_id}")
             assert response.status_code == 200
             assert response.json()["meta"]["release_id"] == old_id
-            notice = await client.get(f"/v1/releases/{old_id}")
-            assert notice.status_code == 200
-            assert notice.json()["data"]["state"] == "withdrawn"
-            assert notice.json()["data"]["replacement_release_id"] == new_id
+            assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
+
+            old = store.get(old_id)
+            pointer = store.current()
+            store.withdraw(
+                principal=ReleasePrincipal(
+                    subject_id="prompt31-reviewer", roles=frozenset({"administrator"})
+                ),
+                release_id=old_id,
+                reason="Successor corrects the public release record.",
+                expected_version=int(old["version"]),
+                expected_generation=int(pointer["generation"]),
+                request_id="prompt31-withdraw",
+                replacement_release_id=new_id,
+            )
+
+            listing_after = await client.get(
+                "/v1/releases", headers={"If-None-Match": old_listing_etag}
+            )
+            assert listing_after.status_code == 200
+            assert listing_after.headers["etag"] != old_listing_etag
+            assert listing_after.headers["cache-control"] == "public, no-cache, must-revalidate"
+            assert any(
+                row["release_id"] == old_id and row["state"] == "withdrawn"
+                for row in listing_after.json()["data"]
+            )
+
+            changed_notice = await client.get(
+                f"/v1/releases/{old_id}", headers={"If-None-Match": old_notice_etag}
+            )
+            assert changed_notice.status_code == 200
+            assert changed_notice.headers["etag"] != old_notice_etag
+            assert changed_notice.headers["cache-control"] == "public, no-cache, must-revalidate"
+            assert changed_notice.json()["data"]["state"] == "withdrawn"
+            assert changed_notice.json()["data"]["replacement_release_id"] == new_id
+
+            unchanged_notice = await client.get(
+                f"/v1/releases/{old_id}", headers={"If-None-Match": changed_notice.headers["etag"]}
+            )
+            assert unchanged_notice.status_code == 304
+            assert unchanged_notice.headers["cache-control"] == "public, no-cache, must-revalidate"
 
     asyncio.run(verify())
 

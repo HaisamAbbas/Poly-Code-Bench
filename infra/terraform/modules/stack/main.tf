@@ -131,17 +131,17 @@ module "backup" {
 }
 
 module "control_services" {
-  source                      = "../control_services"
-  environment                 = var.environment
-  region                      = var.region
-  vpc_id                      = module.network.vpc_id
-  control_security_group_id   = module.network.control_security_group_id
-  public_subnet_ids           = module.network.subnet_ids_by_tier["public"]
-  control_subnet_ids          = module.network.subnet_ids_by_tier["control"]
-  alb_certificate_arn         = var.alb_certificate_arn
-  access_log_bucket           = module.artifacts.bucket_names["logs"]
-  task_execution_role_arn     = module.identity.task_execution_role_arn
-  task_role_arns              = module.identity.service_role_arns
+  source                    = "../control_services"
+  environment               = var.environment
+  region                    = var.region
+  vpc_id                    = module.network.vpc_id
+  control_security_group_id = module.network.control_security_group_id
+  public_subnet_ids         = module.network.subnet_ids_by_tier["public"]
+  control_subnet_ids        = module.network.subnet_ids_by_tier["control"]
+  alb_certificate_arn       = var.alb_certificate_arn
+  access_log_bucket         = module.artifacts.bucket_names["logs"]
+  task_execution_role_arn   = module.identity.task_execution_role_arn
+  task_role_arns            = module.identity.service_role_arns
   services = {
     for name, service in var.services : name => merge(service, {
       # Database credentials are passed as secret references owned by this stack, never as

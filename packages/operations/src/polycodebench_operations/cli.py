@@ -380,6 +380,14 @@ def _collect_garbage() -> int:
     return 0
 
 
+def _required_rehearsal_env(source: dict[str, Any], key: str) -> str:
+    name = source[key]
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(f"{name} is required; load the ignored local .env first")
+    return value
+
+
 def _rehearsal_source(config_path: Path) -> tuple[dict[str, Any], EnvironmentSource]:
     from polycodebench_operations.recovery import EnvironmentSource
 
@@ -388,9 +396,11 @@ def _rehearsal_source(config_path: Path) -> tuple[dict[str, Any], EnvironmentSou
     return config, EnvironmentSource(
         postgres_container=source["postgres_container"],
         database=source["database"],
-        database_url=source["database_url"],
+        database_url=_required_rehearsal_env(source, "database_url_env"),
         object_store_endpoint=source["object_store_endpoint"],
         buckets=dict(source["buckets"]),
+        object_store_access_key=_required_rehearsal_env(source, "object_store_access_key_env"),
+        object_store_secret_key=_required_rehearsal_env(source, "object_store_secret_key_env"),
         release_store_path=REPO_ROOT / source["release_store_path"],
         keyring_path=REPO_ROOT / source["keyring_path"],
         board=source.get("board", "local:board"),

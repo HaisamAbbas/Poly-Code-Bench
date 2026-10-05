@@ -37,7 +37,6 @@ from cryptography.hazmat.primitives.serialization import (  # noqa: E402
 )
 from polycodebench_core.canonical import canonical_json_bytes  # noqa: E402
 from polycodebench_core.models import ScoreDimension as D  # noqa: E402
-from polycodebench_operations import localenv  # noqa: E402
 from polycodebench_operations.migrations import (  # noqa: E402
     PERSISTENCE,
     alembic,
@@ -133,9 +132,21 @@ class Seeder:
     def __init__(self, config: dict[str, Any], replace: bool) -> None:
         self.source = config["source"]
         self.replace = replace
-        os.environ.setdefault("AWS_ACCESS_KEY_ID", localenv.DEV_ONLY_SECRET)
-        os.environ.setdefault("AWS_SECRET_ACCESS_KEY", localenv.DEV_ONLY_SECRET)
+        access_key_name = self.source["object_store_access_key_env"]
+        secret_key_name = self.source["object_store_secret_key_env"]
+        access_key = os.environ.get(access_key_name)
+        secret_key = os.environ.get(secret_key_name)
+        if not access_key or not secret_key:
+            raise SystemExit(
+                "local object-store credentials are required; load the ignored .env first"
+            )
+        os.environ["AWS_ACCESS_KEY_ID"] = access_key
+        os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
         os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
+        admin_url_name = self.source["admin_database_url_env"]
+        self.admin_database_url = os.environ.get(admin_url_name)
+        if not self.admin_database_url:
+            raise SystemExit(f"{admin_url_name} is required; load the ignored local .env first")
         self.artifacts: ArtifactRepository | None = None
         self.store = S3ArtifactStore(
             endpoint_url=self.source["object_store_endpoint"], buckets=self.source["buckets"]
@@ -143,7 +154,7 @@ class Seeder:
 
     # -- database
     def create_database(self) -> str:
-        admin = make_url(self.source["admin_database_url"]).set(drivername="postgresql+psycopg")
+        admin = make_url(self.admin_database_url).set(drivername="postgresql+psycopg")
         name = self.source["database"]
         engine = create_engine(admin, poolclass=NullPool, isolation_level="AUTOCOMMIT")
         with engine.connect() as connection:

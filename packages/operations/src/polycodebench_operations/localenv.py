@@ -10,17 +10,18 @@ rehearsal label remains (resources reclaimed).
 from __future__ import annotations
 
 import json
+import secrets
 import subprocess
 import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import quote
 
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 LABEL = "org.polycodebench.rehearsal"
-DEV_ONLY_SECRET = "local-development-only"  # the same dev-only placeholder compose.yaml uses
 
 
 class DockerError(RuntimeError):
@@ -59,14 +60,18 @@ class IsolatedEnvironment:
     network: str
     postgres_container: str
     object_store_container: str
+    postgres_password: str = field(default_factory=lambda: secrets.token_urlsafe(32))
+    object_store_access_key: str = field(default_factory=lambda: secrets.token_urlsafe(24))
+    object_store_secret_key: str = field(default_factory=lambda: secrets.token_urlsafe(32))
     postgres_port: int = 0
     object_store_port: int = 0
     containers: list[str] = field(default_factory=list)
 
     @property
     def database_url(self) -> str:
+        encoded_password = quote(self.postgres_password, safe="")
         return (
-            f"postgresql+psycopg://polycodebench:{DEV_ONLY_SECRET}@127.0.0.1:"
+            f"postgresql+psycopg://polycodebench:{encoded_password}@127.0.0.1:"
             f"{self.postgres_port}/polycodebench"
         )
 
@@ -107,7 +112,7 @@ def start(*, wait_seconds: int = 120) -> IsolatedEnvironment:
             "-e",
             "POSTGRES_USER=polycodebench",
             "-e",
-            f"POSTGRES_PASSWORD={DEV_ONLY_SECRET}",
+            f"POSTGRES_PASSWORD={env.postgres_password}",
             "-p",
             "127.0.0.1::5432",
             images["postgres"],
@@ -123,9 +128,9 @@ def start(*, wait_seconds: int = 120) -> IsolatedEnvironment:
             "--network",
             env.network,
             "-e",
-            f"AWS_ACCESS_KEY_ID={DEV_ONLY_SECRET}",
+            f"AWS_ACCESS_KEY_ID={env.object_store_access_key}",
             "-e",
-            f"AWS_SECRET_ACCESS_KEY={DEV_ONLY_SECRET}",
+            f"AWS_SECRET_ACCESS_KEY={env.object_store_secret_key}",
             "-p",
             "127.0.0.1::8333",
             images["object-store"],

@@ -17,6 +17,10 @@ On-call operator starts the work. The restore itself runs as `restore-operator`,
 Local production-shaped rehearsal (verified):
 
 ```bash
+# Load the ignored, generated local credentials for this shell; do not print or copy them.
+set -a
+. ./.env
+set +a
 # [V-local] seed a labelled synthetic source (22 scorecards, 11 strata, one signed release)
 uv run --offline --locked --all-packages python scripts/seed_ops_rehearsal.py --replace
 # [V-local] back up database, objects, publication store, keyring

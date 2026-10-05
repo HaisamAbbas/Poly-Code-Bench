@@ -66,22 +66,29 @@ class EnvironmentSource:
     database_url: str
     object_store_endpoint: str
     buckets: dict[str, str]
+    object_store_access_key: str
+    object_store_secret_key: str
     release_store_path: Path
     keyring_path: Path
     board: str = "local:board"
 
 
-def _s3(endpoint: str | None) -> Any:
-    """Local S3-compatible endpoint (dev-only placeholder credentials) or, for ``None``,
-    the real AWS endpoint through the standard credential chain (the restore-operator role)."""
+def _s3(
+    endpoint: str | None,
+    access_key: str | None = None,
+    secret_key: str | None = None,
+) -> Any:
+    """Use explicit local credentials for emulators or the standard IAM chain for AWS."""
 
     if endpoint is None:
         return boto3.client("s3")
+    if not access_key or not secret_key:
+        raise RuntimeError("local object-store credentials are required for an emulator endpoint")
     return boto3.client(
         "s3",
         endpoint_url=endpoint,
-        aws_access_key_id=localenv.DEV_ONLY_SECRET,
-        aws_secret_access_key=localenv.DEV_ONLY_SECRET,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
         region_name="us-east-1",
         config=Config(s3={"addressing_style": "path"}, signature_version="s3v4"),
     )
@@ -129,7 +136,11 @@ def backup(source: EnvironmentSource, destination: Path) -> dict[str, Any]:
         counts = _table_counts(engine)
     finally:
         engine.dispose()
-    client = _s3(source.object_store_endpoint)
+    client = _s3(
+        source.object_store_endpoint,
+        source.object_store_access_key,
+        source.object_store_secret_key,
+    )
     objects: list[dict[str, Any]] = []
     for visibility in VISIBILITIES:
         bucket = source.buckets[visibility]
@@ -245,9 +256,13 @@ def foreign_key_orphans(engine: Engine) -> dict[str, int]:
 
 
 def verify_artifact_digests(
-    engine: Engine, endpoint: str | None, buckets: dict[str, str]
+    engine: Engine,
+    endpoint: str | None,
+    buckets: dict[str, str],
+    access_key: str | None = None,
+    secret_key: str | None = None,
 ) -> dict[str, Any]:
-    client = _s3(endpoint)
+    client = _s3(endpoint, access_key, secret_key)
     checked = missing = mismatched = 0
     failures: list[str] = []
     with engine.connect() as connection:
@@ -304,9 +319,13 @@ def scorecard_rows(engine: Engine) -> list[tuple[ScorecardRow, str, str, str]]:
 
 
 def _load_bundles(
-    engine: Engine, endpoint: str | None, buckets: dict[str, str]
+    engine: Engine,
+    endpoint: str | None,
+    buckets: dict[str, str],
+    access_key: str | None = None,
+    secret_key: str | None = None,
 ) -> list[tuple[ScorecardRow, dict[str, Any]]]:
-    client = _s3(endpoint)
+    client = _s3(endpoint, access_key, secret_key)
     loaded: list[tuple[ScorecardRow, dict[str, Any]]] = []
     for row, visibility, key, artifact_digest in scorecard_rows(engine):
         body = client.get_object(Bucket=buckets[visibility], Key=key)["Body"].read()
@@ -419,6 +438,8 @@ def verify_restored(
     database_url: str,
     object_store_endpoint: str | None,
     buckets: dict[str, str],
+    object_store_access_key: str | None = None,
+    object_store_secret_key: str | None = None,
     release_store_path: Path,
     keyring_document: dict[str, Any],
     board: str,
@@ -453,12 +474,24 @@ def verify_restored(
             if sum(orphans.values()) or count_mismatch:
                 raise RuntimeError("referential integrity or row-count parity failed")
         with timer.step("artifact digest integrity") as record:
-            digests = verify_artifact_digests(engine, object_store_endpoint, buckets)
+            digests = verify_artifact_digests(
+                engine,
+                object_store_endpoint,
+                buckets,
+                object_store_access_key,
+                object_store_secret_key,
+            )
             record.update(digests)
             if digests["missing_objects"] or digests["digest_mismatches"]:
                 raise RuntimeError("restored artifacts do not match recorded digests")
         with timer.step("replay stratified scorecards") as record:
-            bundles = _load_bundles(engine, object_store_endpoint, buckets)
+            bundles = _load_bundles(
+                engine,
+                object_store_endpoint,
+                buckets,
+                object_store_access_key,
+                object_store_secret_key,
+            )
             replay = replay_selected(bundles, count=replay_count, seed=seed)
             record.update(replay)
             if not replay["all_matched"]:
@@ -519,7 +552,11 @@ def rehearse_restore(
                 input_bytes=(backup_dir / "database.dump").read_bytes(),
             )
         with timer.step("restore objects") as record:
-            client = _s3(env.object_store_endpoint)
+            client = _s3(
+                env.object_store_endpoint,
+                env.object_store_access_key,
+                env.object_store_secret_key,
+            )
             for bucket in buckets.values():
                 client.create_bucket(Bucket=bucket)
             for item in manifest["objects"]:
@@ -539,6 +576,8 @@ def rehearse_restore(
             database_url=env.database_url,
             object_store_endpoint=env.object_store_endpoint,
             buckets=buckets,
+            object_store_access_key=env.object_store_access_key,
+            object_store_secret_key=env.object_store_secret_key,
             release_store_path=restored_store,
             keyring_document=keyring_document,
             board=manifest["source"]["board"],

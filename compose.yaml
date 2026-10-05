@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: polycodebench
       POSTGRES_USER: polycodebench
-      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_PASSWORD: ${PCB_LOCAL_POSTGRES_PASSWORD:?run scripts/local_stack.py prepare first}
     ports:
       - "127.0.0.1:55432:5432"
     healthcheck:
@@ -19,8 +19,8 @@ services:
     image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
     command: ["mini", "-dir=/data"]
     environment:
-      AWS_ACCESS_KEY_ID: local-development-only
-      AWS_SECRET_ACCESS_KEY: local-development-only
+      AWS_ACCESS_KEY_ID: ${PCB_LOCAL_S3_ACCESS_KEY:?run scripts/local_stack.py prepare first}
+      AWS_SECRET_ACCESS_KEY: ${PCB_LOCAL_S3_SECRET_KEY:?run scripts/local_stack.py prepare first}
       S3_BUCKET: pcb-local
     ports:
       - "127.0.0.1:8333:8333"

@@ -17,3 +17,9 @@ foreach ($line in Get-Content -LiteralPath $EnvironmentFile) {
   if ($name -notmatch '^[A-Z][A-Z0-9_]*$') { throw 'Invalid environment variable name in local .env file' }
   Set-Item -Path "Env:$name" -Value $value
 }
+
+if (-not $env:PCB_LOCAL_S3_ACCESS_KEY -or -not $env:PCB_LOCAL_S3_SECRET_KEY) {
+  throw 'Local object-store credentials are missing. Run scripts/local_stack.py prepare first.'
+}
+$env:AWS_ACCESS_KEY_ID = $env:PCB_LOCAL_S3_ACCESS_KEY
+$env:AWS_SECRET_ACCESS_KEY = $env:PCB_LOCAL_S3_SECRET_KEY

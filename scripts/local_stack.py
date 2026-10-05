@@ -13,7 +13,7 @@ import sys
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,9 +25,10 @@ PUBLIC_RELEASE_STORE = ROOT / ".cache" / "polycodebench-local-verified-release-s
 PUBLIC_RELEASE_SIGNING_KEY = ROOT / ".cache" / "polycodebench-local-signing-key.pem"
 PUBLIC_RELEASE_KEYRING = ROOT / ".cache" / "polycodebench-local-keyring.json"
 LOCAL_DATABASE = "pcb_local_web_test"
+LOCAL_OPS_DATABASE = "pcb_ops_rehearsal_source"
+LOCAL_ADMIN_ROLE = "polycodebench"
 LOCAL_API_ROLE = "pcb_local_api"
 LOCAL_PUBLISHER_ROLE = "pcb_local_publisher"
-LOCAL_ADMIN_DSN = "postgresql+psycopg://polycodebench:local-development-only@127.0.0.1:55432/"
 REQUIRED_ENV = {
     "KEYCLOAK_ADMIN_USERNAME",
     "KEYCLOAK_ADMIN_PASSWORD",
@@ -41,6 +42,10 @@ REQUIRED_ENV = {
     "PCB_DATABASE_URL",
     "PCB_PUBLISHER_DATABASE_URL",
     "PCB_MIGRATION_DATABASE_URL",
+    "PCB_OPS_REHEARSAL_DATABASE_URL",
+    "PCB_LOCAL_POSTGRES_PASSWORD",
+    "PCB_LOCAL_S3_ACCESS_KEY",
+    "PCB_LOCAL_S3_SECRET_KEY",
     "PCB_PUBLIC_RELEASE_BACKEND",
     "PCB_PUBLICATION_TARGET",
     "PCB_RELEASE_STORE_PATH",
@@ -53,9 +58,16 @@ REQUIRED_ENV = {
 }
 
 
-def read_env(path: Path = ENV_PATH) -> dict[str, str]:
+def _local_admin_database_url(password: str, database: str) -> str:
+    encoded_password = quote(password, safe="")
+    return f"postgresql+psycopg://{LOCAL_ADMIN_ROLE}:{encoded_password}@127.0.0.1:55432/{database}"
+
+
+def read_env(path: Path | None = None) -> dict[str, str]:
     values: dict[str, str] = {}
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    environment_path = path or ENV_PATH
+    lines = environment_path.read_text(encoding="utf-8").splitlines()
+    for line_number, line in enumerate(lines, 1):
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
@@ -74,14 +86,35 @@ def prepare() -> dict[str, str]:
             "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
             "PCB_PUBLICATION_TARGET": "local:board",
         }
-        allowed_generated = set(generated_defaults) | {"PCB_PUBLISHER_DATABASE_URL"}
+        generated_secrets = {
+            "PCB_LOCAL_POSTGRES_PASSWORD": secrets.token_urlsafe(32),
+            "PCB_LOCAL_S3_ACCESS_KEY": secrets.token_urlsafe(24),
+            "PCB_LOCAL_S3_SECRET_KEY": secrets.token_urlsafe(32),
+        }
+        allowed_generated = (
+            set(generated_defaults)
+            | set(generated_secrets)
+            | {"PCB_PUBLISHER_DATABASE_URL", "PCB_OPS_REHEARSAL_DATABASE_URL"}
+        )
         if missing and set(missing) <= allowed_generated:
             additions = {key: value for key, value in generated_defaults.items() if key in missing}
+            additions.update(
+                {key: value for key, value in generated_secrets.items() if key in missing}
+            )
             if "PCB_PUBLISHER_DATABASE_URL" in missing:
                 publisher_password = secrets.token_urlsafe(32)
                 additions["PCB_PUBLISHER_DATABASE_URL"] = (
                     f"postgresql+psycopg://{LOCAL_PUBLISHER_ROLE}:{publisher_password}"
                     f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+                )
+            if "PCB_OPS_REHEARSAL_DATABASE_URL" in missing:
+                admin_password = additions.get(
+                    "PCB_LOCAL_POSTGRES_PASSWORD", values.get("PCB_LOCAL_POSTGRES_PASSWORD")
+                )
+                if not admin_password:
+                    raise RuntimeError("local PostgreSQL credential generation failed")
+                additions["PCB_OPS_REHEARSAL_DATABASE_URL"] = _local_admin_database_url(
+                    admin_password, LOCAL_OPS_DATABASE
                 )
             with ENV_PATH.open("a", encoding="utf-8", newline="\n") as stream:
                 stream.writelines(f"{name}={value}\n" for name, value in sorted(additions.items()))
@@ -94,6 +127,7 @@ def prepare() -> dict[str, str]:
     else:
         api_password = secrets.token_urlsafe(32)
         publisher_password = secrets.token_urlsafe(32)
+        local_postgres_password = secrets.token_urlsafe(32)
         values = {
             "KEYCLOAK_ADMIN_USERNAME": "pcb-local-admin",
             "KEYCLOAK_ADMIN_PASSWORD": secrets.token_urlsafe(32),
@@ -112,7 +146,15 @@ def prepare() -> dict[str, str]:
                 f"postgresql+psycopg://{LOCAL_PUBLISHER_ROLE}:{publisher_password}"
                 f"@127.0.0.1:55432/{LOCAL_DATABASE}"
             ),
-            "PCB_MIGRATION_DATABASE_URL": f"{LOCAL_ADMIN_DSN}{LOCAL_DATABASE}",
+            "PCB_MIGRATION_DATABASE_URL": _local_admin_database_url(
+                local_postgres_password, LOCAL_DATABASE
+            ),
+            "PCB_OPS_REHEARSAL_DATABASE_URL": _local_admin_database_url(
+                local_postgres_password, LOCAL_OPS_DATABASE
+            ),
+            "PCB_LOCAL_POSTGRES_PASSWORD": local_postgres_password,
+            "PCB_LOCAL_S3_ACCESS_KEY": secrets.token_urlsafe(24),
+            "PCB_LOCAL_S3_SECRET_KEY": secrets.token_urlsafe(32),
             "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
             "PCB_PUBLICATION_TARGET": "local:board",
             "PCB_RELEASE_STORE_PATH": ".cache/polycodebench-local-release-store.sqlite3",
@@ -182,7 +224,7 @@ def run_compose_psql(database: str, sql: str, *, args: tuple[str, ...] = ()) -> 
         "-v",
         "ON_ERROR_STOP=1",
         "-U",
-        "polycodebench",
+        LOCAL_ADMIN_ROLE,
         "-d",
         database,
         *args,
@@ -220,7 +262,7 @@ def bootstrap_database(values: dict[str, str] | None = None) -> None:
             "psql",
             "-At",
             "-U",
-            "polycodebench",
+            LOCAL_ADMIN_ROLE,
             "-d",
             "polycodebench",
             "-c",
@@ -243,7 +285,7 @@ def bootstrap_database(values: dict[str, str] | None = None) -> None:
                 "postgres",
                 "createdb",
                 "-U",
-                "polycodebench",
+                LOCAL_ADMIN_ROLE,
                 "-O",
                 "polycodebench",
                 db_name,
@@ -289,6 +331,7 @@ def bootstrap_database(values: dict[str, str] | None = None) -> None:
     run_compose_psql(db_name, grants_sql)
 
     password = values["PCB_LOCAL_API_PASSWORD"].replace("'", "''")
+    admin_password = values["PCB_LOCAL_POSTGRES_PASSWORD"].replace("'", "''")
     publisher_password = urlsplit(values["PCB_PUBLISHER_DATABASE_URL"]).password
     if publisher_password is None:
         raise RuntimeError("local publisher database URL is invalid")
@@ -306,9 +349,44 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_PUBL
 ALTER ROLE {LOCAL_PUBLISHER_ROLE} WITH LOGIN PASSWORD '{publisher_password}';
 GRANT pcb_publisher TO {LOCAL_PUBLISHER_ROLE};
 GRANT CONNECT ON DATABASE {db_name} TO {LOCAL_PUBLISHER_ROLE};
+ALTER ROLE {LOCAL_ADMIN_ROLE} WITH LOGIN PASSWORD '{admin_password}';
 """
     run_compose_psql(db_name, role_sql)
+    _persist_env_values(
+        {
+            "PCB_MIGRATION_DATABASE_URL": _local_admin_database_url(
+                values["PCB_LOCAL_POSTGRES_PASSWORD"], LOCAL_DATABASE
+            ),
+            "PCB_OPS_REHEARSAL_DATABASE_URL": _local_admin_database_url(
+                values["PCB_LOCAL_POSTGRES_PASSWORD"], LOCAL_OPS_DATABASE
+            ),
+        }
+    )
     print(f"Local API database is migrated and scoped roles are configured: {db_name}.")
+
+
+def _persist_env_values(updates: dict[str, str]) -> None:
+    lines = ENV_PATH.read_text(encoding="utf-8").splitlines()
+    found: set[str] = set()
+    rewritten: list[str] = []
+    for line in lines:
+        name, separator, _ = line.partition("=")
+        if separator and name in updates:
+            rewritten.append(f"{name}={updates[name]}")
+            found.add(name)
+        else:
+            rewritten.append(line)
+    missing = set(updates) - found
+    if missing:
+        raise RuntimeError("local .env is missing generated database settings")
+    temporary_path = ENV_PATH.with_name(".env.local-update")
+    temporary_path.write_text("\n".join(rewritten) + "\n", encoding="utf-8", newline="\n")
+    try:
+        os.chmod(temporary_path, 0o600)
+    except OSError:
+        # On Windows, the ignored workspace file inherits the user's directory ACL.
+        pass
+    temporary_path.replace(ENV_PATH)
 
 
 def seed_release_store(values: dict[str, str] | None = None) -> None:

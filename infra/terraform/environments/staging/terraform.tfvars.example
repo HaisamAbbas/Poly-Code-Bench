@@ -22,7 +22,7 @@ alb_certificate_arn            = "arn:aws:acm:REQUIRED"
 cdn_certificate_arn            = "arn:aws:acm:us-east-1:REQUIRED:certificate/REQUIRED"
 domain_names                   = ["staging.REQUIRED-domain"]
 alert_email_endpoints          = ["REQUIRED-oncall@example.invalid"]
-monthly_budget_usd             = 600  # REQUIRED owner-approved cap; proposed value, see docs/operations/staging-execution-plan.md
+monthly_budget_usd             = 0  # REQUIRED: replace with an owner-approved positive alert threshold.
 
 services = {
   "api" = {

@@ -158,5 +158,5 @@ variable "tags" {
 
 variable "monthly_budget_usd" {
   type        = number
-  description = "Owner-approved monthly infrastructure cap."
+  description = "Owner-approved monthly infrastructure alert threshold; not a hard spend limit."
 }

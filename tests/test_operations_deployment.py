@@ -65,6 +65,20 @@ def test_committed_manifests_validate_and_are_separated() -> None:
     assert not by_env["production"].deployable
 
 
+def test_staging_budget_example_requires_owner_supplied_threshold() -> None:
+    example = (ROOT / "infra/terraform/environments/staging/terraform.tfvars.example").read_text(
+        "utf-8"
+    )
+    assignment = next(
+        line.split("#", 1)[0].strip()
+        for line in example.splitlines()
+        if line.strip().startswith("monthly_budget_usd")
+    )
+    assert assignment.split("=", 1)[1].strip() == "0"
+    variable = (ROOT / "infra/terraform/modules/telemetry/variables.tf").read_text("utf-8")
+    assert "condition     = var.monthly_budget_usd > 0" in variable
+
+
 def test_verified_principal_not_a_string_decides_the_environment() -> None:
     manifest = _deployed_staging()
     deployment = resolve_deployment(

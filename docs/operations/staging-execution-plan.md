@@ -7,7 +7,7 @@
 | # | Input | Used by |
 |---|---|---|
 | 1 | Dedicated staging AWS account ID and region | `account_id` / `region` in `terraform.tfvars`; provider `allowed_account_ids` |
-| 2 | **Approved monthly infrastructure cap.** Proposed: **USD 600/month**, plus a one-off USD 150 rehearsal allowance (§4) | `monthly_budget_usd` (AWS Budgets alerts at 50/80/100% and forecast) |
+| 2 | **Owner-approved monthly infrastructure alert threshold.** USD 600/month is only a planning estimate; the one-off USD 150 rehearsal allowance in §4 is also unapproved | `monthly_budget_usd` (SNS notifications at 50/80/100% and forecast) |
 | 3 | State bucket and lock table for staging | `backend.hcl` |
 | 4 | Operator SSO role ARNs (named people, MFA) | `operator_principal_arns` |
 | 5 | Bucket name prefix (org slug) | `bucket_prefix` |
@@ -16,6 +16,8 @@
 | 8 | Control-service image digests, pushed to the environment's ECR | `services.*.image` |
 | 9 | On-call alert addresses | `alert_email_endpoints` |
 | 10 | Activation of the `pcb:environment` cost-allocation tag in Billing | budget filter |
+
+The Terraform budget sends notifications for tagged cost data; it does **not** impose a hard account-wide spending limit. AWS says budget data updates only a few times per day and charges can exceed a threshold before its notification arrives ([AWS Budgets timing and limits](https://docs.aws.amazon.com/cost-management/latest/userguide/bcm-lite-use-budget.html)). The example tfvars sets `monthly_budget_usd = 0`, which fails positive-value validation until the owner supplies an approved threshold. Do not treat the proposed $600 or $150 planning amounts as authorization, and do not apply staging based on budget alerts alone. The owner must approve the actual resource envelope and shutdown response while accepting the residual billing-delay risk.
 
 E2E-42 and E2E-43 need **no model or judge provider spend**. Provider outage is exercised against the gateway with egress denied, not against a live provider. Live pilot spend remains a separate authorization (Prompt 17).
 
@@ -104,7 +106,7 @@ Rehearsal allowance (one-off, about USD 150):
 - **dedicated-tenancy performance guests**: AWS charges a regional dedicated fee of about $2/h while any dedicated instance runs, so keep performance drills to a few hours or set `tenancy=default` in staging;
 - data transfer.
 
-Proposed authorization: **hard cap USD 600/month for staging infrastructure plus USD 150 one-off**, enforced by the AWS Budgets resource and on-call alerts. The cap leaves headroom for the interface endpoints. To trim about $66/month, set `az_count=1` for endpoints in staging (this requires an IaC parameter not yet exposed) or drop unused endpoints.
+Planning estimate only: **USD 600/month for staging infrastructure plus USD 150 one-off rehearsal allowance**. These amounts are not authorized and the AWS Budgets resource cannot guarantee them as hard caps. Re-price everything for the approved region, obtain the owner's actual thresholds and resource envelope, and review shutdown controls before any apply. The estimate leaves headroom for interface endpoints. To trim about $66/month, set `az_count=1` for endpoints in staging (this requires an IaC parameter not yet exposed) or drop unused endpoints.
 
 ## 5. Exit criteria
 

@@ -65,7 +65,7 @@ variable "tags" {
 
 variable "monthly_budget_usd" {
   type        = number
-  description = "Owner-approved monthly infrastructure cap for this environment (AWS Budgets alerts at 50/80/100% and forecast)."
+  description = "Owner-approved monthly infrastructure alert threshold; AWS Budgets notifications are not a hard spend limit."
   validation {
     condition     = var.monthly_budget_usd > 0
     error_message = "An explicit positive budget is required; there is no default."

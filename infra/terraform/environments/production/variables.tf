@@ -152,5 +152,5 @@ variable "alert_email_endpoints" {
 
 variable "monthly_budget_usd" {
   type        = number
-  description = "Owner-approved monthly infrastructure cap (no default)."
+  description = "Owner-approved monthly infrastructure alert threshold (no default); not a hard spend limit."
 }

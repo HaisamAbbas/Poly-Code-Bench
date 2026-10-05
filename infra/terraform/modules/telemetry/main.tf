@@ -124,7 +124,8 @@ resource "aws_sns_topic_policy" "alerts" {
   policy = data.aws_iam_policy_document.alerts_topic.json
 }
 
-# Hard spend guard for the environment's infrastructure (owner-approved cap, not a guess).
+# Cost visibility notifications only. AWS Budgets is not a hard spending ceiling: billing data
+# can lag resource use, and charges can exceed the threshold before notifications arrive.
 # Model/judge provider spend is governed separately by the gateway budget accounts.
 resource "aws_budgets_budget" "monthly" {
   name         = "${local.name}-infrastructure"

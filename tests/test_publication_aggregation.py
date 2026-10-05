@@ -4,6 +4,13 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from polycodebench_core.models import (
+    EvaluationState,
+    Gate,
+    Scorecard,
+    ScoreDimension,
+    ScoreItem,
+)
 from polycodebench_publication.aggregation import (
     BootstrapConfig,
     CohortPolicy,
@@ -14,6 +21,7 @@ from polycodebench_publication.aggregation import (
     aggregate,
     bootstrap,
     filter_post_cutoff,
+    observation_from_scorecard,
     paired_comparison,
 )
 
@@ -74,6 +82,53 @@ def rows(
     )
 
 
+def scorecard(
+    state: EvaluationState,
+    *,
+    gate: Gate = Gate.PASS,
+    task_id: str = "python-0",
+    index: int = 0,
+) -> Scorecard:
+    ready = state == EvaluationState.READY
+    contribution = "0.000000" if gate == Gate.FAIL else "80.000000"
+    items = (
+        [
+            ScoreItem(
+                kind="score_item",
+                schema_version=1,
+                dimension=ScoreDimension.CORRECTNESS,
+                item_id="correctness",
+                applicable=True,
+                primary_owner=ScoreDimension.CORRECTNESS,
+                raw_value=contribution,
+                effective_weight_bps=10000,
+                gating_reason=None,
+                contribution=contribution,
+                evidence_ids=[],
+            )
+        ]
+        if ready
+        else []
+    )
+    return Scorecard(
+        kind="scorecard",
+        schema_version=1,
+        scorecard_id=f"00000000-0000-4000-8000-{index + 1:012d}",
+        task_id=task_id,
+        task_version=1,
+        run_id="00000000-0000-4000-8000-000000000101",
+        candidate_id="00000000-0000-4000-8000-000000000102",
+        evidence_manifest_digest="sha256:" + "a" * 64,
+        scoring_policy_digest="sha256:" + "b" * 64,
+        scorer_digest="sha256:" + "c" * 64,
+        gate=gate,
+        status=state,
+        total_score=("0.000000" if gate == Gate.FAIL else "80.000000") if ready else None,
+        items=items,
+        created_at="2026-10-05T00:00:00Z",
+    )
+
+
 def test_failure_denominators_and_partial_coverage_never_renormalize() -> None:
     policy = cohort()
     metric = MetricDefinition(metric_id="total_score", label="All attempts")
@@ -93,6 +148,90 @@ def test_failure_denominators_and_partial_coverage_never_renormalize() -> None:
     assert (
         aggregate(policy, metric, (infrastructure, *observations[1:]), "internal-a").value is None
     )
+
+
+@pytest.mark.parametrize(
+    ("state", "expected_status", "expected_reason"),
+    [
+        (EvaluationState.PENDING, "pending", "evaluations_pending"),
+        (EvaluationState.EVALUATING, "evaluating", "evaluations_in_progress"),
+        (EvaluationState.NEEDS_REVIEW, "needs_review", "evaluations_need_review"),
+        (EvaluationState.INFRA_BLOCKED, "infrastructure_missing", "infrastructure_missing"),
+        (EvaluationState.QUARANTINED, "quarantined", "evaluations_quarantined"),
+        (EvaluationState.CANCELLED, "cancelled", "evaluations_cancelled"),
+    ],
+)
+def test_nonready_scorecard_states_remain_distinct_and_block_coverage(
+    state: EvaluationState, expected_status: str, expected_reason: str
+) -> None:
+    policy = cohort()
+    metric = MetricDefinition(metric_id="total_score", label="All attempts")
+    task_id = policy.tasks[0].task_id
+    converted = tuple(
+        observation_from_scorecard(
+            scorecard(state, task_id=task_id, index=index),
+            entry_id="internal-a",
+            sample_index=index,
+            metric=metric,
+        )
+        for index in range(policy.planned_samples)
+    )
+
+    assert {row.status for row in converted} == {expected_status}
+    assert all(row.value is None for row in converted)
+    complete_other_tasks = tuple(row for row in rows(policy) if row.task_id != task_id)
+    result = aggregate(policy, metric, (*complete_other_tasks, *converted), "internal-a")
+    assert result.value is None
+    assert result.observed_sample_count == len(complete_other_tasks)
+    assert result.observed_task_count == len(policy.tasks) - 1
+    assert expected_reason in result.reasons
+    assert result.status == "partial"
+
+
+def test_ready_not_applicable_gate_is_not_reported_as_a_pass() -> None:
+    policy = cohort()
+    metric = MetricDefinition(metric_id="total_score", label="All attempts")
+    task_id = policy.tasks[0].task_id
+    converted = tuple(
+        observation_from_scorecard(
+            scorecard(
+                EvaluationState.READY,
+                gate=Gate.NOT_APPLICABLE,
+                task_id=task_id,
+                index=index,
+            ),
+            entry_id="internal-a",
+            sample_index=index,
+            metric=metric,
+        )
+        for index in range(policy.planned_samples)
+    )
+    assert {row.status for row in converted} == {"not_applicable"}
+    assert all(row.value is None for row in converted)
+
+    complete_other_tasks = tuple(row for row in rows(policy) if row.task_id != task_id)
+    result = aggregate(policy, metric, (*complete_other_tasks, *converted), "internal-a")
+    assert result.value is None
+    assert "evaluations_not_applicable" in result.reasons
+    assert result.observed_sample_count == len(complete_other_tasks)
+
+
+def test_scorecard_gate_controls_pass_rate_observation() -> None:
+    metric = MetricDefinition(metric_id="pass_rate", label="Pass rate", unit="percent")
+    passing = observation_from_scorecard(
+        scorecard(EvaluationState.READY, gate=Gate.PASS),
+        entry_id="internal-a",
+        sample_index=0,
+        metric=metric,
+    )
+    failing = observation_from_scorecard(
+        scorecard(EvaluationState.READY, gate=Gate.FAIL, index=1),
+        entry_id="internal-a",
+        sample_index=1,
+        metric=metric,
+    )
+    assert (passing.status, passing.value) == ("pass", "100")
+    assert (failing.status, failing.value) == ("failure", "0")
 
 
 def test_conditional_metric_is_labeled_and_carries_passing_denominator() -> None:

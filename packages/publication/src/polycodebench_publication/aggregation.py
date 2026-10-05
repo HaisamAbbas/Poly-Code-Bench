@@ -152,7 +152,17 @@ class Observation(PublicationModel):
     sample_index: Annotated[int, Field(ge=0)]
     scorecard_digest: str
     metric_id: str
-    status: Literal["pass", "failure", "infrastructure_missing"]
+    status: Literal[
+        "pass",
+        "failure",
+        "infrastructure_missing",
+        "pending",
+        "evaluating",
+        "needs_review",
+        "quarantined",
+        "cancelled",
+        "not_applicable",
+    ]
     value: str | None = None
     true_positive: Annotated[int, Field(ge=0)] = 0
     false_positive: Annotated[int, Field(ge=0)] = 0
@@ -162,8 +172,8 @@ class Observation(PublicationModel):
     def valid_value(self) -> Observation:
         if self.value is not None:
             _decimal(self.value)
-        if self.status == "infrastructure_missing" and self.value is not None:
-            raise ValueError("missing infrastructure evidence cannot contain a score")
+        if self.status not in {"pass", "failure"} and self.value is not None:
+            raise ValueError("an incomplete or inapplicable observation cannot contain a score")
         return self
 
 
@@ -251,7 +261,7 @@ def _statistic(
                 samples = rows.get(task.task_id, [])
                 multiplicity = multiplicities[task.cluster_id] if multiplicities is not None else 1
                 if len(samples) != cohort.planned_samples * multiplicity or any(
-                    s.status == "infrastructure_missing"
+                    s.status not in {"pass", "failure"}
                     or (
                         s.value is None
                         and s.status == "pass"
@@ -305,7 +315,7 @@ def aggregate(
     rows = _rows(cohort, metric, observations, entry_id)
     tasks = [t for t in cohort.tasks if metric.metric_id in t.applicable_metrics]
     samples = [s for t in tasks for s in rows.get(t.task_id, [])]
-    observed = [s for s in samples if s.status != "infrastructure_missing"]
+    observed = [s for s in samples if s.status in {"pass", "failure"}]
     value, language_values = _statistic(cohort, metric, rows)
     clusters = tuple(
         (language, len({t.cluster_id for t in tasks if t.language == language}))
@@ -314,6 +324,20 @@ def aggregate(
     reasons: list[str] = []
     if value is None:
         reasons.append("incomplete_required_coverage")
+    state_reasons = {
+        "infrastructure_missing": "infrastructure_missing",
+        "pending": "evaluations_pending",
+        "evaluating": "evaluations_in_progress",
+        "needs_review": "evaluations_need_review",
+        "quarantined": "evaluations_quarantined",
+        "cancelled": "evaluations_cancelled",
+        "not_applicable": "evaluations_not_applicable",
+    }
+    reasons.extend(
+        reason
+        for status, reason in state_reasons.items()
+        if any(sample.status == status for sample in samples)
+    )
     minimum = 30 if metric.metric_id in ("total_score", "pass_rate") else 20
     if any(count < minimum for _, count in clusters):
         reasons.append("insufficient_independent_clusters")
@@ -329,8 +353,7 @@ def aggregate(
         task_count=len(cohort.tasks),
         applicable_task_count=len(tasks),
         observed_task_count=sum(
-            any(s.status != "infrastructure_missing" for s in rows.get(t.task_id, []))
-            for t in tasks
+            any(s.status in {"pass", "failure"} for s in rows.get(t.task_id, [])) for t in tasks
         ),
         planned_sample_count=planned,
         observed_sample_count=len(observed),
@@ -529,23 +552,58 @@ def observation_from_scorecard(
 ) -> Observation:
     from polycodebench_core.canonical import canonical_document_digest
 
-    status: Literal["pass", "failure", "infrastructure_missing"] = (
-        "infrastructure_missing"
-        if scorecard.status != EvaluationState.READY
-        else "failure"
-        if scorecard.gate == Gate.FAIL
-        else "pass"
-    )
+    if scorecard.status != EvaluationState.READY:
+        status_by_state: dict[
+            EvaluationState,
+            Literal[
+                "pending",
+                "evaluating",
+                "needs_review",
+                "infrastructure_missing",
+                "quarantined",
+                "cancelled",
+            ],
+        ] = {
+            EvaluationState.PENDING: "pending",
+            EvaluationState.EVALUATING: "evaluating",
+            EvaluationState.NEEDS_REVIEW: "needs_review",
+            EvaluationState.INFRA_BLOCKED: "infrastructure_missing",
+            EvaluationState.QUARANTINED: "quarantined",
+            EvaluationState.CANCELLED: "cancelled",
+        }
+        incomplete_status = status_by_state[scorecard.status]
+        return Observation(
+            entry_id=entry_id,
+            task_id=scorecard.task_id,
+            task_version=scorecard.task_version,
+            sample_index=sample_index,
+            scorecard_digest=canonical_document_digest(scorecard),
+            metric_id=metric.metric_id,
+            status=incomplete_status,
+            value=None,
+        )
+    if scorecard.gate == Gate.UNKNOWN:
+        raise ValueError("a ready scorecard cannot carry an unknown gate")
+    if scorecard.gate == Gate.NOT_APPLICABLE:
+        return Observation(
+            entry_id=entry_id,
+            task_id=scorecard.task_id,
+            task_version=scorecard.task_version,
+            sample_index=sample_index,
+            scorecard_digest=canonical_document_digest(scorecard),
+            metric_id=metric.metric_id,
+            status="not_applicable",
+            value=None,
+        )
+    status: Literal["pass", "failure"] = "failure" if scorecard.gate == Gate.FAIL else "pass"
     value = scorecard.total_score
     if metric.metric_id == "pass_rate":
-        value = None if status == "infrastructure_missing" else "100" if status == "pass" else "0"
+        value = "100" if status == "pass" else "0"
     elif metric.source_score_item_ids:
         items = [i for i in scorecard.items if i.item_id in metric.source_score_item_ids]
         if len(items) != len(metric.source_score_item_ids) or any(not i.applicable for i in items):
             raise ValueError("metric source score items missing or not applicable")
         value = _number(sum((Decimal(i.contribution) for i in items), Decimal(0)))
-        if status == "infrastructure_missing":
-            value = None
     elif metric.metric_id != "total_score":
         raise ValueError("metric requires a declared scorecard extraction rule")
     return Observation(

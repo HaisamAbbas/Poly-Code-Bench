@@ -52,7 +52,7 @@ To stop the containers, use `docker compose --profile local-auth down`. This doe
 
 The local stack validates public projections, OIDC submitter sessions, metadata-only request persistence, ownership checks, and reviewer API authorization. Approval still requires an explicit endpoint registration and finite reviewed run plan. This stack does not include production sandbox isolation, public DNS, or public HTTPS.
 
-For a no-cloud setup, Docker Compose, PostgreSQL, SeaweedFS and Keycloak are open-source local components; no paid AWS account is needed. The local development API continues to read the explicitly synthetic SQLite fixture. Staging/production mode now requires a shared PostgreSQL public-release catalog, so multiple API tasks do not depend on a writable local file. A publisher mirrors a source SQLite publication only after the release signature and typed public document verify:
+For a no-cloud setup, Docker Compose, PostgreSQL, SeaweedFS and Keycloak are open-source local components; no paid AWS account is needed. The local API reads the signed, explicitly synthetic public release snapshots from PostgreSQL. SQLite is used only as the local source store that `seed` verifies and mirrors into PostgreSQL; the API does not read that source store. Staging/production mode also requires a shared PostgreSQL public-release catalog, so multiple API tasks do not depend on a writable local file. A publisher mirrors a source SQLite publication only after the release signature and typed public document verify:
 
 ```powershell
 uv run --locked --all-packages pcb-ops releases sync-publication `

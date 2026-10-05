@@ -529,6 +529,7 @@ repair_round = Table(
     CheckConstraint(
         "round_index = 0 OR feedback_digest IS NOT NULL", name="repair_round_has_feedback"
     ),
+    Index("ix_repair_round_run", "repair_run_id"),
 )
 
 repair_delivery = Table(
@@ -548,6 +549,7 @@ repair_delivery = Table(
     CheckConstraint("output_tokens >= 0", name="repair_delivery_output_nonnegative"),
     CheckConstraint("cost_micros >= 0", name="repair_delivery_cost_nonnegative"),
     CheckConstraint("active_ms >= 0", name="repair_delivery_active_nonnegative"),
+    Index("ix_repair_delivery_round", "repair_round_id"),
 )
 
 evaluation = Table(

@@ -127,7 +127,8 @@ case fails on a CRLF checkout, which is the exact false positive it exists to de
 
 ## Known limitations
 
-- `gosec --version` reports `Version: dev` for a module install, so the recorded evaluator identity
-  is not the pinned `v2.29.0` the recipe declares. The pinned spec *is* recorded in
-  `config/images/go-components.json`; this is a gosec reporting defect, not a build one.
+- `gosec --version` reports `Version: dev` for a module install. The image builder now records the
+  exact embedded module version (`v2.29.0`) from `go version -m`, bound to the evaluator image
+  digest. The bundled `go vet` tool is versioned from `go tool vet -V=full` (`1.26.8`) for every
+  recipe instead of being incorrectly recorded as absent.
 - Development-tier only: every result comes from the local Docker driver, not a production worker.

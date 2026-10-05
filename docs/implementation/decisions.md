@@ -679,6 +679,17 @@ byte literals, so they inherit the Python file's endings. `go_source()` now norm
 otherwise the clean-sample case - the one that asserts correct code is *not* penalised - fails on a
 CRLF checkout, which is the precise false positive the case exists to prevent.
 
+# D-22-14 - Go image tool versions are derived from the executable
+
+The Go image probe treated `go tool vet -h` as its version command and recorded the bundled vet
+tool as absent; the actual tool reports its toolchain version with `go tool vet -V=full`. The
+gosec CLI reports `Version: dev` even though Go executable build info carries its installed module
+version. The component-image probe also omitted the analyzers' install directory from `PATH` and
+therefore recorded both analyzers as absent. The image builders now record the vet version from
+its own probe, the gosec module version from `go version -m`, and probe staticcheck at its pinned
+install path. Image digests bind these results to the executable. This keeps the CLI's developer
+placeholder visible as a reporting quirk without substituting it for tool provenance.
+
 # D-23-01 - Java measurement modes are task-frozen and image-declared
 
 The Java performance image declares the complete `cold` and `steady-state` JVM flag sets and fixed

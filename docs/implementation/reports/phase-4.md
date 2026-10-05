@@ -12,7 +12,7 @@ Phase 4 requires current evidence for Python, Rust, JavaScript, TypeScript, C, C
 | TypeScript | Distinct profile and image; TypeScript 7.0.2; zero task manifests | Blocked: no task-backed execution |
 | C | Current executable admission 29/29 in pinned images; nine authored variants and performance smoke run, development sandbox | Partial: quality admission, curator freeze and downstream scoring/replay remain |
 | C++ | Current image identity, manifest and typed plan checks; Cppcheck 2.10 | Partial: no current sandbox admission |
-| Go | Current executable admission, 24/24 checks. Corrected development-sandbox conformance passes 18/18 (`sha256:f0d700f87cc4992ef9a732a39889689987bf7f880589bd3872c599e8a36a32f6`); the prior 17/18 report is preserved as a pre-correction artifact. | Partial: tool identity cleanup and complete downstream language-path evidence remain |
+| Go | Current executable admission, 24/24 checks. Corrected development-sandbox conformance passes 18/18 (`sha256:f0d700f87cc4992ef9a732a39889689987bf7f880589bd3872c599e8a36a32f6`); tool identity records go-vet 1.26.8 and gosec v2.29.0 from build metadata. | Partial: complete downstream language-path and production-tier evidence remain |
 | Java | Current development-sandbox executable admission, 26/26 checks; Java performance unmeasured | Partial: no performance or production score evidence |
 
 E2E-15 and E2E-35 remain PARTIAL. The detailed evidence, task counts, fixture variants, tool/image/profile identities and limitations are in docs/implementation/reports/language-coverage.md. WP-19 is not complete.

@@ -18,12 +18,17 @@ from model_gateway_support import ScriptedTransport, ok
 from polycodebench_core.application_errors import LeaseLost
 from polycodebench_core.canonical import canonical_document_digest
 from polycodebench_core.jobs import JobClaim
+from polycodebench_core.solve_contracts import SolveError
 from polycodebench_orchestration.gateway.store import ArtifactResponseStore
 from polycodebench_orchestration.solve.executor import SolveStageExecutor, stage_outcome
-from polycodebench_orchestration.solve.loader import DatabaseAssignmentLoader
+from polycodebench_orchestration.solve.loader import (
+    DatabaseAssignmentLoader,
+    _require_matching_budget_profile,
+)
 from polycodebench_persistence.models import attempt, config_document, run
 from polycodebench_persistence.tasks import PostgresTaskRepository
 from polycodebench_services.rbac import Principal, Role
+from polycodebench_services.solve_budget_profiles import load_solve_budget_profiles
 from polycodebench_services.task_packages import TaskPackageImporter
 from polycodebench_services.tasks import TaskAdmissionService
 from solve_support import PROTOCOLS, Harness
@@ -32,7 +37,43 @@ from test_model_gateway_postgres import artifacts, build_world, database  # noqa
 from test_solve_sessions import _seed_quota
 from test_task_admission_postgres import _execution_report, _seed_artifact, _task_document
 
-PACK = Path(__file__).resolve().parents[1] / "taskpacks" / "admission-smoke"
+ROOT = Path(__file__).resolve().parents[1]
+PACK = ROOT / "taskpacks" / "admission-smoke"
+BUDGET_PROFILES = load_solve_budget_profiles(ROOT / "config" / "budgets" / "pilot-v1.yaml")
+
+
+def test_configured_protocol_budgets_have_exact_named_run_profiles() -> None:
+    protocol_profiles = {
+        "single-shot-v1": "single-shot-small-v1",
+        "standard-agent-v1": "agent-small-v1",
+        "prediction-v1": "prediction-small-v1",
+        "repo-qa-v1": "repo-qa-small-v1",
+    }
+    assert set(protocol_profiles) <= set(PROTOCOLS)
+    assert set(protocol_profiles.values()) <= set(BUDGET_PROFILES)
+    assert all(
+        BUDGET_PROFILES[profile_id] == PROTOCOLS[protocol_id].budget
+        for protocol_id, profile_id in protocol_profiles.items()
+    )
+
+
+def test_run_budget_profile_must_exist_and_match_the_installed_protocol() -> None:
+    protocol = PROTOCOLS["single-shot-v1"]
+    run_config = {"budget_profile": "single-shot-small-v1"}
+    _require_matching_budget_profile(run_config, protocol, BUDGET_PROFILES)
+
+    missing_profile = dict(BUDGET_PROFILES)
+    missing_profile.pop("single-shot-small-v1")
+    with pytest.raises(SolveError, match="budget profile is not installed"):
+        _require_matching_budget_profile(run_config, protocol, missing_profile)
+
+    mismatched_profile = dict(BUDGET_PROFILES)
+    mismatched_profile["single-shot-small-v1"] = PROTOCOLS["standard-agent-v1"].budget
+    with pytest.raises(SolveError, match="does not match the protocol budget"):
+        _require_matching_budget_profile(run_config, protocol, mismatched_profile)
+
+    with pytest.raises(SolveError, match="budget profile is not installed"):
+        _require_matching_budget_profile({}, protocol, BUDGET_PROFILES)
 
 
 class Jobs:
@@ -99,6 +140,7 @@ def persisted(database, artifacts):  # type: ignore[no-untyped-def]
         "kind": "run_config",
         "model_config_digest": model_digest,
         "protocol_id": "single-shot-v1",
+        "budget_profile": "single-shot-small-v1",
     }
     with database.engine.begin() as connection:
         base = connection.execute(select(run).where(run.c.id == world.run_id)).mappings().one()
@@ -156,7 +198,7 @@ def test_loader_builds_the_assignment_from_visible_data_only(
     persisted, database, artifacts
 ) -> None:  # type: ignore[no-untyped-def]
     h, imported, attempt_id = persisted
-    loader = DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS)
+    loader = DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS, BUDGET_PROFILES)
     assignment = loader(_claim(attempt_id))
     assert assignment.attempt_id == attempt_id and assignment.scope.scope_id == attempt_id
     assert "Double the input" in assignment.instructions
@@ -178,13 +220,33 @@ def test_loader_rejects_a_visible_bundle_that_differs_from_the_frozen_digest(
     persisted, database, artifacts
 ) -> None:  # type: ignore[no-untyped-def]
     h, _, attempt_id = persisted
-    loader = DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS)
+    loader = DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS, BUDGET_PROFILES)
     empty = {k: v for k, v in PROTOCOLS.items() if k != "single-shot-v1"}
-    from polycodebench_core.solve_contracts import SolveError
 
     with pytest.raises(SolveError, match="not installed"):
-        DatabaseAssignmentLoader(database.engine, artifacts, empty)(_claim(attempt_id))
+        DatabaseAssignmentLoader(database.engine, artifacts, empty, BUDGET_PROFILES)(
+            _claim(attempt_id)
+        )
     assert loader(_claim(attempt_id)).attempt_id == attempt_id
+
+
+def test_loader_fails_closed_for_missing_or_mismatched_run_budget_profile(
+    persisted, database, artifacts
+) -> None:  # type: ignore[no-untyped-def]
+    _, _, attempt_id = persisted
+    missing_profile = dict(BUDGET_PROFILES)
+    missing_profile.pop("single-shot-small-v1")
+    with pytest.raises(SolveError, match="budget profile is not installed"):
+        DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS, missing_profile)(
+            _claim(attempt_id)
+        )
+
+    mismatched_profile = dict(BUDGET_PROFILES)
+    mismatched_profile["single-shot-small-v1"] = PROTOCOLS["standard-agent-v1"].budget
+    with pytest.raises(SolveError, match="does not match the protocol budget"):
+        DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS, mismatched_profile)(
+            _claim(attempt_id)
+        )
 
 
 def test_executor_completes_a_model_failure_as_work_and_a_candidate_as_success(
@@ -192,7 +254,7 @@ def test_executor_completes_a_model_failure_as_work_and_a_candidate_as_success(
 ) -> None:  # type: ignore[no-untyped-def]
     h, _, attempt_id = persisted
     store = ArtifactResponseStore(artifacts, owner="p09", encryption_domain="solve-session")
-    loader = DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS)
+    loader = DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS, BUDGET_PROFILES)
     answer = json.dumps(
         {"files": [{"path": "solution.py", "content": "print(int(input()) * 2)\n"}]}
     )
@@ -247,7 +309,9 @@ def test_executor_stops_before_any_request_when_the_lease_is_gone(
     store = ArtifactResponseStore(artifacts, owner="p09", encryption_domain="solve-session")
     transport = ScriptedTransport([ok("{}")])
     executor = SolveStageExecutor(
-        load_assignment=DatabaseAssignmentLoader(database.engine, artifacts, PROTOCOLS),
+        load_assignment=DatabaseAssignmentLoader(
+            database.engine, artifacts, PROTOCOLS, BUDGET_PROFILES
+        ),
         gateway=h.world.gateway(transport),
         jobs=Jobs(allowed=False),  # type: ignore[arg-type]
         solve_repository=h.repo,

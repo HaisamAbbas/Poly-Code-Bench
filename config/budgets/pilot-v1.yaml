@@ -7,6 +7,7 @@ profiles:
     model_turns: 1
     tool_calls: 0
     active_solve_seconds: 180
+    per_command_seconds: null
     input_tokens: 32000
     output_tokens: 8000
     guest_memory_mib: 2048
@@ -16,6 +17,28 @@ profiles:
   agent-small-v1:
     model_turns: 30
     tool_calls: 100
+    active_solve_seconds: 600
+    per_command_seconds: 60
+    input_tokens: 250000
+    output_tokens: 30000
+    guest_memory_mib: 2048
+    guest_cpu: 2
+    writable_disk_gib: 2
+    process_count: 128
+  prediction-small-v1:
+    model_turns: 1
+    tool_calls: 0
+    active_solve_seconds: 120
+    per_command_seconds: 60
+    input_tokens: 48000
+    output_tokens: 2000
+    guest_memory_mib: 2048
+    guest_cpu: 2
+    writable_disk_gib: 2
+    process_count: 128
+  repo-qa-small-v1:
+    model_turns: 20
+    tool_calls: 60
     active_solve_seconds: 600
     per_command_seconds: 60
     input_tokens: 250000

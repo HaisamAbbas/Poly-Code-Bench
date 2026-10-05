@@ -15,7 +15,12 @@ from polycodebench_core.jobs import JobClaim
 from polycodebench_core.model_contracts import CallScope
 from polycodebench_core.model_planning import ModelConfig
 from polycodebench_core.models import TaskVersion
-from polycodebench_core.solve_contracts import SolveError, SolveProtocol, resolve_effective_protocol
+from polycodebench_core.solve_contracts import (
+    SolveBudget,
+    SolveError,
+    SolveProtocol,
+    resolve_effective_protocol,
+)
 from polycodebench_persistence.artifacts import ArtifactRepository
 from polycodebench_persistence.models import attempt, config_document, run, task_version
 from sqlalchemy import select
@@ -37,10 +42,12 @@ class DatabaseAssignmentLoader:
         engine: Engine,
         artifacts: ArtifactRepository,
         protocols: Mapping[str, SolveProtocol],
+        budget_profiles: Mapping[str, SolveBudget],
     ) -> None:
         self._engine = engine
         self._artifacts = artifacts
         self._protocols = protocols
+        self._budget_profiles = budget_profiles
 
     def __call__(self, claim: JobClaim) -> SolveAssignment:
         if claim.scope_type != "attempt":
@@ -82,6 +89,7 @@ class DatabaseAssignmentLoader:
         protocol = self._protocols.get(str(run_config["protocol_id"]))
         if protocol is None:
             raise SolveError("the run names a protocol that is not installed")
+        _require_matching_budget_profile(run_config, protocol, self._budget_profiles)
         effective = resolve_effective_protocol(protocol, task.protocol_constraints)
         bundle = task.visible_bundle
         _, archive = self._artifacts.read_verified(UUID(bundle.artifact_id))
@@ -113,3 +121,15 @@ class DatabaseAssignmentLoader:
                 hidden.artifact_id.encode(),
             ),
         )
+
+
+def _require_matching_budget_profile(
+    run_config: Mapping[str, object],
+    protocol: SolveProtocol,
+    budget_profiles: Mapping[str, SolveBudget],
+) -> None:
+    profile_id = run_config.get("budget_profile")
+    if not isinstance(profile_id, str) or profile_id not in budget_profiles:
+        raise SolveError("the run's budget profile is not installed")
+    if budget_profiles[profile_id] != protocol.budget:
+        raise SolveError("the run's budget profile does not match the protocol budget")

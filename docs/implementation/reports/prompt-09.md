@@ -15,7 +15,18 @@ Full suite: 390 passed, 5 skipped, 0 failed (real Postgres, object store, local 
 - Pending: live model behaviour and provider tool-call conventions (Prompt 17); production isolation (Prompt 06, owner-deferred).
 
 ## 4. Decisions and discrepancies
-D-09-01..12 in `decisions.md`. Independent review produced 15 findings; all were fixed with regression tests except: finding 15's `budget_profile` limitation (run `budget_profile` is not checked against the protocol's embedded budget), which is open and recorded as D-09-12. Notable dispositions: gateway spending-limit refusal is now an operator interruption (resumable), not a model budget exhaustion; helper death with a live sandbox is a tool failure; workspace-limit breaches are recorded model failures; extraction never raises on model text. Another session committed Prompt 08; I edited `tests/test_jobs_postgres.py` only to scope a count to the attempt. No commits made.
+D-09-01..12 in `decisions.md`. Independent review produced 15 findings; the historical report identified finding 15's `budget_profile` limitation as open. Notable dispositions: gateway spending-limit refusal is now an operator interruption (resumable), not a model budget exhaustion; helper death with a live sandbox is a tool failure; workspace-limit breaches are recorded model failures; extraction never raises on model text. Another session committed Prompt 08; I edited `tests/test_jobs_postgres.py` only to scope a count to the attempt. No commits made at the time of the original report.
+
+## Audit correction — 2026-10-05
+
+D-09-12 is resolved. `DatabaseAssignmentLoader` now fails closed unless the run names an installed
+budget profile whose complete solve limits exactly match the selected protocol. The proposed
+budget document now contains exact profiles for all four installed protocols (single-shot,
+standard-agent, prediction and repo-QA); these profiles do not authorize live spend. Tests verify
+all four profile-to-protocol matches and reject missing or mismatched profiles.
+`tests/test_solve_loader.py` reported 2 passed and 5 database-backed cases skipped because
+`PCB_TEST_DATABASE_URL` is not configured. The historical Prompt 09 full-suite result above is
+unchanged.
 
 ## 5. Next
 Next: Prompt 10 — Implement Python support.

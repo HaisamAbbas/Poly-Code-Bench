@@ -101,7 +101,12 @@ def create_app(
         release_store = ReleaseStore(_store_path())
     release_store_path = getattr(release_store, "path", None)
     postgres_runs = (
-        PostgresRunRepository(persistence_database.engine) if persistence_database else None
+        PostgresRunRepository(
+            persistence_database.engine,
+            database_role="pcb_submission_approver",
+        )
+        if persistence_database
+        else None
     )
     submission_store = submissions
     if submission_store is None:
@@ -117,7 +122,10 @@ def create_app(
     endpoint_service = endpoints
     if endpoint_service is None and persistence_database:
         endpoint_service = ModelEndpointService(
-            PostgresEndpointRepository(persistence_database.engine)
+            PostgresEndpointRepository(
+                persistence_database.engine,
+                database_role="pcb_endpoint_administrator",
+            )
         )
 
     @asynccontextmanager

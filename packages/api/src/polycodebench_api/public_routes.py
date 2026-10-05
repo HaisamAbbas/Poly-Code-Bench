@@ -14,8 +14,15 @@ from fastapi import APIRouter, Query, Request
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_publication.projections import (
     ComparisonResult,
+    LanguageProfile,
+    LeaderboardEntry,
+    Methodology,
     MetricRegistry,
+    ModelProfile,
+    PublicScorecard,
+    PublicTaskContent,
     ReleaseSummary,
+    TaskSummary,
     sort_leaderboard,
 )
 from polycodebench_publication.projections_query import (
@@ -49,6 +56,7 @@ from polycodebench_api.envelope import (
     IMMUTABLE_CACHE,
     REVALIDATE_CACHE,
     SHORT_CACHE,
+    ApiEnvelope,
     ResponseMeta,
     envelope,
     respond,
@@ -95,7 +103,7 @@ def _digest_of(payload: object) -> str:
 # --------------------------------------------------------------------------- releases
 
 
-@router.get("/releases")
+@router.get("/releases", response_model=ApiEnvelope[list[ReleaseSummary]])
 def list_releases(
     request: Request,
     state: Annotated[list[str], Query(default_factory=list)],
@@ -135,9 +143,10 @@ def list_releases(
         filters_digest=filters.digest(),
         key=services.secret_key,
     )
+    current_release = services.releases.current(services.target).get("release_id")
     meta = ResponseMeta(
         release_digest=_digest_of([row.model_dump(mode="json") for row in window]),
-        current_release_id=services.releases.current(services.target).get("release_id"),
+        current_release_id=current_release if isinstance(current_release, str) else None,
         total=len(rows),
         returned=len(window),
         limit=page.limit,
@@ -148,7 +157,7 @@ def list_releases(
     return respond(request, envelope(window, meta), cache=REVALIDATE_CACHE)
 
 
-@router.get("/releases/{release_id}")
+@router.get("/releases/{release_id}", response_model=ApiEnvelope[ReleaseSummary])
 def get_release(request: Request, release_id: str) -> Response:
     services = services_of(request)
     resolved, document, _pinned = load_public_document(services, release_id)
@@ -163,7 +172,7 @@ def get_release(request: Request, release_id: str) -> Response:
 # --------------------------------------------------------------------------- leaderboard
 
 
-@router.get("/leaderboard")
+@router.get("/leaderboard", response_model=ApiEnvelope[list[LeaderboardEntry]])
 def get_leaderboard(
     request: Request,
     language: Annotated[list[str], Query(default_factory=list)],
@@ -220,7 +229,7 @@ def get_leaderboard(
 # --------------------------------------------------------------------------- profiles
 
 
-@router.get("/models/{model_config_id}")
+@router.get("/models/{model_config_id}", response_model=ApiEnvelope[ModelProfile])
 def get_model(request: Request, model_config_id: str, release: str = LATEST) -> Response:
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
@@ -234,7 +243,7 @@ def get_model(request: Request, model_config_id: str, release: str = LATEST) -> 
     return respond(request, envelope(profile, meta), cache=_cache(pinned))
 
 
-@router.get("/languages/{language_id}")
+@router.get("/languages/{language_id}", response_model=ApiEnvelope[LanguageProfile])
 def get_language(request: Request, language_id: str, release: str = LATEST) -> Response:
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
@@ -263,7 +272,7 @@ def _comparison(
     )
 
 
-@router.get("/compare")
+@router.get("/compare", response_model=ApiEnvelope[ComparisonResult])
 def get_compare(
     request: Request,
     models: Annotated[list[str], Query(default_factory=list)],
@@ -292,7 +301,7 @@ def get_compare(
 # --------------------------------------------------------------------------- tasks
 
 
-@router.get("/tasks")
+@router.get("/tasks", response_model=ApiEnvelope[list[TaskSummary]])
 def list_tasks(
     request: Request,
     language: Annotated[list[str], Query(default_factory=list)],
@@ -349,7 +358,7 @@ def list_tasks(
     return respond(request, envelope(window, meta), cache=_cache(pinned))
 
 
-@router.get("/tasks/{task_id}")
+@router.get("/tasks/{task_id}", response_model=ApiEnvelope[TaskSummary])
 def get_task(request: Request, task_id: str, release: str = LATEST) -> Response:
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
@@ -358,7 +367,7 @@ def get_task(request: Request, task_id: str, release: str = LATEST) -> Response:
     return respond(request, envelope(task, meta), cache=_cache(pinned))
 
 
-@router.get("/tasks/{task_id}/content")
+@router.get("/tasks/{task_id}/content", response_model=ApiEnvelope[PublicTaskContent])
 def get_task_content(request: Request, task_id: str, release: str = LATEST) -> Response:
     """Fetch bounded, curated task content only after a public task is explicitly opened."""
     services = services_of(request)
@@ -368,7 +377,7 @@ def get_task_content(request: Request, task_id: str, release: str = LATEST) -> R
     return respond(request, envelope(detail, meta), cache=_cache(pinned))
 
 
-@router.get("/scorecards/{scorecard_id}")
+@router.get("/scorecards/{scorecard_id}", response_model=ApiEnvelope[PublicScorecard])
 def get_scorecard(request: Request, scorecard_id: str, release: str = LATEST) -> Response:
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
@@ -385,7 +394,7 @@ def get_scorecard(request: Request, scorecard_id: str, release: str = LATEST) ->
 # --------------------------------------------------------------------------- methodology
 
 
-@router.get("/methodology/{version}")
+@router.get("/methodology/{version}", response_model=ApiEnvelope[Methodology])
 def get_methodology(request: Request, version: str, release: str = LATEST) -> Response:
     """The frozen methods behind a release, resolved by version as release links expect."""
     services = services_of(request)

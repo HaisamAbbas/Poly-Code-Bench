@@ -1,0 +1,4906 @@
+{
+  "components": {
+    "schemas": {
+      "ApiEnvelope_ComparisonResult_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ComparisonResult"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[ComparisonResult]",
+        "type": "object"
+      },
+      "ApiEnvelope_EndpointDecisionResult_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EndpointDecisionResult"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[EndpointDecisionResult]",
+        "type": "object"
+      },
+      "ApiEnvelope_EndpointRegistrationResult_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EndpointRegistrationResult"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[EndpointRegistrationResult]",
+        "type": "object"
+      },
+      "ApiEnvelope_LanguageProfile_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LanguageProfile"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[LanguageProfile]",
+        "type": "object"
+      },
+      "ApiEnvelope_Methodology_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Methodology"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[Methodology]",
+        "type": "object"
+      },
+      "ApiEnvelope_ModelProfile_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelProfile"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[ModelProfile]",
+        "type": "object"
+      },
+      "ApiEnvelope_ModelSubmission_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelSubmission"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[ModelSubmission]",
+        "type": "object"
+      },
+      "ApiEnvelope_PublicScorecard_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicScorecard"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[PublicScorecard]",
+        "type": "object"
+      },
+      "ApiEnvelope_PublicTaskContent_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicTaskContent"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[PublicTaskContent]",
+        "type": "object"
+      },
+      "ApiEnvelope_ReleaseSummary_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReleaseSummary"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[ReleaseSummary]",
+        "type": "object"
+      },
+      "ApiEnvelope_SubmissionReviewView_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SubmissionReviewView"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[SubmissionReviewView]",
+        "type": "object"
+      },
+      "ApiEnvelope_TaskSummary_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TaskSummary"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[TaskSummary]",
+        "type": "object"
+      },
+      "ApiEnvelope_list_LeaderboardEntry__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[list[LeaderboardEntry]]",
+        "type": "object"
+      },
+      "ApiEnvelope_list_ReleaseSummary__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ReleaseSummary"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[list[ReleaseSummary]]",
+        "type": "object"
+      },
+      "ApiEnvelope_list_SubmissionReviewView__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SubmissionReviewView"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[list[SubmissionReviewView]]",
+        "type": "object"
+      },
+      "ApiEnvelope_list_TaskSummary__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/TaskSummary"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[list[TaskSummary]]",
+        "type": "object"
+      },
+      "ComparisonFilters": {
+        "additionalProperties": false,
+        "description": "Task filters applied only to common task references and per-task differences.",
+        "properties": {
+          "difficulties": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Difficulties",
+            "type": "array"
+          },
+          "families": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Families",
+            "type": "array"
+          },
+          "kind": {
+            "const": "comparison_filters",
+            "default": "comparison_filters",
+            "title": "Kind",
+            "type": "string"
+          },
+          "languages": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "languages",
+          "families",
+          "difficulties"
+        ],
+        "title": "ComparisonFilters",
+        "type": "object"
+      },
+      "ComparisonResult": {
+        "additionalProperties": false,
+        "description": "``GET /compare``: either a common-cohort comparison or typed incompatibility.\n\nExactly one of ``entries`` and ``incompatibilities`` is populated. A request that cannot be\ncompared returns the reasons and no numbers at all, so a partial entry can never be presented\nas a full rank. Entry metrics and ``deltas`` retain their full-release aggregate scope;\n``common_task_refs`` and ``paired_task_deltas`` use the disclosed task intersection after\n``applied_filters``.",
+        "properties": {
+          "applied_filters": {
+            "$ref": "#/components/schemas/ComparisonFilters"
+          },
+          "cohort_digest": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Cohort Digest",
+            "type": "string"
+          },
+          "common_independent_clusters": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Independent Clusters"
+          },
+          "common_task_refs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ComparisonTaskRef"
+            },
+            "title": "Common Task Refs",
+            "type": "array"
+          },
+          "common_tasks": {
+            "minimum": 0.0,
+            "title": "Common Tasks",
+            "type": "integer"
+          },
+          "deltas": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PairedDelta"
+            },
+            "title": "Deltas",
+            "type": "array"
+          },
+          "entries": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "incompatibilities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Incompatibility"
+            },
+            "title": "Incompatibilities",
+            "type": "array"
+          },
+          "kind": {
+            "const": "comparison_result",
+            "default": "comparison_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "limitations": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "paired_task_deltas": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PairedTaskDelta"
+            },
+            "title": "Paired Task Deltas",
+            "type": "array"
+          },
+          "release_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "release_metric_scope": {
+            "const": "full_release_aggregate",
+            "default": "full_release_aggregate",
+            "title": "Release Metric Scope",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scope": {
+            "enum": [
+              "exploratory",
+              "ranked_eligible"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "task_pair_scope": {
+            "const": "common_task_intersection_after_filters",
+            "default": "common_task_intersection_after_filters",
+            "title": "Task Pair Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "release_id",
+          "cohort_digest",
+          "scope",
+          "release_metric_scope",
+          "task_pair_scope",
+          "applied_filters",
+          "common_tasks",
+          "common_independent_clusters",
+          "entries",
+          "deltas",
+          "common_task_refs",
+          "paired_task_deltas",
+          "incompatibilities",
+          "limitations"
+        ],
+        "title": "ComparisonResult",
+        "type": "object"
+      },
+      "ComparisonScorecardRef": {
+        "additionalProperties": false,
+        "description": "A scorecard that proves one selected configuration covered a public task version.",
+        "properties": {
+          "evidence_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Evidence Url",
+            "type": "string"
+          },
+          "kind": {
+            "const": "comparison_scorecard_ref",
+            "default": "comparison_scorecard_ref",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scorecard_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Scorecard Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "model_config_id",
+          "scorecard_id",
+          "evidence_url"
+        ],
+        "title": "ComparisonScorecardRef",
+        "type": "object"
+      },
+      "ComparisonTaskRef": {
+        "additionalProperties": false,
+        "description": "One exact, disclosed task version shared by every selected configuration.",
+        "properties": {
+          "difficulty": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Difficulty",
+            "type": "string"
+          },
+          "family": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Family",
+            "type": "string"
+          },
+          "kind": {
+            "const": "comparison_task_ref",
+            "default": "comparison_task_ref",
+            "title": "Kind",
+            "type": "string"
+          },
+          "language_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Language Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scorecards": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonScorecardRef"
+            },
+            "maxItems": 4,
+            "minItems": 2,
+            "title": "Scorecards",
+            "type": "array"
+          },
+          "task_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Task Id",
+            "type": "string"
+          },
+          "task_version": {
+            "minimum": 1.0,
+            "title": "Task Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "task_id",
+          "task_version",
+          "language_id",
+          "family",
+          "difficulty",
+          "scorecards"
+        ],
+        "title": "ComparisonTaskRef",
+        "type": "object"
+      },
+      "ContributionRow": {
+        "additionalProperties": false,
+        "description": "One row of the exact contribution chain (Prompt 15's explanation contract).",
+        "properties": {
+          "arithmetic": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Arithmetic",
+            "type": "string"
+          },
+          "dimension": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Dimension",
+            "type": "string"
+          },
+          "effective_weight_bp": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Effective Weight Bp",
+            "type": "integer"
+          },
+          "evidence_refs": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "item_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Item Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "contribution_row",
+            "default": "contribution_row",
+            "title": "Kind",
+            "type": "string"
+          },
+          "nominal_weight_bp": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Nominal Weight Bp",
+            "type": "integer"
+          },
+          "presentation_weight_bp": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Presentation Weight Bp",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "item_id",
+          "dimension",
+          "nominal_weight_bp",
+          "effective_weight_bp",
+          "presentation_weight_bp",
+          "arithmetic",
+          "evidence_refs",
+          "value"
+        ],
+        "title": "ContributionRow",
+        "type": "object"
+      },
+      "Coverage": {
+        "additionalProperties": false,
+        "description": "How much of a cohort an entry actually covers.\n\n``tasks`` is the number of tasks in the common cohort, not the number an entry found easy.",
+        "properties": {
+          "independent_clusters": {
+            "minimum": 0.0,
+            "title": "Independent Clusters",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "coverage",
+            "default": "coverage",
+            "title": "Kind",
+            "type": "string"
+          },
+          "samples": {
+            "minimum": 0.0,
+            "title": "Samples",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "tasks": {
+            "minimum": 0.0,
+            "title": "Tasks",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "tasks",
+          "samples",
+          "independent_clusters"
+        ],
+        "title": "Coverage",
+        "type": "object"
+      },
+      "DimensionBreakdown": {
+        "additionalProperties": false,
+        "description": "A language or model dimension's score and the coverage behind it.",
+        "properties": {
+          "applicable_tasks": {
+            "minimum": 0.0,
+            "title": "Applicable Tasks",
+            "type": "integer"
+          },
+          "dimension": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Dimension",
+            "type": "string"
+          },
+          "kind": {
+            "const": "dimension_breakdown",
+            "default": "dimension_breakdown",
+            "title": "Kind",
+            "type": "string"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/PublicMetric"
+          },
+          "opportunity_count": {
+            "minimum": 0.0,
+            "title": "Opportunity Count",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "dimension",
+          "metric",
+          "applicable_tasks",
+          "opportunity_count"
+        ],
+        "title": "DimensionBreakdown",
+        "type": "object"
+      },
+      "EndpointDecisionInput": {
+        "additionalProperties": false,
+        "properties": {
+          "conformance_report": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conformance Report"
+          },
+          "decision": {
+            "enum": [
+              "approved",
+              "rejected",
+              "revoked"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "decision",
+          "reason",
+          "expected_version"
+        ],
+        "title": "EndpointDecisionInput",
+        "type": "object"
+      },
+      "EndpointDecisionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint_registration_id": {
+            "title": "Endpoint Registration Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "endpoint_decision_result",
+            "default": "endpoint_decision_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "approved",
+              "rejected",
+              "revoked"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "endpoint_registration_id",
+          "status"
+        ],
+        "title": "EndpointDecisionResult",
+        "type": "object"
+      },
+      "EndpointNetworkPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_cidrs": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Cidrs",
+            "type": "array"
+          },
+          "allowed_hosts": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Hosts",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NetworkPolicyKind"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "EndpointNetworkPolicy",
+        "type": "object"
+      },
+      "EndpointRegistrationInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base_url": {
+            "maxLength": 512,
+            "minLength": 9,
+            "title": "Base Url",
+            "type": "string"
+          },
+          "declared_capabilities": {
+            "$ref": "#/components/schemas/ModelCapabilities"
+          },
+          "network_policy": {
+            "$ref": "#/components/schemas/EndpointNetworkPolicy"
+          },
+          "provider_kind": {
+            "$ref": "#/components/schemas/ProviderKind"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "secret_ref": {
+            "maxLength": 192,
+            "minLength": 1,
+            "title": "Secret Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider_kind",
+          "base_url",
+          "secret_ref",
+          "network_policy",
+          "declared_capabilities"
+        ],
+        "title": "EndpointRegistrationInput",
+        "type": "object"
+      },
+      "EndpointRegistrationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint_registration_id": {
+            "title": "Endpoint Registration Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "endpoint_registration_result",
+            "default": "endpoint_registration_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "status": {
+            "const": "pending",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "endpoint_registration_id",
+          "status"
+        ],
+        "title": "EndpointRegistrationResult",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Incompatibility": {
+        "additionalProperties": false,
+        "description": "Why two or more entries cannot be compared on a common cohort.\n\nTyped rather than free text: the frontend must distinguish \"these two models were never run on\nthe same task set\" from \"this entry is missing a language\", and must never silently renormalise\na partial entry into a full rank (E2E-28).",
+        "properties": {
+          "code": {
+            "enum": [
+              "different_cohort",
+              "missing_language",
+              "protocol_mismatch",
+              "budget_mismatch",
+              "incompatible_metric",
+              "insufficient_common_coverage",
+              "too_few_entries",
+              "too_many_entries"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Detail",
+            "type": "string"
+          },
+          "kind": {
+            "const": "incompatibility",
+            "default": "incompatibility",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_config_id": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Config Id"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "code",
+          "model_config_id",
+          "detail"
+        ],
+        "title": "Incompatibility",
+        "type": "object"
+      },
+      "LanguageEntryProfile": {
+        "additionalProperties": false,
+        "description": "One model's language-specific metrics, diagnostics, and published coverage.",
+        "properties": {
+          "diagnostics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DimensionBreakdown"
+            },
+            "title": "Diagnostics",
+            "type": "array"
+          },
+          "dimensions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DimensionBreakdown"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "evidence_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Evidence Url",
+            "type": "string"
+          },
+          "kind": {
+            "const": "language_entry_profile",
+            "default": "language_entry_profile",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "language_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Language Id",
+            "type": "string"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "tool_coverage": {
+            "default": [],
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Tool Coverage",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "language_id",
+          "model_config_id",
+          "label",
+          "dimensions",
+          "diagnostics",
+          "tool_coverage",
+          "evidence_url"
+        ],
+        "title": "LanguageEntryProfile",
+        "type": "object"
+      },
+      "LanguageProfile": {
+        "additionalProperties": false,
+        "description": "``GET /languages/{id}``: dimension and diagnostic profile with opportunity counts.\n\n``opportunity_count`` is the *measured* opportunity count. A feature the language cannot\nobserve is ``not_applicable`` rather than absent, so a chart cannot imply evidence for an\nuntested feature (Prompt 30, PCB-30-3).",
+        "properties": {
+          "coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Coverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnostics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DimensionBreakdown"
+            },
+            "title": "Diagnostics",
+            "type": "array"
+          },
+          "dimensions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DimensionBreakdown"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "entries": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LanguageEntryProfile"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "kind": {
+            "const": "language_profile",
+            "default": "language_profile",
+            "title": "Kind",
+            "type": "string"
+          },
+          "language_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Language Id",
+            "type": "string"
+          },
+          "metrics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PublicMetric"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "release_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "tool_coverage": {
+            "default": [],
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Tool Coverage",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "language_id",
+          "release_id",
+          "dimensions",
+          "diagnostics",
+          "tool_coverage",
+          "metrics",
+          "coverage",
+          "entries"
+        ],
+        "title": "LanguageProfile",
+        "type": "object"
+      },
+      "LeaderboardEntry": {
+        "additionalProperties": false,
+        "description": "One row of ``GET /leaderboard``.\n\n``rank`` is ``None`` whenever the release is exploratory: an exploratory release may publish an\nunranked partial entry with explicit coverage but no recalculated all-language score\n(T 19.4).",
+        "properties": {
+          "budget_profile_id": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Profile Id"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/Coverage"
+          },
+          "evidence_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Evidence Url",
+            "type": "string"
+          },
+          "generation_cost_micros": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Cost Micros"
+          },
+          "kind": {
+            "const": "leaderboard_entry",
+            "default": "leaderboard_entry",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "languages": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "latency_ms_p50": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms P50"
+          },
+          "latency_ms_p95": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms P95"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/PublicMetric"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "ranking_label": {
+            "enum": [
+              "exploratory",
+              "ranked_eligible"
+            ],
+            "title": "Ranking Label",
+            "type": "string"
+          },
+          "run_mode": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Mode"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "model_config_id",
+          "label",
+          "rank",
+          "ranking_label",
+          "metrics",
+          "coverage",
+          "languages",
+          "run_mode",
+          "budget_profile_id",
+          "generation_cost_micros",
+          "latency_ms_p50",
+          "latency_ms_p95",
+          "evidence_url"
+        ],
+        "title": "LeaderboardEntry",
+        "type": "object"
+      },
+      "Methodology": {
+        "additionalProperties": false,
+        "description": "``GET /methodology/{version}``: the frozen methods behind a release.\n\nRecords what is native versus adapted, so a reader can tell an original benchmark's own metric\nfrom this product's adaptation of it.",
+        "properties": {
+          "correction_history": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Correction History",
+            "type": "array"
+          },
+          "deviations": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Deviations",
+            "type": "array"
+          },
+          "formulas": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Formulas",
+            "type": "array"
+          },
+          "kind": {
+            "const": "methodology",
+            "default": "methodology",
+            "title": "Kind",
+            "type": "string"
+          },
+          "limitations": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "methods": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Methods",
+            "type": "array"
+          },
+          "native_benchmarks": {
+            "default": [],
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Native Benchmarks",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "version",
+          "methods",
+          "formulas",
+          "tools",
+          "deviations",
+          "native_benchmarks",
+          "correction_history",
+          "limitations"
+        ],
+        "title": "Methodology",
+        "type": "object"
+      },
+      "MetricDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "applicability_rule": {
+            "default": "predeclared task metric IDs",
+            "title": "Applicability Rule",
+            "type": "string"
+          },
+          "conditional_on_pass": {
+            "default": false,
+            "title": "Conditional On Pass",
+            "type": "boolean"
+          },
+          "direction": {
+            "default": "higher",
+            "enum": [
+              "higher",
+              "lower"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "domain": {
+            "default": [
+              "0",
+              "100"
+            ],
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Domain",
+            "type": "array"
+          },
+          "formatter": {
+            "default": "decimal-6",
+            "title": "Formatter",
+            "type": "string"
+          },
+          "kind": {
+            "const": "metric_definition",
+            "default": "metric_definition",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "missingness_policy": {
+            "const": "block",
+            "default": "block",
+            "title": "Missingness Policy",
+            "type": "string"
+          },
+          "sample_aggregation": {
+            "const": "mean",
+            "default": "mean",
+            "title": "Sample Aggregation",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_score_item_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Score Item Ids",
+            "type": "array"
+          },
+          "task_aggregation": {
+            "default": "weighted_mean",
+            "enum": [
+              "weighted_mean",
+              "micro_f1"
+            ],
+            "title": "Task Aggregation",
+            "type": "string"
+          },
+          "uncertainty_method": {
+            "default": "cluster-hierarchical-percentile-v1",
+            "title": "Uncertainty Method",
+            "type": "string"
+          },
+          "unit": {
+            "default": "score",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "metric_id",
+          "label",
+          "unit",
+          "direction",
+          "domain",
+          "applicability_rule",
+          "sample_aggregation",
+          "task_aggregation",
+          "missingness_policy",
+          "formatter",
+          "uncertainty_method",
+          "source_score_item_ids",
+          "conditional_on_pass"
+        ],
+        "title": "MetricDefinition",
+        "type": "object"
+      },
+      "MetricRegistry": {
+        "additionalProperties": false,
+        "description": "The metric definitions a response ships alongside its values.\n\nT 19.1: the API returns these definitions with a version so the frontend cannot implement its\nown scoring formula.",
+        "properties": {
+          "definitions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MetricDefinition"
+            },
+            "title": "Definitions",
+            "type": "array"
+          },
+          "kind": {
+            "const": "metric_registry",
+            "default": "metric_registry",
+            "title": "Kind",
+            "type": "string"
+          },
+          "policy_digest": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "policy_digest",
+          "definitions"
+        ],
+        "title": "MetricRegistry",
+        "type": "object"
+      },
+      "ModelCapabilities": {
+        "additionalProperties": false,
+        "description": "What an endpoint/model can do. Adapters declare wire ceilings; operators declare\nmodel facts. Effective capability is the conjunction; nothing is inferred from names.",
+        "properties": {
+          "context_limit_tokens": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Limit Tokens"
+          },
+          "max_output_tokens_limit": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Output Tokens Limit"
+          },
+          "native_tools": {
+            "title": "Native Tools",
+            "type": "boolean"
+          },
+          "output_cap_bounds_all_billed_output": {
+            "default": false,
+            "title": "Output Cap Bounds All Billed Output",
+            "type": "boolean"
+          },
+          "output_limit_parameter": {
+            "default": "max_completion_tokens",
+            "enum": [
+              "max_completion_tokens",
+              "max_tokens"
+            ],
+            "title": "Output Limit Parameter",
+            "type": "string"
+          },
+          "reasoning_budget_tokens": {
+            "default": false,
+            "title": "Reasoning Budget Tokens",
+            "type": "boolean"
+          },
+          "reasoning_efforts": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasoning Efforts",
+            "type": "array"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "boolean"
+          },
+          "seed_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed Max"
+          },
+          "seed_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed Min"
+          },
+          "streaming": {
+            "default": false,
+            "title": "Streaming",
+            "type": "boolean"
+          },
+          "structured_output": {
+            "title": "Structured Output",
+            "type": "boolean"
+          },
+          "temperature": {
+            "title": "Temperature",
+            "type": "boolean"
+          },
+          "usage_counters": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/UsageCounter"
+            },
+            "title": "Usage Counters",
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "native_tools",
+          "structured_output",
+          "seed",
+          "temperature"
+        ],
+        "title": "ModelCapabilities",
+        "type": "object"
+      },
+      "ModelProfile": {
+        "additionalProperties": false,
+        "description": "``GET /models/{id}``: a published configuration-specific profile.\n\nCarries no credentials, no provider secret reference and no endpoint URL (T 20.4).",
+        "properties": {
+          "budget_profile_id": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Profile Id"
+          },
+          "capabilities": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Coverage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dimensions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DimensionBreakdown"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "evidence_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Evidence Url",
+            "type": "string"
+          },
+          "generation_cost_micros": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Cost Micros"
+          },
+          "kind": {
+            "const": "model_profile",
+            "default": "model_profile",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "language_profiles": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LanguageEntryProfile"
+            },
+            "title": "Language Profiles",
+            "type": "array"
+          },
+          "languages": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "latency_ms_p50": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms P50"
+          },
+          "latency_ms_p95": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms P95"
+          },
+          "metrics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PublicMetric"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "release_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "run_mode": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Mode"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "model_config_id",
+          "label",
+          "release_id",
+          "capabilities",
+          "dimensions",
+          "language_profiles",
+          "languages",
+          "run_mode",
+          "budget_profile_id",
+          "generation_cost_micros",
+          "latency_ms_p50",
+          "latency_ms_p95",
+          "metrics",
+          "coverage",
+          "evidence_url"
+        ],
+        "title": "ModelProfile",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "additionalProperties": false,
+        "description": "Submitter-safe status. Review notes and internal plan identities are not returned here.",
+        "properties": {
+          "contact_email": {
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Contact Email",
+            "type": "string"
+          },
+          "endpoint_url": {
+            "maxLength": 512,
+            "minLength": 9,
+            "title": "Endpoint Url",
+            "type": "string"
+          },
+          "kind": {
+            "const": "model_submission",
+            "default": "model_submission",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Model Name",
+            "type": "string"
+          },
+          "organization": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization"
+          },
+          "permission_attested": {
+            "title": "Permission Attested",
+            "type": "boolean"
+          },
+          "provider": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "resulting_run_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resulting Run Id"
+          },
+          "row_version": {
+            "minimum": 0.0,
+            "title": "Row Version",
+            "type": "integer"
+          },
+          "run_status": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Status"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_license": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Source License",
+            "type": "string"
+          },
+          "source_url": {
+            "maxLength": 512,
+            "minLength": 9,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "rejected",
+              "approved"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submission_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Submission Id",
+            "type": "string"
+          },
+          "submitted_at": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "submission_id",
+          "status",
+          "model_name",
+          "provider",
+          "organization",
+          "contact_email",
+          "endpoint_url",
+          "source_url",
+          "source_license",
+          "permission_attested",
+          "submitted_at",
+          "row_version",
+          "rejection_reason",
+          "resulting_run_id",
+          "run_status"
+        ],
+        "title": "ModelSubmission",
+        "type": "object"
+      },
+      "ModelSubmissionInput": {
+        "additionalProperties": false,
+        "description": "Publicly acceptable information. Unknown fields (including credentials) are refused.",
+        "properties": {
+          "contact_email": {
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Contact Email",
+            "type": "string"
+          },
+          "endpoint_url": {
+            "maxLength": 512,
+            "minLength": 9,
+            "title": "Endpoint Url",
+            "type": "string"
+          },
+          "kind": {
+            "const": "model_submission_input",
+            "default": "model_submission_input",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Model Name",
+            "type": "string"
+          },
+          "organization": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization"
+          },
+          "permission_attested": {
+            "title": "Permission Attested",
+            "type": "boolean"
+          },
+          "provider": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Provider",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_license": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Source License",
+            "type": "string"
+          },
+          "source_url": {
+            "maxLength": 512,
+            "minLength": 9,
+            "title": "Source Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_name",
+          "provider",
+          "contact_email",
+          "endpoint_url",
+          "source_url",
+          "source_license",
+          "permission_attested"
+        ],
+        "title": "ModelSubmissionInput",
+        "type": "object"
+      },
+      "NetworkPolicyKind": {
+        "enum": [
+          "public-https-allowlist",
+          "internal-local"
+        ],
+        "title": "NetworkPolicyKind",
+        "type": "string"
+      },
+      "PairedDelta": {
+        "additionalProperties": false,
+        "description": "Difference between published release aggregate metrics, not task-filtered metrics.",
+        "properties": {
+          "baseline_model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Baseline Model Config Id",
+            "type": "string"
+          },
+          "candidate_model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Candidate Model Config Id",
+            "type": "string"
+          },
+          "delta_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Value"
+          },
+          "interval_high": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval High"
+          },
+          "interval_low": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Low"
+          },
+          "interval_method": {
+            "default": "unavailable",
+            "enum": [
+              "reported_interval_difference_bounds",
+              "unavailable"
+            ],
+            "title": "Interval Method",
+            "type": "string"
+          },
+          "kind": {
+            "const": "paired_delta",
+            "default": "paired_delta",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "metric_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "measured",
+              "insufficient_information",
+              "not_applicable",
+              "gated_zero",
+              "missing",
+              "needs_review"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "metric_id",
+          "label",
+          "baseline_model_config_id",
+          "candidate_model_config_id",
+          "delta_value",
+          "interval_low",
+          "interval_high",
+          "interval_method",
+          "status",
+          "reason"
+        ],
+        "title": "PairedDelta",
+        "type": "object"
+      },
+      "PairedTaskDelta": {
+        "additionalProperties": false,
+        "description": "A per-task candidate-minus-baseline difference traced to both source scorecards.",
+        "properties": {
+          "baseline_model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Baseline Model Config Id",
+            "type": "string"
+          },
+          "baseline_scorecard_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Baseline Scorecard Id",
+            "type": "string"
+          },
+          "baseline_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Value"
+          },
+          "candidate_model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Candidate Model Config Id",
+            "type": "string"
+          },
+          "candidate_scorecard_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Candidate Scorecard Id",
+            "type": "string"
+          },
+          "candidate_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Value"
+          },
+          "delta_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Value"
+          },
+          "interval_high": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval High"
+          },
+          "interval_low": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Low"
+          },
+          "interval_method": {
+            "default": "unavailable",
+            "enum": [
+              "reported_interval_difference_bounds",
+              "unavailable"
+            ],
+            "title": "Interval Method",
+            "type": "string"
+          },
+          "kind": {
+            "const": "paired_task_delta",
+            "default": "paired_task_delta",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "metric_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "measured",
+              "insufficient_information",
+              "not_applicable",
+              "gated_zero",
+              "missing",
+              "needs_review"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Task Id",
+            "type": "string"
+          },
+          "task_version": {
+            "minimum": 1.0,
+            "title": "Task Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "task_id",
+          "task_version",
+          "metric_id",
+          "label",
+          "baseline_model_config_id",
+          "candidate_model_config_id",
+          "baseline_scorecard_id",
+          "candidate_scorecard_id",
+          "baseline_value",
+          "candidate_value",
+          "delta_value",
+          "interval_low",
+          "interval_high",
+          "interval_method",
+          "status",
+          "reason"
+        ],
+        "title": "PairedTaskDelta",
+        "type": "object"
+      },
+      "PermissionReviewRecord": {
+        "additionalProperties": false,
+        "description": "An internal, attributable decision about the submitter's source/permission declaration.",
+        "properties": {
+          "decision_reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Decision Reason",
+            "type": "string"
+          },
+          "evidence_reference": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Evidence Reference",
+            "type": "string"
+          },
+          "kind": {
+            "const": "source_permission_review",
+            "default": "source_permission_review",
+            "title": "Kind",
+            "type": "string"
+          },
+          "rights_confirmed": {
+            "const": true,
+            "title": "Rights Confirmed",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_license": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Source License",
+            "type": "string"
+          },
+          "source_url": {
+            "maxLength": 512,
+            "minLength": 9,
+            "title": "Source Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_url",
+          "source_license",
+          "evidence_reference",
+          "rights_confirmed",
+          "decision_reason"
+        ],
+        "title": "PermissionReviewRecord",
+        "type": "object"
+      },
+      "ProviderKind": {
+        "enum": [
+          "openai_compatible",
+          "anthropic",
+          "google",
+          "local"
+        ],
+        "title": "ProviderKind",
+        "type": "string"
+      },
+      "PublicMetric": {
+        "additionalProperties": false,
+        "description": "One public metric value with its availability made explicit.\n\n``value``/``interval_low``/``interval_high`` are decimal strings or ``None``. A metric with no\nmeasurement keeps the key present and null rather than being omitted, so the frontend cannot\nmistake \"not measured\" for \"not applicable\".",
+        "properties": {
+          "conditional_on_pass": {
+            "title": "Conditional On Pass",
+            "type": "boolean"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage"
+          },
+          "direction": {
+            "enum": [
+              "higher",
+              "lower"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "interval_high": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval High"
+          },
+          "interval_low": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Low"
+          },
+          "kind": {
+            "const": "public_metric",
+            "default": "public_metric",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "metric_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "measured",
+              "insufficient_information",
+              "not_applicable",
+              "gated_zero",
+              "missing",
+              "needs_review"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "metric_id",
+          "label",
+          "unit",
+          "direction",
+          "status",
+          "value",
+          "interval_low",
+          "interval_high",
+          "coverage",
+          "conditional_on_pass",
+          "reason"
+        ],
+        "title": "PublicMetric",
+        "type": "object"
+      },
+      "PublicScorecard": {
+        "additionalProperties": false,
+        "description": "``GET /scorecards/{id}``: the public score breakdown.\n\n``formula_version`` and ``policy_digest`` make the score reproducible; ``gating_status``\ndistinguishes a score of zero from a score that could not be produced at all.",
+        "properties": {
+          "contributions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ContributionRow"
+            },
+            "title": "Contributions",
+            "type": "array"
+          },
+          "evidence_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Evidence Url",
+            "type": "string"
+          },
+          "formula_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Formula Version",
+            "type": "string"
+          },
+          "gating_status": {
+            "enum": [
+              "scored",
+              "gated_zero",
+              "needs_review"
+            ],
+            "title": "Gating Status",
+            "type": "string"
+          },
+          "kind": {
+            "const": "public_scorecard",
+            "default": "public_scorecard",
+            "title": "Kind",
+            "type": "string"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/PublicMetric"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "policy_digest": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "redacted_evidence_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Redacted Evidence Count",
+            "type": "integer"
+          },
+          "release_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scorecard_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Scorecard Id",
+            "type": "string"
+          },
+          "task_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Task Id",
+            "type": "string"
+          },
+          "task_version": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Task Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "scorecard_id",
+          "release_id",
+          "model_config_id",
+          "task_id",
+          "task_version",
+          "formula_version",
+          "policy_digest",
+          "gating_status",
+          "metrics",
+          "contributions",
+          "evidence_url",
+          "redacted_evidence_count"
+        ],
+        "title": "PublicScorecard",
+        "type": "object"
+      },
+      "PublicSourceVersion": {
+        "additionalProperties": false,
+        "description": "Curated source text that is safe to disclose inside one published task release.",
+        "properties": {
+          "kind": {
+            "const": "public_source_version",
+            "default": "public_source_version",
+            "title": "Kind",
+            "type": "string"
+          },
+          "language_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Language Id",
+            "type": "string"
+          },
+          "path": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_text": {
+            "maxLength": 65536,
+            "title": "Source Text",
+            "type": "string"
+          },
+          "version_label": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Version Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "source_id",
+          "version_label",
+          "path",
+          "language_id",
+          "source_text"
+        ],
+        "title": "PublicSourceVersion",
+        "type": "object"
+      },
+      "PublicSubmittedPatch": {
+        "additionalProperties": false,
+        "description": "An explicitly released candidate diff; inert text tied to a public scorecard.",
+        "properties": {
+          "diff_text": {
+            "maxLength": 65536,
+            "title": "Diff Text",
+            "type": "string"
+          },
+          "kind": {
+            "const": "public_submitted_patch",
+            "default": "public_submitted_patch",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "patch_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Patch Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scorecard_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Scorecard Id",
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "patch_id",
+          "model_config_id",
+          "scorecard_id",
+          "summary",
+          "diff_text"
+        ],
+        "title": "PublicSubmittedPatch",
+        "type": "object"
+      },
+      "PublicTaskContent": {
+        "additionalProperties": false,
+        "description": "On-demand content for one disclosed task version, never an upload or hidden oracle.",
+        "properties": {
+          "kind": {
+            "const": "public_task_content",
+            "default": "public_task_content",
+            "title": "Kind",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_versions": {
+            "items": {
+              "$ref": "#/components/schemas/PublicSourceVersion"
+            },
+            "maxItems": 20,
+            "title": "Source Versions",
+            "type": "array"
+          },
+          "statement": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Statement",
+            "type": "string"
+          },
+          "submitted_patches": {
+            "items": {
+              "$ref": "#/components/schemas/PublicSubmittedPatch"
+            },
+            "maxItems": 8,
+            "title": "Submitted Patches",
+            "type": "array"
+          },
+          "task_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Task Id",
+            "type": "string"
+          },
+          "task_version": {
+            "minimum": 1.0,
+            "title": "Task Version",
+            "type": "integer"
+          },
+          "tool_findings": {
+            "items": {
+              "$ref": "#/components/schemas/PublicToolFinding"
+            },
+            "maxItems": 200,
+            "title": "Tool Findings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "task_id",
+          "task_version",
+          "statement",
+          "source_versions",
+          "submitted_patches",
+          "tool_findings"
+        ],
+        "title": "PublicTaskContent",
+        "type": "object"
+      },
+      "PublicToolFinding": {
+        "additionalProperties": false,
+        "description": "A curated, location-bounded tool observation from a public task evaluation.",
+        "properties": {
+          "finding_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "public_tool_finding",
+            "default": "public_tool_finding",
+            "title": "Kind",
+            "type": "string"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "message": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "model_config_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Config Id",
+            "type": "string"
+          },
+          "rule_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scorecard_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Scorecard Id",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low",
+              "info"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "source_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Source Id",
+            "type": "string"
+          },
+          "tool_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Tool Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "finding_id",
+          "model_config_id",
+          "scorecard_id",
+          "source_id",
+          "tool_id",
+          "rule_id",
+          "severity",
+          "line",
+          "message"
+        ],
+        "title": "PublicToolFinding",
+        "type": "object"
+      },
+      "ReleaseSummary": {
+        "additionalProperties": false,
+        "description": "``GET /releases``: a published release's public identity and its disclosed limits.\n\nCarries no manifest, no evidence bundle and no task identity list.",
+        "properties": {
+          "cohort_digest": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Cohort Digest",
+            "type": "string"
+          },
+          "fixture_kind": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Fixture Kind",
+            "type": "string"
+          },
+          "kind": {
+            "const": "release_summary",
+            "default": "release_summary",
+            "title": "Kind",
+            "type": "string"
+          },
+          "limitations": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "methodology_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Methodology Url",
+            "type": "string"
+          },
+          "methodology_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Methodology Version",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "release_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "replacement_release_id": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement Release Id"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "scope": {
+            "enum": [
+              "exploratory",
+              "ranked_eligible"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "published",
+              "withdrawn"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          },
+          "withdrawal_reason": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawal Reason"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "release_id",
+          "version",
+          "state",
+          "scope",
+          "fixture_kind",
+          "cohort_digest",
+          "published_at",
+          "limitations",
+          "withdrawal_reason",
+          "replacement_release_id",
+          "methodology_url",
+          "methodology_version"
+        ],
+        "title": "ReleaseSummary",
+        "type": "object"
+      },
+      "ResponseMeta": {
+        "additionalProperties": false,
+        "description": "The exact transport metadata object serialized in an API envelope.",
+        "properties": {
+          "current_release_id": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Release Id"
+          },
+          "exploratory": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exploratory"
+          },
+          "filters": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Filters",
+            "type": "array"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "maximum": 200.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "registry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricRegistry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "release_digest": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Release Digest",
+            "type": "string"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "returned": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returned"
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "release_id",
+          "current_release_id",
+          "release_digest",
+          "exploratory",
+          "total",
+          "returned",
+          "limit",
+          "sort",
+          "filters",
+          "next_cursor",
+          "registry"
+        ],
+        "title": "ResponseMeta",
+        "type": "object"
+      },
+      "SubmissionApprovalInput": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint_registration_id": {
+            "format": "uuid",
+            "title": "Endpoint Registration Id",
+            "type": "string"
+          },
+          "permission_review": {
+            "$ref": "#/components/schemas/PermissionReviewRecord"
+          },
+          "run_request": {
+            "additionalProperties": true,
+            "title": "Run Request",
+            "type": "object"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "endpoint_registration_id",
+          "run_request",
+          "permission_review"
+        ],
+        "title": "SubmissionApprovalInput",
+        "type": "object"
+      },
+      "SubmissionRejectInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reason",
+          "expected_version"
+        ],
+        "title": "SubmissionRejectInput",
+        "type": "object"
+      },
+      "SubmissionReviewView": {
+        "additionalProperties": false,
+        "description": "Private reviewer projection, available only after an explicit review permission check.",
+        "properties": {
+          "approved_plan": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved Plan"
+          },
+          "contact_email": {
+            "title": "Contact Email",
+            "type": "string"
+          },
+          "endpoint_url": {
+            "title": "Endpoint Url",
+            "type": "string"
+          },
+          "kind": {
+            "const": "submission_review_view",
+            "default": "submission_review_view",
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_name": {
+            "title": "Model Name",
+            "type": "string"
+          },
+          "organization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization"
+          },
+          "permission_attested": {
+            "title": "Permission Attested",
+            "type": "boolean"
+          },
+          "permission_review": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permission Review"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "requester_subject": {
+            "title": "Requester Subject",
+            "type": "string"
+          },
+          "resulting_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resulting Run Id"
+          },
+          "reviewer_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Subject"
+          },
+          "row_version": {
+            "title": "Row Version",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_license": {
+            "title": "Source License",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "under_review",
+              "rejected",
+              "approved"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submission_id": {
+            "title": "Submission Id",
+            "type": "string"
+          },
+          "submitted_at": {
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "submission_id",
+          "requester_subject",
+          "status",
+          "model_name",
+          "provider",
+          "organization",
+          "contact_email",
+          "endpoint_url",
+          "source_url",
+          "source_license",
+          "permission_attested",
+          "submitted_at",
+          "row_version",
+          "reviewer_subject",
+          "rejection_reason",
+          "permission_review",
+          "approved_plan",
+          "resulting_run_id"
+        ],
+        "title": "SubmissionReviewView",
+        "type": "object"
+      },
+      "TaskSummary": {
+        "additionalProperties": false,
+        "description": "Bounded task-list/detail metadata; source payloads are fetched only on request.",
+        "properties": {
+          "difficulty": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Difficulty",
+            "type": "string"
+          },
+          "evidence_url": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Evidence Url",
+            "type": "string"
+          },
+          "family": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Family",
+            "type": "string"
+          },
+          "finding_count": {
+            "minimum": 0.0,
+            "title": "Finding Count",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "task_summary",
+            "default": "task_summary",
+            "title": "Kind",
+            "type": "string"
+          },
+          "language_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Language Id",
+            "type": "string"
+          },
+          "patch_count": {
+            "minimum": 0.0,
+            "title": "Patch Count",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "source_version_count": {
+            "minimum": 0.0,
+            "title": "Source Version Count",
+            "type": "integer"
+          },
+          "statement_summary": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Statement Summary",
+            "type": "string"
+          },
+          "task_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Task Id",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "task_id",
+          "version",
+          "language_id",
+          "family",
+          "difficulty",
+          "statement_summary",
+          "evidence_url",
+          "source_version_count",
+          "patch_count",
+          "finding_count"
+        ],
+        "title": "TaskSummary",
+        "type": "object"
+      },
+      "UsageCounter": {
+        "enum": [
+          "input",
+          "output",
+          "reasoning",
+          "cached_input"
+        ],
+        "title": "UsageCounter",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Published projections and authenticated, review-gated submission requests.",
+    "title": "PolyCodeBench Public API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/admin/model-endpoints": {
+      "post": {
+        "operationId": "register_model_endpoint_v1_admin_model_endpoints_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndpointRegistrationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_EndpointRegistrationResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Model Endpoint"
+      }
+    },
+    "/v1/admin/model-endpoints/{endpoint_id}/decision": {
+      "post": {
+        "operationId": "decide_model_endpoint_v1_admin_model_endpoints__endpoint_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Endpoint Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndpointDecisionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_EndpointDecisionResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Model Endpoint"
+      }
+    },
+    "/v1/admin/model-submissions": {
+      "get": {
+        "operationId": "list_model_submissions_for_review_v1_admin_model_submissions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_list_SubmissionReviewView__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Model Submissions For Review"
+      }
+    },
+    "/v1/admin/model-submissions/{submission_id}": {
+      "get": {
+        "operationId": "get_model_submission_for_review_v1_admin_model_submissions__submission_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_SubmissionReviewView_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Model Submission For Review"
+      }
+    },
+    "/v1/admin/model-submissions/{submission_id}/approve": {
+      "post": {
+        "operationId": "approve_model_submission_v1_admin_model_submissions__submission_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionApprovalInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_SubmissionReviewView_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Model Submission"
+      }
+    },
+    "/v1/admin/model-submissions/{submission_id}/reject": {
+      "post": {
+        "operationId": "reject_model_submission_v1_admin_model_submissions__submission_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionRejectInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_SubmissionReviewView_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Model Submission"
+      }
+    },
+    "/v1/compare": {
+      "get": {
+        "operationId": "get_compare_v1_compare_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "models",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Models",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Language",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "family",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Family",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "difficulty",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Difficulty",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_ComparisonResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Compare"
+      }
+    },
+    "/v1/languages/{language_id}": {
+      "get": {
+        "operationId": "get_language_v1_languages__language_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "language_id",
+            "required": true,
+            "schema": {
+              "title": "Language Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_LanguageProfile_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Language"
+      }
+    },
+    "/v1/leaderboard": {
+      "get": {
+        "operationId": "get_leaderboard_v1_leaderboard_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Language",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "family",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Family",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "difficulty",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Difficulty",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "rank_asc",
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_list_LeaderboardEntry__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Leaderboard"
+      }
+    },
+    "/v1/methodology/{version}": {
+      "get": {
+        "description": "The frozen methods behind a release, resolved by version as release links expect.",
+        "operationId": "get_methodology_v1_methodology__version__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_Methodology_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Methodology"
+      }
+    },
+    "/v1/model-submissions": {
+      "post": {
+        "description": "Create a pending record for the verified principal; never contact or schedule a model.",
+        "operationId": "post_model_submission_v1_model_submissions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelSubmissionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_ModelSubmission_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Model Submission"
+      }
+    },
+    "/v1/model-submissions/{submission_id}": {
+      "get": {
+        "operationId": "get_own_model_submission_v1_model_submissions__submission_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Submission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_ModelSubmission_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Own Model Submission"
+      }
+    },
+    "/v1/models/{model_config_id}": {
+      "get": {
+        "operationId": "get_model_v1_models__model_config_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_config_id",
+            "required": true,
+            "schema": {
+              "title": "Model Config Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_ModelProfile_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Model"
+      }
+    },
+    "/v1/releases": {
+      "get": {
+        "description": "Published release identities and disclosed limits; no manifests, no private rows.",
+        "operationId": "list_releases_v1_releases_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "State",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Scope",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_list_ReleaseSummary__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Releases"
+      }
+    },
+    "/v1/releases/{release_id}": {
+      "get": {
+        "operationId": "get_release_v1_releases__release_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "release_id",
+            "required": true,
+            "schema": {
+              "title": "Release Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_ReleaseSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Release"
+      }
+    },
+    "/v1/scorecards/{scorecard_id}": {
+      "get": {
+        "operationId": "get_scorecard_v1_scorecards__scorecard_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scorecard_id",
+            "required": true,
+            "schema": {
+              "title": "Scorecard Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_PublicScorecard_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Scorecard"
+      }
+    },
+    "/v1/tasks": {
+      "get": {
+        "description": "Disclosed task versions only; private task identities never appear in a listing.",
+        "operationId": "list_tasks_v1_tasks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Language",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "family",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Family",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "difficulty",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Difficulty",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_list_TaskSummary__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tasks"
+      }
+    },
+    "/v1/tasks/{task_id}": {
+      "get": {
+        "operationId": "get_task_v1_tasks__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_TaskSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task"
+      }
+    },
+    "/v1/tasks/{task_id}/content": {
+      "get": {
+        "description": "Fetch bounded, curated task content only after a public task is explicitly opened.",
+        "operationId": "get_task_content_v1_tasks__task_id__content_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "latest",
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_PublicTaskContent_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Content"
+      }
+    }
+  }
+}

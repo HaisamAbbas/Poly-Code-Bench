@@ -41,7 +41,12 @@ class PublicationModel(ContractModel):
     field validators, and other scalar validation remains strict.
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        strict=True,
+        json_schema_serialization_defaults_required=True,
+    )
     schema_version: Literal[1] = 1
 
     @model_validator(mode="before")

@@ -8,14 +8,14 @@ and the ``latest`` pointer surface must be revalidated before reuse.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal
+from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_publication.aggregation import PublicationModel
 from polycodebench_publication.projections import MetricRegistry
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import Response
 
 #: Stable content pinned to a release can be cached long-term (Technical Specification 20.1).
@@ -31,10 +31,15 @@ REVALIDATE_CACHE = "public, no-cache, must-revalidate"
 NO_STORE = "private, no-store"
 
 
-class ResponseMeta(PublicationModel):
-    """The ``meta`` of a public envelope: release identity, paging state and metric definitions."""
+class ResponseMeta(BaseModel):
+    """The exact transport metadata object serialized in an API envelope."""
 
-    kind: Literal["response_meta"] = "response_meta"
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        json_schema_serialization_defaults_required=True,
+    )
+
     release_id: str | None = Field(default=None, max_length=120)
     current_release_id: str | None = Field(default=None, max_length=120)
     release_digest: str = Field(min_length=1, max_length=200)
@@ -48,15 +53,24 @@ class ResponseMeta(PublicationModel):
     registry: MetricRegistry | None = None
 
 
+class ApiEnvelope[PayloadT](BaseModel):
+    """Typed success body shared by the public and authenticated API routes."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    data: PayloadT
+    meta: ResponseMeta
+
+
 def envelope(
-    payload: PublicationModel | Sequence[PublicationModel], meta: PublicationModel
+    payload: PublicationModel | Sequence[PublicationModel], meta: ResponseMeta
 ) -> dict[str, Any]:
     """Build one ``{data, meta}`` body from typed rows and their metadata."""
     if isinstance(payload, PublicationModel):
         data: Any = payload.model_dump(mode="json")
     else:
         data = [row.model_dump(mode="json") for row in payload]
-    meta_body = meta.model_dump(mode="json", exclude={"kind", "schema_version"})
+    meta_body = meta.model_dump(mode="json")
     return {"data": data, "meta": meta_body}
 
 
@@ -85,6 +99,7 @@ __all__ = [
     "NO_STORE",
     "REVALIDATE_CACHE",
     "SHORT_CACHE",
+    "ApiEnvelope",
     "ResponseMeta",
     "body_etag",
     "envelope",

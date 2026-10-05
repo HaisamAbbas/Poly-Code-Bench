@@ -20,6 +20,7 @@ OWNERS = {
     "polycodebench_configuration": "configuration",
     "polycodebench_operations": "operations",
     "polycodebench_plugins_api": "plugins_api",
+    "polycodebench_api": "api",
     "polycodebench_lang_python": "lang_python",
     "polycodebench_lang_rust": "lang_rust",
     "polycodebench_lang_c": "lang_c",
@@ -41,6 +42,9 @@ ALLOWED = {
     # exactly the same frozen task and profile documents the plugins publish. It still may not
     # depend on a layer that could execute code, call a model or reach a database.
     "scoring": {"core", "plugins_api"},
+    # The API is an adapter: it serves published projections to readers and drives the
+    # administrative use cases. It may reach the layers below it and nothing else.
+    "api": {"core", "services", "persistence", "publication", "scoring", "orchestration"},
     "publication": {"core", "scoring"},
     "configuration": set(),
     # Operations verifies deployments and rehearses recovery over the persisted state, the

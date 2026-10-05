@@ -163,6 +163,11 @@ function ComparisonView({ result, release }: { result: ComparisonResult; release
     const key = `${delta.task_id}@${delta.task_version}`;
     pairs.set(key, [...(pairs.get(key) ?? []), delta]);
   }
+  const activeFilters = [
+    ...result.applied_filters.languages.map((value) => `language: ${value}`),
+    ...result.applied_filters.families.map((value) => `family: ${value}`),
+    ...result.applied_filters.difficulties.map((value) => `difficulty: ${value}`),
+  ];
   return (
     <>
       <section className="section-card">
@@ -192,7 +197,7 @@ function ComparisonView({ result, release }: { result: ComparisonResult; release
           </article>;
           })}
         </div>
-        <p className="form-help">These are release-wide aggregate values already published by the API. Task filters below identify visible paired scorecards; this page does not recompute or reweight the release aggregates.</p>
+        <p className="form-help">The API reports {result.release_metric_scope.replaceAll("_", " ")} metrics and aggregate deltas. Task filters below ({activeFilters.length ? activeFilters.join(", ") : "none"}) apply only to {result.task_pair_scope.replaceAll("_", " ")} references and task deltas; release aggregates are not recomputed or reweighted.</p>
       </section>
 
       <section className="section-card">

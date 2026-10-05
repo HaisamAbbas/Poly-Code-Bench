@@ -304,6 +304,7 @@ def test_comparison_with_missing_language_is_incompatible_not_renormalised() -> 
     codes = [i.code for i in result.incompatibilities]
     assert codes == ["missing_language"]
     assert result.entries == ()
+    assert result.applied_filters.languages == ("rust",)
     # A partial entry must never be shown as a full rank.
     assert result.common_tasks == 0
 
@@ -320,10 +321,16 @@ def test_comparison_on_one_common_language_produces_paired_deltas() -> None:
         }
     )
     result = compare(
-        {**doc, "content": python_only.model_dump(mode="json")}, ("model-alpha", "model-beta")
+        {**doc, "content": python_only.model_dump(mode="json")},
+        ("model-alpha", "model-beta"),
+        languages=frozenset({"python"}),
     )
     assert result.incompatibilities == ()
     assert len(result.entries) == 2
+    assert result.release_metric_scope == "full_release_aggregate"
+    assert result.task_pair_scope == "common_task_intersection_after_filters"
+    assert result.applied_filters.languages == ("python",)
+    assert result.applied_filters.families == ()
     assert result.common_tasks == 1
     assert result.common_task_refs[0].task_id == "task-public"
     assert result.common_independent_clusters is None

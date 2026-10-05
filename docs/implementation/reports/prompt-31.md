@@ -46,3 +46,15 @@ Main files: `apps/web/src/app/{compare,tasks,scorecards,methodology}/`,
 - D-31-03: public task exports and evidence links resolve only to curated release content; source and diff payloads stay inert and are fetched on demand.
 
 Next: **Prompt 32 — Implement reviewed model submissions and close the public product phase.**
+
+## Audit correction (2026-10-05)
+
+`GET /compare` now returns `release_metric_scope`, `task_pair_scope`, and the exact
+`applied_filters`. Entry metrics and aggregate deltas are explicitly labeled as full-release
+aggregates; common task references and per-task deltas are labeled as the filtered common-task
+intersection. The comparison page renders those API scope values and filter selections.
+
+Verification: 23 focused API/projection tests passed, Ruff check/format passed, and the web TypeScript
+check passed using the installed `tsc`. The module-level mypy check still reports eight pre-existing
+errors elsewhere in these projection modules (one untyped-call and seven optional-value/Literal
+errors); none points to the added scope fields.

@@ -28,6 +28,7 @@ from pydantic import Field, model_validator
 from polycodebench_publication.aggregation import MetricDefinition, PublicationModel
 from polycodebench_publication.projections import (
     ArtifactRef,
+    ComparisonFilters,
     ComparisonResult,
     ComparisonScorecardRef,
     ComparisonTaskRef,
@@ -449,6 +450,8 @@ def compare(
     Compatibility and paired rows are resolved only from this immutable release's declared
     entries, disclosed task versions, and scorecards. Coverage counts are never used as a proxy for
     a task intersection. Any incompatible request returns reasons and no numeric rows.
+    Entry metrics and ``deltas`` are published release aggregates; the filters apply to the exact
+    common task references and ``paired_task_deltas`` only.
     """
     if not 2 <= len(model_config_ids) <= 4:
         raise PublicApiError("INCOMPATIBLE_COHORT", "comparison requires two to four entries")
@@ -459,6 +462,11 @@ def compare(
     content = _content(doc)
     scope = _scope(doc)
     cohort_digest = _cohort(doc)
+    applied_filters = ComparisonFilters(
+        languages=tuple(sorted(languages)),
+        families=tuple(sorted(families)),
+        difficulties=tuple(sorted(difficulties)),
+    )
     by_id = {entry.model_config_id: entry for entry in content.entries}
 
     reasons: list[Incompatibility] = [
@@ -575,6 +583,7 @@ def compare(
             release_id=str(doc.get("id", "")),
             cohort_digest=cohort_digest,
             scope=scope,
+            applied_filters=applied_filters,
             common_tasks=0,
             common_independent_clusters=0,
             entries=(),
@@ -591,6 +600,7 @@ def compare(
         release_id=str(doc.get("id", "")),
         cohort_digest=cohort_digest,
         scope=scope,
+        applied_filters=applied_filters,
         common_tasks=len(task_rows),
         common_independent_clusters=None,
         entries=tuple(_entry_to_leaderboard(e, scope) for e in selected),
@@ -603,7 +613,7 @@ def compare(
 
 
 def _deltas(entries: tuple[ReleaseEntry, ...]) -> tuple[PairedDelta, ...]:
-    """Paired differences against the first selected entry, on the common cohort."""
+    """Differences between release aggregate metrics against the first selected entry."""
     if len(entries) < 2:
         return ()
     baseline = entries[0]

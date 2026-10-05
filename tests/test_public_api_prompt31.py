@@ -28,6 +28,15 @@ async def _assert_prompt31_routes(app: FastAPI, release_id: str) -> None:
         assert comparison["common_tasks"] == 3
         assert comparison["common_independent_clusters"] is None
         assert comparison["incompatibilities"] == []
+        assert comparison["release_metric_scope"] == "full_release_aggregate"
+        assert comparison["task_pair_scope"] == "common_task_intersection_after_filters"
+        assert comparison["applied_filters"] == {
+            "kind": "comparison_filters",
+            "schema_version": 1,
+            "languages": [],
+            "families": [],
+            "difficulties": [],
+        }
         assert {row["task_id"] for row in comparison["common_task_refs"]} == {
             "synthetic-task-example",
             "synthetic-task-rust",
@@ -43,6 +52,21 @@ async def _assert_prompt31_routes(app: FastAPI, release_id: str) -> None:
         assert python_delta["delta_value"] == "-12.000000"
         assert python_delta["baseline_scorecard_id"] == "synthetic-scorecard-a"
         assert python_delta["candidate_scorecard_id"] == "synthetic-scorecard-c"
+
+        filtered = await client.get(
+            "/v1/compare",
+            params={
+                "release": release_id,
+                "models": ["synthetic-code-a", "synthetic-code-c"],
+                "language": "python",
+            },
+        )
+        assert filtered.status_code == 200
+        filtered_comparison = filtered.json()["data"]
+        assert filtered_comparison["release_metric_scope"] == "full_release_aggregate"
+        assert filtered_comparison["task_pair_scope"] == "common_task_intersection_after_filters"
+        assert filtered_comparison["applied_filters"]["languages"] == ["python"]
+        assert {row["language_id"] for row in filtered_comparison["common_task_refs"]} == {"python"}
 
         incompatible = await client.get(
             "/v1/compare",

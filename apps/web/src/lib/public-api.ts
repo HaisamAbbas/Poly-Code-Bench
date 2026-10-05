@@ -230,6 +230,14 @@ export type ComparisonResult = {
   readonly release_id: string;
   readonly cohort_digest: string;
   readonly scope: "exploratory" | "ranked_eligible";
+  readonly release_metric_scope: "full_release_aggregate";
+  readonly task_pair_scope: "common_task_intersection_after_filters";
+  readonly applied_filters: {
+    readonly kind: "comparison_filters";
+    readonly languages: readonly string[];
+    readonly families: readonly string[];
+    readonly difficulties: readonly string[];
+  };
   readonly common_tasks: number;
   readonly common_independent_clusters: number | null;
   readonly entries: readonly LeaderboardEntry[];

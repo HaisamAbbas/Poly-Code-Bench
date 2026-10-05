@@ -453,7 +453,7 @@ class Incompatibility(PublicationModel):
 
 
 class PairedDelta(PublicationModel):
-    """A paired difference between two entries on the common cohort."""
+    """Difference between published release aggregate metrics, not task-filtered metrics."""
 
     kind: Literal["paired_delta"] = "paired_delta"
     metric_id: str = Field(min_length=1, max_length=80)
@@ -489,6 +489,15 @@ class ComparisonTaskRef(PublicationModel):
     scorecards: tuple[ComparisonScorecardRef, ...] = Field(min_length=2, max_length=4)
 
 
+class ComparisonFilters(PublicationModel):
+    """Task filters applied only to common task references and per-task differences."""
+
+    kind: Literal["comparison_filters"] = "comparison_filters"
+    languages: tuple[str, ...] = ()
+    families: tuple[str, ...] = ()
+    difficulties: tuple[str, ...] = ()
+
+
 class PairedTaskDelta(PublicationModel):
     """A per-task candidate-minus-baseline difference traced to both source scorecards."""
 
@@ -516,13 +525,20 @@ class ComparisonResult(PublicationModel):
 
     Exactly one of ``entries`` and ``incompatibilities`` is populated. A request that cannot be
     compared returns the reasons and no numbers at all, so a partial entry can never be presented
-    as a full rank.
+    as a full rank. Entry metrics and ``deltas`` retain their full-release aggregate scope;
+    ``common_task_refs`` and ``paired_task_deltas`` use the disclosed task intersection after
+    ``applied_filters``.
     """
 
     kind: Literal["comparison_result"] = "comparison_result"
     release_id: str = Field(min_length=1, max_length=120)
     cohort_digest: str = Field(min_length=1, max_length=200)
     scope: Literal["exploratory", "ranked_eligible"]
+    release_metric_scope: Literal["full_release_aggregate"] = "full_release_aggregate"
+    task_pair_scope: Literal["common_task_intersection_after_filters"] = (
+        "common_task_intersection_after_filters"
+    )
+    applied_filters: ComparisonFilters = Field(default_factory=ComparisonFilters)
     common_tasks: int = Field(ge=0)
     common_independent_clusters: int | None = Field(default=None, ge=0)
     entries: tuple[LeaderboardEntry, ...] = ()
@@ -815,6 +831,7 @@ __all__ = [
     "ArtifactRef",
     "ComparisonScorecardRef",
     "ComparisonResult",
+    "ComparisonFilters",
     "ComparisonTaskRef",
     "ContributionRow",
     "Coverage",

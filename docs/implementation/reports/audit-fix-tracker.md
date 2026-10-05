@@ -16,7 +16,7 @@ Started 2026-10-05 after the cross-prompt audit. Fix items in this order, verify
 - [x] Submission identity: public requests now use verified generic OIDC sessions and a submitter-only BFF assertion; focused API, browser, build, lint and type checks passed. PostgreSQL integration and production OIDC deployment remain external gates.
 - [x] Go conformance fixture regression: escaped the Go newline rune in the Python bytes literal, preserved the prior 17/18 report, reran the full Docker conformance suite (18/18 pass), added a focused regression test, and updated current Go/Phase 4 ledgers. The run is development-sandbox evidence; Go tool identity cleanup and the aggregate language gate remain open.
 - [x] Implementation ledgers: added Prompt 19/20/29 reports, synchronized current language coverage and Phase 4 status, updated Prompt 22/23 and PCB-19/22/23/29 references, and retained the historical Prompt 23 audit JSON as an explicitly superseded snapshot.
-- [ ] Fresh aggregate verification: rerun the affected E2E, database, build and deployment gates after code fixes; current audit verification was static/focused only.
+- [ ] Fresh aggregate verification: local affected pytest suite passed (129 passed; six PostgreSQL cases skipped because `PCB_TEST_DATABASE_URL` is unset); Go Docker conformance passed 18/18; web typecheck, lint and production build passed; Prompt 31 browser cases passed 3/3. Existing Prompt 30/32 browser result files also record 4/4 and 2/2 passes. PostgreSQL-backed integration and staging/deployment gates remain open because the database URL and authorized AWS environment are unavailable.
 
 ## External blockers to retain
 

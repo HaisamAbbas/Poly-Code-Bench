@@ -73,3 +73,20 @@ Prompt 28 / Phase 5 exit — DONE (prediction suites), E2E-38 PARTIAL
    - Next: Prompt 29 — Implement the complete public API and projections (E2E-25/26/28/39 API
      variants). Before then: Prompt 27 must complete so `repo_qa`'s evidence pointer can become a
      dedicated Q&A artifact and E2E-38's Q&A half can run.
+
+## Audit correction (2026-10-05)
+
+The repository audit found that the original `audit_track_b` treated non-empty path strings as
+proof. It also pointed `repo_qa` at a Python source file and reused Prompt 26 evidence. That did not
+verify task admission or family evidence. The audit now resolves repository-contained paths,
+validates task-package family identity and fixture files, and checks family-specific evidence
+contents against the pack. `repo_qa` now uses `taskpacks/qa/py-configkit-qa-v1` and its dedicated
+Prompt 27 E2E-38 fixture record. This supersedes the provisional `repo_qa` pointer and dependency
+note in Prompt 28's original closing section.
+
+The corrected audit passes all seven family checks. The regenerated
+`docs/implementation/evidence/prompt-28-e2e38.json` records `wp20_closed: true` and no failed
+families. The full SWE-bench suite passed 44 tests; one Rust image test remains opt-in under
+`PCB_TEST_DOCKER=1`. Ruff and strict mypy passed. These are authored local-fixture/admission records;
+they do not claim live model skill, live judge review, production-worker execution or quality
+admission.

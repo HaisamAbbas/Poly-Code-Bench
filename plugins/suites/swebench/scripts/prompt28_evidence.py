@@ -148,8 +148,8 @@ def main() -> int:
             "no live model produced these predictions: the graded submissions are the fixture's "
             "authored answers, so this evidence shows the grader's behaviour, not model skill",
             "no production-worker run occurred; grading ran at the local fixture tier",
-            "the repo_qa evidence pointer names Prompt 26's E2E-37 artifact because that prompt's "
-            "Q&A grading is not separately evidenced yet (PCB-27 is still not_started in tickets)",
+            "repo_qa is backed by Prompt 27's dedicated authored-fixture evidence; it does not "
+            "claim a live model or judge run",
             "quality admission remains pending for both prediction fixtures",
         ],
         "fixtures": {

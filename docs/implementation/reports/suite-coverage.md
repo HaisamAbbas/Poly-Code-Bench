@@ -15,13 +15,14 @@ run behind it.
 | `repo_repair` | native record import; resolution graded by the pinned upstream evaluator | `polycodebench_suites_swebench.overlay.grade_native_candidate` | `plugins/suites/swebench/tests` (authored instances) | `evidence/prompt-24-e2e36.json` | passed |
 | `repo_task` | authoring contract with sealed acceptance; executable criteria plus bounded rubric | `polycodebench_evaluation.repo_task_grading.grade_repo_task` | `taskpacks/repo-tasks/ini-interpolate` | `evidence/prompt-25-admission-ini-interpolate.json` | passed |
 | `self_repair` | fixed rounds on public feedback only; initial/final outcomes preserved | `polycodebench_evaluation.suite_admission.SuiteAdmission.admit` (the final round is a frozen candidate; self-repair has no separate grader) | `taskpacks/self-repair/py-listsort-v1` | `evidence/prompt-26-e2e-37.json` | passed |
-| `repo_qa` | answer with base-snapshot citations; fact recall with grounding diagnostics | `polycodebench_evaluation.qa_grading.grade_qa` | `packages/core/src/polycodebench_core/qa_contracts.py` | `evidence/prompt-26-e2e-37.json` | passed |
+| `repo_qa` | answer with base-snapshot citations; fact recall with grounding diagnostics | `polycodebench_evaluation.qa_grading.grade_qa` | `taskpacks/qa/py-configkit-qa-v1` | `evidence/prompt-27-e2e-38.json` | passed |
 | `output_prediction` | read code and input; predict output; execution tools disabled | `polycodebench_suites_swebench.prediction_grading.grade_prediction_task` | `taskpacks/prediction/output-prediction` | `evidence/prompt-28-e2e38.json` | passed |
 | `test_prediction` | predict a declared test's result under scenario constraints | `polycodebench_suites_swebench.prediction_grading.grade_prediction_task` | `taskpacks/prediction/test-prediction` | `evidence/prompt-28-e2e38.json` | passed |
 
-**WP-20 is closed by the run, not by this table**: the audit refuses to build a verdict that omits
-a family, follows the grader entrypoints by import, and fails a family whose pack or evidence path
-is absent from the tree.
+**WP-20 is closed by the run, not by this table**: the audit refuses a verdict that omits a family,
+imports each grader entrypoint, resolves each repository-relative path, checks task-package family
+identity and declared fixture bytes, and validates the family-specific evidence record. A path string
+alone cannot make a family pass.
 
 ## What Prompt 28 added
 
@@ -57,13 +58,13 @@ All 16 graded cases in `evidence/prompt-28-e2e38.json` come from the run:
 - **No live model.** The graded submissions are the fixtures' authored answers; this evidence shows
   the grader's behaviour, not model skill.
 - **Local fixture tier.** No production-worker run.
-- **`repo_qa` evidence pointer is provisional.** PCB-27 is still `not_started` in the tickets; the
-  audit points at Prompt 26's E2E-37 artifact because Q&A's grading module already exists, and a
-  dedicated Q&A evidence file must replace that pointer when Prompt 27 completes.
+- **`repo_qa` uses dedicated fixture evidence.** `evidence/prompt-27-e2e-38.json` records authored
+  fixture grading through the actual Q&A path. This is local fixture evidence, not a live model,
+  judge or benchmark result.
 - **Quality admission stays pending** for both prediction fixtures, as for every other Phase 5
   pack.
-- Prompt 27's Q&A modules were present in the tree uncommitted while this prompt ran; the audit
-  imports them as they stand and does not commit or claim that work.
+- Quality admission remains pending for the Prompt 27 Q&A pack too; the verified fixture record does
+  not replace source rights review, quality admission or frozen release approval.
 
 ## Prior evidence, preserved
 

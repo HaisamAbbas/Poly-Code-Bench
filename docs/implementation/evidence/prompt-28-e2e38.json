@@ -179,7 +179,7 @@
     },
     "checks": [
       {
-        "detail": "polycodebench_evaluation.suite_admission.SuiteAdmission.admit importable; task pack: plugins/languages/python/fixtures/top-words; evidence: docs/implementation/evidence/prompt-12-eval-python.json",
+        "detail": "polycodebench_evaluation.suite_admission.SuiteAdmission.admit importable; task pack plugins/languages/python/fixtures/top-words: task-package conformance-top-words and 6 fixture files verified; evidence docs/implementation/evidence/prompt-12-eval-python.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-12-eval-python.json",
         "evidence_recorded": true,
         "family": "codegen",
         "grader_entry": "SuiteAdmission.admit",
@@ -194,7 +194,7 @@
         "tool_policy_recorded": true
       },
       {
-        "detail": "polycodebench_suites_swebench.overlay.grade_native_candidate importable; task pack: plugins/suites/swebench/tests; evidence: docs/implementation/evidence/prompt-24-e2e36.json",
+        "detail": "polycodebench_suites_swebench.overlay.grade_native_candidate importable; task pack plugins/suites/swebench/tests: two repo-repair fixture records verified: ['pcb-adapted-calc-rs', 'pcb-native-compatible-calc']; evidence docs/implementation/evidence/prompt-24-e2e36.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-24-e2e36.json",
         "evidence_recorded": true,
         "family": "repo_repair",
         "grader_entry": "grade_native_candidate",
@@ -209,7 +209,7 @@
         "tool_policy_recorded": true
       },
       {
-        "detail": "polycodebench_evaluation.repo_task_grading.grade_repo_task importable; task pack: taskpacks/repo-tasks/ini-interpolate; evidence: docs/implementation/evidence/prompt-25-admission-ini-interpolate.json",
+        "detail": "polycodebench_evaluation.repo_task_grading.grade_repo_task importable; task pack taskpacks/repo-tasks/ini-interpolate: task-package ini-interpolate and 4 fixture files verified; evidence docs/implementation/evidence/prompt-25-admission-ini-interpolate.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-25-admission-ini-interpolate.json",
         "evidence_recorded": true,
         "family": "repo_task",
         "grader_entry": "grade_repo_task",
@@ -224,7 +224,7 @@
         "tool_policy_recorded": true
       },
       {
-        "detail": "polycodebench_evaluation.suite_admission.SuiteAdmission.admit importable; task pack: taskpacks/self-repair/py-listsort-v1; evidence: docs/implementation/evidence/prompt-26-e2e-37.json",
+        "detail": "polycodebench_evaluation.suite_admission.SuiteAdmission.admit importable; task pack taskpacks/self-repair/py-listsort-v1: task-package py-listsort-v1 and 4 fixture files verified; evidence docs/implementation/evidence/prompt-26-e2e-37.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-26-e2e-37.json",
         "evidence_recorded": true,
         "family": "self_repair",
         "grader_entry": "SuiteAdmission.admit",
@@ -239,7 +239,7 @@
         "tool_policy_recorded": true
       },
       {
-        "detail": "polycodebench_evaluation.qa_grading.grade_qa importable; task pack: packages/core/src/polycodebench_core/qa_contracts.py; evidence: docs/implementation/evidence/prompt-26-e2e-37.json",
+        "detail": "polycodebench_evaluation.qa_grading.grade_qa importable; task pack taskpacks/qa/py-configkit-qa-v1: task-package py-configkit-qa-v1 and 6 fixture files verified; evidence docs/implementation/evidence/prompt-27-e2e-38.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-27-e2e-38.json",
         "evidence_recorded": true,
         "family": "repo_qa",
         "grader_entry": "grade_qa",
@@ -254,7 +254,7 @@
         "tool_policy_recorded": true
       },
       {
-        "detail": "polycodebench_suites_swebench.prediction_grading.grade_prediction_task importable; task pack: taskpacks/prediction/output-prediction; evidence: docs/implementation/evidence/prompt-28-e2e38.json",
+        "detail": "polycodebench_suites_swebench.prediction_grading.grade_prediction_task importable; task pack taskpacks/prediction/output-prediction: task-package pcb-output-prediction-ops and 3 fixture files verified; evidence docs/implementation/evidence/prompt-28-e2e38.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-28-e2e38.json",
         "evidence_recorded": true,
         "family": "output_prediction",
         "grader_entry": "grade_prediction_task",
@@ -269,7 +269,7 @@
         "tool_policy_recorded": true
       },
       {
-        "detail": "polycodebench_suites_swebench.prediction_grading.grade_prediction_task importable; task pack: taskpacks/prediction/test-prediction; evidence: docs/implementation/evidence/prompt-28-e2e38.json",
+        "detail": "polycodebench_suites_swebench.prediction_grading.grade_prediction_task importable; task pack taskpacks/prediction/test-prediction: task-package pcb-test-prediction-clamp and 3 fixture files verified; evidence docs/implementation/evidence/prompt-28-e2e38.json: family-specific admission evidence verified: docs/implementation/evidence/prompt-28-e2e38.json",
         "evidence_recorded": true,
         "family": "test_prediction",
         "grader_entry": "grade_prediction_task",
@@ -295,7 +295,7 @@
   "not_claimed": [
     "no live model produced these predictions: the graded submissions are the fixture's authored answers, so this evidence shows the grader's behaviour, not model skill",
     "no production-worker run occurred; grading ran at the local fixture tier",
-    "the repo_qa evidence pointer names Prompt 26's E2E-37 artifact because that prompt's Q&A grading is not separately evidenced yet (PCB-27 is still not_started in tickets)",
+    "repo_qa is backed by Prompt 27's dedicated authored-fixture evidence; it does not claim a live model or judge run",
     "quality admission remains pending for both prediction fixtures"
   ],
   "fixtures": {
@@ -336,5 +336,5 @@
       "test_command": ""
     }
   },
-  "report_digest": "sha256:b7fc39f3f603d2096cf90431127345beb1452b8428bbefce0f5a8242dacfcbf6"
+  "report_digest": "sha256:8af7014e0a6842739da0cc551ca2f84c7bfeaafae664e5f60180499b5f0ebbf0"
 }

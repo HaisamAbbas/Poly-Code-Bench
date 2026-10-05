@@ -32,6 +32,7 @@ from polycodebench_suites_swebench.prediction import (
 )
 from polycodebench_suites_swebench.prediction_grading import (
     TRACK_B_FAMILIES,
+    audit_family,
     audit_track_b,
     grade_prediction_task,
 )
@@ -290,6 +291,8 @@ def test_answer_only_metrics_are_absent_not_zero() -> None:
 def test_the_audit_covers_every_required_track_b_family() -> None:
     audit = audit_track_b()
     assert set(TRACK_B_FAMILIES) == {check.family for check in audit.checks}
+    assert audit.passed
+    assert all(check.output_contract and check.evidence_recorded for check in audit.checks)
 
 
 def test_the_audit_refuses_a_partial_family_list() -> None:
@@ -354,6 +357,34 @@ def test_the_audit_follows_real_entrypoints_and_flags_a_broken_one() -> None:
     )
 
 
+def test_the_audit_opens_pack_and_evidence_paths_instead_of_trusting_strings() -> None:
+    wrong_pack = audit_family(
+        "output_prediction",
+        taskpacks={"output_prediction": "taskpacks/qa/py-configkit-qa-v1"},
+        evidence={"output_prediction": "docs/implementation/evidence/prompt-28-e2e38.json"},
+    )
+    assert not wrong_pack.output_contract
+    assert not wrong_pack.passed
+    assert "family does not match output_prediction" in wrong_pack.detail
+
+    wrong_evidence = audit_family(
+        "output_prediction",
+        taskpacks={"output_prediction": "taskpacks/prediction/output-prediction"},
+        evidence={"output_prediction": "taskpacks/prediction/output-prediction/manifest.yaml"},
+    )
+    assert wrong_evidence.output_contract
+    assert not wrong_evidence.evidence_recorded
+    assert "not readable JSON" in wrong_evidence.detail
+
+    missing_record = audit_family(
+        "output_prediction",
+        taskpacks={"output_prediction": "taskpacks/prediction/output-prediction"},
+        evidence={"output_prediction": "docs/implementation/evidence/absent-evidence.json"},
+    )
+    assert not missing_record.evidence_recorded
+    assert "path does not exist" in missing_record.detail
+
+
 def test_the_audit_verdict_is_deterministic_json() -> None:
     first = json.loads(audit_track_b().as_json())
     second = json.loads(audit_track_b().as_json())
@@ -361,3 +392,6 @@ def test_the_audit_verdict_is_deterministic_json() -> None:
     assert first["wp20_closed"] is True
     assert first["failed_families"] == []
     assert set(first["answer_only_metric_definitions"]) == {"prediction_match"}
+    repo_qa = next(check for check in first["checks"] if check["family"] == "repo_qa")
+    assert "taskpacks/qa/py-configkit-qa-v1" in repo_qa["detail"]
+    assert "prompt-27-e2e-38.json" in repo_qa["detail"]

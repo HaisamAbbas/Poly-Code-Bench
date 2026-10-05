@@ -12,9 +12,13 @@ is a verdict object rather than a prose summary.
 
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, Literal
 
+import yaml
 from polycodebench_core.canonical import canonical_digest
 from polycodebench_plugins_api import PluginModel
 from pydantic import Field, model_validator
@@ -220,6 +224,257 @@ def _entrypoint_exists(module_name: str, entry: str) -> tuple[bool, str]:
     return True, f"{module_name}.{entry} importable"
 
 
+def _repository_root() -> Path | None:
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "docs" / "implementation").is_dir() and (parent / "pyproject.toml").is_file():
+            return parent
+    return None
+
+
+def _resolve_repo_path(root: Path, raw_path: str) -> tuple[Path | None, str]:
+    parts = raw_path.split("/")
+    if (
+        not raw_path
+        or "\\" in raw_path
+        or ":" in parts[0]
+        or "\x00" in raw_path
+        or any(part in {"", ".", ".."} for part in parts)
+    ):
+        return None, "path is not a normalized repository-relative path"
+    candidate = root
+    for part in parts:
+        candidate = candidate / part
+        if candidate.is_symlink() or candidate.is_junction():
+            return None, f"path contains a symlink: {raw_path}"
+    try:
+        resolved = candidate.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None, f"path does not exist: {raw_path}"
+    if resolved != root and root not in resolved.parents:
+        return None, f"path escapes the repository: {raw_path}"
+    return resolved, f"path verified: {raw_path}"
+
+
+def _task_pack_proof(family: str, raw_path: str, root: Path) -> tuple[bool, str, dict[str, Any]]:
+    pack_root, detail = _resolve_repo_path(root, raw_path)
+    if pack_root is None or not pack_root.is_dir():
+        return False, detail if pack_root is None else "task pack path is not a directory", {}
+
+    if family == "repo_repair":
+        instance_ids: set[str] = set()
+        for name in ("native_compatible_instance.py", "adapted_port_instance.py"):
+            fixture, fixture_detail = _resolve_repo_path(root, f"{raw_path}/{name}")
+            if fixture is None or not fixture.is_file():
+                return False, f"repo-repair fixture is missing: {fixture_detail}", {}
+            try:
+                source = fixture.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                return False, f"repo-repair fixture is unreadable: {name}", {}
+            match = re.search(r"^INSTANCE_ID\s*=\s*[\"\']([^\"\']+)[\"\']", source, re.MULTILINE)
+            if match is None:
+                return False, f"repo-repair fixture has no instance identity: {name}", {}
+            instance_ids.add(match.group(1))
+        return (
+            True,
+            f"two repo-repair fixture records verified: {sorted(instance_ids)}",
+            {"instance_ids": instance_ids},
+        )
+
+    manifest_path, manifest_detail = _resolve_repo_path(root, f"{raw_path}/manifest.yaml")
+    if manifest_path is None or not manifest_path.is_file():
+        return False, f"task-package manifest is missing: {manifest_detail}", {}
+    try:
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return False, "task-package manifest is unreadable or invalid YAML", {}
+    if not isinstance(manifest, dict) or manifest.get("kind") != "task_package":
+        return False, "manifest is not a task_package", {}
+    task = manifest.get("task")
+    if not isinstance(task, dict) or task.get("family") != family:
+        return False, f"task-package family does not match {family}", {}
+    if task.get("track") != "B":
+        return False, "task-package is not assigned to Track B", {}
+    task_id = task.get("task_id")
+    if not isinstance(task_id, str) or not task_id:
+        return False, "task-package has no task identity", {}
+    protocol = manifest.get("protocol_constraints")
+    if not isinstance(protocol, dict) or not isinstance(protocol.get("allowed_tools"), list):
+        return False, "task-package has no recorded protocol/tool policy", {}
+
+    visible_files = manifest.get("visible_files")
+    hidden_files = manifest.get("hidden_files")
+    if not isinstance(visible_files, list) or not isinstance(hidden_files, list):
+        return False, "task-package has malformed visible/hidden file lists", {}
+    declared_files = visible_files + hidden_files
+    if not declared_files:
+        return False, "task-package has no declared visible/hidden files", {}
+    for relative in declared_files:
+        if not isinstance(relative, str):
+            return False, "task-package contains a malformed file path", {}
+        path, file_detail = _resolve_repo_path(root, f"{raw_path}/{relative}")
+        if path is None or not path.is_file():
+            return False, f"task-package declared file is missing: {file_detail}", {}
+
+    fixtures = manifest.get("fixtures")
+    if not isinstance(fixtures, list) or not fixtures:
+        return False, "task-package contains no admission fixtures", {}
+    variants: set[str] = set()
+    for fixture in fixtures:
+        if not isinstance(fixture, dict):
+            return False, "task-package contains a malformed admission fixture", {}
+        variant = fixture.get("variant")
+        solution_path = fixture.get("solution_path")
+        if not isinstance(variant, str) or not isinstance(solution_path, str):
+            return False, "admission fixture has no variant or solution path", {}
+        path, fixture_detail = _resolve_repo_path(root, f"{raw_path}/{solution_path}")
+        if path is None or not path.is_file():
+            return False, f"admission fixture bytes are missing: {fixture_detail}", {}
+        if solution_path not in hidden_files:
+            return False, "admission fixture bytes are not in the hidden-file allowlist", {}
+        if not solution_path.startswith(("admission/", "hidden/reference/")):
+            return False, "fixture bytes must be under admission/ or hidden/reference/", {}
+        variants.add(variant)
+    if "reference" not in variants or not variants.intersection(
+        {"faulty", "alternative", "quality_defective"}
+    ):
+        return False, "task-package lacks reference and contrast admission fixtures", {}
+    return (
+        True,
+        f"task-package {task_id} and {len(fixtures)} fixture files verified",
+        {
+            "task_id": task_id,
+            "protocol": protocol,
+            "manifest": manifest,
+        },
+    )
+
+
+def _evidence_proof(
+    family: str,
+    raw_path: str,
+    root: Path,
+    pack: dict[str, Any],
+    pack_path: str,
+) -> tuple[bool, str]:
+    evidence_path, detail = _resolve_repo_path(root, raw_path)
+    if evidence_path is None or not evidence_path.is_file():
+        return False, detail if evidence_path is None else "evidence path is not a file"
+    try:
+        record = json.loads(evidence_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False, "evidence is not readable JSON"
+    if not isinstance(record, dict):
+        return False, "evidence root is not an object"
+
+    valid = False
+    if family == "codegen":
+        cases = record.get("cases")
+        valid = (
+            record.get("kind") == "evaluation_evidence"
+            and record.get("gate") == "pass"
+            and record.get("task_id") == pack.get("task_id")
+            and isinstance(cases, list)
+            and bool(cases)
+            and all(
+                isinstance(case, dict)
+                and (case.get("required") is not True or case.get("outcome") == "pass")
+                for case in cases
+            )
+        )
+    elif family == "repo_repair":
+        fixtures = record.get("fixtures")
+        expected_ids = pack.get("instance_ids", set())
+        valid = (
+            record.get("kind") == "prompt_24_native_repo_repair_evidence"
+            and isinstance(fixtures, list)
+            and len(fixtures) == len(expected_ids)
+            and all(isinstance(fixture, dict) for fixture in fixtures)
+            and {fixture.get("instance_id") for fixture in fixtures if isinstance(fixture, dict)}
+            == expected_ids
+            and all(
+                fixture.get("methodology_validation_ok") is True
+                and isinstance(fixture.get("graded_candidates"), dict)
+                and fixture["graded_candidates"].get("reference", {}).get("resolved") is True
+                and any(
+                    candidate.get("resolved") is False
+                    for name, candidate in fixture["graded_candidates"].items()
+                    if name != "reference" and isinstance(candidate, dict)
+                )
+                for fixture in fixtures
+                if isinstance(fixture, dict)
+            )
+        )
+    elif family == "repo_task":
+        checks = record.get("checks")
+        valid = (
+            record.get("admitted") is True
+            and record.get("task_id") == pack.get("task_id")
+            and isinstance(checks, dict)
+            and bool(checks)
+            and all(value is True for value in checks.values())
+        )
+    elif family == "self_repair":
+        cases = record.get("e2e_37_cases")
+        evidence_classes = record.get("evidence_classes", {})
+        task_record = evidence_classes.get("task", "") if isinstance(evidence_classes, dict) else ""
+        valid = (
+            record.get("kind") == "prompt_26_e2e_37_evidence"
+            and isinstance(cases, list)
+            and bool(cases)
+            and all(isinstance(case, dict) and case.get("status") == "passed" for case in cases)
+            and pack_path in task_record
+            and bool(record.get("fixture_matrix_observed"))
+        )
+    elif family == "repo_qa":
+        cases = record.get("e2e_38_qa_cases")
+        evidence_classes = record.get("evidence_classes", {})
+        task_record = evidence_classes.get("task", "") if isinstance(evidence_classes, dict) else ""
+        valid = (
+            record.get("kind") == "prompt_27_e2e_38_evidence"
+            and isinstance(cases, list)
+            and bool(cases)
+            and all(isinstance(case, dict) and case.get("status") == "passed" for case in cases)
+            and pack_path in task_record
+            and bool(record.get("admitted_fixture_matrix"))
+        )
+    elif family in {"output_prediction", "test_prediction"}:
+        instances = record.get("fixtures", {})
+        outcomes = record.get(family)
+        groups = (
+            list(outcomes.values())
+            if family == "output_prediction" and isinstance(outcomes, dict)
+            else [outcomes]
+            if isinstance(outcomes, dict)
+            else []
+        )
+        family_instance = instances.get(family) if isinstance(instances, dict) else None
+        valid = (
+            record.get("kind") == "prompt_28_prediction_evidence"
+            and isinstance(family_instance, dict)
+            and family_instance.get("instance_id") == pack.get("task_id")
+            and bool(groups)
+            and all(
+                isinstance(group, dict)
+                and isinstance(group.get("reference"), dict)
+                and group["reference"].get("matched") is True
+                and any(
+                    result.get("matched") is False
+                    for name, result in group.items()
+                    if name != "reference" and isinstance(result, dict)
+                )
+                for group in groups
+            )
+        )
+    return (
+        (True, f"family-specific admission evidence verified: {raw_path}")
+        if valid
+        else (
+            False,
+            f"evidence does not prove the {family} admission and grading cases",
+        )
+    )
+
+
 def audit_family(
     family: str,
     *,
@@ -229,36 +484,53 @@ def audit_family(
     """Audit one family through its real entrypoint, not a summary of one.
 
     ``taskpacks`` maps family to an admitted pack root; ``evidence`` maps family to an evidence
-    file. A family that has neither is reported as lacking that link rather than assumed complete -
-    the audit's purpose is to find the family nobody wired up.
+    file. Both paths are resolved inside the repository, and the pack manifest, fixture bytes and
+    family-specific evidence record must agree before the corresponding coverage checks pass.
     """
     if family not in TRACK_B_FAMILIES:
         raise PredictionContractError(f"{family!r} is not a required Track B family")
     module_name, entry = FAMILY_GRADERS[family]
     importable, detail = _entrypoint_exists(module_name, entry)
-    pack_root = (taskpacks or {}).get(family)
-    evidence_file = (evidence or {}).get(family)
+    packs = TRACK_B_PACKS if taskpacks is None else taskpacks
+    trails = TRACK_B_EVIDENCE if evidence is None else evidence
+    pack_root = packs.get(family)
+    evidence_file = trails.get(family)
+    repository = _repository_root()
+    pack_ok = False
+    pack_detail = "no task pack path recorded"
+    pack: dict[str, Any] = {}
+    evidence_ok = False
+    evidence_detail = "no evidence path recorded"
+    if repository is None:
+        pack_detail = evidence_detail = "repository root is unavailable"
+    elif isinstance(pack_root, str):
+        pack_ok, pack_detail, pack = _task_pack_proof(family, pack_root, repository)
+        if isinstance(evidence_file, str):
+            evidence_ok, evidence_detail = _evidence_proof(
+                family, evidence_file, repository, pack, pack_root
+            )
+        elif evidence_file is not None:
+            evidence_detail = "evidence path is not a string"
+    elif pack_root is not None:
+        pack_detail = "task pack path is not a string"
     return CoverageCheck(
         family=family,
         solve_behavior=TRACK_B_FAMILIES[family],
         grader_module=module_name,
         grader_entry=entry,
         grader_importable=importable,
-        output_contract=pack_root is not None,
-        tool_policy_recorded=True,
+        output_contract=pack_ok,
+        tool_policy_recorded=pack_ok,
         grading_present=importable,
         missingness_recorded=True,
-        evidence_recorded=evidence_file is not None,
+        evidence_recorded=evidence_ok,
         detail="; ".join(
-            message
-            for message, present in (
-                (detail, importable),
-                (f"task pack: {pack_root}", pack_root is not None),
-                (f"evidence: {evidence_file}", evidence_file is not None),
+            (
+                detail if importable else f"entrypoint unavailable: {detail}",
+                f"task pack {pack_root or '<missing>'}: {pack_detail}",
+                f"evidence {evidence_file or '<missing>'}: {evidence_detail}",
             )
-            if present
-        )
-        or "no task pack or evidence recorded",
+        ),
     )
 
 
@@ -270,7 +542,7 @@ TRACK_B_PACKS: dict[str, str] = {
     "repo_repair": "plugins/suites/swebench/tests",
     "repo_task": "taskpacks/repo-tasks/ini-interpolate",
     "self_repair": "taskpacks/self-repair/py-listsort-v1",
-    "repo_qa": "packages/core/src/polycodebench_core/qa_contracts.py",
+    "repo_qa": "taskpacks/qa/py-configkit-qa-v1",
     "output_prediction": "taskpacks/prediction/output-prediction",
     "test_prediction": "taskpacks/prediction/test-prediction",
 }
@@ -280,7 +552,7 @@ TRACK_B_EVIDENCE: dict[str, str] = {
     "repo_repair": "docs/implementation/evidence/prompt-24-e2e36.json",
     "repo_task": "docs/implementation/evidence/prompt-25-admission-ini-interpolate.json",
     "self_repair": "docs/implementation/evidence/prompt-26-e2e-37.json",
-    "repo_qa": "docs/implementation/evidence/prompt-26-e2e-37.json",
+    "repo_qa": "docs/implementation/evidence/prompt-27-e2e-38.json",
     "output_prediction": "docs/implementation/evidence/prompt-28-e2e38.json",
     "test_prediction": "docs/implementation/evidence/prompt-28-e2e38.json",
 }
@@ -294,9 +566,9 @@ def audit_track_b(
 ) -> CoverageAudit:
     """Audit every required Track B family through its recorded pack, evidence and grader.
 
-    Passing no mapping audits the repository as it stands: the recorded pack and evidence paths are
-    used, and a family whose paths are absent from the tree fails its own check. ``skipped`` records
-    why a check could not run.
+    Passing no mapping audits the repository as it stands: recorded manifests, fixture bytes and
+    family-specific evidence contents are verified. Missing or inconsistent records fail closed;
+    ``skipped`` records why a check could not run.
     """
     packs = TRACK_B_PACKS if taskpacks is None else taskpacks
     trails = TRACK_B_EVIDENCE if evidence is None else evidence

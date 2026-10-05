@@ -9,7 +9,7 @@ Exit gate: "Staging deploy/recovery/isolation/withdrawal rehearsals have real ev
 | Clean staging deployment (E2E-43) | **blocked** | no authorized AWS account, cap or principals |
 | Isolated restore, 10 scorecards, projection, timing (E2E-42) | local variant passed; staging **blocked** | `evidence/prompt-33/e2e-42-local-restore.json` |
 | Orphan / outage / withdrawal / key rotation / drain drills | local variants passed; staging **blocked** | `evidence/prompt-33/e2e-43-local-drills.json`, `tests/test_operations_postgres.py`, gateway E2E-11/12 |
-| Migration compatibility | **failed** | D-33-03 (`alembic check` drift at HEAD), D-33-04 (branched history from concurrent Prompt 32) |
+| Migration compatibility | local **PASS**; staging **blocked** | D-33-03 is fixed at `d8f971ea2b34`; isolated PostgreSQL 17.6 upgrade, downgrade, re-upgrade and `alembic check` pass. The chain has one head. Staging rollout rehearsal still needs authorization. |
 | Telemetry and required alerts | implemented; promtool-tested; delivery not exercised | `infra/observability/`, `polycodebench_core/telemetry.py` |
 | Runbooks, retention/rights, rehearsal reports | implemented | `docs/operations/` |
 

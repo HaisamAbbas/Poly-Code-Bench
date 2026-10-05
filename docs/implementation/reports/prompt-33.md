@@ -3,8 +3,10 @@
 ## Blocked on me
 
 - **Staging authorization.** There is no authorized AWS account, region, monthly cap (proposed: USD 600/month plus USD 150 one-off), operator SSO principals, state backend, domain/certificates, approved guest AMI, or pushed service image digests. Without these, no clean staging deployment and no staging E2E-42/E2E-43 run is possible. The exact inputs, commands and budget are in `docs/operations/staging-execution-plan.md`.
-- **Migration drift (D-33-03).** At HEAD `alembic check` fails on the Prompt 26 `repair_*` tables. The proposed fix is a small `models.py` change; I did not apply it because Prompt 32 is editing that file now.
-- **Branched migration history (D-33-04).** Prompt 32's new revision `a20c4e619d32` chains from `f17b6b04a237` rather than `e5f6a7b8c9d0`. It needs rebasing before any deploy.
+
+## Resolved during audit repair
+
+- **Migration drift (D-33-03).** Declared the existing `ix_repair_round_run` and `ix_repair_delivery_round` indexes in the model and added migration `d8f971ea2b34` to align the three repair-table foreign keys with the model's `ON DELETE RESTRICT` rules. On isolated PostgreSQL 17.6, upgrade, downgrade, re-upgrade and `alembic check` pass; `tests/test_repair_state_postgres.py` passes 5/5.
 
 ## Changed
 
@@ -47,7 +49,7 @@
   - key rotation, correction and withdrawal (10/10).
   
   Drain/stale-commit and containment commands pass on PostgreSQL (`tests/test_operations_postgres.py`, 3/3). The gateway outage/ambiguity suite passes 14/14.
-- **Migrations.** `pcb-ops migrate rehearse` on the committed tree: empty→head and previous→head **PASS**, with identical schemas (1,032 objects). `alembic check` **FAIL** (D-33-03). `pcb-ops migrate check` on the working tree **FAIL**s by design (D-33-04).
+- **Migrations.** `pcb-ops migrate rehearse` on the committed tree: empty→head and previous→head **PASS**, with identical schemas (1,032 objects). The Prompt 32 integration rebased `a20c4e619d32` onto `e5f6a7b8c9d0`; the current chain now has the single head `d8f971ea2b34`, resolving D-33-04. D-33-03 is resolved by the model/migration alignment above. Against isolated PostgreSQL 17.6, applying the current head, downgrading one revision, reapplying head and `alembic check` all **PASS**. The deployment policy remains pinned to the last released revision until an environment is actually deployed.
 - **IaC checks.** `terraform fmt -check` and `terraform validate` **PASS** for both roots. promtool check and test **PASS** (11 rules). Trivy: 3 findings fixed, 2 accepted (D-33-05).
 - **Unit tests** (`tests/test_operations_telemetry.py`, `tests/test_operations_deployment.py`): 30 pass, covering telemetry, identity, manifests, migrations, keyring, sweep and rehearsal logic.
 - **Load.** `scripts/ops_load_rehearsal.py`: 3,000 requests, 0 errors, uncached origin p95 443 ms on the workstation. The 300 ms cached p95 remains a **target**.
@@ -62,6 +64,6 @@
   
   No benchmark result was published. All rehearsal data is `synthetic_internal`.
 
-Decisions: D-33-01 to D-33-08 in `docs/implementation/decisions.md`.
+Decisions: D-33-01 to D-33-08 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
-Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1 and resolve D-33-03/D-33-04, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.
+Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

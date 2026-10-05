@@ -960,17 +960,18 @@ oracle whose expected value was derived by running the target records that fact
   The staging variants stay blocked on authorization; recovery times are reported only as the
   measured local values (41.8 s, 58.8 s). RPO/RTO, the 10-minute orphan reclamation and the 300 ms
   cached p95 remain targets.
-- **D-33-03 - Discrepancy: model/schema drift in the Prompt 26 repair tables.** At HEAD
-  (`e5f6a7b8c9d0`) `alembic check` fails: the migration created FKs without `ON DELETE RESTRICT`
-  and indexes `ix_repair_delivery_round`/`ix_repair_round_run` the models do not declare. Proposed
-  resolution (nonbreaking, narrowest): declare those two indexes in `models.py` and drop
-  `ondelete="RESTRICT"` from the three repair FKs so models match the deployed schema (PostgreSQL
-  `NO ACTION` and `RESTRICT` both refuse the delete for these non-deferred constraints). Not
-  applied here because a concurrent Prompt 32 session is editing `models.py`; owner: Prompt 34.
-- **D-33-04 - Discrepancy: branched migration history in the working tree.** The concurrent
-  Prompt 32 migration `a20c4e619d32` has `down_revision = f17b6b04a237`, creating a second head.
-  It must be rebased onto `e5f6a7b8c9d0` before release; `pcb-ops migrate check` refuses until
-  then. `config/operations/migration-policy.yaml` pins the released revision at `e5f6a7b8c9d0`.
+- **D-33-03 - Discrepancy: model/schema drift in the Prompt 26 repair tables (RESOLVED).** The
+  models now declare the existing `ix_repair_delivery_round`/`ix_repair_round_run` indexes, and
+  migration `d8f971ea2b34` aligns the three repair-table foreign keys with the model's
+  `ON DELETE RESTRICT` actions. Isolated PostgreSQL 17.6 upgrade, downgrade, re-upgrade and
+  `alembic check` pass; `tests/test_repair_state_postgres.py` passes 5/5.
+- **D-33-04 - Discrepancy: branched migration history in the working tree (RESOLVED).** The
+  Prompt 32 migration `a20c4e619d32` initially branched from `f17b6b04a237`, creating a second
+  head. Prompt 32 integration rebased it onto `e5f6a7b8c9d0`; the current chain includes the
+  follow-up revisions and has the single head `d8f971ea2b34`. Its PostgreSQL upgrade/downgrade
+  path is verified on an isolated local database. The released revision remains pinned at
+  `e5f6a7b8c9d0` in `config/operations/migration-policy.yaml` until a deployment releases a newer
+  schema.
 - **D-33-05 - Accepted IaC scanner exceptions.** Trivy `aws-vpc-no-public-egress-sgr` (control-tier
   HTTPS egress, required for provider/judge APIs that are gated by the gateway's approved endpoint
   registry) and `AVD-AWS-0053` (internet-facing ALB, restricted to the CloudFront origin-facing

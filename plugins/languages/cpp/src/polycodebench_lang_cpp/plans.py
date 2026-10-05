@@ -65,7 +65,7 @@ RUNNER_MARGIN = 3
 MAX_PLAN_SECONDS = 110
 # 126/127 come from the guest runner: the compiler is not executable / not found.
 TOOL_ERRORS = (2, 126, 127)
-SANITIZER_TOOL_ERRORS = (126, 127)
+SANITIZER_TOOL_ERRORS = TOOL_ERRORS
 COMPILE_FAILED = 1
 # Exit 2 is a wrapper usage error. The sanitizer wrapper uses exit 3 when a runtime cannot judge;
 # its structured report distinguishes that from a candidate defect.

@@ -154,8 +154,9 @@ def test_the_release_profile_is_the_measurement_profile_and_nothing_else() -> No
 def test_the_sanitizer_environment_is_the_union_of_the_chosen_instrumentation() -> None:
     assert lock.sanitizer_environment(()) == {}
     both = lock.sanitizer_environment(("address", "undefined"))
-    assert set(both) == {"ASAN_OPTIONS", "UBSAN_OPTIONS"}
+    assert set(both) == {"ASAN_OPTIONS", "ASAN_SYMBOLIZER_PATH", "UBSAN_OPTIONS"}
     assert "detect_leaks=1" in both["ASAN_OPTIONS"]
+    assert both["ASAN_SYMBOLIZER_PATH"] == "/usr/bin/llvm-symbolizer-14"
     assert "halt_on_error=1" in both["UBSAN_OPTIONS"]
     thread = lock.sanitizer_environment(("thread",))
     assert set(thread) == {"TSAN_OPTIONS"}

@@ -184,7 +184,8 @@ def test_c_and_cpp_authored_tasks_validate_and_build_typed_plans() -> None:
         assert all(plan.image_digest in allowlist.get(language).image_digests for plan in plans)
         if language == "cpp":
             sanitizer = next(plan for plan in plans if plan.analyzer_id == "asan")
-            assert sanitizer.exit_semantics.classify(2, False) == "findings"
+            assert sanitizer.exit_semantics.classify(3, False) == "findings"
+            assert sanitizer.exit_semantics.classify(2, False) == "error"
             assert sanitizer.exit_semantics.classify(126, False) == "error"
 
 

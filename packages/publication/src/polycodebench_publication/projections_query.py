@@ -53,10 +53,15 @@ Scope = Literal["exploratory", "ranked_eligible"]
 
 
 class ReleaseLanguageProfile(PublicationModel):
-    """Language-specific source rows captured in the immutable release content."""
+    """Language-specific source rows captured in the immutable release content.
+
+    ``evidence_url`` is optional only for older signed release documents. Query methods suppress
+    such profiles rather than attaching the entry's release-wide scorecard to language values.
+    """
 
     kind: Literal["release_language_profile"] = "release_language_profile"
     language_id: str = Field(min_length=1, max_length=64)
+    evidence_url: str | None = Field(default=None, min_length=1, max_length=200)
     dimensions: tuple[DimensionBreakdown, ...] = ()
     diagnostics: tuple[DimensionBreakdown, ...] = ()
     tool_coverage: tuple[tuple[str, str], ...] = ()
@@ -136,6 +141,28 @@ class ReleaseContent(PublicationModel):
             raise ValueError("release disclosed task rows cannot include a private task")
         entries = {row.model_config_id for row in self.entries}
         cards = {row.scorecard_id: row for row in self.scorecards}
+        cards_by_evidence_url: dict[str, list[PublicScorecard]] = {}
+        for scorecard_row in self.scorecards:
+            cards_by_evidence_url.setdefault(scorecard_row.evidence_url, []).append(scorecard_row)
+        for entry in self.entries:
+            for profile in entry.language_profiles:
+                if profile.evidence_url is None:
+                    continue
+                matching_cards = cards_by_evidence_url.get(profile.evidence_url, [])
+                if len(matching_cards) != 1:
+                    raise ValueError(
+                        "language profile evidence must resolve to one public scorecard"
+                    )
+                language_card = matching_cards[0]
+                task = tasks.get(language_card.task_id)
+                if (
+                    language_card.model_config_id != entry.model_config_id
+                    or task is None
+                    or task.language_id != profile.language_id
+                ):
+                    raise ValueError(
+                        "language profile evidence must belong to the same model and language"
+                    )
         for task_content in self.task_contents:
             task = tasks.get(task_content.task_id)
             if task is None or task.version != task_content.task_version:
@@ -304,6 +331,22 @@ def _entry_to_leaderboard(entry: ReleaseEntry, scope: Scope) -> LeaderboardEntry
     )
 
 
+def _language_entry_profile(
+    entry: ReleaseEntry, profile: ReleaseLanguageProfile
+) -> LanguageEntryProfile:
+    if profile.evidence_url is None:
+        raise ValueError("a public language profile requires language-matched evidence")
+    return LanguageEntryProfile(
+        language_id=profile.language_id,
+        model_config_id=entry.model_config_id,
+        label=entry.label,
+        dimensions=profile.dimensions,
+        diagnostics=profile.diagnostics,
+        tool_coverage=profile.tool_coverage,
+        evidence_url=profile.evidence_url,
+    )
+
+
 def leaderboard(
     document: Mapping[str, Any],
     *,
@@ -312,8 +355,10 @@ def leaderboard(
     """``GET /leaderboard``: published entries for one release.
 
     Language filtering happens here rather than in a query engine, because the only readable source
-    is the approved release document. An entry missing a required language stays out of a board that
-    requires it and is never renormalised into a full rank (E2E-28).
+    is the approved release document. It filters configurations by declared language support; the
+    returned metrics and coverage remain release-wide. Use ``/languages/{id}`` for language-scoped
+    dimensions and diagnostics. An entry missing a required language stays out of the filtered board
+    and is never renormalised into a full rank (E2E-28).
     """
     doc = _published(document)
     scope = _scope(doc)
@@ -341,16 +386,9 @@ def model_profile(document: Mapping[str, Any], model_config_id: str) -> ModelPro
                 capabilities=entry.capabilities,
                 dimensions=entry.dimensions,
                 language_profiles=tuple(
-                    LanguageEntryProfile(
-                        language_id=profile.language_id,
-                        model_config_id=entry.model_config_id,
-                        label=entry.label,
-                        dimensions=profile.dimensions,
-                        diagnostics=profile.diagnostics,
-                        tool_coverage=profile.tool_coverage,
-                        evidence_url=entry.evidence_url,
-                    )
+                    _language_entry_profile(entry, profile)
                     for profile in entry.language_profiles
+                    if profile.evidence_url is not None
                 ),
                 languages=entry.languages,
                 run_mode=entry.run_mode,
@@ -368,48 +406,21 @@ def model_profile(document: Mapping[str, Any], model_config_id: str) -> ModelPro
 def language_profile(document: Mapping[str, Any], language_id: str) -> LanguageProfile:
     """``GET /languages/{id}``: dimension breakdown for one language.
 
-    Built from the entries that actually declared the language, aggregating each declared
-    dimension's measured opportunity counts. A language no entry ran is not-found rather than an
-    empty board, which could read as "scored zero".
+    Built only from language-specific profiles declared in the release. A model's release-wide
+    metrics are never copied into this view. A language with no published profile is not-found
+    rather than an empty board, which could read as "scored zero".
     """
     doc = _published(document)
-    matching = [e for e in _content(doc).entries if language_id in e.languages]
+    matching = [
+        (entry, profile)
+        for entry in _content(doc).entries
+        for profile in entry.language_profiles
+        if profile.language_id == language_id and profile.evidence_url is not None
+    ]
     if not matching:
         raise PublicApiError("NOT_FOUND", "resource is not available")
 
-    profiles = tuple(
-        LanguageEntryProfile(
-            language_id=language_id,
-            model_config_id=entry.model_config_id,
-            label=entry.label,
-            dimensions=next(
-                (
-                    profile.dimensions
-                    for profile in entry.language_profiles
-                    if profile.language_id == language_id
-                ),
-                (),
-            ),
-            diagnostics=next(
-                (
-                    profile.diagnostics
-                    for profile in entry.language_profiles
-                    if profile.language_id == language_id
-                ),
-                (),
-            ),
-            tool_coverage=next(
-                (
-                    profile.tool_coverage
-                    for profile in entry.language_profiles
-                    if profile.language_id == language_id
-                ),
-                (),
-            ),
-            evidence_url=entry.evidence_url,
-        )
-        for entry in matching
-    )
+    profiles = tuple(_language_entry_profile(entry, profile) for entry, profile in matching)
     return LanguageProfile(
         language_id=language_id,
         release_id=str(doc.get("id", "")),

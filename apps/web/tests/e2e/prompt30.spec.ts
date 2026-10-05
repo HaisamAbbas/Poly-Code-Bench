@@ -44,6 +44,7 @@ test("E2E-39 segment: URL filters, metric sorting, release selection, and langua
   await page.locator("#language-select").selectOption("javascript");
   await page.getByRole("button", { name: "Apply filter" }).click();
   await expect(page).toHaveURL(/language=javascript/);
+  await expect(page.getByText(/Metrics and coverage remain release-wide/)).toBeVisible();
   await expect(page.getByRole("row", { name: /Fixture Code System A/ })).toBeVisible();
   await expect(page.getByRole("row", { name: /Fixture Code System B/ })).toHaveCount(0);
 
@@ -65,6 +66,14 @@ test("E2E-39 segment: URL filters, metric sorting, release selection, and langua
   const selectedRelease = await page.locator("#release-select").inputValue();
   await page.goto(`/languages/javascript?release=${selectedRelease}`);
   await expect(page.getByRole("heading", { name: "javascript", level: 1 })).toBeVisible();
+  const languageMeasurements = page.getByRole("region", { name: "javascript language-specific measurements" });
+  await expect(languageMeasurements).toContainText("74.00");
+  await expect(languageMeasurements).not.toContainText("89.750000");
+  const javascriptScore = languageMeasurements.getByRole("link", { name: /Correctness: Measured, 74.000000 score/i }).first();
+  await expect(javascriptScore).toHaveAttribute("href", new RegExp("synthetic-scorecard-a-javascript"));
+  await languageMeasurements.getByRole("link", { name: /Correctness/ }).first().click();
+  await expect(page).toHaveURL(/sort_metric=dimension_correctness/);
+  await expect(languageMeasurements.getByRole("row").nth(1)).toContainText("Fixture Code System C");
   await expect(page.getByRole("heading", { name: "Diagnostic profiles" })).toBeVisible();
   await expect(page.locator(".language-tool-coverage")).toHaveCount(2);
   await expect(page.locator(".language-tool-coverage").nth(0)).toContainText("eslint");
@@ -81,6 +90,10 @@ test("E2E-40 subcase: code profiles expose measured dimensions and answer-only p
   await expect(page.getByRole("img", { name: "Code-only dimension radar" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Language × dimension coverage" })).toBeVisible();
   await expect(page.getByRole("rowheader", { name: "javascript" })).toBeVisible();
+  const languageHeatmap = page.getByRole("region", { name: "Language by dimension coverage" });
+  const javascriptHeatmapMetric = languageHeatmap.getByRole("row", { name: /javascript/ })
+    .getByRole("link", { name: /Correctness: Measured, 74.000000 score/i });
+  await expect(javascriptHeatmapMetric).toHaveAttribute("href", /synthetic-scorecard-a-javascript/);
   await expect(page.locator(".profile-stats")).toContainText("$0.123456");
   await expect(page.getByText("Highest measured code dimension", { exact: true })).toBeVisible();
   await page.screenshot({ path: resolve(artifactDirectory, "model-code-profile.png"), fullPage: true });

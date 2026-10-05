@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CodeRadar, DimensionTable } from "@/components/profile-charts";
+import { CodeRadar, DimensionTable, LanguageMeasurementsTable } from "@/components/profile-charts";
 import {
   EmptyState,
   PageIntro,
@@ -8,17 +8,13 @@ import {
   ReleaseSelector,
   ResourceState,
   SectionHeading,
-  SortableLeaderboard,
 } from "@/components/public-ui";
 import {
-  combineResources,
   loadReleaseContext,
-  orderedEntries,
   publicApi,
   scoreEvidenceHref,
   type ApiEnvelope,
   type LanguageProfile,
-  type LeaderboardEntry,
   type MetricDefinition,
   type ReleaseSummary,
 } from "@/lib/public-api";
@@ -34,7 +30,7 @@ function first(value: string | string[] | undefined): string | undefined {
 export async function generateMetadata({ params }: { params: Promise<{ language: string }> }): Promise<Metadata> {
   const { language } = await params;
   return {
-    title: `${language} leaderboard`,
+    title: `${language} measurements`,
     description: `Language-specific measurements and tool coverage for ${language} in a selected public release.`,
   };
 }
@@ -59,9 +55,9 @@ export default async function LanguagePage({
         ← All configurations
       </Link>
       <PageIntro
-        eyebrow="Language leaderboard · Release backed"
+        eyebrow="Language measurements · Release backed"
         title={language}
-        description="This view uses only language-specific dimensions and diagnostics declared by the release. Untested features have no plotted score."
+        description="This view uses only language-specific dimensions and diagnostics declared by the release. Release-wide model scores are not reused as language scores."
       />
       <ResourceState resource={context}>
         {(releaseContext) => <LanguageForRelease
@@ -92,25 +88,15 @@ async function LanguageForRelease({
   sort?: string;
   direction?: "asc" | "desc";
 }) {
-  const [profileResource, boardResource] = await Promise.all([
-    publicApi<ApiEnvelope<LanguageProfile>>(
-      `/languages/${encodeURIComponent(language)}?release=${encodeURIComponent(releaseId)}`,
-    ),
-    publicApi<ApiEnvelope<readonly LeaderboardEntry[]>>(
-      `/leaderboard?release=${encodeURIComponent(releaseId)}&language=${encodeURIComponent(language)}&limit=200`,
-    ),
-  ]);
-  const result = combineResources(profileResource, boardResource);
+  const profileResource = await publicApi<ApiEnvelope<LanguageProfile>>(
+    `/languages/${encodeURIComponent(language)}?release=${encodeURIComponent(releaseId)}`,
+  );
 
   return (
-    <ResourceState resource={result}>
-      {([profileResponse, boardResponse]) => {
+    <ResourceState resource={profileResource}>
+      {(profileResponse) => {
         const profile = profileResponse.data;
-        const entries = boardResponse.data;
-        const metricIds = new Set(entries.flatMap((entry) => entry.metrics.map((metric) => metric.metric_id)));
-        const sortId = sort && metricIds.has(sort) ? sort : undefined;
-        const rows = orderedEntries(entries, sortId, direction ?? "desc");
-        const definitions: readonly MetricDefinition[] = boardResponse.meta.registry?.definitions ?? [];
+        const definitions: readonly MetricDefinition[] = profileResponse.meta.registry?.definitions ?? [];
 
         return (
           <>
@@ -130,22 +116,21 @@ async function LanguageForRelease({
             <section className="section-card" aria-labelledby="language-board-title">
               <SectionHeading
                 id="language-board-title"
-                title={`${language} leaderboard`}
-                description="Each metric links to its published scorecard. Rows retain their own coverage and run limits."
+                title={`${language} measurements by configuration`}
+                description="Values, opportunity counts, and source scorecards come from each configuration's language-specific release profile."
               />
-              {rows.length ? (
-                <SortableLeaderboard
-                  entries={rows}
-                  metricDefinitions={definitions}
+              {profile.entries.length ? (
+                <LanguageMeasurementsTable
+                  entries={profile.entries}
+                  definitions={definitions}
                   releaseId={releaseId}
                   language={language}
-                  sort={sortId}
+                  sort={sort}
                   direction={direction}
-                  basePath={`/languages/${encodeURIComponent(language)}`}
                 />
               ) : (
-                <EmptyState title={`No published configurations cover ${language}`}>
-                  The release does not include rows for this language. No language result was inferred.
+                <EmptyState title={`No language-specific profiles were published for ${language}`}>
+                  The release does not include language-scoped measurements. No language result was inferred.
                 </EmptyState>
               )}
             </section>

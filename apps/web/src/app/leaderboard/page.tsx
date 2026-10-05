@@ -142,7 +142,9 @@ async function LeaderboardForRelease({
         <SectionHeading
           id="leaderboard-table-title"
           title={selectedLanguage ? `${selectedLanguage} configurations` : "Published configurations"}
-          description="Sort by any published metric. Exploratory releases show no rank; missing and inapplicable values remain distinct."
+          description={selectedLanguage
+            ? `The language filter selects configurations that declare ${selectedLanguage} support. Metrics and coverage remain release-wide; open the ${selectedLanguage} page for language-specific measurements. Exploratory releases show no rank.`
+            : "Sort by any published metric. Exploratory releases show no rank; missing and inapplicable values remain distinct."}
         />
         {rows.length ? (
           <SortableLeaderboard

@@ -30,6 +30,7 @@ from polycodebench_publication.projections_query import (
     PublicApiError,
     ReleaseContent,
     ReleaseEntry,
+    ReleaseLanguageProfile,
     artifact,
     compare,
     language_profile,
@@ -217,6 +218,48 @@ def test_public_resolvers_reject_private_and_unknown_identities_generically() ->
         model_profile(doc, "model-private-hidden")
     with pytest.raises(PublicApiError):
         language_profile(doc, "cobol")
+
+
+def test_language_profile_does_not_fall_back_to_release_wide_scores_or_evidence() -> None:
+    with pytest.raises(PublicApiError) as raised:
+        language_profile(_published_document(), "python")
+    assert raised.value.code == "NOT_FOUND"
+
+
+def test_legacy_language_profile_without_its_own_evidence_is_suppressed() -> None:
+    content = _content()
+    alpha = content.entries[0].model_copy(
+        update={
+            "language_profiles": (ReleaseLanguageProfile(language_id="python"),),
+        }
+    )
+    legacy_content = content.model_copy(update={"entries": (alpha, content.entries[1])})
+    legacy_document = {
+        **_published_document(),
+        "content": legacy_content.model_dump(mode="json"),
+    }
+
+    assert model_profile(legacy_document, "model-alpha").language_profiles == ()
+    with pytest.raises(PublicApiError) as raised:
+        language_profile(legacy_document, "python")
+    assert raised.value.code == "NOT_FOUND"
+
+
+def test_release_rejects_language_profile_evidence_from_another_language() -> None:
+    content = _content()
+    alpha = content.entries[0].model_copy(
+        update={
+            "language_profiles": (
+                ReleaseLanguageProfile(language_id="rust", evidence_url="/v1/scorecards/card-1"),
+            )
+        }
+    )
+    invalid_content = {
+        **content.model_dump(mode="python"),
+        "entries": (alpha.model_dump(mode="python"), content.entries[1].model_dump(mode="python")),
+    }
+    with pytest.raises(ValueError, match="same model and language"):
+        ReleaseContent.model_validate(invalid_content)
 
 
 def test_a_not_found_detail_cannot_carry_paths_digests_or_urls() -> None:

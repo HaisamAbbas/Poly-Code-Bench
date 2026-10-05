@@ -583,6 +583,25 @@ export function orderedEntries(
   });
 }
 
+export function orderedLanguageEntries(
+  entries: readonly LanguageEntryProfile[],
+  metricId: string | undefined,
+  direction: "asc" | "desc",
+): readonly LanguageEntryProfile[] {
+  if (!metricId) return entries;
+  const factor = direction === "asc" ? 1 : -1;
+  return [...entries].sort((left, right) => {
+    const leftMetric = left.dimensions.find((row) => row.metric.metric_id === metricId)?.metric;
+    const rightMetric = right.dimensions.find((row) => row.metric.metric_id === metricId)?.metric;
+    const leftValue = numericMetric(leftMetric);
+    const rightValue = numericMetric(rightMetric);
+    if (leftValue === null && rightValue === null) return left.label.localeCompare(right.label);
+    if (leftValue === null) return 1;
+    if (rightValue === null) return -1;
+    return factor * (leftValue - rightValue) || left.label.localeCompare(right.label);
+  });
+}
+
 function numericMetric(metric: PublicMetric | undefined): number | null {
   if (!metric) return null;
   if (metric.status === "gated_zero") return 0;

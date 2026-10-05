@@ -47,6 +47,21 @@ async def _assert_published_routes(app: FastAPI, release_id: str) -> None:
         javascript_profile = javascript["entries"][0]
         assert [row["dimension"] for row in javascript_profile["dimensions"]] == ["correctness"]
         assert javascript_profile["tool_coverage"][0][0] == "eslint"
+        assert (
+            javascript_profile["evidence_url"] == "/v1/scorecards/synthetic-scorecard-a-javascript"
+        )
+        javascript_source = await client.get(
+            javascript_profile["evidence_url"], params={"release": release_id}
+        )
+        assert javascript_source.json()["data"]["task_id"] == "synthetic-task-javascript"
+
+        rust_model = (
+            await client.get("/v1/models/synthetic-code-a", params={"release": release_id})
+        ).json()["data"]
+        rust_profile = next(
+            row for row in rust_model["language_profiles"] if row["language_id"] == "rust"
+        )
+        assert rust_profile["evidence_url"] == "/v1/scorecards/synthetic-scorecard-a-rust"
 
         answer_only = (
             await client.get("/v1/models/synthetic-answer-only", params={"release": release_id})

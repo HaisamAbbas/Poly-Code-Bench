@@ -1,10 +1,116 @@
+import Link from "next/link";
 import type {
   DimensionBreakdown,
   LanguageEntryProfile,
   MetricDefinition,
 } from "@/lib/public-api";
-import { scoreEvidenceHref } from "@/lib/public-api";
-import { MetricValue, SectionHeading } from "@/components/public-ui";
+import { asUrlQuery, orderedLanguageEntries, scoreEvidenceHref } from "@/lib/public-api";
+import { EmptyState, MetricValue, SectionHeading } from "@/components/public-ui";
+
+export function LanguageMeasurementsTable({
+  entries,
+  definitions,
+  releaseId,
+  language,
+  sort,
+  direction,
+}: {
+  entries: readonly LanguageEntryProfile[];
+  definitions: readonly MetricDefinition[];
+  releaseId: string;
+  language: string;
+  sort?: string;
+  direction?: "asc" | "desc";
+}) {
+  const metrics = [...new Map(
+    entries.flatMap((entry) => entry.dimensions).map((row) => [row.metric.metric_id, row.metric]),
+  ).values()];
+  if (!entries.length || !metrics.length) {
+    return (
+      <EmptyState title={`No language-specific measurements were published for ${language}`}>
+        No release-wide score has been substituted for a missing language profile.
+      </EmptyState>
+    );
+  }
+
+  const sortId = sort && metrics.some((metric) => metric.metric_id === sort) ? sort : undefined;
+  const selectedDirection = direction ?? "desc";
+  const rows = orderedLanguageEntries(entries, sortId, selectedDirection);
+  const definitionById = new Map(definitions.map((definition) => [definition.metric_id, definition]));
+
+  return (
+    <div className="table-wrap" role="region" aria-label={`${language} language-specific measurements`} tabIndex={0}>
+      <table className="data-table">
+        <caption className="sr-only">
+          Language-specific metrics from each configuration release profile, with applicable task and opportunity counts.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Configuration</th>
+            {metrics.map((metric) => {
+              const definition = definitionById.get(metric.metric_id);
+              const active = sortId === metric.metric_id;
+              const nextDirection = active
+                ? selectedDirection === "desc" ? "asc" : "desc"
+                : definition?.direction === "lower" ? "asc" : "desc";
+              return (
+                <th
+                  key={metric.metric_id}
+                  scope="col"
+                  aria-sort={active ? (selectedDirection === "asc" ? "ascending" : "descending") : "none"}
+                >
+                  <Link
+                    className="sort-link"
+                    href={`/languages/${encodeURIComponent(language)}${asUrlQuery({
+                      release: releaseId,
+                      sort_metric: metric.metric_id,
+                      direction: nextDirection,
+                    })}`}
+                  >
+                    {definition?.label ?? metric.label}
+                    {active ? <span aria-hidden="true"> {selectedDirection === "asc" ? "↑" : "↓"}</span> : null}
+                    <span className="sr-only">{active ? `, sorted ${selectedDirection}` : ", sort by this metric"}</span>
+                  </Link>
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((entry) => (
+            <tr key={entry.model_config_id}>
+              <th scope="row">
+                <Link className="model-link" href={`/models/${encodeURIComponent(entry.model_config_id)}${asUrlQuery({ release: releaseId })}`}>
+                  {entry.label}
+                </Link>
+                <span className="model-id">{entry.model_config_id}</span>
+              </th>
+              {metrics.map((metric) => {
+                const dimension = entry.dimensions.find((row) => row.metric.metric_id === metric.metric_id);
+                return (
+                  <td key={metric.metric_id}>
+                    {dimension ? (
+                      <>
+                        <MetricValue
+                          metric={dimension.metric}
+                          sourceUrl={scoreEvidenceHref(entry.evidence_url, releaseId)}
+                          compact
+                        />
+                        <span className="row-subline">
+                          {dimension.opportunity_count} opportunities / {dimension.applicable_tasks} applicable tasks
+                        </span>
+                      </>
+                    ) : <span className="unreported">Not published</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function CodeRadar({
   dimensions,

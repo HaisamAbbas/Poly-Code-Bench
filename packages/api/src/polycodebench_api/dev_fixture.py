@@ -213,6 +213,7 @@ def _entries() -> tuple[ReleaseEntry, ...]:
     alpha_languages = (
         ReleaseLanguageProfile(
             language_id="python",
+            evidence_url="/v1/scorecards/synthetic-scorecard-a",
             dimensions=(
                 _dimension("correctness", "92.000000"),
                 _dimension("code_quality", "76.000000"),
@@ -230,12 +231,14 @@ def _entries() -> tuple[ReleaseEntry, ...]:
         ),
         ReleaseLanguageProfile(
             language_id="rust",
+            evidence_url="/v1/scorecards/synthetic-scorecard-a-rust",
             dimensions=(_dimension("correctness", "82.000000"),),
             diagnostics=(_dimension("clippy", "73.000000"),),
             tool_coverage=(("clippy", "1 measured opportunity"),),
         ),
         ReleaseLanguageProfile(
             language_id="javascript",
+            evidence_url="/v1/scorecards/synthetic-scorecard-a-javascript",
             dimensions=(_dimension("correctness", "74.000000"),),
             diagnostics=(_dimension("eslint", "80.000000"),),
             tool_coverage=(("eslint", "1 measured opportunity"),),
@@ -293,6 +296,7 @@ def _entries() -> tuple[ReleaseEntry, ...]:
             language_profiles=(
                 ReleaseLanguageProfile(
                     language_id="python",
+                    evidence_url="/v1/scorecards/synthetic-scorecard-b",
                     dimensions=(_dimension("correctness", "75.000000"),),
                     diagnostics=(_dimension("ruff", "65.000000"),),
                     tool_coverage=(("ruff", "1 measured opportunity"),),
@@ -326,14 +330,15 @@ def _entries() -> tuple[ReleaseEntry, ...]:
             language_profiles=tuple(
                 ReleaseLanguageProfile(
                     language_id=language,
+                    evidence_url=f"/v1/scorecards/synthetic-scorecard-c{scorecard_suffix}",
                     dimensions=(_dimension("correctness", value),),
                     diagnostics=(_dimension(tool, tool_value),),
                     tool_coverage=((tool, "1 measured opportunity"),),
                 )
-                for language, value, tool, tool_value in (
-                    ("python", "86.000000", "ruff", "81.000000"),
-                    ("rust", "85.000000", "clippy", "78.000000"),
-                    ("javascript", "79.000000", "eslint", "82.000000"),
+                for language, value, tool, tool_value, scorecard_suffix in (
+                    ("python", "86.000000", "ruff", "81.000000", ""),
+                    ("rust", "85.000000", "clippy", "78.000000", "-rust"),
+                    ("javascript", "79.000000", "eslint", "82.000000", "-javascript"),
                 )
             ),
             run_mode="single_shot",

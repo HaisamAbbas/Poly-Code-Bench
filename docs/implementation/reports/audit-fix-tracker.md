@@ -5,7 +5,7 @@ Started 2026-10-05 after the cross-prompt audit. Fix items in this order, verify
 ## Status
 
 - [x] Track A reviewer attribution: untrusted accepted edges and adjudications now fail closed; exact duplicate suppression is derived from the submitted findings; review approvals bind to an immutable evaluation context. A trusted orchestration verifier is required and the CLI deliberately has none. Focused tests and source checks pass.
-- [ ] Public projection scope and evidence links: language pages currently reuse release-wide aggregate values, and profile dimensions can point to an unrelated scorecard.
+- [x] Public projection scope and evidence links: language pages now use only declared language-profile dimensions; a profile is exposed only when its model/language-matched scorecard URL validates at release load. Legacy profiles without that link are suppressed. The separate leaderboard language filter remains a configuration filter whose metrics/coverage are explicitly documented as release-wide.
 - [ ] Release withdrawal cache policy: mutable withdrawal/successor fields are served with a one-year immutable cache lifetime.
 - [ ] PostgreSQL submission rate limit: concurrent requests can race between count and insert.
 - [ ] Publisher typed state mapping: non-ready states collapse to `infrastructure_missing`.

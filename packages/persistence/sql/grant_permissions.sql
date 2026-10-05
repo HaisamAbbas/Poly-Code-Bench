@@ -8,7 +8,8 @@ REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM PUBLIC;
 REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
 
 -- Public readers can only see published projections, never source tables.
-GRANT SELECT ON public_published_release, public_release_entry TO pcb_public_reader;
+GRANT SELECT ON public_published_release, public_release_entry,
+    public_release_document, public_release_pointer TO pcb_public_reader;
 
 GRANT USAGE ON SCHEMA public TO
     pcb_public_reader, pcb_submitter, pcb_curator, pcb_operator, pcb_reviewer,
@@ -94,6 +95,7 @@ GRANT INSERT ON audit_event TO pcb_reviewer;
 
 GRANT SELECT ON release, release_entry, scorecard, score_item, config_document TO pcb_publisher;
 GRANT SELECT, INSERT, UPDATE ON release, release_entry, publication_pointer TO pcb_publisher;
+GRANT SELECT, INSERT, UPDATE ON public_release_document, public_release_pointer TO pcb_publisher;
 GRANT INSERT ON audit_event TO pcb_publisher;
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO pcb_administrator;

@@ -1232,6 +1232,72 @@ publication_pointer = Table(
     CheckConstraint("generation >= 0", name="generation_nonnegative"),
 )
 
+# The API reads only these signed, allowlisted snapshots. Publication review state, validation
+# receipts, approval records and source score tables remain outside the API's database role.
+public_release_document = Table(
+    "public_release_document",
+    metadata,
+    Column("release_id", String(120), primary_key=True),
+    Column("document", JSONB, nullable=False),
+    Column("content_digest", String(71), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("published_at", DateTime(timezone=True), nullable=False),
+    created_at(),
+    CheckConstraint("state IN ('published','withdrawn')", name="state"),
+    CheckConstraint("content_digest ~ '^sha256:[0-9a-f]{64}$'", name="content_digest_format"),
+    CheckConstraint("jsonb_typeof(document) = 'object'", name="document_object"),
+    CheckConstraint(
+        "document ?& ARRAY['id','version','state','content','projection',"
+        "'content_digest','manifest']",
+        name="document_required_public_fields",
+    ),
+    CheckConstraint(
+        "(document - ARRAY['id','slug','version','state','content','projection',"
+        "'content_digest','manifest','withdrawal']) = '{}'::jsonb",
+        name="document_public_allowlist",
+    ),
+    CheckConstraint(
+        "NOT (document ?| ARRAY['validation','review','approval'])",
+        name="document_no_private_workflow_fields",
+    ),
+    CheckConstraint("document->>'id' = release_id", name="document_identity"),
+    CheckConstraint("document->>'state' = state", name="document_state"),
+    CheckConstraint("document->>'content_digest' = content_digest", name="document_digest"),
+    CheckConstraint(
+        "jsonb_typeof(document->'version') = 'number' AND (document->>'version')::integer > 0",
+        name="document_version_positive",
+    ),
+    CheckConstraint(
+        "jsonb_typeof(document->'content') = 'object' AND "
+        "jsonb_typeof(document->'projection') = 'object' AND "
+        "jsonb_typeof(document->'manifest') = 'object'",
+        name="document_public_payload_objects",
+    ),
+    CheckConstraint(
+        "(state = 'published' AND NOT (document ? 'withdrawal')) OR "
+        "(state = 'withdrawn' AND jsonb_typeof(document->'withdrawal') = 'object' AND "
+        "(document->'withdrawal') ? 'reason' AND "
+        "((document->'withdrawal') - ARRAY['reason','replacement_id']) = '{}'::jsonb AND "
+        "COALESCE(NULLIF(btrim((document->'withdrawal')->>'reason'), ''), '') <> '')",
+        name="document_withdrawal_allowlist",
+    ),
+)
+
+public_release_pointer = Table(
+    "public_release_pointer",
+    metadata,
+    Column("target", String(160), primary_key=True),
+    Column("generation", BigInteger, nullable=False),
+    Column(
+        "release_id",
+        String(120),
+        ForeignKey("public_release_document.release_id", ondelete="RESTRICT"),
+        nullable=True,
+    ),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    CheckConstraint("generation >= 1", name="generation_positive"),
+)
+
 model_submission = Table(
     "model_submission",
     metadata,

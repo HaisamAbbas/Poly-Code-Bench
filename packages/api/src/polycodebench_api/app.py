@@ -13,13 +13,19 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fastapi import FastAPI, Request
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.endpoints import PostgresEndpointRepository
+from polycodebench_persistence.public_releases import PostgresPublicReleaseCatalog
 from polycodebench_persistence.runs import PostgresRunRepository
 from polycodebench_publication.releases import ReleaseStore, SigningKey
 from polycodebench_services.model_endpoints import ModelEndpointService
 from polycodebench_services.runs import RunCreationService
 
 from polycodebench_api.auth import TokenDirectory
-from polycodebench_api.context import ApiServices, RunSummarySource, SubmissionRepository
+from polycodebench_api.context import (
+    ApiServices,
+    PublicReleaseCatalog,
+    RunSummarySource,
+    SubmissionRepository,
+)
 from polycodebench_api.errors import install_error_handlers
 from polycodebench_api.postgres_submissions import PostgresSubmissionStore
 from polycodebench_api.public_routes import router as public_router
@@ -53,7 +59,7 @@ def _cursor_key() -> bytes:
 
 def create_app(
     *,
-    store: ReleaseStore | None = None,
+    store: PublicReleaseCatalog | None = None,
     cursor_key: bytes | None = None,
     tokens: TokenDirectory | None = None,
     run_creation: RunCreationService | None = None,
@@ -67,7 +73,12 @@ def create_app(
     Production deployments must provide a stable cursor signing key. Local development gets an
     ephemeral key, so a server restart intentionally invalidates its cursors.
     """
-    release_store = store or ReleaseStore(_store_path())
+    environment = os.environ.get("PCB_ENVIRONMENT", "development")
+    release_backend = os.environ.get("PCB_PUBLIC_RELEASE_BACKEND", "sqlite")
+    if release_backend not in {"sqlite", "postgres"}:
+        raise RuntimeError("PCB_PUBLIC_RELEASE_BACKEND must be sqlite or postgres")
+    if environment in {"staging", "production"} and release_backend != "postgres":
+        raise RuntimeError("staging and production require the shared PostgreSQL release catalog")
     key = cursor_key if cursor_key is not None else _cursor_key()
     if len(key) < 32:
         raise ValueError("cursor signing keys must contain at least 32 bytes")
@@ -80,6 +91,15 @@ def create_app(
         "production",
     }:
         raise RuntimeError("PCB_DATABASE_URL is required outside development")
+    if store is not None:
+        release_store: PublicReleaseCatalog = store
+    elif release_backend == "postgres":
+        if persistence_database is None:
+            raise RuntimeError("PCB_DATABASE_URL is required for the PostgreSQL release catalog")
+        release_store = PostgresPublicReleaseCatalog(persistence_database.engine)
+    else:
+        release_store = ReleaseStore(_store_path())
+    release_store_path = getattr(release_store, "path", None)
     postgres_runs = (
         PostgresRunRepository(persistence_database.engine) if persistence_database else None
     )
@@ -88,8 +108,12 @@ def create_app(
         submission_store = (
             PostgresSubmissionStore(persistence_database.engine)
             if persistence_database
-            else SubmissionStore(release_store.path)
+            else SubmissionStore(release_store_path)
+            if isinstance(release_store_path, str)
+            else None
         )
+    if submission_store is None:
+        raise RuntimeError("a durable submission repository is required for this API configuration")
     endpoint_service = endpoints
     if endpoint_service is None and persistence_database:
         endpoint_service = ModelEndpointService(
@@ -117,6 +141,7 @@ def create_app(
             else (RunCreationService(postgres_runs) if postgres_runs is not None else None)
         ),
         endpoints=endpoint_service,
+        target=os.environ.get("PCB_PUBLICATION_TARGET", "local:board"),
     )
     app = FastAPI(
         title="PolyCodeBench Public API",

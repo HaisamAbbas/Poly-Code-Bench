@@ -8,7 +8,7 @@ from typing import Protocol, cast
 from uuid import UUID
 
 from fastapi import Request
-from polycodebench_publication.releases import ReleaseStore, SigningKey
+from polycodebench_publication.releases import SigningKey
 from polycodebench_services.model_endpoints import ModelEndpointService
 from polycodebench_services.runs import RunCreationService
 
@@ -73,11 +73,25 @@ class SubmissionRepository(Protocol):
     ) -> dict[str, object]: ...
 
 
+class PublicReleaseCatalog(Protocol):
+    """Reader contract implemented by the local SQLite and shared PostgreSQL stores."""
+
+    def get(self, release_id: str) -> dict[str, object]: ...
+
+    def current(self, target: str = "local:board") -> dict[str, object]: ...
+
+    def public(self, release_id: str) -> dict[str, object]: ...
+
+    def list_public(self) -> list[dict[str, object]]: ...
+
+    def audit(self) -> list[dict[str, object]]: ...
+
+
 @dataclass(frozen=True)
 class ApiServices:
     """Everything a route needs, assembled once at application construction."""
 
-    releases: ReleaseStore
+    releases: PublicReleaseCatalog
     submissions: SubmissionRepository
     tokens: TokenDirectory
     secret_key: bytes

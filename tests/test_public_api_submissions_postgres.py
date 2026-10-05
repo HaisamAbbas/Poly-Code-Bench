@@ -30,16 +30,37 @@ def _test_database_url() -> str:
     return value
 
 
+def _migration_check_url(test_url: str) -> str:
+    """Allow schema revision checks with a separate migration identity.
+
+    The submission tests deliberately connect through the submitter role, which should not
+    need SELECT access to Alembic's bookkeeping table. CI uses a database owner for both
+    connections; local role-scoped runs may supply a privileged URL for the same test DB.
+    """
+    value = os.environ.get("PCB_TEST_MIGRATION_DATABASE_URL") or test_url
+    if make_url(value).database != make_url(test_url).database:
+        pytest.fail("PCB_TEST_MIGRATION_DATABASE_URL must target PCB_TEST_DATABASE_URL's database")
+    return value
+
+
 @pytest.fixture(scope="module")
 def engine() -> Generator[Engine, None, None]:
-    database = Database(_test_database_url())
+    test_url = _test_database_url()
+    database = Database(test_url)
     with database.engine.connect() as connection:
-        require_migrated_through(connection, REQUIRED_REVISION)
         if (
             connection.execute(text("SELECT to_regclass('public.model_submission')")).scalar_one()
             is None
         ):
             pytest.fail("PostgreSQL model-submission schema is not installed")
+    migration_engine = create_engine(
+        _migration_check_url(test_url), pool_pre_ping=True, hide_parameters=True
+    )
+    try:
+        with migration_engine.connect() as connection:
+            require_migrated_through(connection, REQUIRED_REVISION)
+    finally:
+        migration_engine.dispose()
     yield database.engine
     database.dispose()
 
@@ -111,6 +132,24 @@ def test_submitter_database_role_is_scoped_and_supports_idempotent_retry() -> No
             rate=SubmissionRate(limit=2, window_seconds=3600),
         )
         assert replayed["submission_id"] == created["submission_id"]
+        audit_engine = create_engine(
+            _migration_check_url(_test_database_url()), hide_parameters=True
+        )
+        try:
+            with audit_engine.connect() as connection:
+                audit_count = connection.execute(
+                    text(
+                        "SELECT count(*) FROM audit_event "
+                        "WHERE action = 'model_submission.create' "
+                        "AND resource_type = 'model_submission' "
+                        "AND resource_id = :submission_id "
+                        "AND request_id = 'owner-scope-request-0001'"
+                    ),
+                    {"submission_id": str(created["submission_id"])},
+                ).scalar_one()
+            assert audit_count == 1
+        finally:
+            audit_engine.dispose()
         assert (
             store.get_owned(subject=subject, submission_id=str(created["submission_id"]))[
                 "submission_id"

@@ -1,17 +1,17 @@
 """Record real C plan executions as parser test fixtures (needs the local Docker images).
 
-Runs the C plugin's build, test, analysis and performance plans against the authored fixture variants
-inside the sandbox and stores each plan, the supervisor execution record and the declared outputs
-under ``tests/fixtures/c_tool_output/<scenario>/<plan>/``. Parser tests replay those recordings
-offline, so the parsers are checked against what the pinned clang, clang-tidy, cppcheck, ASan, UBSan
-and Valgrind really print.
+Runs the C plugin's build, test, analysis and performance plans against the authored fixture
+variants inside the sandbox and stores each plan, the supervisor execution record and the declared
+outputs under ``tests/fixtures/c_tool_output/<scenario>/<plan>/``. Parser tests replay those
+recordings offline, so the parsers are checked against what the pinned clang, clang-tidy, cppcheck,
+ASan, UBSan and Valgrind really print.
 
     .venv/Scripts/python.exe scripts/record_c_tool_fixtures.py [scenario ...]
 
-Every scenario is a real authored variant under ``plugins/languages/c/fixtures/top-words``; nothing
-here is a hand-written transcript. That matters for the lanes this fixture exists to pin down: a
-hand-written ASan report would only prove the parser reads what a human wrote, not what the toolchain
-emits.
+Every scenario is a real authored variant under ``plugins/languages/c/fixtures/top-words``;
+nothing here is a hand-written transcript. That matters for the lanes this fixture exists to pin
+down: a hand-written ASan report would only prove the parser reads what a human wrote, not what
+the toolchain emits.
 """
 
 from __future__ import annotations
@@ -19,12 +19,14 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import cast
 
-import yaml
+import yaml  # type: ignore[import-untyped,unused-ignore]
 from polycodebench_core.identity import new_entity_id
 from polycodebench_core.models import Candidate
-from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
+from polycodebench_evaluation.plan_runner import PlanRun, PlanRunner, materialize_inputs
 from polycodebench_lang_c import CLanguagePlugin
 from polycodebench_plugins_api import AnalysisContext, ExecutionPlan, FrozenTask, TaskDraft
 from polycodebench_runner.provider import LocalDockerSandboxProvider
@@ -62,23 +64,26 @@ def _view(
     return view, files
 
 
-def _sources(view: FrozenTask, files: dict[str, bytes], candidate: bytes) -> dict[str, dict[str, bytes]]:
+def _sources(
+    view: FrozenTask, files: dict[str, bytes], candidate: bytes
+) -> dict[str, dict[str, bytes]]:
     """Stage the workspace the way a real run would: candidate, overlay, then trusted config."""
     inventory = view.inventory
-    groups = inventory["groups"] if isinstance(inventory, dict) else []
+    groups = cast("Sequence[Mapping[str, object]]", inventory["groups"])
     overlay: dict[str, bytes] = {}
     for group in groups:
-        for relative in group["files"]:
+        for relative in cast("Sequence[str]", group["files"]):
             overlay[f"work/{relative}"] = files[f"hidden/{relative}"]
-    declared = view.quality["performance"]
+    declared = cast("Mapping[str, str]", view.quality["performance"])
     if declared:
-        overlay[f"work/{declared['workload_file']}"] = files[f"hidden/{declared['workload_file']}"]
-    scaffold = view.quality["scaffold_files"]
+        workload = declared["workload_file"]
+        overlay[f"work/{workload}"] = files[f"hidden/{workload}"]
+    scaffold = cast("Sequence[str]", view.quality["scaffold_files"])
     config = {f"work/{path}": files[f"visible/repo/{path}"] for path in scaffold}
     return {"candidate": {"src/topwords.c": candidate}, "overlay": overlay, "config": config}
 
 
-def _store(name: str, plan: ExecutionPlan, run: object) -> None:
+def _store(name: str, plan: ExecutionPlan, run: PlanRun) -> None:
     target = FIXTURES / name / plan.plan_id
     target.mkdir(parents=True, exist_ok=True)
     (target / "plan.json").write_text(plan.model_dump_json(indent=1), encoding="utf-8")
@@ -99,9 +104,9 @@ async def record(name: str, source: str, *, suite_timeout: int | None = None) ->
             ids.performance.reference: ids.performance.digest,
         },
         state_dir=ROOT / ".cache" / "record-c-state",
-        # The provider's ceiling is 120s, which is enough for the Valgrind lane and tight enough that
-        # a hung plan fails the recording instead of stalling it. The in-guest deadline is separate
-        # and comes from the oracle's own suite timeout.
+        # The provider's ceiling is 120s, which is enough for the Valgrind lane and tight enough
+        # that a hung plan fails the recording instead of stalling it. The in-guest deadline is
+        # separate and comes from the oracle's own suite timeout.
         operation_timeout_seconds=120,
     )
     runner = PlanRunner(provider, lane="admission")

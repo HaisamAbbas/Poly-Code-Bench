@@ -62,7 +62,7 @@ def test_cpp_image_refresh_keeps_every_registered_language(tmp_path, monkeypatch
         distribution = tmp_path / f"plugins/languages/{language}/pyproject.toml"
         distribution.parent.mkdir(parents=True, exist_ok=True)
         distribution.write_text(
-            "[project.entry-points.\"polycodebench.language_plugins\"]\n"
+            '[project.entry-points."polycodebench.language_plugins"]\n'
             + f'{language} = "{entry_points[language]}"\n',
             encoding="utf-8",
         )

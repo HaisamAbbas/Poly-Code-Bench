@@ -19,6 +19,13 @@ from typing import Any
 import pytest
 import yaml
 from cpp_plugin_support import frozen
+from polycodebench_core.models import (
+    Confidence,
+    MeasurementStatus,
+    Observation,
+    ScoreDimension,
+    SourceLocation,
+)
 from polycodebench_lang_cpp import CppLanguagePlugin
 from polycodebench_plugins_api import (
     EXECUTION_RECORD_PATH,
@@ -27,20 +34,13 @@ from polycodebench_plugins_api import (
     DictArtifactReader,
 )
 from polycodebench_plugins_api.results import make_record
-from polycodebench_core.models import (
-    Confidence,
-    MeasurementStatus,
-    Observation,
-    ScoreDimension,
-    SourceLocation,
-)
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "plugins" / "languages" / "cpp" / "src"))
 
+from polycodebench_lang_cpp import parsers  # noqa: E402
 from polycodebench_lang_cpp.guest import pcb_cpp_scan as scanner  # noqa: E402
 from polycodebench_lang_cpp.observations import COLUMN_KEYED_FAMILIES, issue_key, slug  # noqa: E402
-from polycodebench_lang_cpp import parsers  # noqa: E402
 from polycodebench_lang_cpp.profile import PROFILE_VERSION, load_profile  # noqa: E402
 
 profile = load_profile()
@@ -241,9 +241,7 @@ def test_the_cpp_weights_are_the_cpp_section_of_the_published_table() -> None:
         name: int(round(float(percent) * 100))
         for name, percent in section["idiomatic_percent"].items()
     }
-    document = yaml.safe_load(
-        (ROOT / "config/languages/cpp-profile-v1.yaml").read_text("utf-8")
-    )
+    document = yaml.safe_load((ROOT / "config/languages/cpp-profile-v1.yaml").read_text("utf-8"))
     assert document["weights_source"] == "config/languages/profiles-v1.yaml#profiles.cpp"
 
 
@@ -321,7 +319,9 @@ def test_a_new_with_no_releaser_is_a_violation_the_scanner_confirms() -> None:
 
 
 def test_a_non_owning_raw_pointer_costs_nothing() -> None:
-    """A `const char*` a callee reads but never frees is legal C++, so it is evidence, not a fault."""
+    """A `const char*` a callee reads but never frees is legal C++, so it is evidence,
+    not a fault.
+    """
     findings = from_scanner(
         """
         class TextView
@@ -462,9 +462,7 @@ def test_evaluate_ignores_a_token_lint_even_if_the_caller_skipped_normalisation(
 
 def test_a_token_lint_at_a_site_the_scanner_called_benign_costs_nothing() -> None:
     """The scanner's `benign_in_context` verdict outranks the bare token on the same site."""
-    benign = obs(
-        "cpp.context.raw-pointer-nonowning", 30, status=MeasurementStatus.NOT_APPLICABLE
-    )
+    benign = obs("cpp.context.raw-pointer-nonowning", 30, status=MeasurementStatus.NOT_APPLICABLE)
     lint = obs("cpp.clang_tidy.cppcoreguidelines-owning-memory", 30)
     # `raw-pointer` and `manual-ownership` are different families, so force the meeting site.
     lint = lint.model_copy(update={"issue_key": benign.issue_key})
@@ -528,11 +526,13 @@ def test_two_ownership_faults_on_one_line_are_two_issues_not_one() -> None:
 
 def test_duplicate_reports_of_the_same_rule_on_the_same_site_cannot_change_a_score() -> None:
     once = [obs("cpp.context.pass-by-value-container", 12)]
-    thrice = [*once, obs("cpp.context.pass-by-value-container", 12), obs("cpp.cppcheck.passedbyvalue", 12)]
+    thrice = [
+        *once,
+        obs("cpp.context.pass-by-value-container", 12),
+        obs("cpp.cppcheck.passedbyvalue", 12),
+    ]
     assert (
-        evaluate(once)["moves_copies"].score_bp
-        == evaluate(thrice)["moves_copies"].score_bp
-        == 5000
+        evaluate(once)["moves_copies"].score_bp == evaluate(thrice)["moves_copies"].score_bp == 5000
     )
 
 
@@ -831,9 +831,7 @@ def test_an_analyzer_that_printed_nothing_is_missing_not_clean() -> None:
     outranked one that was genuinely clean. Zero findings is only evidence of a clean scan when
     the run demonstrably looked.
     """
-    scan = parsers.PARSERS["clang_tidy"](
-        _raw(out_err="", out_out=""), _lint_plan(), profile
-    )
+    scan = parsers.PARSERS["clang_tidy"](_raw(out_err="", out_out=""), _lint_plan(), profile)
     assert [o.status for o in scan] == [MeasurementStatus.MISSING]
 
 

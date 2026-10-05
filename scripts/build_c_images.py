@@ -1,12 +1,12 @@
 """Build the pinned C images and record their identities (Prompt 20, PCB-20-1).
 
-Four recipes are built and then *probed*: every tool a recipe claims must answer, and every tool it
-must not have must be gone. The probe is the point - the difference between the runtime image and the
-evaluator image is only meaningful if it is checked rather than declared.
+Four recipes are built and then *probed*: every tool a recipe claims must answer, and every tool
+it must not have must be gone. The probe is the point - the difference between the runtime image
+and the evaluator image is only meaningful if it is checked rather than declared.
 
-``require_distinct`` is the second half of the same gate. Three differently tagged images that are
-byte-identical in the ways that matter would make every recorded identity meaningless, so the digests
-have to differ and the recipe differences have to be real.
+``require_distinct`` is the second half of the same gate. Three differently tagged images that
+are byte-identical in the ways that matter would make every recorded identity meaningless, so the
+digests have to differ and the recipe differences have to be real.
 """
 
 from __future__ import annotations
@@ -18,10 +18,9 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-import yaml  # type: ignore[import-untyped]
-
+import yaml  # type: ignore[import-untyped,unused-ignore]
 from polycodebench_core.canonical import canonical_digest
 from polycodebench_core.models import Digest
 
@@ -56,16 +55,12 @@ ABSENT = "absent"
 
 
 def recipes() -> dict[str, Any]:
-    document = yaml.safe_load(RECIPES_PATH.read_text(encoding="utf-8"))
-    return document["recipes"]
+    document = cast("dict[str, Any]", yaml.safe_load(RECIPES_PATH.read_text(encoding="utf-8")))
+    return cast("dict[str, Any]", document["recipes"])
 
 
 def base_digest() -> str:
     return base_image_digest()
-
-
-def recipes_document_base() -> Any:
-    return yaml.safe_load(RECIPES_PATH.read_text(encoding="utf-8"))["base_image"]
 
 
 def recipes_document_base() -> Any:
@@ -86,7 +81,7 @@ def base_image_digest() -> str:
         check=True,
     )
     try:
-        digests = json.loads(completed.stdout.strip() or "[]")
+        digests = cast("list[str]", json.loads(completed.stdout.strip() or "[]"))
     except ValueError:
         digests = []
     for entry in digests:
@@ -118,9 +113,9 @@ def tree_digest(root: Path, subdirs: tuple[str, ...]) -> str:
 def build_context(recipe: str, base: str) -> Path:
     """Stage the plugin guest + rules plus the Dockerfile for one recipe.
 
-    The clang-tidy configuration is *derived* here from the reviewed grouped YAML rather than kept as
-    a second hand-maintained file: clang-tidy accepts only a flat list, and two lists would eventually
-    disagree - at which point the profile would be mapping checks the tool never ran.
+    The clang-tidy configuration is *derived* here from the reviewed grouped YAML rather than kept
+    as a second hand-maintained file: clang-tidy accepts only a flat list, and two lists would
+    eventually disagree - at which point the profile would be mapping checks the tool never ran.
     """
     from polycodebench_lang_c.recipe import clang_tidy_config_text
 
@@ -173,7 +168,18 @@ def probe(recipe: str, tag: str, *, attempts: int = 3) -> dict[str, str]:
         last = ""
         for attempt in range(attempts):
             completed = subprocess.run(
-                ["docker", "run", "--rm", "--pull=never", "--network", "none", tag, "sh", "-c", script],
+                [
+                    "docker",
+                    "run",
+                    "--rm",
+                    "--pull=never",
+                    "--network",
+                    "none",
+                    tag,
+                    "sh",
+                    "-c",
+                    script,
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -184,9 +190,7 @@ def probe(recipe: str, tag: str, *, attempts: int = 3) -> dict[str, str]:
                 # A library probe is answered by clang echoing the bare name back when it cannot
                 # resolve one, so a resolved path is the evidence that it is installed. Version
                 # probes have no such convention.
-                resolved = first != "pcb-absent" and (
-                    tool != "asan-runtime" or "/" in first
-                )
+                resolved = first != "pcb-absent" and (tool != "asan-runtime" or "/" in first)
                 observed[tool] = first if resolved else ABSENT
                 break
             last = f"{completed.stdout}\n{completed.stderr}".strip()
@@ -196,7 +200,7 @@ def probe(recipe: str, tag: str, *, attempts: int = 3) -> dict[str, str]:
     return observed
 
 
-def build(recipe: str, *, no_cache: bool = False) -> dict[str, str]:
+def build(recipe: str, *, no_cache: bool = False) -> dict[str, Any]:
     # `FROM` needs the reference *and* the digest: a digest alone is not a resolvable image name.
     base = f"{recipes_document_base()}@{base_image_digest()}"
     tag = f"pcb-c-{recipe}:v1"
@@ -251,12 +255,22 @@ def build(recipe: str, *, no_cache: bool = False) -> dict[str, str]:
 def list_checks(tag: str) -> set[str]:
     """Every check the pinned clang-tidy actually ships.
 
-    ``--list-checks`` prints one indented line per check; the leading indent is what distinguishes an
-    entry from the section header.
+    ``--list-checks`` prints one indented line per check; the leading indent is what distinguishes
+    an entry from the section header.
     """
     completed = subprocess.run(
-        ["docker", "run", "--rm", "--pull=never", "--network", "none", tag,
-         "clang-tidy", "--checks=*", "--list-checks"],
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--network",
+            "none",
+            tag,
+            "clang-tidy",
+            "--checks=*",
+            "--list-checks",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -291,8 +305,18 @@ def require_checks_exist(tag: str) -> dict[str, object]:
     # The derived config must also be a config clang-tidy accepts; a syntax error there reads as
     # "no checks enabled" and would turn the whole lane into a no-op.
     probe = subprocess.run(
-        ["docker", "run", "--rm", "--pull=never", "--network", "none", tag, "sh", "-c",
-         "clang-tidy --config-file=/opt/pcb/rules/.clang-tidy --list-checks"],
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--network",
+            "none",
+            tag,
+            "sh",
+            "-c",
+            "clang-tidy --config-file=/opt/pcb/rules/.clang-tidy --list-checks",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -328,7 +352,9 @@ def require_suppressions_agree() -> list[str]:
         for line in (rules / "cppcheck-suppressions.txt").read_text(encoding="utf-8").splitlines()
         if line.strip()
     }
-    document = yaml.safe_load((rules / "cppcheck-suppression-reasons.yaml").read_text(encoding="utf-8"))
+    document = yaml.safe_load(
+        (rules / "cppcheck-suppression-reasons.yaml").read_text(encoding="utf-8")
+    )
     reasoned = {f"{entry['id']}:{entry['pattern']}" for entry in document["suppressions"]}
     for entry in document["suppressions"]:
         if len(str(entry["reason"]).strip()) < 20:
@@ -344,9 +370,9 @@ def require_suppressions_agree() -> list[str]:
 def require_distinct(records: dict[str, dict[str, Any]]) -> None:
     """Fail the build unless the recipes really differ in the ways the plan depends on.
 
-    A probed version is also required to look like a version. A corrupt image layer - the residue of
-    a daemon that died mid-build - makes a tool print its name and then die, which would otherwise be
-    recorded as an image that ships a broken toolchain.
+    A probed version is also required to look like a version. A corrupt image layer - the residue
+    of a daemon that died mid-build - makes a tool print its name and then die, which would
+    otherwise be recorded as an image that ships a broken toolchain.
     """
     table = recipes()
     digests = {record["digest"] for record in records.values()}
@@ -363,9 +389,10 @@ def require_distinct(records: dict[str, dict[str, Any]]) -> None:
         for tool in spec["forbidden_tools"]:
             if record["tools"].get(tool) != ABSENT:
                 raise SystemExit(f"recipe {name} must not ship {tool}")
-        # The sanitizer runtimes' presence is probed from the image, not read from the recipe name. It
-        # is the only thing that makes an instrumented link impossible in a release image, so it has to
-        # be a fact about the image rather than an intention in a configuration file.
+        # The sanitizer runtimes' presence is probed from the image, not read from the recipe
+        # name. It is the only thing that makes an instrumented link impossible in a release
+        # image, so it has to be a fact about the image rather than an intention in a
+        # configuration file.
         has_runtime = record["tools"].get("asan-runtime") != ABSENT
         wants_runtime = str(spec.get("sanitizer_runtime", "absent")) != "absent"
         if has_runtime != wants_runtime:
@@ -375,12 +402,14 @@ def require_distinct(records: dict[str, dict[str, Any]]) -> None:
             )
     if records["instrumented"]["digest"] == records["performance"]["digest"]:
         raise SystemExit(
-            "the instrumented and performance images must differ; otherwise a sanitizer build could "
-            "be reported as release performance"
+            "the instrumented and performance images must differ; otherwise a sanitizer build "
+            "could be reported as release performance"
         )
 
 
-def build_record(name: str, record: dict[str, str], guest_digest: str, rules_digest: str) -> dict[str, Any]:
+def build_record(
+    name: str, record: dict[str, Any], guest_digest: str, rules_digest: str
+) -> dict[str, Any]:
     spec = recipes()[name]
     return {
         "recipe": name,
@@ -402,8 +431,7 @@ def build_record(name: str, record: dict[str, str], guest_digest: str, rules_dig
             canonical_digest({key: spec[key] for key in sorted(spec) if key != "description"})
         ),
         "dockerfile_digest": Digest(
-            "sha256:"
-            + hashlib.sha256((INFRA / "Dockerfile").read_bytes()).hexdigest()
+            "sha256:" + hashlib.sha256((INFRA / "Dockerfile").read_bytes()).hexdigest()
         ),
     }
 
@@ -428,7 +456,7 @@ def main(argv: list[str] | None = None) -> int:
     payload = STAGE / names[0] / "pcb"
     guest_digest = tree_digest(payload, ("guest",))
     rules_digest = tree_digest(payload, ("rules",))
-    records = {}
+    records: dict[str, dict[str, Any]] = {}
     for name in names:
         print(f"building {name}...", file=sys.stderr)
         records[name] = build(name, no_cache=args.no_cache)
@@ -457,8 +485,8 @@ def main(argv: list[str] | None = None) -> int:
         },
         "rule_bundle_digest": rules_digest,
         "guest_digest": guest_digest,
-        # The resolved analyzer selection, so a scorecard can name the checks that actually ran rather
-        # than the ones the bundle hoped for.
+        # The resolved analyzer selection, so a scorecard can name the checks that actually ran
+        # rather than the ones the bundle hoped for.
         "analyzer_checks": checks,
         "images": images,
     }

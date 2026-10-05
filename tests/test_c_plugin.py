@@ -26,7 +26,7 @@ RECORDINGS = Path(__file__).parent / "fixtures" / "c_tool_output"
 REPORT = guestmods.load_guest("pcb_c_sanitize_report")
 
 ASAN_OVERFLOW = """=================================================================
-==26==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x612000000160 at pc 0x59a1 bp 0x7ffd sp 0x7ffd
+==26==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x612000000160 at pc 0x59a1
 READ of size 72 at 0x612000000160 thread T0
     #0 0x59a155ea96ba in count_words /workspace/work/src/topwords.c:100:5
     #1 0x59a155ea9a6b in case_ties_break_alphabetically /workspace/work/tests/behaviour.c:22:5
@@ -72,11 +72,11 @@ def test_guest_and_recipe_sanitizer_flags_agree() -> None:
 
 
 def test_address_lane_is_non_pie_and_release_links_are_hardened() -> None:
-    """D-20-01: a PIE ASan binary dies before main on a high-entropy kernel, so the lane is non-PIE."""
+    """D-20-01: a PIE ASan binary dies before main on a high-entropy kernel; the lane is non-PIE."""
     address = resolve_recipe(recipe="instrumented", sanitizer="address")
     assert "-fno-pie" in address.compile_flags()
     assert "-no-pie" in address.link_flags()
-    # `-no-pie` is a link-driver flag; on a `-c` compile it would be a warning against the candidate.
+    # `-no-pie` is a link-driver flag; on a `-c` compile it is a warning against the candidate.
     assert "-no-pie" not in address.compile_flags()
     undefined = resolve_recipe(recipe="instrumented", sanitizer="undefined")
     assert "-no-pie" not in undefined.link_flags()
@@ -101,7 +101,12 @@ def test_performance_recipe_never_takes_instrumentation_or_werror() -> None:
 
 def test_recorded_image_identities_keep_the_lanes_apart() -> None:
     ids = CLanguagePlugin().identities
-    digests = {ids.runtime.digest, ids.evaluator.digest, ids.instrumented.digest, ids.performance.digest}
+    digests = {
+        ids.runtime.digest,
+        ids.evaluator.digest,
+        ids.instrumented.digest,
+        ids.performance.digest,
+    }
     assert len(digests) == 4
     assert ids.performance.instrumentation == "none"
     assert ids.runtime.instrumentation == "none"
@@ -169,7 +174,13 @@ def test_valgrind_leak_record_with_thousands_separator_is_a_leak() -> None:
         # Valgrind must print its own verdict; silence is not "0 errors".
         ("==1== Memcheck, a memory error detector\n", "valgrind", 0, False, "failed"),
         ("==1== ERROR SUMMARY: 0 errors from 0 contexts\n", "valgrind", 0, False, "clean"),
-        ("==1==ASan runtime does not come first in initial library list\n", "address", 1, False, "unsupported"),
+        (
+            "==1==ASan runtime does not come first in initial library list\n",
+            "address",
+            1,
+            False,
+            "unsupported",
+        ),
         ('{"v":1,"kind":"case","outcome":"pass"}\n', "address", 0, False, "clean"),
     ],
 )
@@ -179,7 +190,9 @@ def test_lane_outcomes_are_classified_distinctly(
     assert REPORT.classify(text, lane, exit_code, timed_out)[0] == verdict
 
 
-def _recorded(scenario: str, plan_name: str, *, replace_out: str | None = None) -> tuple[AnalysisPlan, DictArtifactReader]:
+def _recorded(
+    scenario: str, plan_name: str, *, replace_out: str | None = None
+) -> tuple[AnalysisPlan, DictArtifactReader]:
     directory = RECORDINGS / scenario / plan_name
     plan = AnalysisPlan.model_validate_json((directory / "plan.json").read_text(encoding="utf-8"))
     files: dict[str, bytes] = {
@@ -194,7 +207,9 @@ def _recorded(scenario: str, plan_name: str, *, replace_out: str | None = None) 
     return plan, DictArtifactReader(files)
 
 
-def _scan(plugin: CLanguagePlugin, plan: AnalysisPlan, reader: DictArtifactReader) -> tuple[object, list[object]]:
+def _scan(
+    plugin: CLanguagePlugin, plan: AnalysisPlan, reader: DictArtifactReader
+) -> tuple[object, list[object]]:
     observations = plugin.parse_analysis(reader, plan)
     scan = next(o for o in observations if o.check_id.endswith(".scan"))
     return scan, [o for o in observations if o.issue_key is not None]
@@ -202,7 +217,9 @@ def _scan(plugin: CLanguagePlugin, plan: AnalysisPlan, reader: DictArtifactReade
 
 def test_an_unlocated_finding_is_still_a_finding_not_a_clean_scan() -> None:
     plugin = CLanguagePlugin()
-    harness_only = ASAN_OVERFLOW.replace("/workspace/work/src/topwords.c:100:5", "/opt/pcb/rules/pcb_ctest.c:9:1")
+    harness_only = ASAN_OVERFLOW.replace(
+        "/workspace/work/src/topwords.c:100:5", "/opt/pcb/rules/pcb_ctest.c:9:1"
+    )
     plan, reader = _recorded("reference", "c.analysis.asan.behaviour", replace_out=harness_only)
     scan, found = _scan(plugin, plan, reader)
     assert scan.status == MeasurementStatus.MEASURED and scan.value == 1

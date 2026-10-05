@@ -20,7 +20,7 @@ import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import yaml
 from polycodebench_core.canonical import canonical_digest
@@ -28,7 +28,13 @@ from polycodebench_core.identity import new_entity_id
 from polycodebench_core.models import Candidate, MeasurementStatus
 from polycodebench_evaluation.plan_runner import PlanRunner, materialize_inputs
 from polycodebench_lang_c import CLanguagePlugin
-from polycodebench_plugins_api import AnalysisContext, DictArtifactReader, ExecutionPlan, FrozenTask
+from polycodebench_plugins_api import (
+    AnalysisContext,
+    AnalysisPlan,
+    DictArtifactReader,
+    ExecutionPlan,
+    FrozenTask,
+)
 from polycodebench_plugins_api.contracts import EXECUTION_RECORD_PATH
 from polycodebench_plugins_api.results import record_bytes
 from polycodebench_plugins_api.testreport import reconcile
@@ -39,9 +45,9 @@ BASE = ROOT / "plugins" / "languages" / "c" / "fixtures" / "top-words"
 AREAS = ("visible", "hidden", "admission")
 OUTCOME = Literal["pass", "fail", "skip"]
 
-#: The variants, keyed by the manifest's ``solution_path``. Each entry states what the *evidence* must
-#: say - not what the exit status must be, because the exit status alone is exactly the thing C makes
-#: unreliable: a wrong answer, a crash and a sanitizer abort all exit non-zero.
+#: The variants, keyed by the manifest's ``solution_path``. Each entry states what the *evidence*
+#: must say - not what the exit status must be, because the exit status alone is exactly the thing
+#: C makes unreliable: a wrong answer, a crash and a sanitizer abort all exit non-zero.
 SCENARIOS: dict[str, str] = {
     "reference": "hidden/reference/src/topwords.c",
     "faulty-ties": "admission/faulty-ties/src/topwords.c",
@@ -90,9 +96,13 @@ def _package_files() -> dict[str, bytes]:
     }
 
 
-def _view(plugin: CLanguagePlugin, files: dict[str, bytes], *, suite_timeout: int | None) -> FrozenTask:
+def _view(
+    plugin: CLanguagePlugin, files: dict[str, bytes], *, suite_timeout: int | None
+) -> FrozenTask:
     manifest = _manifest()
-    from polycodebench_plugins_api import TaskDraft  # noqa: PLC0415  (import kept local and explicit)
+    from polycodebench_plugins_api import (
+        TaskDraft,  # noqa: PLC0415  (import kept local and explicit)
+    )
 
     draft = TaskDraft(
         task_id=manifest["task"]["task_id"],
@@ -100,7 +110,7 @@ def _view(plugin: CLanguagePlugin, files: dict[str, bytes], *, suite_timeout: in
         manifest=manifest,
         files=files,
     )
-    view = plugin.freeze_view(draft, "sha256:" + "1" * 64)
+    view: FrozenTask = plugin.freeze_view(draft, "sha256:" + "1" * 64)
     if suite_timeout is not None:
         view = view.model_copy(
             update={"inventory": {**view.inventory, "suite_timeout_seconds": suite_timeout}}
@@ -108,16 +118,21 @@ def _view(plugin: CLanguagePlugin, files: dict[str, bytes], *, suite_timeout: in
     return view
 
 
-def _sources(view: FrozenTask, files: dict[str, bytes], candidate: bytes) -> dict[str, dict[str, bytes]]:
-    groups = view.inventory["groups"]
+def _sources(
+    view: FrozenTask, files: dict[str, bytes], candidate: bytes
+) -> dict[str, dict[str, bytes]]:
     overlay: dict[str, bytes] = {}
-    for group in groups:
-        for relative in group["files"]:
+    for group in cast("list[dict[str, Any]]", view.inventory["groups"]):
+        for relative in cast("list[str]", group["files"]):
             overlay[f"work/{relative}"] = files[f"hidden/{relative}"]
-    declared = view.quality["performance"]
+    declared = cast("dict[str, Any] | None", view.quality["performance"])
     if declared:
-        overlay[f"work/{declared['workload_file']}"] = files[f"hidden/{declared['workload_file']}"]
-    config = {f"work/{path}": files[f"visible/repo/{path}"] for path in view.quality["scaffold_files"]}
+        workload = str(declared["workload_file"])
+        overlay[f"work/{workload}"] = files[f"hidden/{workload}"]
+    config = {
+        f"work/{path}": files[f"visible/repo/{path}"]
+        for path in cast("dict[str, str]", view.quality["scaffold_files"])
+    }
     return {"candidate": {"src/topwords.c": candidate}, "overlay": overlay, "config": config}
 
 
@@ -144,14 +159,12 @@ def _candidate(view: FrozenTask) -> Candidate:
 def _reader(run: Any) -> DictArtifactReader:
     """The plan's outputs *plus* the supervisor's execution record.
 
-    Parsers classify a run from ``_execution.json`` first: without it every parser reports ``tool_error``
-    by design, because a tool's own claim about how it went is not evidence. The record travels beside
-    the outputs rather than inside them, so a caller has to ask for it deliberately - which is why this
-    helper exists instead of the reader being built silently.
+    Parsers classify a run from ``_execution.json`` first: without it every parser reports
+    ``tool_error`` by design, because a tool's own claim about how it went is not evidence. The
+    record travels beside the outputs rather than inside them, so a caller has to ask for it
+    deliberately - which is why this helper exists instead of the reader being built silently.
     """
-    return DictArtifactReader(
-        {**run.outputs, EXECUTION_RECORD_PATH: record_bytes(run.record)}
-    )
+    return DictArtifactReader({**run.outputs, EXECUTION_RECORD_PATH: record_bytes(run.record)})
 
 
 # --------------------------------------------------------------------------- checks
@@ -160,9 +173,9 @@ def _reader(run: Any) -> DictArtifactReader:
 def _gate(case: Case, expectation: str, gate: str, detail: str) -> None:
     """Acceptance gate: ``pass``, ``fail`` or ``incomplete`` must equal the authored expectation.
 
-    ``incomplete`` is deliberately *not* accepted as a pass for a scenario that expects one. A harness
-    that could not run the tests has proved nothing, and a conformance run that reported that as a
-    pass would be a harness that agrees with itself.
+    ``incomplete`` is deliberately *not* accepted as a pass for a scenario that expects one. A
+    harness that could not run the tests has proved nothing, and a conformance run that reported
+    that as a pass would be a harness that agrees with itself.
     """
     if expectation == gate:
         case.outcome = "pass"
@@ -173,7 +186,7 @@ def _gate(case: Case, expectation: str, gate: str, detail: str) -> None:
 
 def _expect_lane(
     case: Case,
-    plan: ExecutionPlan,
+    plan: AnalysisPlan,
     observations: list[Any],
     *,
     expect_findings: bool,
@@ -186,9 +199,7 @@ def _expect_lane(
     nothing satisfies neither by accident: an absent lane is reported ``MISSING`` and an empty one
     ``MEASURED`` with a count of zero.
     """
-    scan = next(
-        (o for o in observations if o.check_id == f"c.{plan.analyzer_id}.scan"), None
-    )
+    scan = next((o for o in observations if o.check_id == f"c.{plan.analyzer_id}.scan"), None)
     if scan is None:
         case.outcome = "fail"
         case.detail = f"{plan.plan_id} produced no scan observation"
@@ -202,7 +213,11 @@ def _expect_lane(
         case.outcome = "fail"
         case.detail = f"{plan.plan_id} was {scan.status.value}: {scan.explanation[:140]}"
         return
-    found = [o for o in observations if o.issue_key is not None and o.status == MeasurementStatus.MEASURED]
+    found = [
+        o
+        for o in observations
+        if o.issue_key is not None and o.status == MeasurementStatus.MEASURED
+    ]
     if expect_findings and not found:
         case.outcome = "fail"
         case.detail = f"{plan.plan_id} found nothing; the variant was authored to trip this lane"
@@ -212,13 +227,13 @@ def _expect_lane(
         case.detail = f"{plan.plan_id} reported {len(found)} finding(s) on a clean variant"
         return
     if families:
-        families = {f.lower() for f in families}
-        matched = [o for o in found if families & {part.lower() for part in o.check_id.split(".")}]
+        wanted = {family.lower() for family in families}
+        matched = [o for o in found if wanted & {part.lower() for part in o.check_id.split(".")}]
         if not matched:
             case.outcome = "fail"
             case.detail = (
                 f"{plan.plan_id} found {sorted({o.check_id for o in found})}, "
-                f"expected one of {sorted(families)}"
+                f"expected one of {sorted(wanted)}"
             )
             return
     case.outcome = "pass"
@@ -241,14 +256,16 @@ def _expect_clean_static(case: Case, plan: ExecutionPlan, observations: list[Any
 
 async def run_scenario(name: str, runner: PlanRunner, plugin: CLanguagePlugin) -> Scenario:
     files = _package_files()
-    # The timeout variant is given the shortest suite the contract allows, so the harness does not sit
-    # for the full default budget waiting for a loop that was authored not to finish.
+    # The timeout variant is given the shortest suite the contract allows, so the harness does not
+    # sit for the full default budget waiting for a loop that was authored not to finish.
     view = _view(plugin, files, suite_timeout=30 if name == "timeout" else None)
     sources = _sources(view, files, files[SCENARIOS[name]])
     scenario = Scenario(name=name, source=SCENARIOS[name])
 
     build_plan = plugin.build_plan(view, _candidate(view))
-    build_run = await runner.run(build_plan, materialize_inputs(build_plan, sources), stage_id=f"c-{name}")
+    build_run = await runner.run(
+        build_plan, materialize_inputs(build_plan, sources), stage_id=f"c-{name}"
+    )
     build_case = Case("c.build", "pass", "")
     _gate(
         build_case,
@@ -275,28 +292,38 @@ async def run_scenario(name: str, runner: PlanRunner, plugin: CLanguagePlugin) -
             )
             records.extend(group_records)
             controls.append(control)
-    # One reconcile over the whole inventory, not per group: the gate is defined over the *required*
-    # groups, and reconciling an optional group on its own reports `incomplete` by construction. That
-    # is the shared contract's rule and the harness has to ask the question the contract answers.
+    # One reconcile over the whole inventory, not per group: the gate is defined over the
+    # *required* groups, and reconciling an optional group on its own reports `incomplete` by
+    # construction. That is the shared contract's rule and the harness has to ask the question the
+    # contract answers.
     verdict = reconcile(inventory, records, controls)
     expectation = "fail" if name in {"faulty-ties", "timeout", "compile-error"} else "pass"
     gate_case = Case("c.acceptance-gate", "pass", "")
-    _gate(gate_case, expectation, verdict.gate, "; ".join(verdict.reasons) or "every required case passed")
+    _gate(
+        gate_case,
+        expectation,
+        verdict.gate,
+        "; ".join(verdict.reasons) or "every required case passed",
+    )
     scenario.cases.append(gate_case)
     for group_verdict in verdict.groups:
         case = Case(f"c.test.{group_verdict.group_id}", "pass", "")
         failed = group_verdict.failed_cases
         if group_verdict.verdict == "incomplete":
             case.outcome = "fail"
-            case.detail = f"{group_verdict.group_id}: incomplete: {'; '.join(group_verdict.reasons)[:150]}"
+            case.detail = (
+                f"{group_verdict.group_id}: incomplete: {'; '.join(group_verdict.reasons)[:150]}"
+            )
         else:
-            case.detail = f"{group_verdict.group_id}: {group_verdict.verdict}, {failed} failing case(s)"
+            case.detail = (
+                f"{group_verdict.group_id}: {group_verdict.verdict}, {failed} failing case(s)"
+            )
         scenario.cases.append(case)
 
     context = AnalysisContext(
         task=view, candidate_digest="sha256:" + "2" * 64, candidate_paths=("src/topwords.c",)
     )
-    expected = {
+    expectations: dict[str, dict[str, bool | None]] = {
         "reference": {"asan": False, "ubsan": False, "valgrind": False},
         # A correct alternative must be as clean as the reference; a leak would make it a
         # resource-defect fixture, which `resource-leak` already is (D-20-03).
@@ -308,8 +335,9 @@ async def run_scenario(name: str, runner: PlanRunner, plugin: CLanguagePlugin) -
         "resource-leak": {"asan": True, "ubsan": False, "valgrind": True},
         "timeout": {"asan": None, "ubsan": None, "valgrind": None},
         "compile-error": {"asan": None, "ubsan": None, "valgrind": None},
-    }[name]
-    families = {
+    }
+    expected = expectations[name]
+    families: dict[str, list[str]] = {
         "buffer-overflow": {"asan": ["bounds-violation"]},
         "undefined-shift": {"ubsan": ["shift-out-of-range"]},
         "resource-leak": {"valgrind": ["resource-leak"]},
@@ -415,7 +443,8 @@ async def main(argv: list[str]) -> int:
                 "source": scenario.source,
                 "verdict": scenario.verdict,
                 "cases": [
-                    {"case_id": c.case_id, "outcome": c.outcome, "detail": c.detail} for c in scenario.cases
+                    {"case_id": c.case_id, "outcome": c.outcome, "detail": c.detail}
+                    for c in scenario.cases
                 ],
             }
             for scenario in scenarios

@@ -22,7 +22,7 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from polycodebench_core.canonical import canonical_digest, canonical_document_digest
@@ -32,6 +32,7 @@ from polycodebench_evaluation.plan_runner import PlanRunner
 from polycodebench_evaluation.suite_admission import SuiteAdmission
 from polycodebench_lang_c import CLanguagePlugin
 from polycodebench_plugins_api import TaskDraft
+from polycodebench_plugins_api.protocols import ExecutableLanguagePlugin
 from polycodebench_runner.provider import LocalDockerSandboxProvider
 from polycodebench_services.task_packages import TaskPackageImporter
 
@@ -167,8 +168,8 @@ async def _baseline_warning_debt(
 ) -> tuple[bool, str]:
     """Compile the frozen baseline with the task's own build plan and compare its warning count.
 
-    ``warning_policy.baseline_warnings`` decides what a candidate's warnings are measured against, so
-    an estimated number would silently move every candidate's debt. It is measured here, in the
+    ``warning_policy.baseline_warnings`` decides what a candidate's warnings are measured against,
+    so an estimated number would silently move every candidate's debt. It is measured here, in the
     release image, with exactly the flags a candidate is built with.
     """
     from polycodebench_evaluation.plan_runner import materialize_inputs
@@ -177,7 +178,7 @@ async def _baseline_warning_debt(
         task_id=manifest["task"]["task_id"], primary_language="c", manifest=manifest, files=files
     )
     view = plugin.freeze_view(draft, "sha256:" + "0" * 64)
-    policy = view.quality["warning_policy"]
+    policy = cast(dict[str, Any], cast(dict[str, Any], view.quality)["warning_policy"])
     allowed = manifest["output_contract"]["allowed_paths"]
     candidate = {path: files[f"visible/repo/{path}"] for path in allowed}
     config = dict(plugin.trusted_inputs(files, view))
@@ -243,9 +244,15 @@ async def admit(root: Path, report_path: Path) -> int:
     }
     runner = PlanRunner(provider, lane="admission")
     # PCB-20-3: the declared baseline warning debt is a measured fact, not an annotation.
-    precheck["baseline-warning-debt"] = await _baseline_warning_debt(plugin, runner, manifest, files)
+    precheck["baseline-warning-debt"] = await _baseline_warning_debt(
+        plugin, runner, manifest, files
+    )
+    # ``CProfile.evaluate`` returns the C plugin's own ``ProfileResult`` model, whose fields are a
+    # superset of the shared ``plugins-api`` one, so the plugin really is an
+    # ``ExecutableLanguagePlugin``; only the nominal return type differs. Verified against the
+    # protocol's resolve/owner/evaluate by importing the plugin.
     engine = SuiteAdmission(
-        plugin,
+        cast("ExecutableLanguagePlugin", plugin),
         runner,
         image_digests=tuple(record.digest for record in images),
     )

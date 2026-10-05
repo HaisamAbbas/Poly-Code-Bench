@@ -48,9 +48,11 @@ def _read(relative: str) -> str:
 
 # Every scenario is an authored variant; `compile-error` is the reference with one statement
 # broken, which is the smallest edit that still compiles the header and fails the translation unit.
-_COMPILE_ERROR = _read("hidden/reference/src/top_words.cpp").replace(
-    "    if (ranked.size() > k) {", "    if (ranked.size() > k) {", 1
-).replace("ranked.resize(k);", "ranked.resize(k", 1)
+_COMPILE_ERROR = (
+    _read("hidden/reference/src/top_words.cpp")
+    .replace("    if (ranked.size() > k) {", "    if (ranked.size() > k) {", 1)
+    .replace("ranked.resize(k);", "ranked.resize(k", 1)
+)
 
 
 def _view(plugin: CppLanguagePlugin) -> tuple[Any, dict[str, bytes]]:
@@ -165,10 +167,10 @@ async def record(name: str, source: str, *, instrumented_argv: bool = False) -> 
         candidate_digest="sha256:" + "2" * 64,
         candidate_paths=(UNIT, HEADER),
     )
-    for plan in plugin.analysis_plans(context):
-        if instrumented_argv and plan.analyzer_id in {"asan", "tsan"}:
-            plan = _impossible_sanitizer(plan)
-        plans.append(plan)
+    for analysis in plugin.analysis_plans(context):
+        if instrumented_argv and analysis.analyzer_id in {"asan", "tsan"}:
+            analysis = _impossible_sanitizer(analysis)
+        plans.append(analysis)
     for plan in plans:
         run = await runner.run(plan, materialize_inputs(plan, sources), stage_id=f"cpp-rec-{name}")
         _store(name, plan, run)

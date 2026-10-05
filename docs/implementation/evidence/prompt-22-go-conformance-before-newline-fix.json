@@ -50,9 +50,9 @@
       "kind": "conformance_case_result",
       "category": "anti_pattern",
       "name": "defer-close-wrapped-error-errors-is-and-joined-goroutine-are-not-penalised",
-      "passed": true,
+      "passed": false,
       "expected": "deferred close, wrapped error, errors.Is, root context and a joined goroutine: perfect score, no findings",
-      "observed": "gate=pass score=10000 measured=[]"
+      "observed": "gate=fail score=10000 measured=[]"
     },
     {
       "schema_version": 1,
@@ -172,6 +172,6 @@
       "observed": "required=measured/1 owner=robustness item=measured/1 clean=measured/0"
     }
   ],
-  "passed": true,
-  "report_digest": "sha256:f0d700f87cc4992ef9a732a39889689987bf7f880589bd3872c599e8a36a32f6"
+  "passed": false,
+  "report_digest": "sha256:667ca47e3b463859198c89055264e9fb9908a56ba45cbdb752d483f3fcf0ecdc"
 }

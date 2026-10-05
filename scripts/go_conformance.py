@@ -80,7 +80,7 @@ func TopWords(text string, k int) []Count {
 \t}()
 \tgroup.Wait()
 
-\tline, err := bufio.NewReader(reader).ReadString('\n')
+\tline, err := bufio.NewReader(reader).ReadString('\\n')
 \tif err != nil && !errors.Is(err, io.EOF) {
 \t\treturn nil
 \t}

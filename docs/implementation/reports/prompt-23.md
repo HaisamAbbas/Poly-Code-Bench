@@ -32,3 +32,13 @@
 
 5. Exact next command or numbered prompt
    - Next: Auxiliary R1 — finish current Go conformance rerun; obtain current C/C++ task admission; author JavaScript and TypeScript task packs and run them through admission, solve, grading, scoring and replay; then re-enter Prompt 23. Prompt 24 remains gated until WP-19 and the Phase 4 aggregate gate pass.
+
+## Audit correction — 2026-10-05
+
+The Prompt 23 language audit is a historical snapshot. Later evidence records current JavaScript
+admission (25/25 checks across six authored variants) and C admission (29/29 checks across nine
+authored variants), both at development-sandbox tier: `prompt-19-js-admission.json` and
+`prompt-20-c-admission.json`. The original `prompt-23-language-audit.json` remains unchanged and
+its JavaScript 0/0 count is superseded. C++ still has no current sandbox admission, TypeScript has
+no task pack, and quality admission/curator freeze remain open. E2E-15/35 and the Phase 4 aggregate
+gate therefore remain partial/blocked.

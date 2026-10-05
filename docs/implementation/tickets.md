@@ -561,40 +561,40 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
-- Verification: `not_run` (not independently verified during Prompt 17).
+- Implementation: `implemented` (`packages/evaluation/src/polycodebench_evaluation/{performance.py,perfcontracts.py,efficiency.py}`, `PlanRunner.reserved_guest`).
+- Verification: `passed` at development tier — `tests/test_performance_plan.py` and `tests/test_efficiency.py` (16 tests, re-run green) plus `tests/test_performance_docker.py` in the pinned Python image. Hardware gate `blocked_shared_ci`: the dedicated/homogeneous-machine requirement is unmet on this host.
 - Required verification scope: E2E-19, plus the dedicated/homogeneous-hardware gate which is recorded as blocked on this host.
-- Evidence: `packages/evaluation/src/polycodebench_evaluation/perfcontracts.py`, `tests/test_performance_plan.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
+- Evidence: `tests/test_performance_plan.py`, `tests/test_performance_docker.py`, `docs/implementation/evidence/prompt-13-{e2e-19-paired,e2e-20-invalid-block,wrong-but-fast}.json`. Corrected 2026-10-03: these entries previously read `in_progress`/`not_run`, which was a Prompt 17 bookkeeping artifact — that prompt declined to audit another prompt's gate, and it was recorded here as if the gate had never run. Prompt 13's own report and its four Docker evidence artifacts show the gate did run. The hardware gate stays blocked and E2E-19/20 remain `not_run` overall.
 - Acceptance criteria: — Implement PerformancePlan validation, exclusive capacity/hardware matching, reference identity and output verification. DoD: candidate/reference use the same physical worker/allocation class, frozen workload/flags and equivalent runtime; instrumented builds cannot enter the speed lane.
 
 ## PCB-13-2 - Prompt 13: — Implement performance measurement
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
-- Verification: `not_run` (not independently verified during Prompt 17).
+- Implementation: `implemented` (`packages/evaluation/src/polycodebench_evaluation/performance.py`; randomized pair order derived from `(plan_seed, workload_seed, iteration)`, per-iteration retention, separate build timings).
+- Verification: `passed` at development tier — `tests/test_performance_docker.py` with real containers: one exclusive reservation for the whole window, guest-reported hardware identity, all three declared scales measured, 24 retained iterations, separate build timings. Hardware gate `blocked_shared_ci` as in PCB-13-1.
 - Required verification scope: E2E-19.
-- Evidence: `packages/evaluation/src/polycodebench_evaluation/performance.py`, `tests/test_performance_docker.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
+- Evidence: `tests/test_performance_docker.py`, `docs/implementation/evidence/prompt-13-e2e-19-paired.json`. Corrected 2026-10-03 from `in_progress`/`not_run`; see the PCB-13-1 note.
 - Acceptance criteria: — Implement randomized paired order, specified warmup/iteration counts, cold/steady-state modes and whole-process-tree memory recording. DoD: every iteration and input/environment identity is preserved, with compile time separately reported.
 
 ## PCB-13-3 - Prompt 13: — Implement performance measurement
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
-- Verification: `not_run` (not independently verified during Prompt 17).
+- Implementation: `implemented` (`packages/evaluation/src/polycodebench_evaluation/{performance.py,efficiency.py}`; canary on the trusted reference at the largest declared scale, frozen thresholds, at most two retained blocks, first-valid-block selection).
+- Verification: `passed` at development tier — `tests/test_efficiency.py` (9 golden/property tests) and `tests/test_performance_docker.py`: a faster block invalidated by its canary was rejected in favour of the earlier, slower valid block, proving no cherry-picking; a starved frozen baseline invalidates every block with `score: null`. Hardware gate `blocked_shared_ci`.
 - Required verification scope: E2E-20.
-- Evidence: `packages/evaluation/src/polycodebench_evaluation/efficiency.py`, `tests/test_efficiency.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
+- Evidence: `tests/test_efficiency.py`, `tests/test_performance_docker.py`, `docs/implementation/evidence/prompt-13-e2e-20-invalid-block.json`. Corrected 2026-10-03 from `in_progress`/`not_run`; see the PCB-13-1 note.
 - Acceptance criteria: — Implement canaries, frozen stability thresholds, bounded block retries and first-valid-block selection. DoD: noise invalidates the affected block consistently; the fastest rerun is never cherry-picked.
 
 ## PCB-13-4 - Prompt 13: — Implement performance measurement
 
 - Owner prompt: `13`.
 - Dependencies: sandbox/evaluation ·.
-- Implementation: `in_progress` (parallel prompt work is present in the shared workspace; Prompt 17 does not claim its acceptance gate).
-- Verification: `not_run` (not independently verified during Prompt 17).
+- Implementation: `implemented` (`packages/evaluation/src/polycodebench_evaluation/efficiency.py`; symmetric positive floors, median/MAD/relative-MAD, weighted geometric mean over basis-point weights, the documented `f(r,b)` transform, `E = 0.70·f(r_time,4) + 0.30·f(r_memory,2)`, censored-timeout bounds).
+- Verification: `passed` — `tests/test_efficiency.py` hand-evaluated golden values: ratio 2 / memory 1.5 → `61.666667`, ratio 1 / memory 1 → `100.000000`, ratio 1 / memory 2 → `70.000000`, a 5 s timeout against a 1 ms reference → lower bound 5000 → `30.000000`, a 2 ms timeout → `insufficient_information` with no score, a missing component → `EfficiencyError`. A censored bound is never reported as an exact duration.
 - Required verification scope: E2E-19, E2E-20.
-- Evidence: `packages/evaluation/src/polycodebench_evaluation/performance.py`, `tests/test_performance_plan.py`; parallel Prompt 13 work is present, but its ticket gate was not independently audited in Prompt 17.
+- Evidence: `tests/test_efficiency.py`, `tests/test_performance_plan.py`, `docs/implementation/evidence/prompt-13-wrong-but-fast.json` (a wrong-but-fast candidate is recorded `rejected_output` with `invalid_iterations` and no score). Corrected 2026-10-03 from `in_progress`/`not_run`; see the PCB-13-1 note.
 - Acceptance criteria: — Implement workload aggregation, ratio floors, weighted geometric means, variance and censored-timeout handling. DoD: a lower bound is not reported as an exact duration; the documented efficiency transform has golden checks and does not claim proof of Big-O.
 
 ## PCB-14-1 - Prompt 14: — Implement judging, review and calibration
@@ -911,9 +911,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `21`.
 - Dependencies: WP-19: WP-17.
-- Implementation: repaired the C++ build/output declarations, sanitizer and context evidence parsing, abnormal candidate-exit classification, compatible sanitizer lanes, fixture visibility, and typed performance smoke. The task now has eight authored synthetic variants; no concurrency/race fixture is claimed because the local TSan runtime cannot initialize.
+- Implementation: repaired the C++ build/output declarations, sanitizer and context evidence parsing, abnormal candidate-exit classification, compatible sanitizer lanes, fixture visibility, and typed performance smoke. The task now has eight authored synthetic variants; TSan is not required because the local runtime cannot initialize.
 - Verification: passed (development sandbox). Executable admission passed 27/27 checks; five reference repetitions matched; clang-tidy, cppcheck, context and ASan measured the reference and applicable defects; performance smoke passed. Quality admission remains pending.
-- Required verification scope: E2E-15 and E2E-35 remain partial; concurrency/race coverage, quality admission, curator/owner approval and downstream scoring/replay are pending.
+- Required verification scope: E2E-15 and E2E-35 remain partial; quality admission, curator/owner approval and downstream scoring/replay are pending.
 - Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp-admission-followup.json` (27/27, `development_sandbox`). No live benchmark result is claimed.
 - Acceptance criteria: — Admit runnable fixtures for valid alternatives, ownership/exception/resource/concurrency defects and timeouts. DoD: shared extension checks pass and expected evidence reaches the ordinary scorer/replay path.
 
@@ -1094,9 +1094,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `26`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 26 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (round-state, feedback-isolation and budget tests recorded).
 - Required verification scope: E2E-37.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/core/src/polycodebench_core/repair_contracts.py` (RepairProtocol/RepairLimits/RepairRound/RepairRun/RoundTicket, public-only RepairFeedback with HiddenFeedbackRejected, RepairSpend) and `repair_prompts.py` (policy pcb-repair-v1); tests `tests/test_repair_contracts.py` 13 passed, including `test_every_round_retains_candidate_prompt_feedback_and_cost` and `test_the_protocol_fixes_when_rounds_stop`; durable round records in `docs/implementation/evidence/prompt-26-e2e-37.json`.
 - Acceptance criteria: — Implement initial/repair-round state, allowed public feedback and fixed round/budget limits. DoD: every round retains its candidate, prompt, public feedback and cost; the protocol fixes when rounds stop.
 
 ## PCB-26-2 - Prompt 26: — Implement self-repair
@@ -1104,9 +1104,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `26`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 26 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (protocol selection without hidden-result access; initial/final outcomes distinct from cumulative cost).
 - Required verification scope: E2E-37.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `select_final`/`freeze_selection`/`metrics_of` in `repair_contracts.py` (selection is a pure function of the frozen rule and public results only; RepairMetrics records initial/final native correctness separately from cumulative tokens/cost); tests `tests/test_repair_contracts.py::test_final_selection_is_protocol_rule_not_hidden_best_of`, `tests/test_repair_session.py::test_e2e37_only_public_feedback_reaches_the_model` (hidden 0/2 initial vs 2/2 final on the protocol-selected artifact).
 - Acceptance criteria: — Implement final candidate selection without hidden-result access. DoD: final quality evaluates the protocol-selected artifact, never the best hidden-scoring round; initial/final native correctness and cumulative cost remain distinct.
 
 ## PCB-26-3 - Prompt 26: — Implement self-repair
@@ -1114,9 +1114,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `26`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 26 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (round-boundary checkpoint, redelivery and restart cases on real PostgreSQL).
 - Required verification scope: E2E-37.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/persistence/src/polycodebench_persistence/repair_state.py` (run-row round-boundary checkpoint under CAS, immutable repair_round/repair_delivery rows via migration `e5f6a7b8c9d0_repair_runs_and_rounds`), `solve_state.py` candidate revisions; tests `tests/test_repair_state_postgres.py` 5 passed (stale-frontier conflict, redelivery adds delivery and spend without a round, DB trigger keeps rounds immutable) and `tests/test_repair_session.py::test_e2e37_restart_during_a_repair_round_grants_no_extra_round` (restart consumes the persisted response once, no extra round, spend preserved).
 - Acceptance criteria: — Integrate durable checkpoints and infrastructure retries at round boundaries. DoD: recovering infrastructure does not grant additional repair rounds or erase spent budget.
 
 ## PCB-26-4 - Prompt 26: — Implement self-repair
@@ -1124,9 +1124,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `26`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 26 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (fixture matrix independently re-run; methodology records asserted).
 - Required verification scope: E2E-37.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: admitted pack `taskpacks/self-repair/py-listsort-v1` (family self_repair, methodology_label adapted; initial scaffold 2/3 public + 0/2 hidden with visible feedback; reference/alternative 5/5; faulty fails hidden-stability; quality_defective 5/5); `docs/implementation/self-repair-method.md` (native-versus-adapted record, LiveCodeBench self-repair scenario as native reference) and `docs/methodology/livecodebench.md`; tests `tests/test_repair_session.py::test_e2e37_hidden_outcomes_cannot_cause_another_model_call` prove hidden outcomes cannot cause another model call.
 - Acceptance criteria: — Add admitted self-repair fixtures and native-versus-adapted methodology records. DoD: visible feedback can drive the permitted repair, while hidden outcomes cannot cause another model call.
 
 ## PCB-27-1 - Prompt 27: — Implement repository understanding and factual Q&A
@@ -1134,9 +1134,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 27 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (pinned inputs, read/search-only protocol, answer envelope and retrieval logging tests recorded).
 - Required verification scope: E2E-38 Q&A variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/core/src/polycodebench_core/qa_contracts.py` (QaTaskInputs pinning base digest and snapshot paths; `validate_qa_protocol_tools` refusing every mutating tool; `parse_qa_answer` frozen envelope with claims quoting the answer and citations carrying the pinned digest; `RetrievalRecord`/`retrieval_records` logging context and truncation), `qa_prompts.py` (policy pcb-qa-v1), `config/protocols/repo-qa-v1.yaml` (list_files/read_file/search only); tests `tests/test_qa_contracts.py::{test_qa_protocols_are_read_search_only,test_retrieval_context_and_truncation_are_logged,test_question_inputs_pin_the_snapshot,test_citations_reference_the_base_snapshot_only}` (passed).
 - Acceptance criteria: — Implement pinned repo/question inputs, read/search-only solving and structured answers/citations. DoD: citations reference the base snapshot; editing is disabled for this protocol; retrieval context and truncation are logged.
 
 ## PCB-27-2 - Prompt 27: — Implement repository understanding and factual Q&A
@@ -1144,9 +1144,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 27 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (entailment judging through the real judge services; recall formula and native aggregation tests recorded).
 - Required verification scope: E2E-38 Q&A variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `qa_contracts.py` (versioned `QaOracle`/`AtomicFact` with weights and accepted paraphrases; `fact_credits` and `weighted_fact_recall` per Technical Spec 17.3; `native_presence_aggregation` preserved separately) and `packages/evaluation/src/polycodebench_evaluation/qa_grading.py` (`entailment_packet_input`, `entailment_votes` converting real `JudgementResult`s); rubric/panel `config/judging/qa-entailment-{rubric,panel}-v1.yaml`; tests `tests/test_qa_grading.py` (10 passed, incl. `::test_e2e38_missing_facts_zero_repetition_no_credit_and_empty_recall_zero` and `::test_e2e38_native_aggregation_is_preserved_separately_from_entailment`).
 - Acceptance criteria: — Implement atomic-fact oracles, accepted paraphrases and fixed entailment judging with preserved native adapter aggregation. DoD: missing facts get no credit, repeated facts add no credit and empty answers have fact recall zero.
 
 ## PCB-27-3 - Prompt 27: — Implement repository understanding and factual Q&A
@@ -1154,9 +1154,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 27 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (citation, grounding and claim diagnostics with explicit unknown states recorded).
 - Required verification scope: E2E-38 Q&A variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `qa_contracts.py` (`validate_citations`, frozen `claim-extraction-v1`, deterministic `contradiction-v1`, `claim_precision`/`grounding_rate`/`rate` keeping unknown as None) and `qa_grading.py` (`grade_qa` producing `QaMetrics` with `grounding_rate`, `unsupported_claims`/`contradicted_claims` and `code_dimensions: not_applicable`; `incomplete_verifications` naming the missing judgments); tests `tests/test_qa_grading.py::{test_e2e38_incomplete_verification_is_unknown_not_zero,test_e2e38_wrong_citations_are_invalid_and_grounding_unsupported_diagnostics_follow}` and `tests/test_qa_fixtures.py::test_six_code_dimensions_stay_not_applicable` (passed).
 - Acceptance criteria: — Implement citation validity, grounding and unsupported/contradicted-claim diagnostics with explicit unknown states. DoD: incomplete claim verification is not zero hallucinations; prose does not receive invented security/runtime/idiom scores.
 
 ## PCB-27-4 - Prompt 27: — Implement repository understanding and factual Q&A
@@ -1164,9 +1164,9 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `27`.
 - Dependencies: WP-20: WP-17.
 - Implementation: `implemented` (Prompt 27 deliverable completed).
-- Verification: `not_run` (no application implementation to verify).
+- Verification: `passed` (cross-file fixture matrix re-run through the real contracts; method records asserted).
 - Required verification scope: E2E-38 Q&A variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: admitted pack `taskpacks/qa/py-configkit-qa-v1` (family repo_qa, `inspired`; cross-file facts verified in `cfgkit/loader.py` and `cfgkit/interpolate.py`; versioned `hidden/oracle.json` with base-digest-tied verifying spans; variants: reference and paraphrased alternative both 100.000000 recall, wrong-citation all-citations-flagged with grounding 0, contradiction credited zero and counted, empty recall zero with undefined precision, repeated equals reference); `docs/implementation/qa-method.md` (DeepCodeBench-inspired boundary, native-versus-inspired table, explicit non-claims) and `docs/methodology/deepcodebench.md`; tests `tests/test_qa_fixtures.py` (8 passed).
 - Acceptance criteria: — Admit cross-file Q&A fixtures with verifying code spans, alternative correct wording, wrong citations and contradictions. DoD: source/method records accurately describe DeepCodeBench-inspired or native compatibility and all fact evidence is versioned.
 
 ## PCB-28-1 - Prompt 28: — Implement prediction suites and close Track B coverage
@@ -1234,7 +1234,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
 - Implementation: `implemented` (public/private route access controls and privacy projections are implemented; held-out references are redacted and released evidence is allowlisted by published content).
-- Verification: `partial` (local API ownership/privacy variants are exercised; PostgreSQL integration and production artifact-bucket/IAM denial remain unverified).
+- Verification: `partial` (local PostgreSQL ownership/persistence integration passes; production artifact-bucket/IAM denial remains unverified).
 - Required verification scope: E2E-25/26/28/39 API variants.
 - Evidence: `docs/implementation/reports/prompt-29.md`, `docs/implementation/reports/prompt-31.md`, `docs/implementation/reports/prompt-32.md`, and their public API/browser tests.
 - Acceptance criteria: — Complete administrative/API authorization, idempotency, optimistic concurrency, error taxonomy and publication/read access controls. DoD: permissions are enforced on every route/artifact; private identity probes cannot reveal hidden data or useful download tokens.
@@ -1243,8 +1243,8 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
-- Implementation: `partial` (API schemas, test-release fixtures and a maintained typed browser API client exist; generated OpenAPI/TypeScript client parity is not verified).
-- Verification: `partial` (typed client and release fixtures are exercised downstream; generator/server parity and full E2E-26 artifact/privacy cases remain open).
+- Implementation: `implemented` (the web DTOs and API operations are generated from the checked-in FastAPI OpenAPI snapshot).
+- Verification: `passed` for client/server parity (`pnpm api:types:check` plus the runtime OpenAPI snapshot test); full E2E-26 artifact/privacy cases remain open.
 - Required verification scope: E2E-25/26/28/39 API variants.
 - Evidence: `docs/implementation/reports/prompt-29.md`, `apps/web/src/lib/public-api.ts`, public API schemas and `tests/test_public_api_projections.py`.
 - Acceptance criteria: — Generate and validate OpenAPI/TypeScript clients and safe public response fixtures. DoD: schemas/client/server agree, and fixtures originate from real test-release generation with explicitly synthetic labels where appropriate.
@@ -1293,80 +1293,80 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `31`.
 - Dependencies: first pages/API ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`apps/web/src/app/compare/page.tsx`; API compatibility checks and exact task/card pairing in `packages/publication/src/polycodebench_publication/projections_query.py`). Requests accept two to four distinct released configurations, reject absent/mixed protocol and budget identities, and pair only task ID/version-matched public scorecards.
+- Verification: `passed` for the compatible A/C same-release three-task comparison, API-to-browser decimal equality, exact scorecard identities, and A/B protocol/budget incompatibility with no numeric comparison rows.
 - Required verification scope: E2E-26, E2E-39, E2E-40.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-31.md`; `docs/implementation/evidence/prompt-31/browser-results.json`, `comparison-desktop.png`, `comparison-mobile.png`; `tests/test_public_api_prompt31.py`.
 - Acceptance criteria: — Build 2–4 model comparison with compatibility feedback, common-task paired differences/intervals and configuration identities. DoD: the same visible task and release underpin code comparisons; incompatible budgets/protocols are not silently mixed.
 
 ## PCB-31-2 - Prompt 31: — Build comparison, task explorer and methodology pages
 
 - Owner prompt: `31`.
 - Dependencies: first pages/API ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`apps/web/src/app/tasks/`, bounded same-origin task-content handler, `LazyTaskContent`; source/diff text is escaped as inert React text, source and diff fields are each capped at 64 KiB, total task content is capped at 512,000 UTF-8 bytes, and summaries are paginated at 50 rows).
+- Verification: `passed` for lazy fetch after activation, keyboard activation, inert `<script>` diff text, public JSON export, pagination, and generic not-found/private-reference probes. E2E-26's public task/export/privacy subcases pass; artifact-storage downloads and production IAM checks remain outside this slice.
 - Required verification scope: E2E-26, E2E-39, E2E-40.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-31.md`; `docs/implementation/evidence/prompt-31/browser-results.json`, `task-detail-public-evidence.png`; `tests/test_public_api_prompt31.py`.
 - Acceptance criteria: — Implement bounded escaped source/diff views, task browsing, public statement/source versions, submitted patches and tool findings. DoD: uploads are inert, large payloads are lazy-loaded, and private/held-out candidates are never accidentally exposed.
 
 ## PCB-31-3 - Prompt 31: — Build comparison, task explorer and methodology pages
 
 - Owner prompt: `31`.
 - Dependencies: first pages/API ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`apps/web/src/app/scorecards/[scorecardId]/page.tsx`; released decimal strings, gate/missingness states, contribution weights/arithmetic, formula and metric definitions, and task/item/evidence links are shown from the API; private evidence references are redacted per task by the projection query).
+- Verification: `passed` for source-value equality, gated/N/A/missing/pending-review distinction, public evidence links and redacted-reference counts.
 - Required verification scope: E2E-26, E2E-39, E2E-40.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-31.md`; `docs/implementation/evidence/prompt-31/browser-results.json`, `scorecard-contribution-chain.png`; `tests/test_public_api_prompt31.py`.
 - Acceptance criteria: — Implement metric-to-task-to-item-to-evidence drilldowns with raw/gated values, effective weights, versioned formulas and redacted-private explanations. DoD: a user can reconstruct a public score from unrounded contributions within documented rounding.
 
 ## PCB-31-4 - Prompt 31: — Build comparison, task explorer and methodology pages
 
 - Owner prompt: `31`.
 - Dependencies: first pages/API ·.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`apps/web/src/app/methodology/[version]/page.tsx`; methodology requests are pinned to the selected release/version; correction history, native/adapted labels, limitations, withdrawal notice and successor links remain attached to historical release identity).
+- Verification: `passed` for pinned-version mismatch rejection, withdrawn predecessor/successor display and methodology content from the original release.
 - Required verification scope: E2E-26, E2E-39, E2E-40.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `docs/implementation/reports/prompt-31.md`; `docs/implementation/evidence/prompt-31/browser-results.json`, `frozen-methodology.png`, `withdrawal-and-successor.png`; `tests/test_public_api_prompt31.py`.
 - Acceptance criteria: — Build frozen methodology and correction/withdrawal views, native-versus-adapted labels and explicit limitations. DoD: historical URLs retain the original release identity and clearly identify successors/withdrawals.
 
 ## PCB-32-1 - Prompt 32: — Implement reviewed model submissions and close the public product phase
 
 - Owner prompt: `32`.
 - Dependencies: WP-22: WP-21; WP-23: WP-08, WP-21.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (`packages/api/src/polycodebench_api/submissions.py` validates metadata-only requests, binds verified account identity to request ownership, rejects extra secret/run-plan fields, rate-limits to five requests per hour by default, and preserves idempotent pending records; public create returns 201 and performs no run, endpoint contact, VM or model call).
+- Verification: `passed` at local API/browser fixture tier; owner-only status, mismatched email, unauthenticated, rate-limit, secret-schema and pending/no-network cases pass in `tests/test_public_api_prompt32.py` and `apps/web/tests/e2e/prompt32.spec.ts`.
 - Required verification scope: E2E-41; close E2E-25/26/39/40 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/api/src/polycodebench_api/submission_routes.py`, `submissions.py`, `tests/test_public_api_prompt32.py` (5 tests), and `docs/implementation/evidence/prompt-32/browser-results.json`. No live model call or spend was made.
 - Acceptance criteria: — Implement submitter identity/ownership, validated metadata, rate limits and pending/rejected/approved request states. DoD: a public request creates no model call, VM or automatic benchmark run and cannot carry provider secret values in the public schema.
 
 ## PCB-32-2 - Prompt 32: — Implement reviewed model submissions and close the public product phase
 
 - Owner prompt: `32`.
 - Dependencies: WP-22: WP-21; WP-23: WP-08, WP-21.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (review requires reviewer/admin RBAC plus MFA; endpoint registration stores a secret reference only; source permission review and approval pin an approved endpoint, concrete model/run configuration and finite budget; endpoint policy denies private/mixed DNS targets; approved requests are capped at 500 attempts).
+- Verification: `passed` at local API/service and PostgreSQL integration tiers. `tests/test_public_api_prompt32.py` covers role/MFA checks, malicious unapproved endpoint non-contact, private/mixed-address denial and bounded plans; `tests/test_public_api_submissions_postgres.py::test_approved_submission_recovers_one_bounded_postgres_run` registers and approves a synthetic endpoint through the API under the restricted database login. No provider endpoint is contacted.
 - Required verification scope: E2E-41; close E2E-25/26/39/40 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/services/src/polycodebench_services/{rbac.py,model_endpoints.py,runs.py}`, `packages/api/src/polycodebench_api/{submission_routes.py,app.py,postgres_submissions.py}`, `packages/persistence/src/polycodebench_persistence/{endpoints.py,runs.py}`, `packages/persistence/sql/{provision_roles.sql,grant_permissions.sql}`, `scripts/local_stack.py`, and the PostgreSQL integration test. Hosted OIDC registration and secret-store provisioning remain Prompt 33 deployment inputs.
 - Acceptance criteria: — Implement reviewer/admin endpoint/capability checks, source/permission records, secret-reference setup and explicit bounded run plans. DoD: SSRF/private-address rules hold and approval binds a concrete model/config/budget, not unlimited future evaluations.
 
 ## PCB-32-3 - Prompt 32: — Implement reviewed model submissions and close the public product phase
 
 - Owner prompt: `32`.
 - Dependencies: WP-22: WP-21; WP-23: WP-08, WP-21.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (approval is version-checked and idempotent, pins a digest of the exact endpoint/rights/run plan, creates one bounded authorized run through the existing run service, then exposes only safe owner status; run creation retains its existing budget/idempotency/audit path).
+- Verification: `passed` for synthetic API and PostgreSQL lifecycle: one bounded queued run is created; an injected failure after run creation recovers through the run idempotency record; repeated approval returns the same run; exact cost/token caps and one durable audit transition are verified; foreign owners receive generic 404. An unapproved malicious URL receives no contact or run in the companion API tests.
 - Required verification scope: E2E-41; close E2E-25/26/39/40 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `packages/api/src/polycodebench_api/{postgres_submissions.py,submission_routes.py}`, migration `a20c4e619d32_reviewed_model_submissions.py`, `packages/persistence/src/polycodebench_persistence/{runs.py,endpoints.py}`, role grants in `packages/persistence/sql/`, and `tests/test_public_api_submissions_postgres.py`. The local PostgreSQL 17.6 migration/bootstrap and approval integration passed; no live provider or spend was used.
 - Acceptance criteria: — Implement authorized run creation and submitter-safe status updates after approval. DoD: existing idempotency/budget/audit controls apply; repeated approval/request cannot create duplicate spending; other users cannot read the request.
 
 ## PCB-32-4 - Prompt 32: — Implement reviewed model submissions and close the public product phase
 
 - Owner prompt: `32`.
 - Dependencies: WP-22: WP-21; WP-23: WP-08, WP-21.
-- Implementation: `not_started` (no application source observed).
-- Verification: `not_run` (no application implementation to verify).
+- Implementation: `implemented` (the seventh submission page uses the published release context and typed API states, authenticates through generic OIDC with PKCE and a verified email, keeps its session in an HttpOnly cookie, never exposes a bearer token to browser code or accepts provider credentials, explains review/budget boundaries and supports request, error and owner-status states; no admin dashboard was added).
+- Verification: `passed` for the two Prompt 32 browser cases and full Prompt 30/31 regressions: 9 browser cases passed across 375px/1440px/1600px layouts, keyboard interaction, release-backed navigation, status/privacy/error, task evidence and lazy payload states.
 - Required verification scope: E2E-41; close E2E-25/26/39/40 variants.
-- Evidence: no implementation or acceptance evidence observed in the pre-Prompt-00 workspace; future evidence path/command is not yet established.
+- Evidence: `apps/web/src/app/model-submissions/`, same-origin bounded BFF routes in `apps/web/src/app/api/model-submissions/`, `apps/web/src/components/model-submission-form.tsx`, `apps/web/tests/e2e/prompt32.spec.ts`, and `docs/implementation/evidence/prompt-32/`. Development release fixtures are explicitly marked synthetic.
 - Acceptance criteria: — Build the seventh public page and review the complete seven-page product. DoD: request/error/status states work, public/admin/submitter permissions are tested server-side, and all pages use actual release data/contracts without placeholder features.
 
 ## PCB-33-1 - Prompt 33: — Harden deployment and rehearse operations
@@ -1384,7 +1384,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `33`.
 - Dependencies: all public-product/engine modules ·.
 - Implementation: `implemented` - `pcb-ops` (packages/operations): doctor, env validate/reconcile, migrate check/rehearse/upgrade (expand-only gate), workers drain, orphans sweep, artifacts collect-garbage; structured redacting JSON logs with correlation IDs and bounded metric catalog (`polycodebench_core.telemetry`) wired into the worker and `pcb-scheduler`; canonical alert rules `infra/observability/prometheus/alerts.yaml` (+ promtool tests), Grafana dashboard, AMP/CloudTrail alarms in IaC.
-- Verification: `failed` - drain/stale-commit drill PASS on PostgreSQL; promtool check+test PASS (11 rules); telemetry redaction tests PASS; migration rehearsal: empty->head and previous->head PASS with identical schemas, but `alembic check` FAILS on pre-existing repair_* drift (D-33-03) and the working tree has a branched history from the concurrent Prompt 32 migration (D-33-04); staging telemetry/alert delivery not run.
+- Verification: `partial` - drain/stale-commit drill PASS on PostgreSQL; promtool check+test PASS (11 rules); telemetry redaction tests PASS; migration rehearsal: empty->head and previous->head PASS on the recorded committed tree; `alembic heads` now has one head after Prompt 32 rebased `a20c4e619d32` onto `e5f6a7b8c9d0`. `alembic check` still FAILS on pre-existing repair_* drift (D-33-03); current-tree DB rehearsal and staging telemetry/alert delivery remain unverified.
 - Required verification scope: E2E-42, E2E-43.
 - Evidence: docs/implementation/evidence/prompt-33/migration-rehearsal.json, docs/implementation/evidence/prompt-33/migrate-check-working-tree.json; tests/test_operations_postgres.py, tests/test_operations_telemetry.py.
 - Acceptance criteria: — Implement validated deployment/configuration, migration/rollback/drain procedures, telemetry and required alerts. DoD: expanded schemas remain compatible, stale workers cannot commit, logs/metrics expose useful run IDs without leaking secrets/held-out content.

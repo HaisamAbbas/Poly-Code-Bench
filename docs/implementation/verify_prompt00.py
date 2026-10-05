@@ -53,7 +53,8 @@ if blocked_intervening:
     assert (
         exception.get("active_prompt") == f"{active:02d}"
         and exception.get("authorized_by_user") is True
-        and set(exception.get("blocked_prompts", [])) == {f"{number:02d}" for number in blocked_intervening}
+        and set(exception.get("blocked_prompts", []))
+        == {f"{number:02d}" for number in blocked_intervening}
     ), "blocked predecessors require an explicit independent-prompt authorization record"
 assert progress["prompt_statuses"][f"{active:02d}"] in {
     "not_started",

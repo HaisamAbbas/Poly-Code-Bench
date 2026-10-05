@@ -12,7 +12,7 @@ Prompt 17 / Phase 2 — BLOCKED
 3. Acceptance gates
    - Phase 2 aggregate gate: BLOCKED.
    - Pilot attempts: expected 144; completed 0; model-failed 0; infrastructure/pre-dispatch-blocked 144. Provider deliveries: 0. Thus there are no attempt outcomes to aggregate or replay.
-   - Pending gates include production isolation/worker admission, full task rights and quality admission/freeze, authorized model endpoints/configurations and prices, an active hard spend limit, a distinct calibrated judge and scoring policy, production persistence/object-store/supervisor configuration, and an authenticated run-start entrypoint. The shared progress ledger records Prompt 13 done and Prompts 14–15 partial; no Prompt 17 integrated run evidence is inferred from that status.
+  - Pending gates include production isolation/worker admission, full task rights and quality admission/freeze, authorized model endpoints/configurations and prices, an active hard spend limit, a distinct calibrated judge and scoring policy, production persistence/object-store/supervisor configuration, and an authenticated run-start entrypoint. Prompt 13 is done at development tier with its dedicated-hardware gate blocked; Prompts 14 and 17 remain partial/blocked. No Prompt 17 integrated run evidence is inferred from any prompt status.
    - Public ranking/publication is not part of this pilot and has not been authorized or attempted.
 
 4. Decisions or specification discrepancies recorded

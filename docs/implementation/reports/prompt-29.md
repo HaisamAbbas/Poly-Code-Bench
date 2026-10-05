@@ -6,9 +6,10 @@ Date: 2026-10-05  |  Phase 6  |  WP-21  |  E2E-25 / E2E-26 / E2E-28 / E2E-39
 
 The release-backed public API and projection surface is implemented and exercised by the Prompt
 30-32 public workflows. The public routes read published release projections; the public pages do
-not query worker or held-out tables. The UI currently uses a maintained typed client. Generated
-OpenAPI/TypeScript client parity and the full private-artifact/production IAM cases remain
-unverified, so WP-21 and E2E-26 are not closed.
+not query worker or held-out tables. At report time, the UI used a maintained typed client and
+generated OpenAPI/TypeScript parity was unverified. The 2026-10-06 follow-up below closes that
+client-sync gap; the full private-artifact/production IAM cases remain unverified, so WP-21 and
+E2E-26 are not closed.
 
 ### Implemented surface
 
@@ -48,14 +49,22 @@ unverified, so WP-21 and E2E-26 are not closed.
   complete standalone E2E-28 cohort matrix is not evidenced as a fresh Prompt 29 run.
 - **PCB-29-3:** Partial. Authorization, privacy and ownership have local API coverage; deployed
   artifact-bucket/IAM denial and PostgreSQL-backed integrations remain unverified.
-- **PCB-29-4:** Partial. A typed browser client and API schemas exist, but generated-client/server
-  parity is not independently verified. Release fixtures are explicitly synthetic internal data.
+- **PCB-29-4:** PASS in follow-up verification. REST schemas and web DTOs are generated from the
+  FastAPI OpenAPI snapshot, and a check command verifies both generated artifacts. Release
+  fixtures are explicitly synthetic internal data.
 - E2E-25/39 public flows have later local evidence. E2E-26 remains partial for binary artifacts
-  and production IAM policy. E2E-28 full matrix and generated-client parity remain open. No live
-  benchmark result is claimed.
+  and production IAM policy. E2E-28 full matrix remains open. No live benchmark result is claimed.
 
 ### Next
 
-Generate and validate API clients against the current OpenAPI schema, complete the public privacy
-and artifact IAM variants, and rerun the affected aggregate API/browser gates with the required
-PostgreSQL and deployment inputs.
+Complete the public privacy and artifact IAM variants, then rerun the affected aggregate
+API/browser gates with the required deployment inputs.
+
+### Follow-up verification (2026-10-06)
+
+`scripts/export_public_api_openapi.py` produces the checked-in FastAPI REST OpenAPI snapshot;
+`openapi-typescript` generates the web schemas from that snapshot. Pydantic serialization schemas
+now mark defaulted response fields as required while keeping request defaults optional. The web
+client aliases those generated response models and constrains public reads to generated GET
+responses. `tests/test_public_api_openapi.py`, `pnpm api:types:check`, web typecheck/build/lint,
+Ruff, and strict mypy pass. The full private-artifact/production IAM gate remains open.

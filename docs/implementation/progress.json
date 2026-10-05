@@ -1,9 +1,9 @@
 {
     "schema_version":  1,
     "project":  "PolyCodeBench",
-    "last_completed_prompt":  "30",
-    "active_prompt":  "31",
-    "active_scope":  "Prompt 30 complete: release-backed leaderboard, language diagnostics and model profile built from published projections; four Prompt 30 browser cases and the focused API/projection suite pass. Full E2E-39/40 remain partial pending Prompt 31/32 comparison, task, methodology, seventh-page and large-list/load variants.",
+    "last_completed_prompt":  "32",
+    "active_prompt":  "33",
+    "active_scope":  "Prompt 32 complete: reviewed model submissions, seven public workflows, owner-safe status and bounded approval are implemented. Local browser/API evidence, PostgreSQL-backed approval/run recovery and generated REST client parity pass; Phase 6 remains blocked on broader administrative-role coverage, production privacy/IAM and declared-load checks. Next: Prompt 33.",
     "phase_status":  {
                          "phase_0":  "done",
                          "phase_1":  "done",
@@ -11,12 +11,12 @@
                          "phase_3":  "blocked",
                          "phase_4":  "blocked",
                          "phase_5":  "not_started",
-                         "phase_6":  "not_started",
+                         "phase_6":  "blocked",
                          "phase_7":  "blocked",
                          "phase_8":  "not_started"
                      },
-    "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20: all seven Track B families implemented (Prompts 24-28). Prompt 27 Q&A: polycodebench_core/{qa_contracts,qa_prompts}.py (pcb-qa-v1, read/search-only repo-qa-v1 protocol), polycodebench_evaluation/qa_grading.py, config/judging/qa-entailment-{rubric,panel}-v1.yaml, admitted cross-file fixture taskpacks/qa/py-configkit-qa-v1 and docs/implementation/qa-method.md. Prompt 28 implemented: plugins/suites/swebench prediction contracts and graders, config/protocols/prediction-v1.yaml, pcb-prediction-v1 prompt policy, two admitted task packs under taskpacks/prediction/, the Track B coverage audit and reports/suite-coverage.md.",
-    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prompt 27: 32 Q&A tests passed (14 contracts, 10 grading incl. the real judge-service entailment flow and adversarial citation/judge fixtures, 8 fixture-matrix); regression 187 passed / 12 skipped (PCB_TEST_DOCKER-gated) over the Q&A, judging and solving suites; ruff/format clean, mypy clean on changed modules, schema export check PASS. Prior: Prompt 26 22 repair tests; Prompt 25 30 repo-task tests; Prompt 24 23 swebench suite tests. Prompt 28: 21 E2E-38 tests plus the 22 remaining suite tests pass under uv run pytest -q plugins/suites/swebench/tests; ruff check and ruff format pass; mypy strict passes on 9 suite source files; evidence regenerated from a real run at docs/implementation/evidence/prompt-28-e2e38.json with wp20_closed true.",
+    "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20: all seven Track B families implemented (Prompts 24-28). Prompt 27 Q&A: polycodebench_core/{qa_contracts,qa_prompts}.py (pcb-qa-v1, read/search-only repo-qa-v1 protocol), polycodebench_evaluation/qa_grading.py, config/judging/qa-entailment-{rubric,panel}-v1.yaml, admitted cross-file fixture taskpacks/qa/py-configkit-qa-v1 and docs/implementation/qa-method.md. Prompt 28 implemented: plugins/suites/swebench prediction contracts and graders, config/protocols/prediction-v1.yaml, pcb-prediction-v1 prompt policy, two admitted task packs under taskpacks/prediction/, the Track B coverage audit and reports/suite-coverage.md. Prompt 30 implemented: release-backed leaderboard, language diagnostics and model profile in apps/web. Prompt 31 adds exact release/cohort comparisons, paginated disclosed task browsing, lazy inert public task content and JSON export, redacted scorecard contribution drilldowns, and historical-release methodology/correction views. Prompt 32 adds metadata-only submissions, verified identity/ownership, reviewer/admin gates, bounded idempotent approval, PostgreSQL storage wiring, and the release-backed submission page.",
+    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prompt 27: 32 Q&A tests passed; Prompt 28: 21 E2E-38 tests plus 22 suite tests passed with ruff/format and strict mypy. Prompt 30: four Playwright browser cases, optimized Next build, typecheck/lint and 24 focused API tests passed. Prompt 31: three Playwright cases passed for E2E-39 navigation, E2E-26 task privacy/export and E2E-40 keyboard/responsive/pagination; Prompt 30 regression Playwright suite 4/4 passed; 27 focused API/projection/release tests passed; optimized Next build, web typecheck/lint and scoped Ruff/format checks passed. Prompt 32: API suite 32/32 passed; Prompt 32 browser 2/2, Prompt 31 3/3, Prompt 30 4/4; Next build, web typecheck/lint, Ruff/format, migration single-head check and git diff check passed. Follow-up 2026-10-05: `tests/test_public_api_submissions_postgres.py` passed 3/3 on a disposable migrated local PostgreSQL database using `pcb_local_api` for HTTP/repository calls and a separate migration identity; covered per-subject concurrent rate limits, idempotent owner reads, authenticated create/reject routes, RLS isolation and durable audit events. The test database was removed.",
     "source_manifest":  "docs/implementation/source-manifest.json",
     "blockers_or_open_inputs":  [
                                     "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
@@ -30,7 +30,7 @@
                                     "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
                                     "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
                                     "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
-                                    "Public API, page, download and export privacy routes are not implemented; full E2E-26 remains pending",
+                                    "E2E-26 binary artifact-download routing and production IAM/bucket-policy denial remain unverified after Prompt 31 public task/scorecard/privacy/export subcases passed",
                                     "E2E-04 production execution and E2E-27 public/cohort filter variants remain with Prompts 16-17; the generic evaluator-worker variant passed in Prompt 12 at development tier only",
                                     "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
                                     "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
@@ -129,12 +129,12 @@
                                          "docs/implementation/evidence/prompt-30/model-not-found.png"
                                      ],
                                      "e2e_status": {
-                                         "E2E-39": "partial; Prompt 30 release, filter, language, model and scorecard subcases passed; comparison/task journey pending Prompts 31/32",
-                                         "E2E-40": "partial; Prompt 30 statuses, answer-only, keyboard and viewport subcases passed; all-seven-page and large-list/load cases pending Prompts 31/32"
+                                         "E2E-39": "passed for leaderboard→model→comparison→task→score evidence, API/browser scalar equality and incompatible-cohort feedback; model-submission flow passes Prompt 32 browser coverage",
+                                         "E2E-40": "partial; Prompt 30/31 states, keyboard, narrow/wide viewport, lazy payload and 64-task pagination cases pass; submission-page keyboard/error/responsive variants pass; declared-load run remains open"
                                      }
                                  }
 },
-    "exact_next_action":  "Next: Prompt 31 ? Build comparison, task explorer and methodology pages.",
+    "exact_next_action":  "Next: Prompt 33 — Harden deployment and rehearse operations.",
     "prompt_statuses":  {
                             "00":  "done",
                             "01":  "done",
@@ -165,10 +165,10 @@
                             "26":  "not_started",
                             "27":  "not_started",
                             "28":  "done",
-                            "29":  "not_started",
+                            "29":  "partial",
                             "30":  "done",
-                            "31":  "not_started",
-                            "32":  "not_started",
+                            "31":  "done",
+                            "32":  "done",
                             "33":  "blocked",
                             "34":  "not_started"
                         },
@@ -884,10 +884,51 @@
         "E2E-40": "Prompt 30 browser subcases passed; complete scenario remains partial"
     },
     "pending": [
-        "Prompt 31/32 comparison/task/methodology/seventh page and large-task-list/load browser variants"
+        "Phase 6 residuals: broader E2E-25 administrative-role matrix, production artifact/IAM denial and declared-load rehearsal"
     ],
     "no_live_benchmark_results_claimed": true
 },
+    "prompt_31_completion": {
+        "date": "2026-10-04",
+        "status": "done",
+        "report": "docs/implementation/reports/prompt-31.md",
+        "browser_results": "docs/implementation/evidence/prompt-31/browser-results.json",
+        "tickets": {
+            "PCB-31-1": "implemented and verified: release-pinned 2–4 comparison, exact shared task versions, paired API values and typed protocol/budget incompatibility",
+            "PCB-31-2": "implemented and verified: bounded paginated task metadata, lazy escaped sources/diffs/findings and safe disclosed-task JSON export",
+            "PCB-31-3": "implemented and verified: metric/task/item/evidence drilldown, exact source values/weights/formulas and per-task private-reference redaction",
+            "PCB-31-4": "implemented and verified: frozen release-pinned methodology, native/adapted labels, correction/withdrawal notice and successor links"
+        },
+        "e2e": {
+            "E2E-26": "partial overall; public task/scorecard hidden-ID and curated task-export probes passed, artifact binary route and production IAM remain",
+            "E2E-39": "passed for the public analysis journey from leaderboard through model, comparison, task and score evidence",
+            "E2E-40": "partial overall; affected missingness, keyboard, viewport, lazy-payload and 64-task pagination cases passed; submission-page keyboard/error/responsive variants pass; declared-load run remains open"
+        },
+        "submission_page": "implemented; Prompt 32 browser request/status/error paths passed against explicitly synthetic release data",
+        "no_live_benchmark_results_claimed": true
+    },
+    "prompt_32_completion": {
+        "date": "2026-10-04",
+        "status": "done",
+        "report": "docs/implementation/reports/prompt-32.md",
+        "browser_results": "docs/implementation/evidence/prompt-32/browser-results.json",
+        "tickets": {
+            "PCB-32-1": "metadata-only request, verified submitter ownership, five-per-hour default limit, idempotency and pending/rejected/approved states implemented",
+            "PCB-32-2": "MFA reviewer/admin authorization, endpoint secret references, rights review, SSRF policy and finite pinned run plans implemented",
+            "PCB-32-3": "synthetic bounded approval/run flow and PostgreSQL submission/endpoint/approval/run recovery, owner isolation and audit integration pass locally",
+            "PCB-32-4": "release-backed submission page, typed request/error/status and responsive keyboard flow implemented"
+        },
+        "e2e": {
+            "E2E-25": "local API role/MFA/owner variants and PostgreSQL-backed submission route/RLS/audit cases pass; broader role/run routes remain partial",
+            "E2E-26": "public task/export/owner-status privacy probes pass; binary artifact route and production IAM remain partial",
+            "E2E-39": "passed for leaderboard-to-evidence and leaderboard-to-submission/status journeys",
+            "E2E-40": "page/accessibility/responsive/pagination cases pass; declared-load rehearsal remains partial",
+            "E2E-41": "synthetic bounded request-to-approved-run/status lifecycle and PostgreSQL-backed create/reject/owner status/endpoint/run approval recovery pass locally; production IAM and full role-matrix cases remain open"
+        },
+        "no_live_benchmark_results_claimed": true,
+        "no_live_spend_or_provider_contact": true,
+        "phase_6_aggregate_gate": "blocked"
+    },
     "prompt_33_completion":  {
       "date": "2026-10-04",
       "status": "blocked",
@@ -916,10 +957,8 @@
       },
       "blockers": [
         "No authorized staging AWS account/region, approved monthly cap (proposed USD 600 + 150 one-off), operator SSO principals, state backend, domain/certificates, approved guest AMI or service image digests: staging deployment and E2E-42/43 staging variants not run",
-        "D-33-03: alembic check fails at HEAD on Prompt 26 repair_* model/schema drift",
-        "D-33-04: working tree migration history is branched by concurrent Prompt 32 revision a20c4e619d32 (down_revision f17b6b04a237)",
         "16 expired local development guests (provider local-default) found by dry-run sweep; not reclaimed because they belong to other sessions' work"
       ],
-      "next_action": "Owner authorizes staging (docs/operations/staging-execution-plan.md section 1), D-33-03/D-33-04 are resolved, then run section 2-3 of the plan; otherwise Prompt 34 per explicit user authorization with Phase 7 recorded as blocked."
+      "next_action": "Staging remains blocked until the owner supplies an AWS account/region, SSO principals, state backend, deployment inputs and approved spend threshold. D-33-03/D-33-04 now pass local migration checks; then run staging plan sections 2-3."
     }
 }

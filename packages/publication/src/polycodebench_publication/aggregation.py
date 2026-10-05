@@ -18,7 +18,7 @@ from typing import Annotated, Any, Literal, Union, get_args, get_origin
 
 from polycodebench_core.canonical import canonical_document_digest, canonical_json_bytes
 from polycodebench_core.models import ContractModel, EvaluationState, Gate, Scorecard
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 Positive = Annotated[int, Field(gt=0)]
 
@@ -36,9 +36,9 @@ def _decimal(value: str) -> Decimal:
 class PublicationModel(ContractModel):
     """Base for contracts that are written to and read back from JSON.
 
-    ``ContractModel`` is strict so a number cannot arrive as a string. JSON has no tuples, so the
-    before validator converts JSON arrays only for fields declared as tuples. Scalar validation
-    remains strict, and unknown fields are still forbidden.
+    ``ContractModel`` is strict so a number cannot arrive as a string. The before validator
+    converts arrays only for fields declared as tuples; JSON datetime strings are parsed by their
+    field validators, and other scalar validation remains strict.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
@@ -124,6 +124,16 @@ class CohortTask(PublicationModel):
     weight: Positive = 1
     applicable_metrics: tuple[str, ...] = ("total_score", "pass_rate")
     earliest_public_at: datetime | None = None
+
+    @field_validator("earliest_public_at", mode="before")
+    @classmethod
+    def parse_exposure_timestamp(cls, value: Any) -> Any:
+        if not isinstance(value, str):
+            return value
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as error:
+            raise ValueError("invalid exposure timestamp") from error
 
     @model_validator(mode="after")
     def valid_exposure(self) -> CohortTask:

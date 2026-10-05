@@ -1,5 +1,6 @@
 """Synthetic internal behavior fixtures; these are not model benchmark results."""
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -24,6 +25,30 @@ from polycodebench_publication.aggregation import (
     observation_from_scorecard,
     paired_comparison,
 )
+from pydantic import ValidationError
+
+
+def test_strict_publication_json_mode_parses_datetime_and_tuple_arrays() -> None:
+    document = {
+        "kind": "cohort_task",
+        "task_id": "python-json-roundtrip",
+        "language": "python",
+        "stratum": "ordinary",
+        "cluster_id": "cluster-json-roundtrip",
+        "applicable_metrics": ["total_score"],
+        "earliest_public_at": "2026-01-01T00:00:00Z",
+    }
+
+    parsed = CohortTask.model_validate_json(json.dumps(document))
+    assert parsed.earliest_public_at == datetime(2026, 1, 1, tzinfo=UTC)
+    assert parsed.applicable_metrics == ("total_score",)
+
+    # Parsing the declared timestamp representation does not relax other strict scalar fields.
+    invalid_weight = {**document, "weight": "2"}
+    with pytest.raises(ValidationError, match="invalid exposure timestamp"):
+        CohortTask.model_validate({**document, "earliest_public_at": "not-a-timestamp"})
+    with pytest.raises(ValidationError, match="valid integer"):
+        CohortTask.model_validate(invalid_weight)
 
 
 def cohort(

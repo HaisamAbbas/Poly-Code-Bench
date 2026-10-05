@@ -27,6 +27,7 @@ from polycodebench_evaluation.track_a import (
     evaluate_repair,
     mutate_source,
     score_detection,
+    track_a_review_subject_digest,
     validate_source_admission,
 )
 from polycodebench_plugins_api import ExecutionPlan, ExitSemantics, ResourcePolicy
@@ -38,6 +39,18 @@ pytestmark = pytest.mark.skipif(
     os.environ.get("PCB_TEST_DOCKER") != "1",
     reason="real Docker integration tests are opt-in (PCB_TEST_DOCKER=1)",
 )
+
+
+class _FixtureReviewVerifier:
+    def __init__(self, subject_digest: str, edge_digests: set[str]) -> None:
+        self.subject_digest = subject_digest
+        self.edge_digests = edge_digests
+
+    def verify_edge(self, edge: MatchEdge, subject_digest: str) -> bool:
+        return subject_digest == self.subject_digest and edge.content_digest() in self.edge_digests
+
+    def verify_disposition(self, disposition: Any, subject_digest: str) -> bool:
+        return False
 
 
 def _write_evidence(name: str, body: dict[str, Any]) -> None:
@@ -433,10 +446,20 @@ def test_e2e_34_combined_patch_uses_fresh_candidate_and_independent_evaluator() 
         explanation_facts=(10000, 10000, 10000, 10000),
         evidence_id="fixture:review-packet",
     )
+    detection_findings = (reported_finding,)
+    detection_bugs = (known_bug,)
+    review_context = "fixture:docker-e2e34/evaluation-1"
     detection = score_detection(
-        findings=(reported_finding,),
-        bugs=(known_bug,),
+        findings=detection_findings,
+        bugs=detection_bugs,
         edges=(accepted_edge,),
+        review_verifier=_FixtureReviewVerifier(
+            track_a_review_subject_digest(
+                detection_findings, detection_bugs, review_context=review_context
+            ),
+            {accepted_edge.content_digest()},
+        ),
+        review_context=review_context,
     )
 
     async def run() -> tuple[RepairResult, Any]:

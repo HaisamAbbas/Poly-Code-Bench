@@ -55,7 +55,10 @@ def main(argv: list[str] | None = None) -> int:
     validate.add_argument("--base", type=Path, required=True)
     validate.add_argument("--input", type=Path, required=True)
     validate.add_argument("--max-findings", type=int, default=20)
-    score = subparsers.add_parser("score-detection", help="score an adjudicated sample JSON record")
+    score = subparsers.add_parser(
+        "score-detection",
+        help="score a sample; reviewer decisions fail closed without a trusted verifier",
+    )
     score.add_argument("--input", type=Path, required=True)
     source = subparsers.add_parser(
         "validate-source", help="validate task provenance and rights evidence"
@@ -86,11 +89,16 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "score-detection":
             body = json.loads(args.input.read_text(encoding="utf-8"))
             result = score_detection(
-                findings=tuple(Finding.model_validate(v) for v in body["findings"]),
-                bugs=tuple(OracleBug.model_validate(v) for v in body["bugs"]),
-                edges=tuple(MatchEdge.model_validate(v) for v in body.get("edges", [])),
+                findings=tuple(
+                    Finding.model_validate_json(json.dumps(v)) for v in body["findings"]
+                ),
+                bugs=tuple(OracleBug.model_validate_json(json.dumps(v)) for v in body["bugs"]),
+                edges=tuple(
+                    MatchEdge.model_validate_json(json.dumps(v)) for v in body.get("edges", [])
+                ),
                 dispositions=tuple(
-                    FindingDisposition.model_validate(v) for v in body.get("dispositions", [])
+                    FindingDisposition.model_validate_json(json.dumps(v))
+                    for v in body.get("dispositions", [])
                 ),
                 schema_valid=bool(body.get("schema_valid", True)),
                 duplicate_of=tuple(tuple(v) for v in body.get("duplicate_of", [])),

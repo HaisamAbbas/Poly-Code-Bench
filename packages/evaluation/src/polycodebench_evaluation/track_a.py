@@ -16,7 +16,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, Protocol
 
 from polycodebench_core.canonical import (
     canonical_digest,
@@ -916,6 +916,36 @@ def _maximum_matching(
     )
 
 
+class TrackAReviewVerifier(Protocol):
+    """Trusted boundary for reviewer decisions used by Track A scoring.
+
+    Implementations must verify reviewer authority, the immutable review record, and the cited
+    evidence against the supplied subject digest. A reviewer ID or hash-chain entry by itself is
+    not proof of authorization. The orchestration layer supplies this boundary; the evaluation
+    package intentionally has no permissive default verifier.
+    """
+
+    def verify_edge(self, edge: MatchEdge, subject_digest: str) -> bool: ...
+
+    def verify_disposition(self, disposition: FindingDisposition, subject_digest: str) -> bool: ...
+
+
+def track_a_review_subject_digest(
+    findings: Sequence[Finding], bugs: Sequence[OracleBug], *, review_context: str
+) -> str:
+    """Identify the exact finding/oracle pair and immutable evaluation being reviewed."""
+    if not review_context.strip():
+        raise ValueError("review context must identify the immutable evaluation")
+    return canonical_digest(
+        {
+            "kind": "track_a_review_subject",
+            "review_context": review_context,
+            "findings": [finding.model_dump(mode="json") for finding in findings],
+            "bugs": [bug.model_dump(mode="json") for bug in bugs],
+        }
+    )
+
+
 def score_detection(
     *,
     findings: Sequence[Finding],
@@ -924,6 +954,8 @@ def score_detection(
     dispositions: Sequence[FindingDisposition] = (),
     schema_valid: bool = True,
     duplicate_of: Sequence[tuple[str, str]] = (),
+    review_verifier: TrackAReviewVerifier | None = None,
+    review_context: str | None = None,
 ) -> DetectionResult:
     if not schema_valid:
         return DetectionResult(
@@ -932,7 +964,7 @@ def score_detection(
             false_positive=0,
             false_negative=len(bugs),
             unresolved_findings=0,
-            duplicate_count=len(duplicate_of),
+            duplicate_count=0,
             precision=None,
             recall=Decimal(0) if bugs else None,
             f1=Decimal(0) if bugs else None,
@@ -943,27 +975,81 @@ def score_detection(
             edge_digests=tuple(e.content_digest() for e in edges),
             reasons=("invalid_findings_schema",),
         )
-    duplicates = {duplicate for duplicate, _ in duplicate_of}
-    duplicates.update(d.finding_id for d in dispositions if d.disposition == "duplicate")
+    if review_verifier is not None and not (review_context and review_context.strip()):
+        raise ValueError("trusted review verification requires an immutable evaluation context")
+    review_subject = (
+        track_a_review_subject_digest(findings, bugs, review_context=review_context)
+        if review_context
+        else None
+    )
+    review_unverified = False
+    verified_edges: list[MatchEdge] = []
+    for edge in edges:
+        if edge.decision != "accepted" or not edge.causal_equivalent:
+            continue
+        if review_verifier is None or review_subject is None:
+            review_unverified = True
+            continue
+        try:
+            verified = review_verifier.verify_edge(edge, review_subject)
+        except Exception:
+            verified = False
+        if verified is True:
+            verified_edges.append(edge)
+        else:
+            review_unverified = True
+
+    verified_dispositions: list[FindingDisposition] = []
+    for disposition in dispositions:
+        if disposition.disposition == "unverified":
+            verified_dispositions.append(disposition)
+            continue
+        if review_verifier is None or review_subject is None:
+            review_unverified = True
+            continue
+        try:
+            verified = review_verifier.verify_disposition(disposition, review_subject)
+        except Exception:
+            verified = False
+        if verified is True:
+            verified_dispositions.append(disposition)
+        else:
+            review_unverified = True
+
+    # Duplicate suppression is safe only for the deterministic exact
+    # semantic/location duplicates derived from the submitted findings. A
+    # caller-supplied mapping must never let a reviewer decision be forged.
+    canonical_duplicate_of = canonicalize_findings(findings)[1]
+    if duplicate_of and set(duplicate_of) != set(canonical_duplicate_of):
+        raise ValueError("duplicate mapping must match deterministic finding canonicalization")
+    duplicates = {duplicate for duplicate, _ in canonical_duplicate_of}
     all_finding_ids = {finding.local_id for finding in findings}
+    if len(all_finding_ids) != len(findings):
+        raise ValueError("finding identifiers must be unique")
+    for disposition in verified_dispositions:
+        if disposition.disposition == "duplicate":
+            target = disposition.duplicate_of
+            if target not in all_finding_ids or target == disposition.finding_id:
+                raise ValueError("reviewed duplicate must reference another finding in the sample")
+    duplicates.update(d.finding_id for d in verified_dispositions if d.disposition == "duplicate")
     if not duplicates <= all_finding_ids:
         raise ValueError("duplicate mapping references an unknown finding")
     active_findings = [f for f in findings if f.local_id not in duplicates]
     finding_ids = {f.local_id for f in active_findings}
     bug_ids = {b.bug_id for b in bugs}
-    if len(finding_ids) != len(active_findings) or len(bug_ids) != len(bugs):
-        raise ValueError("finding and bug identifiers must be unique")
+    if len(bug_ids) != len(bugs):
+        raise ValueError("bug identifiers must be unique")
     for edge in edges:
         if edge.finding_id not in finding_ids or edge.bug_id not in bug_ids:
             raise ValueError(
                 "match edge references a finding or bug outside the immutable task sample"
             )
-    accepted_edges = [e for e in edges if e.decision == "accepted" and e.causal_equivalent]
+    accepted_edges = verified_edges
     pairs = _maximum_matching(active_findings, bugs, accepted_edges)
     matched_findings = {f for f, _ in pairs}
     matched_bugs = {b for _, b in pairs}
-    dispositions_by_id = {d.finding_id: d for d in dispositions}
-    if len(dispositions_by_id) != len(dispositions):
+    dispositions_by_id = {d.finding_id: d for d in verified_dispositions}
+    if len(dispositions_by_id) != len(verified_dispositions):
         raise ValueError("duplicate finding disposition")
     unresolved = sum(
         finding.local_id not in matched_findings
@@ -1007,6 +1093,11 @@ def score_detection(
         explain_total += Decimal(sum(edge.explanation_facts)) / 400
         severity_total += _severity_score(finding, bug)
     denominator = len(bugs)
+    reasons: list[str] = []
+    if pending:
+        reasons.append("unresolved_findings_block_strict_precision_and_f1")
+    if review_unverified:
+        reasons.append("review_authority_or_evidence_not_verified")
     return DetectionResult(
         status="pending_review" if pending else "complete",
         true_positive=tp,
@@ -1022,7 +1113,7 @@ def score_detection(
         severity=Decimal(severity_total) / denominator if denominator else None,
         matched_pairs=pairs,
         edge_digests=tuple(e.content_digest() for e in edges),
-        reasons=("unresolved_findings_block_strict_precision_and_f1",) if pending else (),
+        reasons=tuple(reasons),
     )
 
 
@@ -1144,6 +1235,7 @@ def rematch_cohort(
     reports: Sequence[AdjudicatedFindingSample],
     *,
     expected_evaluation_ids: Sequence[str],
+    review_verifier: TrackAReviewVerifier | None = None,
 ) -> CohortRematch:
     """Re-score every declared sample against one new immutable oracle or fail closed."""
     expected = tuple(sorted(set(expected_evaluation_ids)))
@@ -1160,6 +1252,8 @@ def rematch_cohort(
                 dispositions=by_id[evaluation_id].dispositions,
                 schema_valid=by_id[evaluation_id].schema_valid,
                 duplicate_of=by_id[evaluation_id].duplicate_of,
+                review_verifier=review_verifier,
+                review_context=evaluation_id,
             ),
         )
         for evaluation_id in expected
@@ -1187,6 +1281,8 @@ def revise_ground_truth(
 
 @dataclass(frozen=True, slots=True)
 class ReviewLedger:
+    """Tamper-evident event ordering only; it does not authenticate actors or authorize scores."""
+
     events: tuple[ReviewEvent, ...] = ()
 
     def append(

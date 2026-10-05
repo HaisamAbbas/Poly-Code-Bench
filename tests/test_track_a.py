@@ -6,6 +6,7 @@ import json
 import os
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from polycodebench_core.canonical import canonical_digest, canonical_envelope
@@ -34,6 +35,7 @@ from polycodebench_evaluation.track_a import (
     revise_ground_truth,
     score_detection,
     source_requirement_report,
+    track_a_review_subject_digest,
     validate_source_admission,
 )
 from polycodebench_evaluation.track_a_cli import main as track_a_main
@@ -121,6 +123,42 @@ def disposition(fid: str, kind: str = "false_positive") -> FindingDisposition:
     )
 
 
+class _FixtureReviewVerifier:
+    """Test-only allowlist representing an already authenticated review service."""
+
+    def __init__(
+        self,
+        *,
+        edge_approvals: set[tuple[str, str]] | None = None,
+        disposition_approvals: set[tuple[str, str]] | None = None,
+    ) -> None:
+        self.edge_approvals = edge_approvals or set()
+        self.disposition_approvals = disposition_approvals or set()
+
+    def verify_edge(self, review_edge: MatchEdge, subject_digest: str) -> bool:
+        return (subject_digest, review_edge.content_digest()) in self.edge_approvals
+
+    def verify_disposition(
+        self, review_disposition: FindingDisposition, subject_digest: str
+    ) -> bool:
+        return (subject_digest, review_disposition.content_digest()) in self.disposition_approvals
+
+
+def _trusted_fixture_reviewer(
+    *,
+    findings: tuple[Finding, ...],
+    bugs: tuple[OracleBug, ...],
+    review_context: str,
+    edges: tuple[MatchEdge, ...] = (),
+    dispositions: tuple[FindingDisposition, ...] = (),
+) -> _FixtureReviewVerifier:
+    subject_digest = track_a_review_subject_digest(findings, bugs, review_context=review_context)
+    return _FixtureReviewVerifier(
+        edge_approvals={(subject_digest, item.content_digest()) for item in edges},
+        disposition_approvals={(subject_digest, item.content_digest()) for item in dispositions},
+    )
+
+
 def test_e2e_32_duplicate_tp_does_not_change_tp_fp_fn_or_micro_scores() -> None:
     submitted = [
         finding("tp"),
@@ -144,12 +182,24 @@ def test_e2e_32_duplicate_tp_does_not_change_tp_fp_fn_or_micro_scores() -> None:
     )
     assert parsed.valid and parsed.patch is not None
     assert parsed.duplicate_of == (("duplicate", "tp"),)
+    selected_bugs = (bug(), bug("B-2", start=6, end=6, taxonomy="resource exhaustion"))
+    selected_edges = (edge("tp"),)
+    selected_dispositions = (disposition("false"),)
+    context = "fixture:e2e-32/model-a/sample-0"
     result = score_detection(
         findings=parsed.findings,
-        bugs=(bug(), bug("B-2", start=6, end=6, taxonomy="resource exhaustion")),
-        edges=(edge("tp"),),
-        dispositions=(disposition("false"),),
+        bugs=selected_bugs,
+        edges=selected_edges,
+        dispositions=selected_dispositions,
         duplicate_of=parsed.duplicate_of,
+        review_verifier=_trusted_fixture_reviewer(
+            findings=parsed.findings,
+            bugs=selected_bugs,
+            review_context=context,
+            edges=selected_edges,
+            dispositions=selected_dispositions,
+        ),
+        review_context=context,
     )
     assert (result.true_positive, result.false_positive, result.false_negative) == (1, 1, 1)
     assert result.precision == result.recall == result.f1 == Decimal("0.5")
@@ -210,8 +260,19 @@ def test_e2e_33_oracle_revision_requires_cohort_wide_rematching() -> None:
         )
         for evaluation_id in rematch.required_rematches
     )
+    edge_approvals: set[tuple[str, str]] = set()
+    for report in source_reports:
+        subject_digest = track_a_review_subject_digest(
+            report.findings, revision.bugs, review_context=report.evaluation_id
+        )
+        edge_approvals.update(
+            (subject_digest, reviewed_edge.content_digest()) for reviewed_edge in report.edges
+        )
     rematched = rematch_cohort(
-        revision, source_reports, expected_evaluation_ids=rematch.required_rematches
+        revision,
+        source_reports,
+        expected_evaluation_ids=rematch.required_rematches,
+        review_verifier=_FixtureReviewVerifier(edge_approvals=edge_approvals),
     )
     reports = [
         (evaluation_id.split("/")[0], outcome.true_positive, outcome.false_negative, outcome.f1)
@@ -246,7 +307,22 @@ def test_e2e_33_oracle_revision_requires_cohort_wide_rematching() -> None:
 
 
 def test_e2e_34_failed_repair_is_separate_and_clean_control_has_no_repair_score() -> None:
-    detection = score_detection(findings=(finding("tp"),), bugs=(bug(),), edges=(edge("tp"),))
+    detection_findings = (finding("tp"),)
+    detection_bugs = (bug(),)
+    detection_edges = (edge("tp"),)
+    detection_context = "fixture:e2e-34/model-a/sample-0"
+    detection = score_detection(
+        findings=detection_findings,
+        bugs=detection_bugs,
+        edges=detection_edges,
+        review_verifier=_trusted_fixture_reviewer(
+            findings=detection_findings,
+            bugs=detection_bugs,
+            review_context=detection_context,
+            edges=detection_edges,
+        ),
+        review_context=detection_context,
+    )
     failed_repair = RepairResult(
         status="evaluated",
         repair_required=True,
@@ -344,12 +420,118 @@ def test_finding_schema_failure_discards_every_finding_and_records_reason() -> N
 
 
 def test_overbroad_span_is_not_exact_but_same_function_gets_70() -> None:
+    findings = (finding("wide", start=1, end=3),)
+    bugs = (bug(),)
+    edges = (edge("wide"),)
+    context = "fixture:overbroad-span/model-a/sample-0"
     result = score_detection(
-        findings=(finding("wide", start=1, end=3),),
-        bugs=(bug(),),
-        edges=(edge("wide"),),
+        findings=findings,
+        bugs=bugs,
+        edges=edges,
+        review_verifier=_trusted_fixture_reviewer(
+            findings=findings,
+            bugs=bugs,
+            review_context=context,
+            edges=edges,
+        ),
+        review_context=context,
     )
     assert result.localization == 70
+
+
+def test_untrusted_review_edges_and_dispositions_fail_closed() -> None:
+    finding_value = finding("claim")
+    bug_value = bug()
+    edge_value = edge("claim")
+    result = score_detection(
+        findings=(finding_value,),
+        bugs=(bug_value,),
+        edges=(edge_value,),
+        dispositions=(disposition("claim", "false_positive"),),
+    )
+    assert result.status == "pending_review"
+    assert result.true_positive == result.false_positive == 0
+    assert result.false_negative == result.unresolved_findings == 1
+    assert "review_authority_or_evidence_not_verified" in result.reasons
+
+
+def test_review_approval_is_bound_to_its_evaluation_and_verifier_failure_is_closed() -> None:
+    findings = (finding("claim"),)
+    bugs = (bug(),)
+    edges = (edge("claim"),)
+    reviewer = _trusted_fixture_reviewer(
+        findings=findings,
+        bugs=bugs,
+        review_context="evaluation-original",
+        edges=edges,
+    )
+
+    replayed = score_detection(
+        findings=findings,
+        bugs=bugs,
+        edges=edges,
+        review_verifier=reviewer,
+        review_context="evaluation-replayed",
+    )
+    assert replayed.status == "pending_review" and replayed.true_positive == 0
+
+    class BrokenVerifier:
+        def verify_edge(self, edge: MatchEdge, subject_digest: str) -> bool:
+            raise RuntimeError("review store unavailable")
+
+        def verify_disposition(self, disposition: FindingDisposition, subject_digest: str) -> bool:
+            raise RuntimeError("review store unavailable")
+
+    unavailable = score_detection(
+        findings=findings,
+        bugs=bugs,
+        edges=edges,
+        review_verifier=BrokenVerifier(),
+        review_context="evaluation-original",
+    )
+    assert unavailable.status == "pending_review" and unavailable.true_positive == 0
+    assert "review_authority_or_evidence_not_verified" in unavailable.reasons
+
+    class MalformedVerifier:
+        def verify_edge(self, edge: MatchEdge, subject_digest: str) -> Any:
+            return object()
+
+        def verify_disposition(self, disposition: FindingDisposition, subject_digest: str) -> bool:
+            return False
+
+    malformed = score_detection(
+        findings=findings,
+        bugs=bugs,
+        edges=edges,
+        review_verifier=MalformedVerifier(),
+        review_context="evaluation-original",
+    )
+    assert malformed.status == "pending_review" and malformed.true_positive == 0
+
+
+def test_score_detection_cli_does_not_trust_reviewer_ids_from_raw_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    finding_value = finding("claim")
+    record: dict[str, Any] = {
+        "findings": [finding_value.model_dump(mode="json")],
+        "bugs": [bug().model_dump(mode="json")],
+        "edges": [edge("claim").model_dump(mode="json")],
+        "dispositions": [],
+    }
+    input_path = tmp_path / "raw-review.json"
+    input_path.write_text(json.dumps(record), encoding="utf-8")
+
+    assert track_a_main(["score-detection", "--input", str(input_path)]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "pending_review"
+    assert result["true_positive"] == 0 and result["false_negative"] == 1
+    assert "review_authority_or_evidence_not_verified" in result["reasons"]
+
+    record["duplicate_of"] = [["claim", "invented-canonical-finding"]]
+    input_path.write_text(json.dumps(record), encoding="utf-8")
+    assert track_a_main(["score-detection", "--input", str(input_path)]) == 2
+    assert "duplicate mapping must match" in capsys.readouterr().err
 
 
 def test_patch_application_is_fresh_allowlisted_and_protected() -> None:

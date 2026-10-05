@@ -2,19 +2,25 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from collections import Counter
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from threading import Barrier
 from uuid import uuid4
 
+import httpx
 import pytest
 from migration_support import require_migrated_through
+from polycodebench_api.app import create_app
+from polycodebench_api.auth import ApiPrincipal, TokenDirectory
 from polycodebench_api.errors import ApiError
 from polycodebench_api.postgres_submissions import PostgresSubmissionStore
 from polycodebench_api.submissions import SubmissionRate
 from polycodebench_persistence.database import Database
+from polycodebench_publication.releases import ReleaseStore
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
 
@@ -164,3 +170,116 @@ def test_submitter_database_role_is_scoped_and_supports_idempotent_retry() -> No
         assert forbidden.value.code == "NOT_FOUND"
     finally:
         role_engine.dispose()
+
+
+def test_authenticated_submission_routes_use_postgres_roles(tmp_path: Path, engine: Engine) -> None:
+    """Exercise submit, reviewer reject and owner status through the PostgreSQL app adapter."""
+    del engine  # The fixture verifies the dedicated database revision before app startup.
+    database = Database(_test_database_url())
+    release_store = ReleaseStore(Path(str(tmp_path)) / "submission-routes.sqlite3")
+    tokens = TokenDirectory(
+        {
+            "route-submitter-token-000001": ApiPrincipal(
+                "route-owner",
+                frozenset({"submitter"}),
+                email="route-owner@example.org",
+                email_verified=True,
+            ),
+            "route-other-token-0000001": ApiPrincipal(
+                "route-other",
+                frozenset({"submitter"}),
+                email="route-other@example.org",
+                email_verified=True,
+            ),
+            "route-reviewer-token-00001": ApiPrincipal(
+                "route-reviewer",
+                frozenset({"reviewer"}),
+                mfa=True,
+            ),
+        }
+    )
+    app = create_app(
+        store=release_store,
+        cursor_key=b"prompt32-postgres-route-test-key-000",
+        tokens=tokens,
+        persistence_database=database,
+    )
+
+    async def verify() -> str:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            created = await client.post(
+                "/v1/model-submissions",
+                headers={
+                    "Authorization": "Bearer route-submitter-token-000001",
+                    "Idempotency-Key": "route-submit-32-1",
+                },
+                json={
+                    "kind": "model_submission_input",
+                    "model_name": "PostgreSQL route fixture",
+                    "provider": "Fixture Provider",
+                    "contact_email": "route-owner@example.org",
+                    "endpoint_url": "https://models.example.org/v1",
+                    "source_url": "https://models.example.org/model-card",
+                    "source_license": "test-only permission",
+                    "permission_attested": True,
+                },
+            )
+            assert created.status_code == 201
+            submission_id = created.json()["data"]["submission_id"]
+            assert created.json()["data"]["status"] == "pending"
+            assert "secret_ref" not in created.text
+
+            review_headers = {"Authorization": "Bearer route-reviewer-token-00001"}
+            queue = await client.get("/v1/admin/model-submissions", headers=review_headers)
+            assert queue.status_code == 200
+            assert any(row["submission_id"] == submission_id for row in queue.json()["data"])
+
+            rejected = await client.post(
+                f"/v1/admin/model-submissions/{submission_id}/reject",
+                headers={**review_headers, "Idempotency-Key": "route-reject-32-1"},
+                json={
+                    "reason": "Rejected by the PostgreSQL route integration fixture.",
+                    "expected_version": 0,
+                },
+            )
+            assert rejected.status_code == 200
+            assert rejected.json()["data"]["status"] == "rejected"
+
+            own_status = await client.get(
+                f"/v1/model-submissions/{submission_id}",
+                headers={"Authorization": "Bearer route-submitter-token-000001"},
+            )
+            assert own_status.status_code == 200
+            assert own_status.json()["data"]["status"] == "rejected"
+            foreign_status = await client.get(
+                f"/v1/model-submissions/{submission_id}",
+                headers={"Authorization": "Bearer route-other-token-0000001"},
+            )
+            assert foreign_status.status_code == 404
+            return submission_id
+
+    try:
+        submission_id = asyncio.run(verify())
+        audit_engine = create_engine(
+            _migration_check_url(_test_database_url()), hide_parameters=True
+        )
+        try:
+            with audit_engine.connect() as connection:
+                actions = (
+                    connection.execute(
+                        text(
+                            "SELECT action FROM audit_event "
+                            "WHERE resource_type = 'model_submission' AND resource_id = :id "
+                            "ORDER BY action"
+                        ),
+                        {"id": submission_id},
+                    )
+                    .scalars()
+                    .all()
+                )
+            assert actions == ["model_submission.create", "model_submission.reject"]
+        finally:
+            audit_engine.dispose()
+    finally:
+        database.dispose()

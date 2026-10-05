@@ -476,9 +476,9 @@ The complete task admission is deliberately rerun after any fixture byte changes
 binds the sealed package digest. Python/Rust Prompt 10/11 image evidence is reused only as historical
 evidence; current shared contracts are checked locally. E2E-15/35 remain partial until TypeScript
 has a task pack and C++ has current sandbox admission. Java performance remains unmeasured. The
-latest Go conformance report is 17/18 and fails the benign-sample candidate gate; its digest is
-`sha256:667ca47e3b463859198c89055264e9fb9908a56ba45cbdb752d483f3fcf0ecdc`. Re-run it in a working
-Docker sandbox after fixing the candidate gate.
+corrected Go conformance report passes 18/18 in the development Docker sandbox; its digest is
+`sha256:f0d700f87cc4992ef9a732a39889689987bf7f880589bd3872c599e8a36a32f6`. The previous 17/18
+failure is preserved at `docs/implementation/evidence/prompt-22-go-conformance-before-newline-fix.json`.
 
 ## Go (Prompt 22)
 

@@ -14,14 +14,14 @@
    - After adding an explicit JS/TS zero-manifest guard, uv run pytest -q tests/test_language_extension_audit.py: PASS, 7 tests.
    - uv run pytest -q tests/test_c_plugin.py: PASS, 29 tests. uv run pytest -q tests/test_cpp_profile.py tests/test_cpp_locks.py: PASS, 78 tests.
    - Ruff over the changed Java/C++/audit paths: PASS. Ruff over scripts/go_conformance.py and tests/test_language_extension_audit.py: PASS. uv run mypy plugins/languages/java/src/polycodebench_lang_java: PASS, 16 source files. Java pinned recipe/JIT check: PASS.
-   - The prior Go conformance report was 17/18 because its benign sample called Close on strings.Reader and remains preserved at docs/implementation/evidence/prompt-22-go-conformance-first-attempt.json. The latest saved report is also 17/18: its sole failure is the benign sample candidate gate (`gate=fail score=10000 measured=[]`). The fixture changed, but no passing corrected rerun is available. Go admission remains separately 24/24.
+   - At this report's original audit snapshot, Go admission was 24/24 and the latest conformance report was 17/18. The earlier Close-on-strings.Reader attempt remains at docs/implementation/evidence/prompt-22-go-conformance-first-attempt.json. A later audit correction reran conformance after escaping the Go newline rune in the Python bytes literal; the corrected result passes 18/18 and is recorded in docs/implementation/evidence/prompt-22-go-conformance.json.
    - Reused, explicitly historical evidence: Python 14/14 at docs/implementation/evidence/prompt-10-conformance.json and Rust 16/16 at docs/implementation/evidence/prompt-11-conformance.json. They were not rerun because the pinned image work is expensive; current adapter contracts are covered by the local suite.
    - Not run: current C++ full sandbox admission (local task/plan contracts pass); a TypeScript task admission (no TypeScript task pack exists); Java performance measurement (the fixture declares no performance workload); full-workspace pytest and production-worker execution. Current JavaScript (25/25) and C (29/29) development-sandbox admission artifacts are recorded separately in Prompt 19/20 reports. No model calls or publication occurred.
 
 3. Acceptance gates
    - Satisfied: PCB-23-1 pinned recipes, offline dependency closure and fixed JVM modes; PCB-23-2 Java analyzers and probe outcomes through shared runner/observation contracts; PCB-23-3 Java profile and all eight declared fixture variants admitted. Java executable evidence is development-sandbox evidence, not a scored benchmark result.
-   - Partial: PCB-23-4 / WP-19. C++ lacks current sandbox admission; TypeScript lacks a task pack; latest Go conformance fails 1/18 although Go admission passes 24/24. Plugin registration and image identities are not counted as task conformance.
-   - E2E-15: PARTIAL. Historical Python/Rust evidence, current Go/JavaScript/C/Java admission exist; C++ execution and the TypeScript task path remain unverified, and the latest Go conformance artifact fails 1/18.
+   - Partial: PCB-23-4 / WP-19. C++ lacks current sandbox admission and TypeScript lacks a task pack. Go admission passes 24/24 and its corrected conformance passes 18/18; plugin registration and image identities are not counted as full task-path conformance.
+   - E2E-15: PARTIAL. Historical Python/Rust evidence and current Go/JavaScript/C/Java admission exist; C++ execution and the TypeScript task path remain unverified.
    - E2E-35: PARTIAL. Java's profile and contextual probes pass, and JS/TS applicability is distinct locally; required language/variant coverage is incomplete.
    - Phase 4 aggregate gate: BLOCKED on complete current language conformance.
    - Phase 2 aggregate gate remains BLOCKED: 144 expected attempts, 0 completed, 0 model-failed, 144 infrastructure/pre-dispatch-blocked, 0 provider deliveries. Missing provider authorization/configurations, an active hard budget, distinct calibrated judges, production workers and a run-start route remain recorded in prompt-17-preflight.json.
@@ -42,3 +42,13 @@ authored variants), both at development-sandbox tier: `prompt-19-js-admission.js
 its JavaScript 0/0 count is superseded. C++ still has no current sandbox admission, TypeScript has
 no task pack, and quality admission/curator freeze remain open. E2E-15/35 and the Phase 4 aggregate
 gate therefore remain partial/blocked.
+
+## Audit correction — Go inline fixture — 2026-10-05
+
+The Go benign-sample case previously failed because Python consumed the newline escape in its bytes
+literal, emitting a real newline inside Go's rune literal. The source now doubles the backslash so
+Go receives its `\n` rune token. A focused regression test passes, and the full Docker conformance
+run passes 18/18 in the development sandbox. The pre-correction 17/18 report is retained at
+`docs/implementation/evidence/prompt-22-go-conformance-before-newline-fix.json`. This fixes that
+conformance finding only: C++ admission, a TypeScript task pack, complete E2E-15/35 coverage and
+Phase 4 remain open.

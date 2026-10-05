@@ -96,7 +96,7 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 19 | Prompt 19 | — Add JavaScript and TypeScript support | WP-19, part 1 | Separate JavaScript and TypeScript support | partial (JS/TS source plugins and entrypoints exist; no allowlist entries, task packs or complete images) |
 | 20 | Prompt 20 | — Add C support | WP-19, part 2 | C support | partial (local C plugin/plans/fixtures exist; fresh image admission unverified) |
 | 21 | Prompt 21 | — Add C++ support | WP-19, part 3 | C++ support | partial (local C++ plugin/plans/fixtures exist; fresh image admission unverified) |
-| 22 | Prompt 22 | — Add Go support | WP-19, part 4 | Go support | partial (plugin, pinned recipes, profiles, task pack and 24/24 executable admission pass; latest saved conformance artifact fails 1/18 on the benign-sample candidate gate; rerun unavailable without Docker) |
+| 22 | Prompt 22 | — Add Go support | WP-19, part 4 | Go support | partial (plugin, pinned recipes, profiles, task pack, 24/24 executable admission and 18/18 development-sandbox conformance pass; Go tool identity cleanup remains) |
 | 23 | Prompt 23 | - Add Java and close language coverage | WP-19, part 5 | Java support and complete language coverage audit | partial (Java implementation, pinned images and development-sandbox admission are complete; all-language conformance remains incomplete) |
 | 24 | Prompt 24 | — Implement repository repair benchmark adapters | WP-20, part 1 | SWE-style/native repository repair adapter | done (E2E-36 passed at the local-fixture tier through the pinned upstream evaluator; no official dataset instance imported) |
 | 25 | Prompt 25 | — Implement realistic repository tasks | WP-20, part 2 | Independently curated realistic repository tasks | not_started |
@@ -111,4 +111,4 @@ Phase-ending prompts are **00, 05, 17, 18, 23, 28, 32, 33 and 34**. They must in
 | 34 | Prompt 34 | — Perform the final integrated audit and repair pass | All WP-01–24 | Final integrated audit and verified repair pass | not_started |
 
 - Prompt 23: PARTIAL. Java recipes, profiles, task fixtures and local shared-contract audit are implemented; current image identity and complete eight-language conformance remain blocked. See `reports/prompt-23.md`, `reports/language-coverage.md` and the Phase 4 gate report.
-- Phase 4 aggregate gate: BLOCKED. E2E-15 and E2E-35 remain partial until JS/TS identities, task packs and Docker execution are admitted and the required Docker-backed image/admission evidence is current.
+- Phase 4 aggregate gate: BLOCKED. E2E-15 and E2E-35 remain partial because C++ admission and TypeScript task-backed execution are missing, Python/Rust evidence is historical, and Go still has tool identity cleanup and downstream path evidence outstanding.

@@ -1004,7 +1004,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `23`.
 - Dependencies: WP-19: WP-17.
 - Implementation: partial (all eight plugin/image identities are audited, JS and TS semantics are distinct, and an allowlist writer that dropped languages plus a C++ analyzer identity defect were fixed).
-- Verification: partial (JavaScript, C, Go and Java have current development-sandbox admissions; C++ lacks current sandbox admission and TypeScript has no task pack; latest Go conformance is 17/18 with one failed benign-sample gate; E2E-15 and E2E-35 remain partial).
+- Verification: partial (JavaScript, C, Go and Java have current development-sandbox admissions; Go admission passes 24/24 and corrected conformance passes 18/18; C++ lacks current sandbox admission and TypeScript has no task pack; E2E-15 and E2E-35 remain partial).
 - Required verification scope: E2E-15, E2E-35 for all required languages.
 - Evidence: See `tests/test_language_extension_audit.py`, `docs/implementation/reports/language-coverage.md`, and `docs/implementation/evidence/prompt-23-language-audit.json`.
 - Acceptance criteria: — Audit Python, Rust, JS, TS, C, C++, Go and Java end to end through plugin registration, task admission, solve output contracts, grading, scoring, replay and capability metadata. DoD: every required language has actual conformance evidence, separate JS/TS semantics, and no missing core path hidden by a capability label.

@@ -1,0 +1,56 @@
+{
+  "realm": "polycodebench-local",
+  "enabled": true,
+  "displayName": "PolyCodeBench Local Development",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "clients": [
+    {
+      "clientId": "polycodebench-web",
+      "name": "PolyCodeBench local web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:3001/auth/callback"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:3001"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://127.0.0.1:3001/*"
+      },
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "roles",
+        "web-origins"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "local-submitter",
+      "enabled": true,
+      "firstName": "Local",
+      "lastName": "Submitter",
+      "email": "local-submitter@example.test",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "__LOCAL_SUBMITTER_PASSWORD__",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Local self-hosted website
 
-This is the no-cloud, loopback-only development stack. It uses the repository's PostgreSQL and SeaweedFS containers plus Keycloak for a real local OIDC login. The UI release rows are generated `synthetic_internal` data used for development; they are not benchmark results. The sample submitter is verified only inside the local test realm. No provider endpoint is called and no model run is created by submitting a request.
+This is the no-cloud, loopback-only development stack. It uses the repository's PostgreSQL and SeaweedFS containers plus Keycloak for a real local OIDC login. The UI reads signed `synthetic_internal` release snapshots from PostgreSQL; they are authored display data, not benchmark results. The source release store, local signing key and public keyring stay under ignored `.cache/`. The sample submitter is verified only inside the local test realm. No provider endpoint is called and no model run is created by submitting a request.
 
 Do not expose these containers to the LAN or internet. Keycloak runs in development mode over HTTP, and the generated reviewer token is a trusted local development identity rather than proof of production MFA. Do not reuse `.env` values in another environment.
 
@@ -16,7 +16,7 @@ uv run --locked --group dev python scripts/local_stack.py bootstrap-db
 uv run --locked --group dev python scripts/local_stack.py seed
 ```
 
-`prepare` creates a gitignored `.env`, a Keycloak import file under `.cache/`, and a local-only identity fingerprint file. Passwords and signing keys are random and are not printed. The local submitter username and password are in `.env`; keep that file private. PostgreSQL is migrated to the current Alembic head and grants are applied. The API connects as a database role scoped to public reads, submission, and the local review API.
+`prepare` creates a gitignored `.env`, a Keycloak import file under `.cache/`, and a local-only identity fingerprint file. Passwords and signing keys are random and are not printed. The local submitter username and password are in `.env`; keep that file private. PostgreSQL is migrated to the current Alembic head and grants are applied. The API connects as a database role scoped to public reads, submission, and the local review API. `seed` creates signed synthetic release documents, verifies them against the local keyring, and mirrors only the public snapshots into PostgreSQL using the separate publisher role. The API itself never receives that publisher credential.
 
 Keycloak's `polycodebench-local` realm uses the public `polycodebench-web` client with PKCE. The provider listens only on `127.0.0.1:8080`. Its data and `.env` must be retained together so the imported user's password and bootstrap administrator remain available across restarts.
 
@@ -61,15 +61,15 @@ uv run --locked --all-packages pcb-ops releases sync-publication `
   --target staging:test-board
 ```
 
-For a local rehearsal, load `.env` and point the CLI at its separately scoped publisher DSN:
+To repeat the local catalog sync, load `.env` and point the CLI at its separately scoped publisher DSN:
 
 ```powershell
 . .\scripts\load-local-env.ps1
 $env:PCB_DATABASE_URL = $env:PCB_PUBLISHER_DATABASE_URL
 uv run --locked --all-packages pcb-ops releases sync-publication `
-  --store .local/ops-rehearsal/source/releases.db `
-  --keyring .local/ops-rehearsal/source/keyring.json `
-  --target local:test-board
+  --store .cache/polycodebench-local-verified-release-store.sqlite3 `
+  --keyring .cache/polycodebench-local-keyring.json `
+  --target local:board
 ```
 
 The command copies only public release fields and publication timestamps; review, validation and approval records stay private. Replays are idempotent, published documents are immutable apart from a withdrawal notice, and the release pointer only advances. The Terraform task definition injects the API's database DSN and cursor key through Secrets Manager references. No live DNS, internet endpoint, cloud resource, or benchmark spend has been provisioned; an internet deployment still needs a host/account, a domain, HTTPS, and owner-approved operating limits.

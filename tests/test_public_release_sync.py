@@ -10,7 +10,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from polycodebench_core.application_errors import InvalidState
 from polycodebench_operations.release_sync import verified_publication_snapshot
-from polycodebench_publication.keyring import Keyring
+from polycodebench_publication.keyring import Keyring, public_key_b64
 from polycodebench_publication.projections_query import ReleaseContent
 from polycodebench_publication.releases import (
     ReleaseStore,
@@ -140,3 +140,18 @@ def test_production_api_refuses_task_local_sqlite_release_storage(monkeypatch):
 
     with pytest.raises(RuntimeError, match="shared PostgreSQL release catalog"):
         create_app(cursor_key=b"production-config-test-key-000000000000")
+
+
+def test_local_fixture_signer_reloads_without_committing_private_key_material(tmp_path):
+    from polycodebench_api.dev_fixture import _persistent_fixture_signer
+
+    private_key_path = tmp_path / "local-only" / "signer.pem"
+    keyring_path = tmp_path / "local-only" / "keyring.json"
+
+    first = _persistent_fixture_signer(private_key_path, keyring_path)
+    second = _persistent_fixture_signer(private_key_path, keyring_path)
+
+    assert public_key_b64(first) == public_key_b64(second)
+    keyring = json.loads(keyring_path.read_text(encoding="utf-8"))
+    assert "private_key" not in json.dumps(keyring)
+    assert "BEGIN PRIVATE KEY" not in keyring_path.read_text(encoding="utf-8")

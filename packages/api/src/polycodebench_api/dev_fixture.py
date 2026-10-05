@@ -7,6 +7,9 @@ must not be cited as benchmark measurements.
 from __future__ import annotations
 
 import argparse
+import json
+import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -639,7 +642,7 @@ def _task_contents() -> tuple[PublicTaskContent, ...]:
     return tuple(details)
 
 
-def create_synthetic_release(store: ReleaseStore) -> str:
+def create_synthetic_release(store: ReleaseStore, signer: SigningKey | None = None) -> str:
     """Publish a generated fixture through the real local release lifecycle."""
     principal = ReleasePrincipal(subject_id="local-ui-fixture", roles=frozenset({"administrator"}))
     policy_digest = digest({"policy": "synthetic-ui-fixture-v1"})
@@ -751,7 +754,7 @@ def create_synthetic_release(store: ReleaseStore) -> str:
     store.publish(
         principal,
         release_id,
-        SigningKey("synthetic-ui-fixture-key", Ed25519PrivateKey.generate()),
+        signer or SigningKey("synthetic-ui-fixture-key", Ed25519PrivateKey.generate()),
         int(pointer["generation"]),
         int(approved["version"]),
         f"publish-{draft_id}",
@@ -759,16 +762,74 @@ def create_synthetic_release(store: ReleaseStore) -> str:
     return release_id
 
 
+def _persistent_fixture_signer(private_key_path: Path, keyring_path: Path) -> SigningKey:
+    """Load or create an ignored local-only fixture key and its public verification keyring."""
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
+        load_pem_private_key,
+    )
+    from polycodebench_publication.keyring import Keyring, public_key_b64
+
+    key_id = "synthetic-local-fixture"
+    private_key_path.parent.mkdir(parents=True, exist_ok=True)
+    if not private_key_path.exists():
+        generated = Ed25519PrivateKey.generate()
+        private_bytes = generated.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
+        try:
+            descriptor = os.open(private_key_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            pass
+        else:
+            with os.fdopen(descriptor, "wb") as output:
+                output.write(private_bytes)
+            try:
+                os.chmod(private_key_path, 0o600)
+            except OSError:
+                # Windows ACLs inherit from the ignored .cache directory; the key is still never
+                # written into the tracked source tree.
+                pass
+    loaded = load_pem_private_key(private_key_path.read_bytes(), password=None)
+    if not isinstance(loaded, Ed25519PrivateKey):
+        raise RuntimeError("local synthetic release key is not Ed25519")
+    signer = SigningKey(key_id, loaded)
+
+    keyring = (
+        Keyring.from_document(json.loads(keyring_path.read_text(encoding="utf-8")))
+        if keyring_path.exists()
+        else Keyring()
+    )
+    entry = next((item for item in keyring.entries if item.key_id == key_id), None)
+    if entry is not None:
+        if entry.state != "active" or entry.public_key_b64 != public_key_b64(signer):
+            raise RuntimeError("local synthetic signer does not match its active keyring entry")
+    else:
+        keyring = keyring.rotate(signer, at=datetime.now(UTC).isoformat(timespec="seconds"))
+        keyring_path.parent.mkdir(parents=True, exist_ok=True)
+        keyring_path.write_text(json.dumps(keyring.document(), indent=2) + "\n", encoding="utf-8")
+    return signer
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--store", type=Path, required=True)
     parser.add_argument("--count", type=int, default=1)
+    parser.add_argument("--signing-key", type=Path)
+    parser.add_argument("--keyring", type=Path)
     arguments = parser.parse_args()
     if arguments.count < 1 or arguments.count > 5:
         parser.error("--count must be between 1 and 5")
+    if (arguments.signing_key is None) != (arguments.keyring is None):
+        parser.error("--signing-key and --keyring must be provided together")
     arguments.store.parent.mkdir(parents=True, exist_ok=True)
     store = ReleaseStore(arguments.store)
-    release_ids = tuple(create_synthetic_release(store) for _ in range(arguments.count))
+    signer = (
+        _persistent_fixture_signer(arguments.signing_key, arguments.keyring)
+        if arguments.signing_key is not None and arguments.keyring is not None
+        else None
+    )
+    release_ids = tuple(create_synthetic_release(store, signer) for _ in range(arguments.count))
     if len(release_ids) > 1:
         predecessor = store.get(release_ids[0])
         pointer = store.current()

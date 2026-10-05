@@ -21,6 +21,9 @@ ENV_PATH = ROOT / ".env"
 REALM_TEMPLATE = ROOT / "config" / "keycloak" / "polycodebench-local-realm.json"
 REALM_IMPORT_DIR = ROOT / ".cache" / "keycloak-import"
 IDENTITY_PATH = ROOT / ".cache" / "polycodebench-local-identities.json"
+PUBLIC_RELEASE_STORE = ROOT / ".cache" / "polycodebench-local-verified-release-store.sqlite3"
+PUBLIC_RELEASE_SIGNING_KEY = ROOT / ".cache" / "polycodebench-local-signing-key.pem"
+PUBLIC_RELEASE_KEYRING = ROOT / ".cache" / "polycodebench-local-keyring.json"
 LOCAL_DATABASE = "pcb_local_web_test"
 LOCAL_API_ROLE = "pcb_local_api"
 LOCAL_PUBLISHER_ROLE = "pcb_local_publisher"
@@ -38,6 +41,8 @@ REQUIRED_ENV = {
     "PCB_DATABASE_URL",
     "PCB_PUBLISHER_DATABASE_URL",
     "PCB_MIGRATION_DATABASE_URL",
+    "PCB_PUBLIC_RELEASE_BACKEND",
+    "PCB_PUBLICATION_TARGET",
     "PCB_RELEASE_STORE_PATH",
     "PCB_OIDC_ISSUER",
     "PCB_OIDC_CLIENT_ID",
@@ -65,16 +70,22 @@ def prepare() -> dict[str, str]:
     if ENV_PATH.exists():
         values = read_env()
         missing = sorted(REQUIRED_ENV - values.keys())
-        publisher_url_key = "PCB_PUBLISHER_DATABASE_URL"
-        if missing == [publisher_url_key]:
-            publisher_password = secrets.token_urlsafe(32)
-            publisher_url = (
-                f"postgresql+psycopg://{LOCAL_PUBLISHER_ROLE}:{publisher_password}"
-                f"@127.0.0.1:55432/{LOCAL_DATABASE}"
-            )
+        generated_defaults = {
+            "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
+            "PCB_PUBLICATION_TARGET": "local:board",
+        }
+        allowed_generated = set(generated_defaults) | {"PCB_PUBLISHER_DATABASE_URL"}
+        if missing and set(missing) <= allowed_generated:
+            additions = {key: value for key, value in generated_defaults.items() if key in missing}
+            if "PCB_PUBLISHER_DATABASE_URL" in missing:
+                publisher_password = secrets.token_urlsafe(32)
+                additions["PCB_PUBLISHER_DATABASE_URL"] = (
+                    f"postgresql+psycopg://{LOCAL_PUBLISHER_ROLE}:{publisher_password}"
+                    f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+                )
             with ENV_PATH.open("a", encoding="utf-8", newline="\n") as stream:
-                stream.write(f"{publisher_url_key}={publisher_url}\n")
-            values[publisher_url_key] = publisher_url
+                stream.writelines(f"{name}={value}\n" for name, value in sorted(additions.items()))
+            values.update(additions)
         elif missing:
             raise RuntimeError(
                 ".env already exists and was not changed; add the missing local settings: "
@@ -102,6 +113,8 @@ def prepare() -> dict[str, str]:
                 f"@127.0.0.1:55432/{LOCAL_DATABASE}"
             ),
             "PCB_MIGRATION_DATABASE_URL": f"{LOCAL_ADMIN_DSN}{LOCAL_DATABASE}",
+            "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
+            "PCB_PUBLICATION_TARGET": "local:board",
             "PCB_RELEASE_STORE_PATH": ".cache/polycodebench-local-release-store.sqlite3",
             "PCB_OIDC_ISSUER": "http://127.0.0.1:8080/realms/polycodebench-local",
             "PCB_OIDC_CLIENT_ID": "polycodebench-web",
@@ -331,6 +344,67 @@ def seed_release_store(values: dict[str, str] | None = None) -> None:
         raise RuntimeError("could not create the synthetic local release fixture")
 
 
+def seed_public_release_catalog(values: dict[str, str] | None = None) -> None:
+    """Create local signing material and sync verified synthetic releases to PostgreSQL."""
+    values = values or read_env()
+    if values.get("PCB_PUBLIC_RELEASE_BACKEND", "sqlite") != "postgres":
+        return
+    if not PUBLIC_RELEASE_STORE.exists():
+        PUBLIC_RELEASE_STORE.parent.mkdir(parents=True, exist_ok=True)
+        fixture = subprocess.run(
+            [
+                "uv",
+                "run",
+                "--locked",
+                "--group",
+                "dev",
+                "python",
+                "-m",
+                "polycodebench_api.dev_fixture",
+                "--store",
+                str(PUBLIC_RELEASE_STORE),
+                "--count",
+                "2",
+                "--signing-key",
+                str(PUBLIC_RELEASE_SIGNING_KEY),
+                "--keyring",
+                str(PUBLIC_RELEASE_KEYRING),
+            ],
+            cwd=ROOT,
+            check=False,
+        )
+        if fixture.returncode:
+            raise RuntimeError("could not create signed local synthetic release projections")
+
+    env = os.environ.copy()
+    # The web API uses a reader-scoped DSN. Only this local operator command receives the
+    # publisher-scoped credential, and the credential itself remains in the ignored .env file.
+    env["PCB_DATABASE_URL"] = values["PCB_PUBLISHER_DATABASE_URL"]
+    target = values.get("PCB_PUBLICATION_TARGET", "local:board")
+    sync = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--locked",
+            "--all-packages",
+            "pcb-ops",
+            "releases",
+            "sync-publication",
+            "--store",
+            str(PUBLIC_RELEASE_STORE),
+            "--keyring",
+            str(PUBLIC_RELEASE_KEYRING),
+            "--target",
+            target,
+        ],
+        cwd=ROOT,
+        env=env,
+        check=False,
+    )
+    if sync.returncode:
+        raise RuntimeError("could not sync verified synthetic releases into local PostgreSQL")
+
+
 def wait_for_keycloak(timeout_seconds: int = 120) -> None:
     values = read_env()
     endpoint = values["PCB_OIDC_ISSUER"].rstrip("/") + "/.well-known/openid-configuration"
@@ -362,6 +436,7 @@ def main() -> int:
             bootstrap_database()
         elif args.command == "seed":
             seed_release_store()
+            seed_public_release_catalog()
         else:
             wait_for_keycloak()
     except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:

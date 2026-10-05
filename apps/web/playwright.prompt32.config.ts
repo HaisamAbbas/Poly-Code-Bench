@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -6,23 +6,16 @@ const webRoot = __dirname;
 const repoRoot = resolve(webRoot, "../..");
 const artifacts = resolve(repoRoot, "docs/implementation/evidence/prompt-32");
 const releaseStore = resolve(repoRoot, `.cache/prompt32-e2e-${process.pid}.sqlite3`);
-const clientFile = resolve(repoRoot, ".cache/prompt32-e2e-client.json");
 const apiOrigin = "http://127.0.0.1:8132";
 const webOrigin = "http://127.0.0.1:3123";
-// Stable synthetic credentials keep Playwright's config and worker processes on one fixture
-// identity if the runner evaluates the config in more than one process.
-const accountToken = "a".repeat(64);
-const secondAccountToken = "b".repeat(64);
+const oidcOrigin = "http://127.0.0.1:8140";
+const oidcClientId = "prompt32-e2e-client";
+const webAuthSigningKey = "synthetic-prompt32-signing-key-not-a-secret-0001";
 
 mkdirSync(artifacts, { recursive: true });
 mkdirSync(resolve(repoRoot, ".cache"), { recursive: true });
 process.env.PCB_TEST_RELEASE_STORE_PATH = releaseStore;
 process.env.PCB_ENVIRONMENT = "development";
-writeFileSync(
-  clientFile,
-  JSON.stringify({ accountToken, secondAccountToken }),
-  { mode: 0o600 },
-);
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -45,6 +38,14 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: "node ./tests/e2e/fake-oidc-provider.mjs",
+      cwd: webRoot,
+      url: `${oidcOrigin}/.well-known/openid-configuration`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+      env: { PCB_FAKE_OIDC_PORT: "8140" },
+    },
+    {
       command: "uv run --locked --group dev python apps/web/tests/e2e/launch-prompt32-api.py",
       cwd: repoRoot,
       url: `${apiOrigin}/v1/releases`,
@@ -53,6 +54,7 @@ export default defineConfig({
       env: {
         PCB_RELEASE_STORE_PATH: releaseStore,
         PCB_ENVIRONMENT: "development",
+        PCB_WEB_AUTH_SIGNING_KEY: webAuthSigningKey,
       },
     },
     {
@@ -61,7 +63,15 @@ export default defineConfig({
       url: `${webOrigin}/leaderboard`,
       reuseExistingServer: false,
       timeout: 180_000,
-      env: { PCB_PUBLIC_API_URL: `${apiOrigin}/v1` },
+      env: {
+        PCB_PUBLIC_API_URL: `${apiOrigin}/v1`,
+        PCB_ENVIRONMENT: "development",
+        PCB_OIDC_ISSUER: oidcOrigin,
+        PCB_OIDC_CLIENT_ID: oidcClientId,
+        PCB_OIDC_REDIRECT_URI: `${webOrigin}/auth/callback`,
+        PCB_WEB_ORIGIN: webOrigin,
+        PCB_WEB_AUTH_SIGNING_KEY: webAuthSigningKey,
+      },
     },
   ],
 });

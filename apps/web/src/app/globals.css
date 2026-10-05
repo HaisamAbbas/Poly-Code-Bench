@@ -300,6 +300,9 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
 .submission-layout { align-items: start; display: grid; gap: 14px; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); }
 .submission-form-card, .submission-status-card { min-width: 0; }
 .submission-form-card > .section-heading, .submission-status-card > .section-heading { margin-bottom: 13px; }
+.submission-identity { align-items: center; display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; }
+.submission-identity form { margin: 0; }
+.submission-identity .button-link, .submission-identity button { align-items: center; background: var(--green-dark); border: 1px solid var(--green-dark); border-radius: 2px; color: white; cursor: pointer; display: inline-flex; font-size: .74rem; font-weight: 700; justify-content: center; min-height: 36px; padding: 0 12px; text-decoration: none; }
 .submission-form-card .section-heading p, .submission-status-card .section-heading p { color: #68736c; font-size: .7rem; margin: 4px 0 0; }
 .submission-fields { display: grid; gap: 11px 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .submission-field { display: grid; gap: 5px; min-width: 0; }

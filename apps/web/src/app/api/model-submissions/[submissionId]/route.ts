@@ -1,13 +1,19 @@
+import {
+  createApiBearer,
+  cookieValue,
+  readSessionToken,
+  sessionCookieName,
+} from "@/lib/oidc-auth";
+
 const API_BASE = (process.env.PCB_PUBLIC_API_URL ?? "http://127.0.0.1:8000/v1").replace(/\/$/, "");
-const BEARER = /^Bearer [A-Za-z0-9._~+/=-]{16,4096}$/;
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ submissionId: string }> },
 ): Promise<Response> {
-  const authorization = request.headers.get("authorization") ?? "";
-  if (!BEARER.test(authorization)) {
+  const session = readSessionToken(cookieValue(request.headers.get("cookie"), sessionCookieName()));
+  if (!session) {
     return Response.json(
       { error: { code: "UNAUTHENTICATED", message: "authentication is required", request_id: crypto.randomUUID() } },
       { status: 401, headers: { "cache-control": "private, no-store" } },
@@ -22,7 +28,7 @@ export async function GET(
   }
   try {
     const upstream = await fetch(`${API_BASE}/model-submissions/${encodeURIComponent(submissionId)}`, {
-      headers: { accept: "application/json", authorization },
+      headers: { accept: "application/json", authorization: `Bearer ${createApiBearer(session)}` },
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });

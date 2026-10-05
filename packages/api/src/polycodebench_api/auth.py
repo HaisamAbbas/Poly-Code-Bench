@@ -7,7 +7,9 @@ publisher actions additionally require an MFA-backed session.
 
 from __future__ import annotations
 
+import base64
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -15,7 +17,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
 
 from fastapi import Request
 from polycodebench_publication.releases import ReleasePrincipal
@@ -45,18 +46,33 @@ class TokenDirectory:
     than token values. The issuer must rotate the file as short-lived account tokens expire.
     """
 
-    def __init__(self, tokens: Mapping[str, ApiPrincipal]) -> None:
+    def __init__(
+        self,
+        tokens: Mapping[str, ApiPrincipal],
+        *,
+        web_auth_signing_key: bytes | None = None,
+    ) -> None:
         self._tokens = dict(tokens)
         self._fingerprints: dict[str, ApiPrincipal] = {}
+        self._web_auth_signing_key = web_auth_signing_key
+        if web_auth_signing_key is not None and len(web_auth_signing_key) < 32:
+            raise ValueError("web auth signing key must contain at least 32 bytes")
 
     @classmethod
     def from_env(cls) -> TokenDirectory:
         """Load trusted claims from ``PCB_API_IDENTITY_FILE`` without storing bearer values."""
         configured = os.environ.get("PCB_API_IDENTITY_FILE")
+        web_auth_secret = os.environ.get("PCB_WEB_AUTH_SIGNING_KEY")
+        environment = os.environ.get("PCB_ENVIRONMENT", "development")
+        if web_auth_secret is not None and len(web_auth_secret.encode("utf-8")) < 32:
+            raise RuntimeError("PCB_WEB_AUTH_SIGNING_KEY must contain at least 32 bytes")
+        if environment in {"staging", "production"} and not web_auth_secret:
+            raise RuntimeError("PCB_WEB_AUTH_SIGNING_KEY is required outside development")
+        web_auth_signing_key = web_auth_secret.encode("utf-8") if web_auth_secret else None
         if not configured:
-            if os.environ.get("PCB_ENVIRONMENT", "development") in {"staging", "production"}:
+            if environment in {"staging", "production"}:
                 raise RuntimeError("PCB_API_IDENTITY_FILE is required outside development")
-            return cls({})
+            return cls({}, web_auth_signing_key=web_auth_signing_key)
         try:
             identity_path = Path(configured)
             if identity_path.stat().st_size > 4_000_000:
@@ -109,7 +125,7 @@ class TokenDirectory:
                 email_verified=claims["email_verified"],
                 expires_at=claims["expires_at"],
             )
-        directory = cls({})
+        directory = cls({}, web_auth_signing_key=web_auth_signing_key)
         directory._fingerprints = fingerprints
         return directory
 
@@ -118,10 +134,86 @@ class TokenDirectory:
         if principal is None:
             fingerprint = hashlib.sha256(token.encode("utf-8")).hexdigest()
             principal = self._fingerprints.get(fingerprint)
+        if principal is None and self._web_auth_signing_key is not None:
+            principal = self._resolve_web_auth_token(token)
         if principal is not None and principal.expires_at is not None:
             if principal.expires_at <= int(datetime.now(UTC).timestamp()):
                 return None
         return principal
+
+    def _resolve_web_auth_token(self, token: str) -> ApiPrincipal | None:
+        """Verify the web BFF's five-minute, submitter-only OIDC session assertion."""
+        key = self._web_auth_signing_key
+        if key is None:
+            return None
+        parts = token.split(".")
+        if len(parts) != 3 or any(not part for part in parts):
+            return None
+        try:
+            header = _decode_jwt_part(parts[0])
+            claims = _decode_jwt_part(parts[1])
+            if header != {"alg": "HS256", "typ": "JWT"}:
+                return None
+            expected = hmac.new(
+                key,
+                f"{parts[0]}.{parts[1]}".encode("ascii"),
+                hashlib.sha256,
+            ).digest()
+            signature = _decode_b64url(parts[2])
+            if not hmac.compare_digest(signature, expected):
+                return None
+            now = int(datetime.now(UTC).timestamp())
+            if (
+                set(claims)
+                != {"iss", "aud", "sub", "roles", "email", "email_verified", "iat", "exp", "jti"}
+                or claims["iss"] != "polycodebench-web"
+                or claims["aud"] != "polycodebench-api"
+                or not isinstance(claims["sub"], str)
+                or not claims["sub"].strip()
+                or len(claims["sub"]) > 512
+                or claims["roles"] != ["submitter"]
+                or not isinstance(claims["email"], str)
+                or claims["email_verified"] is not True
+                or len(claims["email"]) > 320
+                or not isinstance(claims["iat"], int)
+                or isinstance(claims["iat"], bool)
+                or not isinstance(claims["exp"], int)
+                or isinstance(claims["exp"], bool)
+                or claims["iat"] > now + 30
+                or claims["exp"] <= now
+                or claims["exp"] <= claims["iat"]
+                or claims["exp"] - claims["iat"] > 300
+                or not isinstance(claims["jti"], str)
+                or not claims["jti"]
+                or len(claims["jti"]) > 200
+            ):
+                return None
+            return ApiPrincipal(
+                subject_id=claims["sub"],
+                roles=frozenset({"submitter"}),
+                email=claims["email"],
+                email_verified=True,
+                expires_at=claims["exp"],
+            )
+        except (UnicodeDecodeError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+            return None
+
+
+def _decode_b64url(value: str) -> bytes:
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", value):
+        raise ValueError("invalid JWT encoding")
+    padded = value + "=" * (-len(value) % 4)
+    decoded = base64.urlsafe_b64decode(padded.encode("ascii"))
+    if base64.urlsafe_b64encode(decoded).decode("ascii").rstrip("=") != value:
+        raise ValueError("invalid JWT encoding")
+    return decoded
+
+
+def _decode_jwt_part(value: str) -> dict[str, object]:
+    decoded = json.loads(_decode_b64url(value))
+    if not isinstance(decoded, dict):
+        raise ValueError("JWT part is not an object")
+    return decoded
 
 
 def bearer_principal(request: Request, tokens: TokenDirectory) -> ApiPrincipal:
@@ -146,7 +238,7 @@ def require_permission(
 ) -> ApiPrincipal:
     """Authenticate, then enforce one rbac permission and, where policy demands it, MFA."""
     principal = bearer_principal(request, tokens)
-    rbac_roles = frozenset(cast(Role, Role(role)) for role in principal.roles if role in set(Role))
+    rbac_roles = frozenset(Role(role) for role in principal.roles if role in set(Role))
     authorize(Principal(subject_id=principal.subject_id, roles=rbac_roles), permission)
     if mfa and not principal.mfa:
         raise ApiError("FORBIDDEN")

@@ -519,6 +519,7 @@ def test_prompt32_hashed_identity_file_and_expiry(
     )
     monkeypatch.setenv("PCB_API_IDENTITY_FILE", str(path))
     monkeypatch.setenv("PCB_ENVIRONMENT", "production")
+    monkeypatch.setenv("PCB_WEB_AUTH_SIGNING_KEY", "synthetic-production-test-signing-key-32-bytes")
     directory = TokenDirectory.from_env()
     assert directory.resolve(token) == ApiPrincipal(
         "verified-user",

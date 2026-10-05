@@ -14,16 +14,20 @@ const EMPTY_FORM = {
   model_name: "",
   provider: "",
   organization: "",
-  contact_email: "",
   endpoint_url: "",
   source_url: "",
   source_license: "",
   permission_attested: false,
 };
 
-export function ModelSubmissionForm() {
+export function ModelSubmissionForm({
+  identity,
+  loginAvailable,
+}: {
+  readonly identity: { readonly email: string } | null;
+  readonly loginAvailable: boolean;
+}) {
   const [form, setForm] = useState(EMPTY_FORM);
-  const [token, setToken] = useState("");
   const [submissionId, setSubmissionId] = useState("");
   const [result, setResult] = useState<ModelSubmissionStatus | null>(null);
   const [submissionState, setSubmissionState] = useState<Resource<ModelSubmissionStatus> | null>(null);
@@ -39,7 +43,7 @@ export function ModelSubmissionForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sending || result) return;
+    if (sending || result || !identity) return;
     setSending(true);
     setSubmissionState(null);
     idempotencyKey.current ??= crypto.randomUUID();
@@ -48,13 +52,13 @@ export function ModelSubmissionForm() {
       model_name: form.model_name.trim(),
       provider: form.provider.trim(),
       ...(form.organization.trim() ? { organization: form.organization.trim() } : {}),
-      contact_email: form.contact_email.trim(),
+      contact_email: identity.email,
       endpoint_url: form.endpoint_url.trim(),
       source_url: form.source_url.trim(),
       source_license: form.source_license.trim(),
       permission_attested: form.permission_attested,
     };
-    const response = await sendModelSubmission(token, idempotencyKey.current, payload);
+    const response = await sendModelSubmission(idempotencyKey.current, payload);
     if (response.state === "ready") {
       const accepted = response.value.data;
       setResult(accepted);
@@ -69,10 +73,10 @@ export function ModelSubmissionForm() {
 
   async function checkStatus(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (checking) return;
+    if (checking || !identity) return;
     setChecking(true);
     setStatusState(null);
-    const response = await loadModelSubmissionStatus(token, submissionId.trim());
+    const response = await loadModelSubmissionStatus(submissionId.trim());
     if (response.state === "ready") {
       const status = response.value.data;
       setResult(status);
@@ -94,21 +98,18 @@ export function ModelSubmissionForm() {
             <p>Only model metadata, public endpoint/source URLs and the rights attestation are sent.</p>
           </div>
         </div>
-        <label className="submission-field">
-          <span>Verified account access token</span>
-          <input
-            autoComplete="off"
-            name="verified-account-token"
-            type="password"
-            value={token}
-            onChange={(event) => setToken(event.currentTarget.value)}
-            aria-describedby="submission-token-help"
-          />
-        </label>
-        <p id="submission-token-help" className="submission-help">
-          Use the short-lived token from your verified PolyCodeBench account. It stays in this page&#39;s
-          memory and is sent only as an authorization header. Never enter a provider API key here.
-        </p>
+        {identity ? (
+          <div className="submission-help submission-identity">
+            <span>Signed in with verified account <strong>{identity.email}</strong>.</span>
+            <form action="/auth/sign-out" method="post"><button className="button-link" type="submit">Sign out</button></form>
+          </div>
+        ) : (
+          <div className="submission-help submission-identity" role="status">
+            <span>Sign in with a verified account to submit a request or check its status.</span>
+            {loginAvailable ? <a className="button-link" href="/auth/sign-in?return_to=%2Fmodel-submissions">Sign in with your account</a> : <span>Account sign-in is not configured in this environment.</span>}
+          </div>
+        )}
+        {identity ? (
         <form className="submission-fields" onSubmit={submit}>
           <label className="submission-field">
             <span>Model name</span>
@@ -124,7 +125,8 @@ export function ModelSubmissionForm() {
           </label>
           <label className="submission-field">
             <span>Verified account email</span>
-            <input required type="email" maxLength={320} autoComplete="email" value={form.contact_email} onChange={(event) => update("contact_email", event.currentTarget.value)} />
+            <input type="email" autoComplete="email" value={identity.email} readOnly aria-describedby="submission-email-help" />
+            <small id="submission-email-help">This address comes from your verified sign-in and cannot be changed here.</small>
           </label>
           <label className="submission-field submission-field-wide">
             <span>Provider endpoint URL</span>
@@ -149,6 +151,7 @@ export function ModelSubmissionForm() {
             </button>
           </div>
         </form>
+        ) : null}
         {submissionState?.state === "error" ? (
           <p className="submission-error" role="alert">{submissionState.title}. {submissionState.message} {submissionState.requestId ? `Request ${submissionState.requestId}.` : ""}</p>
         ) : null}
@@ -167,16 +170,16 @@ export function ModelSubmissionForm() {
             <p>Only the verified account that submitted the request can read its status.</p>
           </div>
         </div>
-        <form className="submission-track-form" onSubmit={checkStatus}>
+        {identity ? <form className="submission-track-form" onSubmit={checkStatus}>
           <label className="submission-field">
             <span>Request ID</span>
             <input required autoComplete="off" value={submissionId} onChange={(event) => setSubmissionId(event.currentTarget.value)} />
           </label>
-          <p className="submission-help">Status requests use the verified account token entered in the request form. It remains only in page memory.</p>
+          <p className="submission-help">Only requests owned by {identity.email} can be shown here.</p>
           <button type="submit" disabled={checking || !submissionId.trim()}>
             {checking ? "Checking…" : "Check status"}
           </button>
-        </form>
+        </form> : <p className="submission-help">Sign in above to check request status.</p>}
         {statusState?.state === "error" ? (
           <p className="submission-error" role="alert">{statusState.title}. {statusState.message} {statusState.requestId ? `Request ${statusState.requestId}.` : ""}</p>
         ) : null}

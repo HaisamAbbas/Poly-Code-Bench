@@ -2,34 +2,18 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
+import os
 
 from polycodebench_api.app import create_app
-from polycodebench_api.auth import ApiPrincipal, TokenDirectory
+from polycodebench_api.auth import TokenDirectory
 
 
 def main() -> None:
-    clients = json.loads(Path(".cache/prompt32-e2e-client.json").read_text(encoding="utf-8"))
-    tokens = TokenDirectory(
-        {
-            clients["accountToken"]: ApiPrincipal(
-                subject_id="browser-submitter",
-                roles=frozenset({"submitter"}),
-                email="browser@example.org",
-                email_verified=True,
-            ),
-            clients["secondAccountToken"]: ApiPrincipal(
-                subject_id="other-browser-account",
-                roles=frozenset({"submitter"}),
-                email="other@example.org",
-                email_verified=True,
-            ),
-        }
-    )
+    signing_key = os.environ.get("PCB_WEB_AUTH_SIGNING_KEY", "").encode("utf-8")
+    if len(signing_key) < 32:
+        raise RuntimeError("Prompt 32 test API requires its synthetic OIDC signing key")
+    tokens = TokenDirectory({}, web_auth_signing_key=signing_key)
     app = create_app(tokens=tokens)
-    if app.state.services.tokens.resolve(clients["accountToken"]) is None:
-        raise RuntimeError("Prompt 32 API lost the synthetic account before server startup")
     import uvicorn
 
     uvicorn.run(app, host="127.0.0.1", port=8132, log_level="warning")

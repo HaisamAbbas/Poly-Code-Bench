@@ -410,13 +410,11 @@ type ErrorEnvelope = {
 };
 
 export async function sendModelSubmission(
-  token: string,
   idempotencyKey: string,
   submission: ModelSubmissionRequest,
 ): Promise<Resource<ApiEnvelope<ModelSubmissionStatus>>> {
-  return authenticatedSubmissionApi<ApiEnvelope<ModelSubmissionStatus>>(
+  return submissionApi<ApiEnvelope<ModelSubmissionStatus>>(
     "/api/model-submissions",
-    token,
     {
       method: "POST",
       headers: { "content-type": "application/json", "idempotency-key": idempotencyKey },
@@ -426,31 +424,24 @@ export async function sendModelSubmission(
 }
 
 export async function loadModelSubmissionStatus(
-  token: string,
   submissionId: string,
 ): Promise<Resource<ApiEnvelope<ModelSubmissionStatus>>> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) {
     return { state: "error", title: "Request ID is invalid", message: "Enter the request ID returned after submission." };
   }
-  return authenticatedSubmissionApi<ApiEnvelope<ModelSubmissionStatus>>(
+  return submissionApi<ApiEnvelope<ModelSubmissionStatus>>(
     `/api/model-submissions/${encodeURIComponent(submissionId)}`,
-    token,
     { method: "GET" },
   );
 }
 
-async function authenticatedSubmissionApi<T>(
+async function submissionApi<T>(
   path: string,
-  token: string,
   init: RequestInit,
 ): Promise<Resource<T>> {
-  if (!token.trim() || token.length > 4096 || /[\r\n]/.test(token)) {
-    return { state: "error", title: "Verified account sign-in required", message: "Provide the short lived access token for your verified account. Provider credentials are never requested." };
-  }
   try {
     const headers = new Headers(init.headers);
     headers.set("accept", "application/json");
-    headers.set("authorization", `Bearer ${token.trim()}`);
     const response = await fetch(path, {
       ...init,
       cache: "no-store",
@@ -463,9 +454,15 @@ async function authenticatedSubmissionApi<T>(
       const code = error.error?.code;
       return {
         state: "error",
-        title: code === "FORBIDDEN" ? "Verified account could not be confirmed" : "Submission request failed",
+        title: code === "UNAUTHENTICATED"
+          ? "Verified account sign-in required"
+          : code === "FORBIDDEN"
+            ? "Request origin could not be verified"
+            : "Submission request failed",
         message: code === "RATE_LIMITED"
           ? "Too many new requests. Wait for the limit window to pass, then try again."
+          : code === "UNAUTHENTICATED"
+            ? "Sign in with a verified account, then try again."
           : code === "NOT_FOUND"
             ? "No request with that ID belongs to this verified account."
             : error.error?.message ?? `The API returned HTTP ${response.status}.`,

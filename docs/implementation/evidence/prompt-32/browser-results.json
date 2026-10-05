@@ -72,7 +72,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "E2E-41 and E2E-39: public request is pending and owner can track its status",
+          "title": "E2E-41 and E2E-39: OIDC request is pending and only the owner can track it",
           "ok": true,
           "tags": [],
           "tests": [
@@ -87,12 +87,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 13168,
+                  "duration": 5255,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-03T23:16:29.517Z",
+                  "startTime": "2026-10-05T10:10:11.770Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -100,13 +100,13 @@
               "status": "expected"
             }
           ],
-          "id": "ddd9ed034ca22af27fa2-0fc587dc75bdd8b56506",
+          "id": "ddd9ed034ca22af27fa2-8953ba736d5a44eac188",
           "file": "prompt32.spec.ts",
-          "line": 30,
+          "line": 32,
           "column": 5
         },
         {
-          "title": "E2E-25/26/40: identity mismatch errors, keyboard flow and narrow viewport",
+          "title": "E2E-25/26/40: unverified OIDC email is rejected and the sign-in flow works by keyboard on mobile",
           "ok": true,
           "tags": [],
           "tests": [
@@ -121,12 +121,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12204,
+                  "duration": 2753,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-03T23:16:43.842Z",
+                  "startTime": "2026-10-05T10:10:17.301Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -134,9 +134,9 @@
               "status": "expected"
             }
           ],
-          "id": "ddd9ed034ca22af27fa2-bb8528c1c92a2c5d2565",
+          "id": "ddd9ed034ca22af27fa2-331cbc7466b0048c2499",
           "file": "prompt32.spec.ts",
-          "line": 75,
+          "line": 95,
           "column": 5
         }
       ]
@@ -144,8 +144,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-03T23:15:38.320Z",
-    "duration": 100130.08899999999,
+    "startTime": "2026-10-05T10:10:04.222Z",
+    "duration": 17258.948,
     "expected": 2,
     "skipped": 0,
     "unexpected": 0,

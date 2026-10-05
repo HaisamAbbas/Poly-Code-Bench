@@ -17,7 +17,7 @@ from polycodebench_core.model_contracts import (
 from polycodebench_publication.aggregation import PublicationModel
 from polycodebench_services.rbac import Permission, Principal, Role
 from polycodebench_services.runs import RunCreateRequest
-from pydantic import Field, ValidationError
+from pydantic import Field, ValidationError, field_validator
 from starlette.responses import Response
 
 from polycodebench_api.auth import ApiPrincipal, require_permission
@@ -45,6 +45,17 @@ class SubmissionApprovalInput(PublicationModel):
     endpoint_registration_id: UUID
     run_request: dict[str, object]
     permission_review: PermissionReviewRecord
+
+    @field_validator("endpoint_registration_id", mode="before")
+    @classmethod
+    def parse_json_endpoint_id(cls, value: object) -> object:
+        """Accept a JSON UUID string while preserving strict validation for every other field."""
+        if isinstance(value, str):
+            try:
+                return UUID(value)
+            except ValueError:
+                raise ValueError("endpoint_registration_id must be a UUID") from None
+        return value
 
 
 class EndpointRegistrationInput(PublicationModel):
@@ -233,6 +244,9 @@ def approve_model_submission(
         or permission_review.source_license != review["source_license"]
     ):
         raise ApiError("SCHEMA_INVALID")
+    expected_version = review.get("row_version")
+    if not isinstance(expected_version, int) or isinstance(expected_version, bool):
+        raise ApiError("DEPENDENCY_UNAVAILABLE")
     try:
         endpoint = services.endpoints.get_approved(approval.endpoint_registration_id)
         submitted_endpoint = parse_endpoint_url(str(review["endpoint_url"]), endpoint.policy)
@@ -251,7 +265,7 @@ def approve_model_submission(
     claim = services.submissions.begin_approval(
         submission_id=str(submission_id),
         reviewer=principal.subject_id,
-        expected_version=int(review["row_version"]),
+        expected_version=expected_version,
         request_id=idempotency_key.strip(),
         approval_document=approval_document,
     )

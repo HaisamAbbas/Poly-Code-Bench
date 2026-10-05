@@ -16,6 +16,8 @@ GRANT USAGE ON SCHEMA public TO
     pcb_scorer, pcb_artifact_finalizer, pcb_administrator;
 
 GRANT SELECT, INSERT ON model_submission TO pcb_submitter;
+GRANT SELECT, INSERT, UPDATE, DELETE ON idempotency_record TO pcb_submitter;
+GRANT INSERT ON audit_event TO pcb_submitter;
 GRANT SELECT ON model_submission TO pcb_reviewer, pcb_administrator;
 GRANT UPDATE (status, reviewer_subject, rejection_reason, resulting_run_id, row_version)
     ON model_submission TO pcb_reviewer, pcb_administrator;

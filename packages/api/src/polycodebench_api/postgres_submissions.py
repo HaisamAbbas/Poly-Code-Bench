@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
-from typing import cast
+from typing import Literal, cast
 from uuid import UUID, uuid4
 
 from polycodebench_core.application_errors import IdempotencyConflict, PersistenceUnavailable
@@ -54,6 +54,7 @@ class PostgresSubmissionStore:
         idempotency_id = uuid4()
         try:
             with self._engine.begin() as connection:
+                _set_submitter_scope(connection, subject)
                 claimed = connection.execute(
                     pg_insert(idempotency_record)
                     .values(
@@ -194,6 +195,7 @@ class PostgresSubmissionStore:
     def get_owned(self, *, subject: str, submission_id: str) -> dict[str, object]:
         try:
             with self._engine.connect() as connection:
+                _set_submitter_scope(connection, subject)
                 row = (
                     connection.execute(
                         select(model_submission).where(
@@ -220,6 +222,7 @@ class PostgresSubmissionStore:
             raise ApiError("SCHEMA_INVALID")
         try:
             with self._engine.connect() as connection:
+                _set_local_role(connection, "pcb_reviewer")
                 rows = (
                     connection.execute(
                         select(model_submission)
@@ -240,6 +243,7 @@ class PostgresSubmissionStore:
     def get_for_review(self, *, submission_id: str) -> dict[str, object]:
         try:
             with self._engine.connect() as connection:
+                _set_local_role(connection, "pcb_reviewer")
                 row = (
                     connection.execute(
                         select(model_submission).where(model_submission.c.id == UUID(submission_id))
@@ -269,6 +273,7 @@ class PostgresSubmissionStore:
             raise ApiError("SCHEMA_INVALID")
         try:
             with self._engine.begin() as connection:
+                _set_local_role(connection, "pcb_reviewer")
                 row = _locked_submission(connection, submission_id)
                 if row is None:
                     raise ApiError("NOT_FOUND")
@@ -324,6 +329,7 @@ class PostgresSubmissionStore:
         digest = _digest(document)
         try:
             with self._engine.begin() as connection:
+                _set_local_role(connection, "pcb_administrator")
                 row = _locked_submission(connection, submission_id)
                 if row is None or row["request_document"] is None:
                     raise ApiError("NOT_FOUND")
@@ -394,6 +400,7 @@ class PostgresSubmissionStore:
         _check_request_id(request_id)
         try:
             with self._engine.begin() as connection:
+                _set_local_role(connection, "pcb_administrator")
                 row = _locked_submission(connection, submission_id)
                 if row is None or row["request_document"] is None:
                     raise ApiError("NOT_FOUND")
@@ -524,6 +531,20 @@ def _audit(
             details={},
         )
     )
+
+
+def _set_local_role(
+    connection: Connection,
+    role: Literal["pcb_submitter", "pcb_reviewer", "pcb_administrator"],
+) -> None:
+    """Use the narrow database role for this operation until the transaction ends."""
+    connection.exec_driver_sql(f"SET LOCAL ROLE {role}")
+
+
+def _set_submitter_scope(connection: Connection, subject: str) -> None:
+    """Bind submitter RLS to this transaction without leaking identity across pool reuse."""
+    _set_local_role(connection, "pcb_submitter")
+    connection.execute(select(func.set_config("pcb.subject_id", subject, True)))
 
 
 __all__ = ["PostgresSubmissionStore"]

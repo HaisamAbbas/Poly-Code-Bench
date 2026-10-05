@@ -15,7 +15,7 @@ from polycodebench_api.errors import ApiError
 from polycodebench_api.postgres_submissions import PostgresSubmissionStore
 from polycodebench_api.submissions import SubmissionRate
 from polycodebench_persistence.database import Database
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
 
 REQUIRED_REVISION = "c41e1d8ab0f6"
@@ -79,3 +79,49 @@ def test_concurrent_requests_cannot_exceed_one_subject_rate_limit(engine: Engine
     counts = Counter(outcomes)
     assert counts["created"] == 2
     assert counts["RATE_LIMITED"] == request_count - 2
+
+
+def test_submitter_database_role_is_scoped_and_supports_idempotent_retry() -> None:
+    """Exercise submit, audit and owner reads under the actual submitter RLS policy."""
+    role_engine = create_engine(_test_database_url(), pool_pre_ping=True, hide_parameters=True)
+
+    store = PostgresSubmissionStore(role_engine)
+    subject = f"prompt32-owner-scope-{uuid4()}"
+    payload = {
+        "model_name": "Submitter role regression fixture",
+        "provider": "fixture",
+        "organization": None,
+        "contact_email": "fixture@example.org",
+        "endpoint_url": "https://models.example.org/v1",
+        "source_url": "https://models.example.org/source",
+        "source_license": "test-only",
+        "permission_attested": True,
+    }
+    try:
+        created = store.submit(
+            subject=subject,
+            request_id="owner-scope-request-0001",
+            payload=payload,
+            rate=SubmissionRate(limit=2, window_seconds=3600),
+        )
+        replayed = store.submit(
+            subject=subject,
+            request_id="owner-scope-request-0001",
+            payload=payload,
+            rate=SubmissionRate(limit=2, window_seconds=3600),
+        )
+        assert replayed["submission_id"] == created["submission_id"]
+        assert (
+            store.get_owned(subject=subject, submission_id=str(created["submission_id"]))[
+                "submission_id"
+            ]
+            == created["submission_id"]
+        )
+        with pytest.raises(ApiError) as forbidden:
+            store.get_owned(
+                subject=f"{subject}-other",
+                submission_id=str(created["submission_id"]),
+            )
+        assert forbidden.value.code == "NOT_FOUND"
+    finally:
+        role_engine.dispose()

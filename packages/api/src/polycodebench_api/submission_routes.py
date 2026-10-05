@@ -22,7 +22,7 @@ from starlette.responses import Response
 
 from polycodebench_api.auth import ApiPrincipal, require_permission
 from polycodebench_api.context import services_of
-from polycodebench_api.envelope import NO_STORE, ResponseMeta, envelope, respond
+from polycodebench_api.envelope import NO_STORE, ApiEnvelope, ResponseMeta, envelope, respond
 from polycodebench_api.errors import ApiError
 from polycodebench_api.submissions import (
     ModelSubmission,
@@ -64,6 +64,30 @@ class EndpointRegistrationInput(PublicationModel):
     secret_ref: str = Field(min_length=1, max_length=192)
     network_policy: EndpointNetworkPolicy
     declared_capabilities: ModelCapabilities
+
+    @field_validator("provider_kind", mode="before")
+    @classmethod
+    def parse_json_provider_kind(cls, value: object) -> object:
+        if isinstance(value, str):
+            try:
+                return ProviderKind(value)
+            except ValueError:
+                raise ValueError("provider_kind is invalid") from None
+        return value
+
+    @field_validator("network_policy", mode="before")
+    @classmethod
+    def parse_json_network_policy(cls, value: object) -> object:
+        if isinstance(value, dict):
+            return EndpointNetworkPolicy.model_validate_json(json.dumps(value), strict=True)
+        return value
+
+    @field_validator("declared_capabilities", mode="before")
+    @classmethod
+    def parse_json_capabilities(cls, value: object) -> object:
+        if isinstance(value, dict):
+            return ModelCapabilities.model_validate_json(json.dumps(value), strict=True)
+        return value
 
 
 class EndpointDecisionInput(PublicationModel):
@@ -117,7 +141,11 @@ def _with_run_status(request: Request, result: dict[str, object]) -> dict[str, o
     return result
 
 
-@router.post("/model-submissions")
+@router.post(
+    "/model-submissions",
+    response_model=ApiEnvelope[ModelSubmission],
+    status_code=201,
+)
 def post_model_submission(
     request: Request,
     submission: ModelSubmissionInput,
@@ -150,7 +178,10 @@ def post_model_submission(
     )
 
 
-@router.get("/model-submissions/{submission_id}")
+@router.get(
+    "/model-submissions/{submission_id}",
+    response_model=ApiEnvelope[ModelSubmission],
+)
 def get_own_model_submission(request: Request, submission_id: UUID) -> Response:
     services = services_of(request)
     principal = require_permission(request, services.tokens, Permission.SUBMISSION_READ_OWN)
@@ -167,7 +198,10 @@ def get_own_model_submission(request: Request, submission_id: UUID) -> Response:
     )
 
 
-@router.get("/admin/model-submissions")
+@router.get(
+    "/admin/model-submissions",
+    response_model=ApiEnvelope[list[SubmissionReviewView]],
+)
 def list_model_submissions_for_review(
     request: Request,
     status: Annotated[list[str] | None, Query()] = None,
@@ -185,7 +219,10 @@ def list_model_submissions_for_review(
     )
 
 
-@router.get("/admin/model-submissions/{submission_id}")
+@router.get(
+    "/admin/model-submissions/{submission_id}",
+    response_model=ApiEnvelope[SubmissionReviewView],
+)
 def get_model_submission_for_review(request: Request, submission_id: UUID) -> Response:
     _require_mfa_permission(request, Permission.SUBMISSION_REVIEW)
     result = services_of(request).submissions.get_for_review(submission_id=str(submission_id))
@@ -193,7 +230,10 @@ def get_model_submission_for_review(request: Request, submission_id: UUID) -> Re
     return respond(request, envelope(view, _meta(view)), cache=NO_STORE)
 
 
-@router.post("/admin/model-submissions/{submission_id}/reject")
+@router.post(
+    "/admin/model-submissions/{submission_id}/reject",
+    response_model=ApiEnvelope[SubmissionReviewView],
+)
 def reject_model_submission(
     request: Request,
     submission_id: UUID,
@@ -214,7 +254,11 @@ def reject_model_submission(
     return respond(request, envelope(view, _meta(view)), cache=NO_STORE)
 
 
-@router.post("/admin/model-submissions/{submission_id}/approve")
+@router.post(
+    "/admin/model-submissions/{submission_id}/approve",
+    response_model=ApiEnvelope[SubmissionReviewView],
+    status_code=202,
+)
 def approve_model_submission(
     request: Request,
     submission_id: UUID,
@@ -288,7 +332,11 @@ def approve_model_submission(
     return respond(request, envelope(view, _meta(view)), status_code=202, cache=NO_STORE)
 
 
-@router.post("/admin/model-endpoints")
+@router.post(
+    "/admin/model-endpoints",
+    response_model=ApiEnvelope[EndpointRegistrationResult],
+    status_code=201,
+)
 def register_model_endpoint(
     request: Request,
     registration: EndpointRegistrationInput,
@@ -317,7 +365,10 @@ def register_model_endpoint(
     )
 
 
-@router.post("/admin/model-endpoints/{endpoint_id}/decision")
+@router.post(
+    "/admin/model-endpoints/{endpoint_id}/decision",
+    response_model=ApiEnvelope[EndpointDecisionResult],
+)
 def decide_model_endpoint(
     request: Request,
     endpoint_id: UUID,

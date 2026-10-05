@@ -129,7 +129,7 @@ class PostgresSubmissionStore:
                         )
                         if row is None:
                             raise PersistenceUnavailable()
-                        return _owner_view(row)
+                        return _owner_view(cast(Mapping[str, object], row))
                     if claimed is None:
                         raise ApiError("DEPENDENCY_UNAVAILABLE")
 
@@ -212,7 +212,7 @@ class PostgresSubmissionStore:
             raise map_database_error(error) from None
         if row is None or row["request_document"] is None:
             raise ApiError("NOT_FOUND")
-        return _owner_view(row)
+        return _owner_view(cast(Mapping[str, object], row))
 
     def list_for_review(
         self, *, statuses: tuple[str, ...], limit: int = 100
@@ -222,7 +222,7 @@ class PostgresSubmissionStore:
             raise ApiError("SCHEMA_INVALID")
         try:
             with self._engine.connect() as connection:
-                _set_local_role(connection, "pcb_reviewer")
+                _set_local_role(connection, "pcb_submission_reviewer")
                 rows = (
                     connection.execute(
                         select(model_submission)
@@ -238,12 +238,12 @@ class PostgresSubmissionStore:
                 )
         except DBAPIError as error:
             raise map_database_error(error) from None
-        return [_review_view(row) for row in rows]
+        return [_review_view(cast(Mapping[str, object], row)) for row in rows]
 
     def get_for_review(self, *, submission_id: str) -> dict[str, object]:
         try:
             with self._engine.connect() as connection:
-                _set_local_role(connection, "pcb_reviewer")
+                _set_local_role(connection, "pcb_submission_reviewer")
                 row = (
                     connection.execute(
                         select(model_submission).where(model_submission.c.id == UUID(submission_id))
@@ -257,7 +257,7 @@ class PostgresSubmissionStore:
             raise map_database_error(error) from None
         if row is None or row["request_document"] is None:
             raise ApiError("NOT_FOUND")
-        return _review_view(row)
+        return _review_view(cast(Mapping[str, object], row))
 
     def reject(
         self,
@@ -273,13 +273,14 @@ class PostgresSubmissionStore:
             raise ApiError("SCHEMA_INVALID")
         try:
             with self._engine.begin() as connection:
-                _set_local_role(connection, "pcb_reviewer")
+                _set_local_role(connection, "pcb_submission_reviewer")
                 row = _locked_submission(connection, submission_id)
                 if row is None:
                     raise ApiError("NOT_FOUND")
                 if row["request_document"] is None:
                     raise ApiError("NOT_FOUND")
-                if row["row_version"] != expected_version:
+                row_version = _row_version(row)
+                if row_version != expected_version:
                     raise ApiError("VERSION_CONFLICT")
                 if row["status"] not in {"pending", "under_review"}:
                     raise ApiError("RESULT_CONFLICT")
@@ -293,7 +294,7 @@ class PostgresSubmissionStore:
                         status="rejected",
                         reviewer_subject=reviewer,
                         rejection_reason=reason.strip(),
-                        row_version=expected_version + 1,
+                        row_version=row_version + 1,
                     )
                 )
                 _audit(
@@ -309,7 +310,7 @@ class PostgresSubmissionStore:
                     status="rejected",
                     reviewer_subject=reviewer,
                     rejection_reason=reason.strip(),
-                    row_version=expected_version + 1,
+                    row_version=row_version + 1,
                 )
                 return _review_view(updated)
         except DBAPIError as error:
@@ -329,7 +330,7 @@ class PostgresSubmissionStore:
         digest = _digest(document)
         try:
             with self._engine.begin() as connection:
-                _set_local_role(connection, "pcb_administrator")
+                _set_local_role(connection, "pcb_submission_approver")
                 row = _locked_submission(connection, submission_id)
                 if row is None or row["request_document"] is None:
                     raise ApiError("NOT_FOUND")
@@ -355,7 +356,8 @@ class PostgresSubmissionStore:
                     }
                 if row["status"] != "pending":
                     raise ApiError("RESULT_CONFLICT")
-                if row["row_version"] != expected_version:
+                row_version = _row_version(row)
+                if row_version != expected_version:
                     raise ApiError("VERSION_CONFLICT")
                 connection.execute(
                     update(model_submission)
@@ -368,7 +370,7 @@ class PostgresSubmissionStore:
                         reviewer_subject=reviewer,
                         approval_document=document,
                         approval_digest=digest,
-                        row_version=expected_version + 1,
+                        row_version=row_version + 1,
                     )
                 )
                 _audit(
@@ -400,7 +402,7 @@ class PostgresSubmissionStore:
         _check_request_id(request_id)
         try:
             with self._engine.begin() as connection:
-                _set_local_role(connection, "pcb_administrator")
+                _set_local_role(connection, "pcb_submission_approver")
                 row = _locked_submission(connection, submission_id)
                 if row is None or row["request_document"] is None:
                     raise ApiError("NOT_FOUND")
@@ -413,16 +415,17 @@ class PostgresSubmissionStore:
                 if row["status"] != "under_review" or row["reviewer_subject"] != reviewer:
                     raise ApiError("RESULT_CONFLICT")
                 parsed_run_id = UUID(run_id)
+                row_version = _row_version(row)
                 connection.execute(
                     update(model_submission)
                     .where(
                         model_submission.c.id == row["id"],
-                        model_submission.c.row_version == row["row_version"],
+                        model_submission.c.row_version == row_version,
                     )
                     .values(
                         status="approved",
                         resulting_run_id=parsed_run_id,
-                        row_version=row["row_version"] + 1,
+                        row_version=row_version + 1,
                     )
                 )
                 _audit(
@@ -437,7 +440,7 @@ class PostgresSubmissionStore:
                 updated.update(
                     status="approved",
                     resulting_run_id=parsed_run_id,
-                    row_version=row["row_version"] + 1,
+                    row_version=row_version + 1,
                 )
                 return _review_view(updated)
         except DBAPIError as error:
@@ -459,6 +462,13 @@ def _locked_submission(connection: Connection, submission_id: str) -> Mapping[st
     )
 
 
+def _row_version(row: Mapping[str, object]) -> int:
+    value = row["row_version"]
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise PersistenceUnavailable("submission row version is invalid")
+    return value
+
+
 def _owner_view(row: Mapping[str, object]) -> dict[str, object]:
     document = row["request_document"]
     if not isinstance(document, dict):
@@ -470,7 +480,7 @@ def _owner_view(row: Mapping[str, object]) -> dict[str, object]:
         **document,
         "status": status,
         "submitted_at": _timestamp(row["created_at"]),
-        "row_version": int(row["row_version"]),
+        "row_version": _row_version(row),
         "rejection_reason": row["rejection_reason"],
         "resulting_run_id": str(row["resulting_run_id"]) if row["resulting_run_id"] else None,
         "run_status": None,
@@ -535,7 +545,11 @@ def _audit(
 
 def _set_local_role(
     connection: Connection,
-    role: Literal["pcb_submitter", "pcb_reviewer", "pcb_administrator"],
+    role: Literal[
+        "pcb_submitter",
+        "pcb_submission_reviewer",
+        "pcb_submission_approver",
+    ],
 ) -> None:
     """Use the narrow database role for this operation until the transaction ends."""
     connection.exec_driver_sql(f"SET LOCAL ROLE {role}")

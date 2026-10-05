@@ -1,0 +1,63 @@
+{
+  "evidence_kind": "local_postgresql_integration",
+  "recorded_on": "2026-10-06",
+  "postgres_image": "postgres:17.6",
+  "database_scope": "pcb_local_web_test; local synthetic/test database",
+  "api_database_role": "pcb_local_api",
+  "migration_identity": "separate local migration identity loaded from ignored .env",
+  "commands": [
+    {
+      "command": "pytest -q tests/test_public_api_submissions_postgres.py tests/test_public_api_prompt32.py",
+      "launcher": "uv run --offline --locked --all-packages python -; loaded PCB_DATABASE_URL and PCB_MIGRATION_DATABASE_URL from ignored .env in process memory without printing values",
+      "result": "PASS: 9 passed"
+    },
+    {
+      "command": "pytest -q tests/test_persistence_postgres.py",
+      "launcher": "uv run --offline --locked --all-packages python -; used the local migration identity for PCB_TEST_DATABASE_URL",
+      "result": "PASS: 4 passed"
+    },
+    {
+      "command": "uv run --offline --locked --all-packages python scripts/local_stack.py bootstrap-db",
+      "result": "PASS: local migrations applied and scoped database roles/grants configured"
+    }
+  ],
+  "local_stack_health": {
+    "web_root_http_status": 200,
+    "api_openapi_http_status": 200,
+    "postgres_readiness": "accepting connections"
+  },
+  "approval_run_assertions": {
+    "endpoint_registration_and_decision": "passed through authenticated API routes",
+    "pending_endpoint_creates_no_run": true,
+    "approved_run_status": "queued",
+    "run_attempt_count": 1,
+    "run_cost_limit_micro_usd": 100000,
+    "input_token_limit": 8192,
+    "output_token_limit": 128,
+    "injected_post_creation_interruption_recovered": true,
+    "replay_created_duplicate_run": false,
+    "audit_transitions": [
+      "model_submission.create",
+      "model_submission.approval_started",
+      "model_submission.approved"
+    ],
+    "foreign_owner_status": 404
+  },
+  "least_privilege": {
+    "required_api_groups_present": [
+      "pcb_public_reader",
+      "pcb_submitter",
+      "pcb_submission_reviewer",
+      "pcb_submission_approver",
+      "pcb_endpoint_administrator"
+    ],
+    "broad_groups_absent": [
+      "pcb_reviewer",
+      "pcb_operator",
+      "pcb_administrator"
+    ]
+  },
+  "provider_endpoint_contacted": false,
+  "provider_spend_micro_usd": 0,
+  "data_note": "The integration inserted synthetic private fixture rows into the local test database. Public release projection tables were not modified."
+}

@@ -26,6 +26,15 @@ try {
   await page.screenshot({ path: resolve(artifactDirectory, "leaderboard-desktop.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: resolve(artifactDirectory, "leaderboard-mobile.png"), fullPage: true });
+  const metricsRegion = page.getByRole("region", { name: "Scrollable published configuration metrics" });
+  assert.match(await metricsRegion.innerText(), /scroll this region horizontally/i);
+  const tableHasHorizontalOverflow = await metricsRegion.evaluate((node) => node.scrollWidth > node.clientWidth);
+  assert.ok(tableHasHorizontalOverflow, "the mobile metrics region should expose its overflowing columns");
+  await metricsRegion.focus();
+  await page.keyboard.press("ArrowRight");
+  const keyboardScrolled = await metricsRegion.evaluate((node) => node.scrollLeft > 0);
+  assert.ok(keyboardScrolled, "the mobile metrics region should scroll with the keyboard");
+  await metricsRegion.evaluate((node) => { node.scrollLeft = 0; });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${webOrigin}/model-submissions`);
   await page.getByRole("link", { name: "Sign in with your account" }).click();
@@ -74,34 +83,64 @@ try {
   const submissionFeedback = page.locator(".submission-status, .submission-error").first();
   await submissionFeedback.waitFor();
   const submissionError = page.locator(".submission-error");
-  assert.equal(
-    await submissionError.count(),
-    0,
-    `the metadata request should be accepted: ${await submissionError.textContent().catch(() => "no error details")}`,
-  );
-  assert.match(
-    await page.locator(".submission-status").innerText(),
-    /Pending review\. No endpoint has been contacted and no run or charge exists\./,
-  );
   assert.equal(unexpectedEndpointRequests.length, 0, "submitting metadata must not contact the provider endpoint");
+
+  let requestId = await page.locator("dd code").first().textContent();
+  let expectedModelName = modelName;
+  if (await submissionError.count()) {
+    const errorText = await submissionError.innerText();
+    assert.match(errorText, /Too many new requests/, `unexpected submission error: ${errorText}`);
+    assert.equal(await submissionError.getAttribute("role"), "alert", "the rate limit error should be announced accessibly");
+
+    // The local API deliberately limits each owner to five new requests per hour. Reuse one of
+    // this user's earlier synthetic smoke submissions when that window is full, without deleting
+    // local data or relaxing the application rate limit.
+    const reviewerResponse = await fetch(`${apiOrigin}/v1/admin/model-submissions?status=pending&limit=200`, {
+      headers: { authorization: `Bearer ${env.LOCAL_REVIEWER_TOKEN}` },
+    });
+    assert.equal(reviewerResponse.status, 200, "the local reviewer identity should access the review queue");
+    const reviewerEnvelope = await reviewerResponse.json();
+    const smokeRows = reviewerEnvelope.data.filter((row) => row.model_name.startsWith("Local OIDC smoke "));
+    for (const row of smokeRows) {
+      const ownerStatus = await page.evaluate(async (submissionId) => {
+        const response = await fetch(`/api/model-submissions/${encodeURIComponent(submissionId)}`, {
+          cache: "no-store",
+        });
+        return response.ok ? response.json() : null;
+      }, row.submission_id);
+      if (ownerStatus?.data?.submission_id === row.submission_id) {
+        requestId = row.submission_id;
+        expectedModelName = row.model_name;
+        break;
+      }
+    }
+    assert.ok(requestId, "a prior owner-visible synthetic smoke request is required after rate limiting");
+    await page.getByLabel("Request ID").fill(requestId);
+  } else {
+    assert.match(
+      await page.locator(".submission-status").innerText(),
+      /Pending review\. No endpoint has been contacted and no run or charge exists\./,
+    );
+  }
+
   await page.getByRole("button", { name: "Check status" }).click();
   await page.waitForFunction(() => Array.from(document.querySelectorAll("button")).some(
     (button) => button.textContent?.trim() === "Check status" && !button.disabled,
   ));
   assert.equal(await page.locator(".submission-status").count(), 1, "the owner status lookup should load from PostgreSQL");
+  assert.match(await page.locator(".submission-status").innerText(), /pending review/i);
   await page.screenshot({ path: resolve(artifactDirectory, "submission-pending-mobile.png"), fullPage: true });
 
-  const requestId = await page.locator("dd code").first().textContent();
   assert.ok(requestId, "the accepted request should have a visible request ID");
 
-  const reviewerResponse = await fetch(`${apiOrigin}/v1/admin/model-submissions?status=pending`, {
+  const reviewerResponse = await fetch(`${apiOrigin}/v1/admin/model-submissions?status=pending&limit=200`, {
     headers: { authorization: `Bearer ${env.LOCAL_REVIEWER_TOKEN}` },
   });
   assert.equal(reviewerResponse.status, 200, "the local reviewer identity should access the review queue");
   const reviewerEnvelope = await reviewerResponse.json();
   const reviewerRows = reviewerEnvelope.data;
   assert.ok(Array.isArray(reviewerRows), "the reviewer queue should return rows");
-  assert.ok(reviewerRows.some((row) => row.submission_id === requestId && row.model_name === modelName));
+  assert.ok(reviewerRows.some((row) => row.submission_id === requestId && row.model_name === expectedModelName));
 
   const otherOwnerToken = ownerToken(env.PCB_WEB_AUTH_SIGNING_KEY, "different-local-submitter");
   const otherOwnerResponse = await fetch(`${apiOrigin}/v1/model-submissions/${requestId}`, {

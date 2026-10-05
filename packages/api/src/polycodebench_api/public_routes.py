@@ -89,7 +89,7 @@ def single_meta(
 
 
 def _digest_of(payload: object) -> str:
-    return "sha256:" + sha256_bytes(canonical_json_bytes(payload))
+    return sha256_bytes(canonical_json_bytes(payload))
 
 
 # --------------------------------------------------------------------------- releases

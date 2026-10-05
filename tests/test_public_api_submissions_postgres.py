@@ -18,7 +18,7 @@ from polycodebench_persistence.database import Database
 from sqlalchemy import text
 from sqlalchemy.engine import Engine, make_url
 
-REQUIRED_REVISION = "a20c4e619d32"
+REQUIRED_REVISION = "c41e1d8ab0f6"
 
 
 def _test_database_url() -> str:

@@ -1235,7 +1235,7 @@ model_submission = Table(
     metadata,
     pk(),
     Column("requester_subject", String(255), nullable=False),
-    fk("metadata_artifact_id", "artifact.id"),
+    fk("metadata_artifact_id", "artifact.id", nullable=True),
     Column("status", String(24), nullable=False),
     Column("request_document", JSONB, nullable=True),
     Column("reviewer_subject", String(255), nullable=True),
@@ -1252,6 +1252,10 @@ model_submission = Table(
     CheckConstraint(
         "approval_digest IS NULL OR approval_digest ~ '^sha256:[0-9a-f]{64}$'",
         name="approval_digest_format",
+    ),
+    CheckConstraint(
+        "metadata_artifact_id IS NOT NULL OR request_document IS NOT NULL",
+        name="submission_content_present",
     ),
     Index("ix_model_submission_requester", "requester_subject", "created_at"),
 )

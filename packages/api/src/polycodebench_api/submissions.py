@@ -140,7 +140,7 @@ class SubmissionRate:
 
 
 def _digest(payload: Mapping[str, object]) -> str:
-    return "sha256:" + sha256_bytes(canonical_json_bytes(dict(payload)))
+    return sha256_bytes(canonical_json_bytes(dict(payload)))
 
 
 class SubmissionStore:

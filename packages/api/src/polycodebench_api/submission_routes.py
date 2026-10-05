@@ -90,7 +90,7 @@ def _meta(payload: object) -> ResponseMeta:
 
     if hasattr(payload, "model_dump"):
         payload = payload.model_dump(mode="json")
-    return ResponseMeta(release_digest="sha256:" + sha256_bytes(canonical_json_bytes(payload)))
+    return ResponseMeta(release_digest=sha256_bytes(canonical_json_bytes(payload)))
 
 
 def _principal(value: ApiPrincipal) -> Principal:

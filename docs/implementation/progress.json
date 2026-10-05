@@ -622,7 +622,7 @@
                                              "blocked_prompts":  [
                                                                      "17"
                                                                  ],
-                                             "note":  "Prompt 17 remains blocked with its original attempt accounting and its gate is NOT waived. Prompt 23 was explicitly requested first; Prompt 21 (C++) was subsequently explicitly requested and implemented independently to close the C++ language-extension defects, without touching or claiming the Prompt 17 pilot prerequisite. Prompt 21\u0027s own status is partial: its code defects are closed and locally verified, but no C++ image was built or admitted, so its E2E-15/35 variants are unrun. prompt_statuses[\u002721\u0027] = partial."
+                                             "note":  "Prompt 17 remains blocked with its original attempt accounting and its gate is NOT waived. Prompt 23 was explicitly requested first; Prompt 21 (C++) was subsequently explicitly requested and implemented independently to close the C++ language-extension defects, without touching or claiming the Prompt 17 pilot prerequisite. Prompt 21 executable admission now passes 27/27 in the development sandbox across eight authored synthetic variants; E2E-15/35 remain partial with quality admission, curator approval and downstream scorer/replay pending. The local TSan runtime is unsupported; race/concurrency acceptance remains unverified and no race-detection claim is made. prompt_statuses[\u002721\u0027] = partial."
                                          },
     "prompt_18_completion":  {
                                  "date":  "2026-10-02",

@@ -911,10 +911,10 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 
 - Owner prompt: `21`.
 - Dependencies: WP-19: WP-17.
-- Implementation: implemented. The shared `FixtureExpectation` schema now admits the two instrumented-language outcomes it previously rejected outright (`expected_lane_findings`, `expected_failure: candidate_crash`/`build_error`), which had made four C++ fixtures and four C fixtures unvalidatable. `SuiteAdmission` now analyzes any fixture that *declares* lane findings -- previously only `reference` and `quality_defective` were analyzed, so those fixtures were never executed by any analyzer -- and adds two gates: `instrumented-lane-defect-detected` and `crash-and-build-fixtures-rejected`. Corrected the C++ manifest's lane families to the profile's real equivalence families (`manual-ownership`, `undefined-behaviour`, `data-race`) rather than sanitizer wording that no observation ever carries.
-- Verification: passed (local). All nine C++ fixtures and all six languages' fixture manifests validate against the schema; `tests/test_cpp_plugin.py` (128 passed) exercises the plans and profile the lane expectations gate consumes.
-- Required verification scope: E2E-15, E2E-35 (Docker image build/admission not run in this prompt; the new admission gates are therefore unexecuted in-container).
-- Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp.json`.
+- Implementation: repaired the C++ build/output declarations, sanitizer and context evidence parsing, abnormal candidate-exit classification, compatible sanitizer lanes, fixture visibility, and typed performance smoke. The task now has eight authored synthetic variants; no concurrency/race fixture is claimed because the local TSan runtime cannot initialize.
+- Verification: passed (development sandbox). Executable admission passed 27/27 checks; five reference repetitions matched; clang-tidy, cppcheck, context and ASan measured the reference and applicable defects; performance smoke passed. Quality admission remains pending.
+- Required verification scope: E2E-15 and E2E-35 remain partial; concurrency/race coverage, quality admission, curator/owner approval and downstream scoring/replay are pending.
+- Evidence: `docs/implementation/reports/prompt-21.md`; `docs/implementation/evidence/prompt-21-cpp-admission-followup.json` (27/27, `development_sandbox`). No live benchmark result is claimed.
 - Acceptance criteria: — Admit runnable fixtures for valid alternatives, ownership/exception/resource/concurrency defects and timeouts. DoD: shared extension checks pass and expected evidence reaches the ordinary scorer/replay path.
 
 ## PCB-22-1 - Prompt 22: — Add Go support

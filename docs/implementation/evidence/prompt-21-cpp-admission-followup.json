@@ -1,0 +1,477 @@
+{
+  "schema_version": 1,
+  "kind": "suite_admission_report",
+  "profile_id": "admission-v1",
+  "task_id": "conformance-cpp-top-words",
+  "task_version": 1,
+  "package_digest": "sha256:8fd86ad6eba963bd36bf2d6b84c8b3445b44e9437c0cea889fe1cf1a45c84aef",
+  "plugin_id": "cpp",
+  "execution_tier": "development_sandbox",
+  "image_digests": [
+    "sha256:64ffcc71022b7b4d7856872f2058a5d257949a559bc3f6f77b7c06d91a22248f",
+    "sha256:fd3dc4e4010da8c40122eb7d6307bca8d922a204cb438867969494f5e24fb6b6"
+  ],
+  "checks": [
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "disclosure-scan",
+      "status": "pass",
+      "detail": "no hidden bytes/paths/digests or credentials in visible bundle"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "pinned-recipe",
+      "status": "pass",
+      "detail": "compiler=c++20 standard set locked by cpp-toolchain-v1"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "rights-and-provenance",
+      "status": "pass",
+      "detail": "status=authored_fixture; license=CC0-1.0"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "safe-paths-and-snapshot",
+      "status": "pass",
+      "detail": "contained regular files, no links, no git metadata"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "strict-schema",
+      "status": "pass",
+      "detail": "manifest validated by the safe importer"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "visible-hidden-separation",
+      "status": "pass",
+      "detail": "physically separate archives; disclosure scan ran"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "plugin-task-validation",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-reference",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-faulty-ties",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-alternative-sort",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-quality-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-timeout-case",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-ownership-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-leak-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "output-contract-exception-defective",
+      "status": "pass",
+      "detail": "variant files must stay inside the output contract"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "reference-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "five-reference-repetitions",
+      "status": "pass",
+      "detail": "five identical outcome inventories required"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "known-fault-rejection",
+      "status": "pass",
+      "detail": "faulty variants must fail their declared cases"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "alternative-solution-acceptance",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "timeout-variants-rejected",
+      "status": "pass",
+      "detail": "timeouts are candidate failures, not harness errors"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-defect-detected",
+      "status": "pass",
+      "detail": "quality-defective variants pass the functional gate yet show their intended defect"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-quality-probe-outcomes",
+      "status": "pass",
+      "detail": "all declared quality-only probe outcomes matched"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "instrumented-lane-defect-detected",
+      "status": "pass",
+      "detail": "every declared lane reported its families"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "crash-and-build-fixtures-rejected",
+      "status": "pass",
+      "detail": "a crashing or unbuildable solution is a candidate failure, not a harness error"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "required-analyzer-compatibility",
+      "status": "pass",
+      "detail": "scans: [('cpp.asan.scan', 'measured'), ('cpp.clang_tidy.scan', 'measured'), ('cpp.context.scan', 'measured'), ('cpp.cppcheck.scan', 'measured')]"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "performance-workload-smoke",
+      "status": "pass",
+      "detail": "scale=2000 outputs=['out/perf.err', 'out/perf.out', 'out/perf.run.json'] checksum='{\"elapsed_ns\": 380095, \"peak_rss_kb\": 16632, \"tokens\": 74}'"
+    },
+    {
+      "schema_version": 1,
+      "kind": "admission_check",
+      "check_id": "quality-opportunity-coverage",
+      "status": "pass",
+      "detail": "dimensions: code_quality,correctness,efficiency,idiomatic,robustness"
+    }
+  ],
+  "runs": [
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "reference",
+      "variant": "reference",
+      "repetitions": 5,
+      "gates": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa",
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa",
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa",
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa",
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa"
+      ],
+      "analyzer_scans": [
+        "cpp.asan.scan=measured",
+        "cpp.clang_tidy.scan=measured",
+        "cpp.context.scan=measured",
+        "cpp.cppcheck.scan=measured"
+      ],
+      "issue_families": [
+        "container-construction",
+        "index-loop"
+      ],
+      "durations_ms": [
+        1905,
+        2031,
+        2702,
+        2468,
+        2562,
+        3375,
+        2922,
+        3016
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "faulty-ties",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [
+        "behaviour::ties_break_alphabetically"
+      ],
+      "reasons": [
+        "fail:behaviour::ties_break_alphabetically:equal counts are ordered alphabetically: apple:2, pear:2, fig:1"
+      ],
+      "outcome_digests": [
+        "sha256:81de5ff0d2cc1e47f153a4bfcc3af05fc952dea4ea9894385424f4e30cca7499"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        4061,
+        4327,
+        4155,
+        6577
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "alternative-sort",
+      "variant": "alternative",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        2437,
+        2686,
+        2718,
+        3030
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "quality-defective",
+      "variant": "quality_defective",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa"
+      ],
+      "analyzer_scans": [
+        "cpp.asan.scan=measured",
+        "cpp.clang_tidy.scan=measured",
+        "cpp.context.scan=measured",
+        "cpp.cppcheck.scan=measured"
+      ],
+      "issue_families": [
+        "clang-diagnostic-exceptions",
+        "container-construction",
+        "exception-escape",
+        "exceptthrowindestructor",
+        "index-loop",
+        "manual-ownership",
+        "special-member-functions",
+        "throwing-destructor",
+        "value-copy"
+      ],
+      "durations_ms": [
+        9954,
+        11968,
+        8797,
+        5311
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "timeout-case",
+      "variant": "timeout",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_timeout:collection"
+      ],
+      "outcome_digests": [
+        "sha256:de477c59308d252d163024f58f268357a419215a2acb36adb5fbffc1e4f72b16"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        2000,
+        2827,
+        2014,
+        57703
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "ownership-defective",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa"
+      ],
+      "analyzer_scans": [
+        "cpp.asan.scan=measured",
+        "cpp.clang_tidy.scan=measured",
+        "cpp.context.scan=measured",
+        "cpp.cppcheck.scan=measured"
+      ],
+      "issue_families": [
+        "clang-analyzer-cplusplus-newdelete",
+        "container-construction",
+        "deallocuse",
+        "index-loop",
+        "manual-ownership",
+        "undefined-behaviour"
+      ],
+      "durations_ms": [
+        3688,
+        3687,
+        2952,
+        2359
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "leak-defective",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "pass"
+      ],
+      "failing_cases": [],
+      "reasons": [],
+      "outcome_digests": [
+        "sha256:1a47f6ebd7a236ec718cb81cb791455686a4192da5ee93098c789fa629ba0aaa"
+      ],
+      "analyzer_scans": [
+        "cpp.asan.scan=measured",
+        "cpp.clang_tidy.scan=measured",
+        "cpp.context.scan=measured",
+        "cpp.cppcheck.scan=measured"
+      ],
+      "issue_families": [
+        "clang-analyzer-cplusplus-newdeleteleaks",
+        "container-construction",
+        "index-loop",
+        "manual-ownership",
+        "string-format-loop"
+      ],
+      "durations_ms": [
+        3359,
+        3781,
+        2407,
+        2577
+      ],
+      "quality_only_pass": true
+    },
+    {
+      "schema_version": 1,
+      "kind": "variant_run",
+      "name": "exception-defective",
+      "variant": "faulty",
+      "repetitions": 1,
+      "gates": [
+        "fail"
+      ],
+      "failing_cases": [],
+      "reasons": [
+        "candidate_killed:collection"
+      ],
+      "outcome_digests": [
+        "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      ],
+      "analyzer_scans": [],
+      "issue_families": [],
+      "durations_ms": [
+        2625,
+        2891,
+        2670,
+        2671
+      ],
+      "quality_only_pass": false
+    }
+  ],
+  "executable_admission_passed": true,
+  "pending_gates": [
+    "generic-evaluator-stage-integration (Prompt 12)",
+    "performance-baseline-canary-and-paired-measurement (Prompt 13)",
+    "judge-anchors-and-human-calibration (Prompt 14)",
+    "deterministic-scoring-replay-and-golden-calculations (Prompt 15)",
+    "production-worker-execution-tier (Prompt 06 owner-deferred)",
+    "curator-approval-and-task-freeze",
+    "owner-rights-confirmation"
+  ],
+  "quality_admission": "pending",
+  "report_digest": "sha256:aa8341ae2c57922c578be9f6f4e7991539af2ac8ff79a4600589d50585670056"
+}

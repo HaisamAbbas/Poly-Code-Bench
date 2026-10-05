@@ -128,3 +128,16 @@ describe real instrumented outcomes rather than errors in the manifests.
 When Docker and the network-fetch step are available, the C++ real-container gate is:
 `uv run python scripts/fetch_cpp_components.py` then the C++ image build and admission, which
 would execute the two new admission gates for the first time.
+
+### 2026-10-05 follow-up — executable admission
+
+The statement above is historical and is superseded by this follow-up. The pinned C++ development
+images were built and the synthetic fixture pack passed **27/27 executable-admission checks**
+across eight authored variants. The five reference repetitions matched; clang-tidy, cppcheck,
+context and ASan findings were measured on the reference and applicable defective variants; the
+performance smoke passed. Evidence: `evidence/prompt-21-cpp-admission-followup.json` (report
+digest `sha256:aa8341ae2c57922c578be9f6f4e7991539af2ac8ff79a4600589d50585670056`).
+
+This is local `development_sandbox` synthetic-fixture evidence. Quality admission, curator/owner
+approval, downstream scoring/replay, and E2E-15/E2E-35 remain pending. The local TSan runtime could not initialize (`unexpected memory mapping`), so the race/concurrency
+fixture is not covered. That acceptance dimension remains unverified; no race finding is claimed.

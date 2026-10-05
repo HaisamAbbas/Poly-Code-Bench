@@ -51,6 +51,11 @@ pcb-ops keys rotate --keyring keyring.json --new-key-id staging-ed25519-2026-10 
 aws secretsmanager put-secret-value --secret-id pcb/staging/signing/staging-ed25519-2026-10 --secret-binary fileb://<offline>
 
 # 4. Schema (migrator task; refuses non-expand migrations)
+# Bootstrap PostgreSQL roles with provision_roles.sql before migration and apply
+# grant_permissions.sql after Alembic. The API login belongs to exactly these scoped groups:
+# pcb_public_reader, pcb_submitter, pcb_submission_reviewer,
+# pcb_submission_approver, pcb_endpoint_administrator. Do not grant it pcb_reviewer,
+# pcb_operator or pcb_administrator; the separate pcb_migrator login runs Alembic.
 aws ecs run-task --cluster pcb-staging --task-definition pcb-staging-migrator --launch-type FARGATE \
   --network-configuration 'awsvpcConfiguration={subnets=[<control>],securityGroups=[<control-sg>]}'
 

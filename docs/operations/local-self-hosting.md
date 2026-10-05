@@ -16,7 +16,9 @@ uv run --locked --group dev python scripts/local_stack.py bootstrap-db
 uv run --locked --group dev python scripts/local_stack.py seed
 ```
 
-`prepare` creates a gitignored `.env`, a Keycloak import file under `.cache/`, and a local-only identity fingerprint file. Passwords, object-store credentials, and signing keys are random and are not printed. The local submitter username and password are in `.env`; keep that file private. `bootstrap-db` migrates PostgreSQL, configures scoped application roles, and rotates the local admin role to the generated password. The API connects as a database role scoped to public reads, submission, and the local review API. `seed` creates signed synthetic release documents, verifies them against the local keyring, and mirrors only the public snapshots into PostgreSQL using the separate publisher role. The API itself never receives that publisher credential.
+`prepare` creates a gitignored `.env`, a Keycloak import file under `.cache/`, and a local-only identity fingerprint file. Passwords, object-store credentials, and signing keys are random and are not printed. The local submitter username and password are in `.env`; keep that file private. `bootstrap-db` migrates PostgreSQL, configures scoped application roles, and rotates the local admin role to the generated password. The API login receives `pcb_public_reader`, `pcb_submitter`, `pcb_submission_reviewer`, `pcb_submission_approver` and `pcb_endpoint_administrator`; it is not a member of the broad `pcb_reviewer`, `pcb_operator` or `pcb_administrator` groups. `seed` creates signed synthetic release documents, verifies them against the local keyring, and mirrors only the public snapshots into PostgreSQL using the separate publisher role. The API itself never receives that publisher credential.
+
+If you run `prepare` again while the API is running, restart the API afterward. It loads the trusted local identity file at startup and does not watch for changes.
 
 Keycloak's `polycodebench-local` realm uses the public `polycodebench-web` client with PKCE. The provider listens only on `127.0.0.1:8080`. Its data and `.env` must be retained together so the imported user's password and bootstrap administrator remain available across restarts.
 
@@ -43,6 +45,30 @@ npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycod
 ```
 
 This browser smoke uses the generated local account, writes one synthetic metadata-only request per run, verifies the owner status path, reviewer queue and owner isolation, and saves local-only screenshots under `.cache/local-stack-browser/`. It does not contact the submitted provider URL or create a run.
+
+To run the PostgreSQL-backed submission/approval integration against the disposable local test database, set the opt-in test URLs from `.env` and run only that integration module:
+
+```powershell
+. .\scripts\load-local-env.ps1
+$env:PCB_TEST_DATABASE_URL = $env:PCB_DATABASE_URL
+$env:PCB_TEST_MIGRATION_DATABASE_URL = $env:PCB_MIGRATION_DATABASE_URL
+uv run --locked --all-packages pytest tests/test_public_api_submissions_postgres.py
+```
+
+Run the in-memory API policy tests separately in a fresh shell without loading `.env`:
+
+```powershell
+uv run --locked --all-packages pytest tests/test_public_api_prompt32.py
+```
+
+The local operator-drill tests inspect Alembic state and use SeaweedFS, so give that test module the local migration URL and loopback object-store endpoint:
+
+```powershell
+. .\scripts\load-local-env.ps1
+$env:PCB_TEST_DATABASE_URL = $env:PCB_MIGRATION_DATABASE_URL
+$env:PCB_OBJECT_STORE_ENDPOINT = 'http://127.0.0.1:8333'
+uv run --locked --all-packages pytest tests/test_operations_postgres.py
+```
 
 Open `http://127.0.0.1:3001/leaderboard`. Sign-in at `/model-submissions` uses the local Keycloak account from `.env`. The API listens on `http://127.0.0.1:8010`; PostgreSQL and SeaweedFS remain on `127.0.0.1:55432` and `127.0.0.1:8333`.
 

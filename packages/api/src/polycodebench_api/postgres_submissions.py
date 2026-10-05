@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -24,6 +25,12 @@ IDEMPOTENCY_TTL = timedelta(hours=24)
 
 def _digest(payload: Mapping[str, object]) -> str:
     return "sha256:" + sha256_bytes(canonical_json_bytes(dict(payload)))
+
+
+def _rate_lock_key(subject: str) -> int:
+    """Return a stable signed bigint for a transaction-scoped per-subject advisory lock."""
+    raw = sha256(f"polycodebench:model-submission-rate:{subject}".encode()).digest()[:8]
+    return int.from_bytes(raw, byteorder="big", signed=True)
 
 
 class PostgresSubmissionStore:
@@ -125,7 +132,11 @@ class PostgresSubmissionStore:
                     if claimed is None:
                         raise ApiError("DEPENDENCY_UNAVAILABLE")
 
-                window_start = now - timedelta(seconds=rate.window_seconds)
+                # Serialize this subject's count-and-insert section. A hash collision can only
+                # serialize unrelated subjects; it cannot let either subject exceed its limit.
+                connection.execute(select(func.pg_advisory_xact_lock(_rate_lock_key(subject))))
+                submitted_at = connection.execute(select(func.clock_timestamp())).scalar_one()
+                window_start = submitted_at - timedelta(seconds=rate.window_seconds)
                 count = connection.execute(
                     select(func.count())
                     .select_from(model_submission)
@@ -144,7 +155,7 @@ class PostgresSubmissionStore:
                     "submission_id": str(submission_id),
                     "status": "pending",
                     **document,
-                    "submitted_at": now.isoformat().replace("+00:00", "Z"),
+                    "submitted_at": submitted_at.isoformat().replace("+00:00", "Z"),
                     "row_version": 0,
                     "rejection_reason": None,
                     "resulting_run_id": None,
@@ -158,6 +169,7 @@ class PostgresSubmissionStore:
                         request_document=document,
                         status="pending",
                         row_version=0,
+                        created_at=submitted_at,
                     )
                 )
                 connection.execute(

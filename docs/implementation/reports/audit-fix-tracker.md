@@ -7,8 +7,8 @@ Started 2026-10-05 after the cross-prompt audit. Fix items in this order, verify
 - [x] Track A reviewer attribution: untrusted accepted edges and adjudications now fail closed; exact duplicate suppression is derived from the submitted findings; review approvals bind to an immutable evaluation context. A trusted orchestration verifier is required and the CLI deliberately has none. Focused tests and source checks pass.
 - [x] Public projection scope and evidence links: language pages now use only declared language-profile dimensions; a profile is exposed only when its model/language-matched scorecard URL validates at release load. Legacy profiles without that link are suppressed. The separate leaderboard language filter remains a configuration filter whose metrics/coverage are explicitly documented as release-wide.
 - [x] Release withdrawal cache policy: release lists and per-release state/withdrawal notices now require revalidation; immutable methodology/content routes retain long caching. ETag changes and 304 revalidation are covered across withdrawal.
-- [ ] PostgreSQL submission rate limit: concurrent requests can race between count and insert.
-- [ ] Publisher typed state mapping: non-ready states collapse to `infrastructure_missing`.
+- [x] PostgreSQL submission rate limit: the count-and-insert section now holds a stable subject-scoped transaction advisory lock and uses the post-lock database timestamp; a concurrent PostgreSQL integration test is added.
+- [x] Publisher typed state mapping: pending, evaluating, needs-review, infrastructure-blocked, quarantined, cancelled, and not-applicable rows retain distinct statuses/reasons and block score coverage; only finalized pass/failure attempts count as observed. Ready not-applicable gates do not become passes. Focused scorecard-to-aggregate tests pass.
 - [ ] Prompt 28 admission closure: Q&A and prediction checks treat path strings as evidence without validating the files or admission records.
 - [ ] Comparison query scope: filtered task pairs coexist with release-wide summary/deltas; document or separate these API values so consumers cannot confuse cohorts.
 - [ ] Strict publication validation: inspect the dirty change to `PublicationModel` and restore strict scalar validation while retaining JSON collection compatibility.
@@ -22,4 +22,5 @@ Started 2026-10-05 after the cross-prompt audit. Fix items in this order, verify
 - Live benchmark authorization and reviewer/human calibration are absent; synthetic fixtures must not be represented as benchmark results.
 - Phase 7 cloud account, spend authorization and PostgreSQL deployment inputs are absent. Do not provision resources or run live spending without them.
 - The Prompt 05 source artifact `Pasted markdown(5).md` is missing from the workspace.
+- `PCB_TEST_DATABASE_URL` is not configured, so the new PostgreSQL concurrency integration test is currently skipped.
 - Phase 8 final integrated deployment gate has no recorded completion.

@@ -10,6 +10,7 @@ import {
   type Resource,
   scoreEvidenceHref,
 } from "@/lib/public-api";
+import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 
 export function AppHeader() {
   return (
@@ -272,12 +273,10 @@ export function SortableLeaderboard({
   const showRank = entries.some((entry) => entry.rank !== null);
 
   return (
-    <div
-      className="table-wrap"
-      role="region"
-      aria-label="Scrollable published configuration metrics"
-      tabIndex={0}
-    >
+    <KeyboardScrollRegion className="table-wrap" label="Scrollable published configuration metrics">
+      <p className="table-scroll-hint">
+        If columns extend beyond the page, scroll this region horizontally to view the remaining metrics. Tab to the region and use the left and right arrow keys, or scroll with touch or pointer.
+      </p>
       <table className="data-table">
         <caption className="sr-only">
           Published configuration metrics, missingness states, and coverage. Metric values link to their source scorecard.
@@ -372,7 +371,7 @@ export function SortableLeaderboard({
           ))}
         </tbody>
       </table>
-    </div>
+    </KeyboardScrollRegion>
   );
 }
 

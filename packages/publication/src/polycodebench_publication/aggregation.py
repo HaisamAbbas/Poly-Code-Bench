@@ -10,13 +10,15 @@ import hashlib
 import random
 import sys
 from collections import Counter
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Annotated, Literal
+from types import UnionType
+from typing import Annotated, Any, Literal, Union, get_args, get_origin
 
 from polycodebench_core.canonical import canonical_document_digest, canonical_json_bytes
 from polycodebench_core.models import ContractModel, EvaluationState, Gate, Scorecard
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 Positive = Annotated[int, Field(gt=0)]
 
@@ -32,10 +34,58 @@ def _decimal(value: str) -> Decimal:
 
 
 class PublicationModel(ContractModel):
+    """Base for contracts that are written to and read back from JSON.
+
+    ``ContractModel`` is strict so a number cannot arrive as a string. JSON has no tuples, so the
+    before validator converts JSON arrays only for fields declared as tuples. Scalar validation
+    remains strict, and unknown fields are still forbidden.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
     schema_version: Literal[1] = 1
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_json_tuple_fields(cls, value: Any) -> Any:
+        if not isinstance(value, Mapping):
+            return value
+
+        normalized = dict(value)
+        for name, field in cls.model_fields.items():
+            if name in normalized:
+                normalized[name] = _json_array_to_tuple(normalized[name], field.annotation)
+        return normalized
 
     def content_digest(self) -> str:
         return canonical_document_digest(self)
+
+
+def _json_array_to_tuple(value: Any, annotation: Any) -> Any:
+    """Convert JSON arrays to tuples only where the declared contract expects tuples."""
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+
+    if origin is Annotated:
+        return _json_array_to_tuple(value, args[0])
+
+    if origin in (Union, UnionType):
+        tuple_branch = next((arg for arg in args if get_origin(arg) is tuple), None)
+        if tuple_branch is not None:
+            return _json_array_to_tuple(value, tuple_branch)
+        return value
+
+    if origin is tuple:
+        if not isinstance(value, (list, tuple)):
+            return value
+        item_types = args[:-1] if args and args[-1] is Ellipsis else args
+        if len(item_types) == 1 and (not args or args[-1] is Ellipsis):
+            item_types = item_types * len(value)
+        return tuple(
+            _json_array_to_tuple(item, item_types[index]) if index < len(item_types) else item
+            for index, item in enumerate(value)
+        )
+
+    return value
 
 
 class MetricDefinition(PublicationModel):

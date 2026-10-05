@@ -12,6 +12,7 @@ sees is exactly what a published release contains.
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 from pathlib import Path
 
@@ -50,6 +51,7 @@ from polycodebench_publication.releases import (
     digest,
     validate_projection,
 )
+from pydantic import ValidationError
 
 
 def _metric(metric_id: str, value: str | None) -> PublicMetric:
@@ -191,6 +193,20 @@ def _not_found_ids() -> tuple[str, ...]:
         "hidden/oracle.json",
         "secret-reference-abc",
     )
+
+
+def test_publication_json_arrays_round_trip_without_scalar_coercion() -> None:
+    content = _content()
+    decoded_json = json.loads(content.model_dump_json())
+
+    restored = ReleaseContent.model_validate(decoded_json)
+    assert restored == content
+    assert isinstance(restored.entries, tuple)
+    assert isinstance(restored.entries[0].dimensions, tuple)
+
+    malformed = {**decoded_json, "policy_digest": 17}
+    with pytest.raises(ValidationError):
+        ReleaseContent.model_validate(malformed)
 
 
 # -------- E2E-26 style probes

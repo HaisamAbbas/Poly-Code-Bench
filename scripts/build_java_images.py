@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml  # type: ignore[import-untyped]
+import yaml  # type: ignore[import-untyped,unused-ignore]
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGES = ROOT / "infra" / "images" / "java"

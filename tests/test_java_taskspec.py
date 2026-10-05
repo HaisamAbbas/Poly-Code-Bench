@@ -34,7 +34,7 @@ def test_authored_java_task_has_all_required_fixture_variants() -> None:
 
 
 def test_junit_discovery_handles_plain_test_and_other_annotations() -> None:
-    source = b'''package demo;
+    source = b"""package demo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 class ExampleTest {
@@ -45,7 +45,7 @@ class ExampleTest {
     @Test()
     void secondCase() {}
 }
-'''
+"""
     assert discover_cases("tests/demo/ExampleTest.java", source) == [
         "demo.ExampleTest#firstCase",
         "demo.ExampleTest#secondCase",
@@ -110,7 +110,7 @@ def test_resource_concurrency_and_security_cannot_be_advertised_without_evidence
             }
         )
     with pytest.raises(ValueError, match="unknown required analyzer"):
-            JavaQualityPlan.model_validate({"required_analyzers": ("concurrency",)})
+        JavaQualityPlan.model_validate({"required_analyzers": ("concurrency",)})
 
 
 def test_junit_inventory_and_quality_contract_load_without_coercion() -> None:

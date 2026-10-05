@@ -622,9 +622,7 @@ def _check_fixtures(
     # `variant` is the shared admission role (faulty / quality_defective); `language_variant`
     # preserves Java's richer authored-fixture subtype without forking the core admission schema.
     variants = {
-        str(f.get("language_variant", f.get("variant")))
-        for f in fixtures
-        if isinstance(f, Mapping)
+        str(f.get("language_variant", f.get("variant"))) for f in fixtures if isinstance(f, Mapping)
     }
     for needed in VARIANTS:
         if needed not in variants:

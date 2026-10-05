@@ -17,7 +17,7 @@ run_guest = load_guest("pcb_java_run")
 
 
 def test_context_scan_separates_resource_null_concurrency_and_security_defects() -> None:
-    source = b'''package demo;
+    source = b"""package demo;
 import java.io.FileInputStream;
 import java.util.Optional;
 import java.util.Map;
@@ -33,7 +33,7 @@ class Bad {
     return Runtime.getRuntime().exec("lookup " + value);
   }
 }
-'''
+"""
     findings, parsed = scan.scan_text("src/main/java/demo/Bad.java", source)
     assert parsed is True
     rules = {item["rule"] for item in findings if item["verdict"] == "violation"}
@@ -46,7 +46,7 @@ class Bad {
 
 
 def test_context_scan_treats_correct_resource_and_optional_use_as_benign() -> None:
-    source = b'''package demo;
+    source = b"""package demo;
 import java.io.FileInputStream;
 import java.util.Optional;
 class Good {
@@ -55,7 +55,7 @@ class Good {
   }
   String maybe(String value) { return Optional.ofNullable(value).orElse(""); }
 }
-'''
+"""
     findings, parsed = scan.scan_text("src/main/java/demo/Good.java", source)
     assert parsed is True
     assert not [item for item in findings if item["verdict"] == "violation"]
@@ -64,20 +64,15 @@ class Good {
 def test_admission_quality_fixtures_expose_the_declared_context_defects() -> None:
     fixture_root = ROOT / "plugins/languages/java/fixtures/top-words/admission"
     sources = {
-        "resource-unclosed": fixture_root
-        / "resource-leak/src/main/java/demo/TopWords.java",
+        "resource-unclosed": fixture_root / "resource-leak/src/main/java/demo/TopWords.java",
         "published-mutable-state": fixture_root
         / "concurrent-defect/src/main/java/demo/TopWords.java",
-        "command-injection": fixture_root
-        / "security-defective/src/main/java/demo/TopWords.java",
+        "command-injection": fixture_root / "security-defective/src/main/java/demo/TopWords.java",
     }
     for expected, path in sources.items():
         findings, parsed = scan.scan_text(path.as_posix(), path.read_bytes())
         assert parsed
-        assert any(
-            item["rule"] == expected and item["verdict"] == "violation"
-            for item in findings
-        )
+        assert any(item["rule"] == expected and item["verdict"] == "violation" for item in findings)
 
 
 def test_dependency_comparison_reports_findings_and_drift_separately() -> None:
@@ -118,9 +113,7 @@ def _stub_runner(monkeypatch, calls, exit_codes):
     )
 
 
-def test_dependency_pipeline_runs_resolution_before_audit(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_dependency_pipeline_runs_resolution_before_audit(tmp_path: Path, monkeypatch) -> None:
     calls = []
     _stub_runner(monkeypatch, calls, [0, 0])
     monkeypatch.chdir(tmp_path)

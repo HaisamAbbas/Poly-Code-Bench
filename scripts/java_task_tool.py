@@ -91,9 +91,7 @@ def sealed(root: Path, plugin: JavaLanguagePlugin) -> dict[str, Any]:
     runtime["build_recipe_digest"] = canonical_digest(
         plugin.build_plan(view, candidate).model_dump(mode="json")
     )
-    runtime["test_recipe_digest"] = canonical_digest(
-        plugin.test_plan(view).model_dump(mode="json")
-    )
+    runtime["test_recipe_digest"] = canonical_digest(plugin.test_plan(view).model_dump(mode="json"))
     return manifest
 
 

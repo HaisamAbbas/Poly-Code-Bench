@@ -61,9 +61,7 @@ def test_java_freeze_build_test_and_analysis_use_shared_plan_contracts() -> None
         "-Dtest=demo.TopWordsTest"
     )
     behavior_xml = {
-        output.path
-        for output in tests.groups[0].plan.outputs
-        if output.format == "junit_xml"
+        output.path for output in tests.groups[0].plan.outputs if output.format == "junit_xml"
     }
     assert behavior_xml == {
         "work/target/surefire-reports/TEST-demo.TopWordsTest.xml",

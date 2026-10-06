@@ -84,6 +84,13 @@
 - `pcb-model plan` reports one planned call, compatible context/usage controls, strict-cap eligibility, and a USD 0 provider-fee ceiling. This is a plan only: no run, score, or release was created. Local power and hardware costs are outside that fee figure.
 - Evidence: `docs/implementation/evidence/prompt-33/local-ollama-smoke-2026-10-06.json`. This model is not calibrated or admitted for ranked releases. Production worker modes and judge/evaluation/scoring/publication processors remain open.
 
-Decisions: D-33-01 to D-33-08 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
+## EC2 launch-policy follow-up (2026-10-06)
+
+- Found that the EC2 driver issued raw launch parameters while the IAM role only authorizes a lane-specific Terraform launch template. The driver now supplies that exact template, includes the environment and ownership tags at creation, and validates the returned instance type, image, subnet, security group, metadata and public-address state before the first guest-control command.
+- Added the missing read-only `ec2:DescribeSecurityGroups` permission to the lane supervisor roles; the runtime's isolation attestation already requires this call.
+- Fake-EC2 policy verification: `tests/test_sandbox.py` passed 11 tests (one opt-in live-Docker case skipped). The negative case gives the fake instance a public IP and confirms that no guest command is sent. Worker runtime and deployment regressions passed 40 tests total; Ruff, formatting and strict runner mypy passed. Terraform formatting and staging/production `init -backend=false` plus `validate` passed with the pinned Terraform 1.13/AWS 6.36 toolchain.
+- No AWS API was called and no VM was created. A production worker runtime/CLI, approved guest AMI and launch-template deployment remain open; this fixes the existing driver/IAM mismatch only.
+
+Decisions: D-33-01 to D-33-09 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "ec2_launch_template_policy_contract_test",
+  "recorded_on": "2026-10-06",
+  "environment": "offline-fake-ec2",
+  "test_data": "synthetic_internal",
+  "checks": {
+    "launch_request_uses_lane_template": "passed",
+    "launch_request_omits_mutable_image_and_network_overrides": "passed",
+    "launch_tags_include_environment_and_lane": "passed",
+    "unsafe_public_address_rejected_before_guest_control": "passed",
+    "ec2_live_calls": 0,
+    "vm_created": false
+  },
+  "verification": {
+    "tests/test_sandbox.py": "11 passed, 1 opt-in Docker skip",
+    "worker_runtime_and_deployment_regressions": "40 passed, 1 opt-in Docker skip",
+    "terraform_fmt": "passed",
+    "terraform_staging_and_production_validate": "passed (terraform 1.13, AWS provider 6.36.0, backend disabled)",
+    "ruff_and_format": "passed",
+    "strict_mypy_runner": "passed"
+  },
+  "scope_limit": "This fixes the existing sandbox driver/IAM launch mismatch. It does not assemble the production worker runtime or supply an approved AMI."
+}

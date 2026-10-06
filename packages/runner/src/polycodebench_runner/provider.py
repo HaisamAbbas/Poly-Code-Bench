@@ -278,6 +278,7 @@ class Ec2VmSandboxProvider:
         worker_identity_verified: AwsWorkerIdentityVerifier,
         approved_ami_id: str,
         launch_template_by_lane: dict[str, str],
+        launch_template_version_by_lane: dict[str, int],
         environment: str,
         supervisor_role: str,
         control_security_group_id: str,
@@ -293,6 +294,10 @@ class Ec2VmSandboxProvider:
             raise ValueError("each execution lane requires its own approved launch template")
         if any(not value.startswith("lt-") for value in launch_template_by_lane.values()):
             raise ValueError("execution lane launch template ids are invalid")
+        if set(launch_template_version_by_lane) != {"solve", "grading", "admission"}:
+            raise ValueError("each execution lane requires a pinned launch template version")
+        if any(value < 1 for value in launch_template_version_by_lane.values()):
+            raise ValueError("execution lane launch template versions must be positive")
         if environment not in {"integration", "staging", "production"}:
             raise ValueError("execution environment is invalid")
         if supervisor_role not in {"solve-supervisor", "eval-supervisor", "admission-operator"}:
@@ -308,6 +313,7 @@ class Ec2VmSandboxProvider:
         self.worker_identity_verified = worker_identity_verified
         self.approved_ami_id = approved_ami_id
         self.launch_template_by_lane = dict(launch_template_by_lane)
+        self.launch_template_version_by_lane = dict(launch_template_version_by_lane)
         self.environment = environment
         self.supervisor_role = supervisor_role
         self.control_security_group_id = control_security_group_id
@@ -337,7 +343,7 @@ class Ec2VmSandboxProvider:
         response = self.ec2.run_instances(
             LaunchTemplate={
                 "LaunchTemplateId": self.launch_template_by_lane[spec.lane],
-                "Version": "$Default",
+                "Version": str(self.launch_template_version_by_lane[spec.lane]),
             },
             MinCount=1,
             MaxCount=1,

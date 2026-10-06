@@ -451,6 +451,7 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
             "grading": "lt-grading012345",
             "admission": "lt-admission01234",
         },
+        launch_template_version_by_lane={"solve": 4, "grading": 7, "admission": 3},
         environment="staging",
         supervisor_role="solve-supervisor",
         control_security_group_id="sg-supervisor",
@@ -463,7 +464,7 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
     assert handle.isolation_tier == "production"
     assert ec2.call["LaunchTemplate"] == {
         "LaunchTemplateId": "lt-admission01234",
-        "Version": "$Default",
+        "Version": "3",
     }
     launch_tags = ec2.call["TagSpecifications"][0]["Tags"]  # type: ignore[index]
     assert {tag["Key"]: tag["Value"] for tag in launch_tags}["pcb:environment"] == "staging"

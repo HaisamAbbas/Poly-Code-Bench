@@ -24,7 +24,8 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - [x] Verify scheduler reaping against disposable local PostgreSQL: migrated a throwaway PostgreSQL 17.6 container, ran 16 scheduler/operations integration cases with a separate throwaway object store, and ran the guarded scheduler image against that database.
 - [x] Make the production Terraform example bootstrap-safe: services default to zero, schedules are empty, and Terraform requires nonnegative integer counts plus resolved image digests before enabling a service.
 - [x] Review the current official Alibaba Cloud and OCI free-tier rules; record that account eligibility, exact product quotas and a provider-specific deployment target are still unverified. No provider account or resource was touched.
-- [ ] Run the equivalent reaper smoke against staged PostgreSQL, and build the model/judge gateway, solve/evaluation supervisor, scorer and publisher work-processing runtimes; complete staging E2E-42/43 before raising their task counts.
+- [ ] Build and configure the model/judge gateway, solve/evaluation supervisors, scorer and publisher work-processing runtimes. Approved bounded runs currently create durable queued jobs but are not executed locally; the loopback Ollama service has zero installed models (read-only check, no model call or download).
+- [ ] Run the equivalent reaper smoke against staged PostgreSQL and complete staging E2E-42/43 before raising worker task counts.
 - [ ] Select and verify a cloud account/region and its actual trial quotas, expiry, network/domain inputs and owner-approved maximum spend. Alibaba/OCI require a separate target; the current Terraform is AWS-specific. Do not provision resources until those limits are confirmed.
 
 ## Current local evidence

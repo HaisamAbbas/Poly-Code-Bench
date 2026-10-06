@@ -5,6 +5,8 @@ This directory is the operator handbook for WP-24 (Prompt 33). It covers deploym
 | Document | Purpose |
 |---|---|
 | [staging-execution-plan.md](staging-execution-plan.md) | Exact remaining steps, inputs and budget for the first staging deployment. Nothing has been provisioned. |
+| [oracle-free-tier-readiness.md](oracle-free-tier-readiness.md) | OCI Free Tier feasibility for a private synthetic POC and the gap to cloud staging. |
+| [alibaba-trial-staging-readiness.md](alibaba-trial-staging-readiness.md) | Alibaba trial feasibility, verified quota limits and prerequisites for an isolated target. |
 | [retention-and-rights-policy.md](retention-and-rights-policy.md) | What is kept, for how long, who may read it, and how holds override deletion. |
 | [rehearsal-report-2026-10.md](rehearsal-report-2026-10.md) | Restore, drill, load and security rehearsals that were actually executed, with measurements. |
 | [runbooks/](runbooks/) | One runbook per required procedure (T 22.7) and per alert. |

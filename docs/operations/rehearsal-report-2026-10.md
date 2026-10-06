@@ -76,6 +76,20 @@ Not covered by this variant: the selection reached 10 of the 11 strata (`unknown
 
 This is **uncached origin** latency on a shared workstation, with no CDN. It does **not** meet, and is not evidence about, the A 15.3 proposed target of 300 ms **cached** p95. That target remains unmeasured until the staging CDN run.
 
+### Follow-up: current PostgreSQL-backed API, 2026-10-06
+
+The explicit API-origin mode of `scripts/ops_load_rehearsal.py` was run against the existing
+loopback API at `127.0.0.1:8010`, serving the published `synthetic_internal` release
+`7c7fffc5-308f-4837-af58-1d18ba752b22` from the local PostgreSQL-backed catalog. The run sent
+3,000 read-only GETs at concurrency 16 across 11 release, leaderboard, language/model profile,
+comparison, task, scorecard and methodology routes. It measured **19.0 req/s**, p50 **754.325 ms**,
+p95 **1,539.525 ms**, p99 **2,382.115 ms**, with **0 errors** and **750/750 ETag revalidations
+returning 304**.
+
+This is a local API-origin measurement with no CDN or browser rendering. It does not meet, or
+claim anything about, the staging cached-p95 target. Evidence:
+`docs/implementation/evidence/prompt-33/load-rehearsal-local-postgres-api-2026-10-06.json`.
+
 ## 5. Security rehearsal
 
 - **IaC static analysis** (Trivy 0.67.2, `trivy config infra/terraform`):

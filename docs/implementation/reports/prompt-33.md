@@ -69,6 +69,8 @@
 - `pcb-ops migrate check` passes for the current chain through `b390a26f17cd` with no violations; `alembic check` against the local migration database reports no new operations.
 - Terraform formatting passes, and staging plus production pass `terraform init -backend=false` and `terraform validate` in the pinned 1.13 container. The check used isolated temporary Terraform data directories; no plan or apply was run.
 - `tests/test_operations_telemetry.py` and `tests/test_operations_deployment.py`: 36 passed on the current worktree. `tests/test_operations_postgres.py`: 3 passed against local PostgreSQL and SeaweedFS with the local migration identity.
+- Corrected the load rehearsal so its default remains the ephemeral synthetic loopback API, while an explicit `--base-url ... --confirm-target` mode discovers a published release and exercises its read-only public API routes. After final runner hardening, the explicit-target mode was run only against the local PostgreSQL-backed API: 3,000 requests across 11 routes at concurrency 16, 0 errors, p95 1,539.525 ms, and 750/750 ETag revalidations returned 304. Evidence: `docs/implementation/evidence/prompt-33/load-rehearsal-local-postgres-api-2026-10-06.json`. This is local API-only evidence; browser page load and staging CDN remain unverified.
+- The rehearsal's under-sampled-route case (`requests < discovered routes`) initially exposed an empty-percentile crash; it now records null per-route percentiles for routes with zero load samples. The 1-request explicit loopback smoke passes.
 
 Decisions: D-33-01 to D-33-08 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 

@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "environment_class": "local loopback API origin; no CDN",
+  "target_mode": "explicit_api_origin",
+  "target_release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
+  "release_fixture_kind": "synthetic_internal",
+  "claim": "read-only API route measurement only; does not establish browser page timing or the A 15.3 300 ms staging target",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10"
+  },
+  "requests": 3000,
+  "concurrency": 16,
+  "routes_exercised": [
+    "/v1/releases",
+    "/v1/releases/7c7fffc5-308f-4837-af58-1d18ba752b22",
+    "/v1/leaderboard",
+    "/v1/tasks",
+    "/v1/methodology/synthetic-ui-fixture-v1",
+    "/v1/models/synthetic-answer-only",
+    "/v1/languages/python",
+    "/v1/scorecards/synthetic-scorecard-answer",
+    "/v1/compare",
+    "/v1/tasks/synthetic-browse-task-001",
+    "/v1/tasks/synthetic-browse-task-001/content"
+  ],
+  "throughput_rps": 19.0,
+  "latency_ms": {
+    "p50": 754.325,
+    "p95": 1539.525,
+    "p99": 2382.115,
+    "max": 4137.147,
+    "mean": 840.928
+  },
+  "revalidations_304": 750,
+  "revalidations": 750,
+  "error_rate": 0.0,
+  "errors": [],
+  "per_route": {
+    "/v1/releases": {
+      "requests": 273,
+      "p50_ms": 853.309,
+      "p95_ms": 1883.8
+    },
+    "/v1/releases/7c7fffc5-308f-4837-af58-1d18ba752b22": {
+      "requests": 273,
+      "p50_ms": 862.095,
+      "p95_ms": 1792.989
+    },
+    "/v1/leaderboard": {
+      "requests": 273,
+      "p50_ms": 726.454,
+      "p95_ms": 1369.748
+    },
+    "/v1/tasks": {
+      "requests": 273,
+      "p50_ms": 745.332,
+      "p95_ms": 1509.661
+    },
+    "/v1/methodology/synthetic-ui-fixture-v1": {
+      "requests": 273,
+      "p50_ms": 727.002,
+      "p95_ms": 1421.875
+    },
+    "/v1/models/synthetic-answer-only": {
+      "requests": 273,
+      "p50_ms": 731.628,
+      "p95_ms": 1435.557
+    },
+    "/v1/languages/python": {
+      "requests": 273,
+      "p50_ms": 734.16,
+      "p95_ms": 1440.671
+    },
+    "/v1/scorecards/synthetic-scorecard-answer": {
+      "requests": 273,
+      "p50_ms": 745.721,
+      "p95_ms": 1482.718
+    },
+    "/v1/compare": {
+      "requests": 272,
+      "p50_ms": 742.339,
+      "p95_ms": 1383.565
+    },
+    "/v1/tasks/synthetic-browse-task-001": {
+      "requests": 272,
+      "p50_ms": 717.753,
+      "p95_ms": 1430.116
+    },
+    "/v1/tasks/synthetic-browse-task-001/content": {
+      "requests": 272,
+      "p50_ms": 713.615,
+      "p95_ms": 1384.428
+    }
+  }
+}

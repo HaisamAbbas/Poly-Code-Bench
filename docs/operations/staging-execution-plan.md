@@ -13,11 +13,25 @@
 | 5 | Bucket name prefix (org slug) | `bucket_prefix` |
 | 6 | Domain for the staging test board, plus ACM certificates (regional and us-east-1) | `domain_names`, `alb_certificate_arn`, `cdn_certificate_arn` |
 | 7 | Approved guest AMI, built by the AMI pipeline from `infra/sandbox/aws/guest/bootstrap-control.sh`, with its image manifest/SBOM | `approved_guest_ami_id` |
-| 8 | Control-service image digests, pushed to the environment's ECR | `services.*.image` |
+| 8 | Public API/web image digests and the operations image digest, pushed to the environment's ECR; see the bootstrap cycle below | `services.*.image` |
 | 9 | On-call alert addresses | `alert_email_endpoints` |
 | 10 | Activation of the `pcb:environment` cost-allocation tag in Billing | budget filter |
+| 11 | OIDC issuer URL and registered public client ID with the exact HTTPS callback URI | web task environment; callback must be registered at the issuer |
 
 The Terraform budget sends notifications for tagged cost data; it does **not** impose a hard account-wide spending limit. AWS says budget data updates only a few times per day and charges can exceed a threshold before its notification arrives ([AWS Budgets timing and limits](https://docs.aws.amazon.com/cost-management/latest/userguide/bcm-lite-use-budget.html)). The example tfvars sets `monthly_budget_usd = 0`, which fails positive-value validation until the owner supplies an approved threshold. Do not treat the proposed $600 or $150 planning amounts as authorization, and do not apply staging based on budget alerts alone. The owner must approve the actual resource envelope and shutdown response while accepting the residual billing-delay risk.
+
+The public API/web runtime additionally requires a selected OIDC issuer, registered client ID and
+callback URL, a reconciled environment manifest, populated database/cursor secrets, and a
+randomly generated shared web/API signing key. The API receives its principal fingerprint export
+as bounded JSON from Secrets Manager; the initial export is empty and grants no operator role.
+The control-services module advertises API through the environment-scoped ECS Service Connect
+name `api`, which is the URL baked into the web image. The web task health path is `/`.
+
+Only the API and web production image builds exist today. The other always-on Terraform roles do
+not yet have matching daemon commands and runtime images. Building these two images does not make
+E2E-42/E2E-43 deployable; do not scale roles without an implemented image and a passing local
+runtime check. Build details and the evidence scope are recorded in
+[`container-images.md`](container-images.md).
 
 E2E-42 and E2E-43 need **no model or judge provider spend**. Provider outage is exercised against the gateway with egress denied, not against a live provider. Live pilot spend remains a separate authorization (Prompt 17).
 
@@ -30,13 +44,16 @@ Every command is **[S]**: not executed. Run them as the named role.
 uv run --offline --locked --all-packages pcb-ops env validate
 uv run --offline --locked --all-packages pcb-ops migrate check     # current local tree passes
 
-# 1. State + plan + apply (platform owner)
+# 1. Bootstrap the infrastructure with services/schedules left disabled (platform owner).
+#    The committed staging example sets every desired_count to 0 and schedules to {}.
+#    Do not raise counts while the image fields still contain REQUIRED/zero-digest placeholders.
 cd infra/terraform/environments/staging
 cp backend.hcl.example backend.hcl && cp terraform.tfvars.example terraform.tfvars   # fill every REQUIRED
 terraform init -backend-config=backend.hcl
-terraform plan -out=staging.plan          # review: no resource outside pcb:environment=staging
-terraform apply staging.plan              # resource count is whatever the reviewed plan shows
+terraform plan -out=staging-bootstrap.plan # review: no resource outside pcb:environment=staging
+terraform apply staging-bootstrap.plan    # creates infra/task definitions, starts no app service
 terraform output -json deployment > ../../../../config/environments/staging.terraform-output.json
+cd ../../../../                           # back to repository root for pcb-ops and Docker builds
 
 # 2. Make the manifest deployable (platform owner)
 #    fill config/environments/staging.yaml from the output, set status: deployed
@@ -44,13 +61,27 @@ uv run --offline --locked --all-packages pcb-ops env reconcile --env staging \
   --terraform-output config/environments/staging.terraform-output.json   # must print no differences
 uv run --offline --locked --all-packages pcb-ops doctor --profile staging # must exit 0
 
-# 3. Secrets (key ceremony: two approvers + owner)
+# 3. Set OIDC values in terraform.tfvars and create the required secret values (two approvers + owner).
+#    The identity-export secret already contains only {schema_version:1, principals:[]}; it grants no roles.
+#    Add only SHA-256 token fingerprints and scoped claims for approved reviewer/admin accounts.
 aws secretsmanager put-secret-value --secret-id pcb/staging/db/<role> ...          # per role
 aws secretsmanager put-secret-value --secret-id pcb/staging/api/cursor-signing-key ...
+aws secretsmanager put-secret-value --secret-id pcb/staging/api/web-auth-signing-key ... # random >=32 bytes, same for API+web
+# If the OIDC provider requires a confidential client, set PCB_OIDC_CLIENT_SECRET by secret reference.
 pcb-ops keys rotate --keyring keyring.json --new-key-id staging-ed25519-2026-10 --private-key-out <offline>
 aws secretsmanager put-secret-value --secret-id pcb/staging/signing/staging-ed25519-2026-10 --secret-binary fileb://<offline>
 
-# 4. Schema (migrator task; refuses non-expand migrations)
+# 4. Build and push reviewed immutable app images after the environment manifest is deployed.
+#    The api image also carries pcb-ops for identity-guarded one-off operations.
+docker build --platform linux/amd64 --file Dockerfile.api --build-arg `
+  PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --tag pcb-api:staging .
+docker build --platform linux/amd64 --file Dockerfile.web --build-arg `
+  PCB_PUBLIC_API_URL=http://api:8000/v1 --tag pcb-web:staging .
+#    Push the API image to the api and ops ECR repositories; push web separately. Resolve the
+#    resulting ECR digests and update only api, web, migrator, ops-reaper and restore-operator.
+#    Other long-running worker/gateway roles remain at 0 until their matching daemons are built.
+
+# 5. Schema (migrator task; refuses non-expand migrations)
 # Bootstrap PostgreSQL roles with provision_roles.sql before migration and apply
 # grant_permissions.sql after Alembic. The API login belongs to exactly these scoped groups:
 # pcb_public_reader, pcb_submitter, pcb_submission_reviewer,
@@ -59,9 +90,16 @@ aws secretsmanager put-secret-value --secret-id pcb/staging/signing/staging-ed25
 aws ecs run-task --cluster pcb-staging --task-definition pcb-staging-migrator --launch-type FARGATE \
   --network-configuration 'awsvpcConfiguration={subnets=[<control>],securityGroups=[<control-sg>]}'
 
-# 5. Services: desired counts come from tfvars; verify each task logged a verified identity
-aws logs filter-log-events --log-group-name /pcb/staging/scheduler --filter-pattern '"PCB_VERIFIED_ENVIRONMENT"'
+# 6. Set the reviewed API/web counts (and only implemented one-shot operations) in terraform.tfvars,
+#    set schedules only after their ops image exists, plan, review, and apply. Verify each task's
+#    startup log contains the expected verified identity before sending traffic.
+aws logs filter-log-events --log-group-name /pcb/staging/api --filter-pattern '"PCB_VERIFIED_ENVIRONMENT"'
 ```
+
+This bootstrap is infrastructure preparation, not the full staging acceptance run. Scheduler,
+model/judge gateways, solve/evaluation supervisors, scorer and publisher do not yet have complete
+long-running runtime images. Their Terraform example counts are therefore zero; the API and web
+images alone cannot pass E2E-42/E2E-43. Do not raise those counts or point them at the API image.
 
 ## 3. Staging acceptance runs (E2E-42, E2E-43)
 
@@ -100,7 +138,11 @@ Production-only steps not executed and not planned in staging: production Multi-
 
 ## 4. Budget
 
-Bill of materials for the staging parameters in `terraform.tfvars.example`: 2 AZs, `db.t4g.medium` single-AZ, 8 always-on Fargate tasks (3.75 vCPU, 7.5 GB total), no reserved performance capacity.
+The prior full-staging estimate below describes 2 AZs, `db.t4g.medium` single-AZ and 8 always-on
+Fargate tasks (3.75 vCPU, 7.5 GB total), with no reserved performance capacity. The committed
+bootstrap profile starts no ECS service, but an applied stack still accrues database, VPC/NAT,
+endpoint, load balancer, monitoring and storage charges. A later API/web-only profile also differs
+from both quantities. Re-price the exact reviewed plan and shutdown window before authorization.
 
 The unit prices are **planning assumptions** taken from publicly listed us-east-1 on-demand prices, as known to the author at the time of writing. They were **not** fetched from AWS for this plan. Re-price everything with the AWS Pricing Calculator for the approved region on the authorization date.
 

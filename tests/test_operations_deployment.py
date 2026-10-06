@@ -141,7 +141,9 @@ def test_identity_verify_uses_the_trusted_source_and_fails_closed() -> None:
         claimed_role="publisher",
         caller_source=lambda: _caller(role="publisher"),
     )
-    assert identity.verified_environment(ok)["PCB_VERIFIED_ISOLATION_TIER"] == "production"
+    verified = identity.verified_environment(ok)
+    assert verified["PCB_SERVICE_IDENTITY"] == ok.principal == _caller(role="publisher").arn
+    assert verified["PCB_VERIFIED_ISOLATION_TIER"] == "production"
 
     def unavailable() -> CallerPrincipal:
         raise ConnectionError("sts unreachable")

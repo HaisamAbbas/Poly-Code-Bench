@@ -7,8 +7,8 @@ entrypoint (infra/terraform/modules/control_services). The guard:
 2. asks the trusted identity service (AWS STS) who this process is - never the request;
 3. resolves environment, role and isolation tier with
    :func:`polycodebench_core.deployment.resolve_deployment`, refusing on any mismatch;
-4. only then replaces itself with the service command, exporting the *verified* values as
-   ``PCB_VERIFIED_ENVIRONMENT``/``PCB_VERIFIED_ROLE``/``PCB_VERIFIED_ISOLATION_TIER``.
+4. only then replaces itself with the service command, exporting the verified deployment and
+   principal for authorization and audit attribution.
 
 IAM remains the primary control (a staging role cannot touch production resources at all);
 this guard makes a mis-deployed container fail closed instead of running with the wrong policy.
@@ -89,6 +89,7 @@ def verify(
 
 def verified_environment(deployment: VerifiedDeployment) -> dict[str, str]:
     return {
+        "PCB_SERVICE_IDENTITY": deployment.principal,
         "PCB_VERIFIED_ENVIRONMENT": deployment.environment,
         "PCB_VERIFIED_ROLE": deployment.role,
         "PCB_VERIFIED_ISOLATION_TIER": deployment.isolation_tier,

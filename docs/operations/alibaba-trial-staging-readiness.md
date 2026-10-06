@@ -151,6 +151,17 @@ development-only deployment instead of weakening per-service credential boundari
 
 ## Owner inputs required for a concrete trial target
 
+Before choosing an implementation, check the signed-in console and record only these
+non-secret facts (a screenshot with account identifiers redacted is sufficient):
+
+- Under **My Trial > Service Free Trial**, the exact ECS/OSS/KMS offers shown, eligible region,
+  instance/disk configuration, remaining compute and traffic quota, and trial expiry. Confirm
+  whether each resource is released or becomes billable at expiry.
+- Under **My Trial > Solution Free Trial**, any solution points, balance, expiry, and the
+  selected solution's maximum duration. Do not assume that solution-trial resources persist.
+- The billing currency, existing account spending controls/alerts, and an owner-approved maximum
+  total exposure and shutdown date. Alerts and free quotas are not hard spending caps.
+
 - The Alibaba region selected in the console.
 - Which of ACK, ECS, RDS PostgreSQL 17, OSS, KMS/Secrets Manager, and container registry are
   available to this account's trial, including quotas and trial expiry dates. A screenshot or
@@ -170,4 +181,6 @@ development-only deployment instead of weakening per-service credential boundari
 - [ACK RRSA](https://www.alibabacloud.com/help/en/ack/ack-managed-and-ack-dedicated/user-guide/use-rrsa-to-authorize-pods-to-access-different-cloud-services): pod-scoped RAM roles use short-lived STS credentials.
 - [RDS PostgreSQL release notes](https://www.alibabacloud.com/help/en/rds/apsaradb-rds-for-postgresql/rds-pg): PostgreSQL 17 and 18 support is documented; availability still needs confirmation in the selected region and trial.
 - [Alibaba Cloud free-trial terms](https://www.alibabacloud.com/help/en/user-center/product-overview/learn-about-free-trials): eligibility, trial duration, and resource cleanup depend on the product offer.
+- [ECS free-trial guide](https://help.aliyun.com/en/ecs/user-guide/ecs-free-trial): finite ECS and system-disk quota, traffic allowance, eligible regions, and pay-as-you-go billing after expiry.
+- [KMS billing FAQ](https://www.alibabacloud.com/help/en/kms/key-management-service/product-overview/faq-2): one software KMS trial instance auto-converts to pay-as-you-go after 14 days unless released.
 - [OSS free trial for new users](https://www.alibabacloud.com/help/en/oss/free-quota-for-new-users): current capacity quota and excluded billable items.

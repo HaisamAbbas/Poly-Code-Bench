@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "fixture_kind": "synthetic_test",
+  "verified_at": "2026-10-06",
+  "checks": {
+    "submission_api_unit_tests": "5 passed",
+    "postgres_submission_integration_tests": "4 passed",
+    "prompt32_browser_tests": "2 passed",
+    "python_lint": "passed",
+    "web_lint": "passed",
+    "web_typecheck": "passed",
+    "openapi_types_check": "passed"
+  },
+  "database": {
+    "engine": "PostgreSQL 16",
+    "lifecycle": "disposable local test container",
+    "api_role": "pcb_test_login with pcb_submission_approver membership",
+    "migration_role": "separate PostgreSQL administrator connection",
+    "summary_permission": "repository reads persisted stage_job state; API resolves the run from the caller's owned submission and returns aggregate state counts only"
+  },
+  "approved_bounded_run": {
+    "run_status": "queued",
+    "attempt_states": {"queued": 1},
+    "solve_job_states": {"queued": 1},
+    "status_response": "contains only persisted state counts and run status",
+    "provider_endpoint_requests": 0,
+    "live_model_spend": 0
+  },
+  "browser_evidence": {
+    "approved_state": "docs/implementation/evidence/prompt-32/submission-approved-progress-desktop.png",
+    "approved_state_mobile": "docs/implementation/evidence/prompt-32/submission-approved-progress-mobile.png",
+    "synthetic_fixture": true,
+    "mobile_viewport_width": 375,
+    "horizontal_overflow": false
+  },
+  "limitations": [
+    "The browser approved-state response is synthetic UI fixture data; the PostgreSQL integration test verifies the real API response and least-privilege database path.",
+    "No solve worker processed this queue entry; the progress remains queued until an authorized worker is deployed.",
+    "This evidence is not a live benchmark result."
+  ]
+}

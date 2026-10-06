@@ -234,7 +234,9 @@ data "aws_iam_policy_document" "service" {
   }
 
   dynamic "statement" {
-    for_each = each.key == "model-gateway" ? [1] : []
+    # The solve supervisor runs the same accountable ModelGateway in-process while claiming
+    # solve work; both roles are limited to this environment's model credential namespace.
+    for_each = contains(["model-gateway", "solve-supervisor"], each.key) ? [1] : []
     content {
       sid       = "ModelNamespaceOnly"
       actions   = ["secretsmanager:GetSecretValue"]

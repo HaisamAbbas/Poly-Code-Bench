@@ -107,6 +107,11 @@
 - Local API/OIDC policy tests passed 20/20; web lint and TypeScript checks passed; Docker Compose configuration validation passed. The API and leaderboard remained healthy after verification.
 - The displayed release is labelled `Synthetic internal test data`; it is not benchmark evidence. Desktop/mobile screenshots are retained only in ignored `.cache/local-stack-browser/`; the committed JSON records no account, request ID, or credential data. No cloud resource or model call was used.
 
+## Approved submission to bounded queue (2026-10-06)
+
+- Ran `test_approved_submission_recovers_one_bounded_postgres_run` against the actual local PostgreSQL 17.6 website database, with the API's restricted application role and a separate migration connection. The synthetic administrator path refused approval while the endpoint was pending, then approved the endpoint using a fixture conformance report, injected a retry interruption after idempotent run creation, and recovered the same run on replay.
+- The test verified one queued run, one attempt and one solve job, persisted run/token limits, audit events and submitter-safe queued progress. The generated job remains queued in the local test database. `PCB_WORKER_DISPATCH_ENABLED=false`; no worker process ran, no provider endpoint or model was contacted, and no score/release was created. Evidence: `docs/implementation/evidence/prompt-33/approved-bounded-run-local-postgres-2026-10-06.json`.
+
 ## Free cloud target review (2026-10-06)
 
 - Reviewed the current official Alibaba and OCI free-tier terms and recorded the account-specific checks in `docs/operations/free-cloud-target-review-2026-10.md`. Alibaba's listed ECS free offer is not enough to infer this account's quotas; solution trials are temporary and their data is deleted on expiry. OCI has an Always Free A1 option, but requires a different target and self-managed PostgreSQL for this application.

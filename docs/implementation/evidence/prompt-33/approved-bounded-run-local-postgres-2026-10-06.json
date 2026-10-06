@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "approved_submission_bounded_run_integration",
+  "verified_at": "2026-10-06",
+  "fixture_kind": "synthetic_test",
+  "environment": "loopback-only local development",
+  "database": {
+    "engine": "PostgreSQL 17.6",
+    "submitter_api_login": "pcb_local_api",
+    "migration_connection_separate": true
+  },
+  "test": {
+    "name": "test_approved_submission_recovers_one_bounded_postgres_run",
+    "result": "passed",
+    "database_role_boundary": "application role has submitter, reviewer, approver, endpoint administrator and public reader memberships, but no broad administrator/operator memberships"
+  },
+  "approval_flow": {
+    "pending_endpoint_approval_status": 403,
+    "no_run_created_before_endpoint_approval": true,
+    "recovery_after_interruption_status": 202,
+    "idempotent_replay_returns_same_run": true,
+    "owner_status": "queued",
+    "runs_created": 1,
+    "attempts_created": 1,
+    "solve_jobs_created": 1,
+    "run_budget_limit_micro_usd": 100000,
+    "input_token_limit": 8192,
+    "output_token_limit": 128,
+    "audit_events_checked": true
+  },
+  "execution_boundary": {
+    "worker_dispatch_enabled": false,
+    "active_local_worker_process": false,
+    "provider_endpoint_calls": 0,
+    "model_calls": 0,
+    "live_spend_micro_usd": 0,
+    "queued_fixture_remains_in_local_test_database": true
+  },
+  "limitations": [
+    "This verifies approval and bounded queue creation only; no worker processed the job and no score or release was created.",
+    "The approved endpoint and rights record are synthetic test fixtures, not usable provider credentials or production approval."
+  ]
+}

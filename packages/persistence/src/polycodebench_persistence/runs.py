@@ -17,6 +17,7 @@ from polycodebench_core.application_errors import (
     PersistenceConflict,
     PersistenceUnavailable,
 )
+from polycodebench_core.canonical import canonical_digest, sha256_bytes
 from polycodebench_core.identity import derive_sample_seed
 from polycodebench_core.model_planning import ModelConfig, cost_bound
 from sqlalchemy import delete, func, insert, select, update
@@ -36,6 +37,8 @@ from polycodebench_persistence.models import (
     idempotency_record,
     model_revision,
     run,
+    stage_job,
+    stage_job_event,
     task_set,
     task_set_member,
     task_version,
@@ -43,6 +46,10 @@ from polycodebench_persistence.models import (
 
 IDEMPOTENCY_TTL = timedelta(days=7)
 MAX_ATTEMPTS_PER_RUN = 100_000
+
+
+def _logical_key(scope_type: str, scope_id: UUID, key: str) -> str:
+    return sha256_bytes(f"{scope_type}:{scope_id}:{key}".encode("ascii"))
 
 
 class PostgresRunRepository:
@@ -373,6 +380,9 @@ class PostgresRunRepository:
             )
         attempt_ids: list[UUID] = []
         attempt_rows: list[dict[str, object]] = []
+        solve_job_rows: list[dict[str, object]] = []
+        solve_job_events: list[dict[str, object]] = []
+        provider_key = str(request.get("endpoint_registration_id") or "system")
         for member in members:
             for sample_index in range(samples_per_task):
                 attempt_id = uuid4()
@@ -388,7 +398,54 @@ class PostgresRunRepository:
                         "state": "queued",
                     }
                 )
+                logical_key = _logical_key("attempt", attempt_id, "solve")
+                input_digest = canonical_digest(
+                    {
+                        "kind": "solve_job_input",
+                        "schema_version": 1,
+                        "attempt_id": str(attempt_id),
+                        "run_config_digest": config_row["digest"],
+                        "task_version_id": str(member["id"]),
+                        "task_version_digest": member["digest"],
+                        "sample_index": sample_index,
+                        "sample_seed": str(seed),
+                    }
+                )
+                job_id = uuid4()
+                solve_job_rows.append(
+                    {
+                        "id": job_id,
+                        "attempt_id": attempt_id,
+                        "stage": "solve",
+                        "shard_key": str(sample_index),
+                        "input_digest": input_digest,
+                        "logical_key": logical_key,
+                        "state": "queued",
+                        "required": True,
+                        "queue_class": "solve",
+                        "resource_class": "default",
+                        "fairness_campaign_id": campaign_id,
+                        "provider_key": provider_key,
+                        "priority": 0,
+                        "max_deliveries": 3,
+                    }
+                )
+                solve_job_events.append(
+                    {
+                        "id": uuid4(),
+                        "job_id": job_id,
+                        "event_seq": 1,
+                        "event_kind": "job_created",
+                        "actor": subject_id,
+                        "fence": None,
+                        "details": {"stage": "solve", "logical_key": logical_key},
+                    }
+                )
         connection.execute(insert(attempt), attempt_rows)
+        # Attempts and their first executable stage commit together. A queued run can
+        # therefore never be visible without durable solve work for every sample.
+        connection.execute(insert(stage_job), solve_job_rows)
+        connection.execute(insert(stage_job_event), solve_job_events)
         return run_id, attempt_ids
 
     @staticmethod

@@ -39,6 +39,8 @@ from polycodebench_persistence.models import (
     config_document,
     model_revision,
     run,
+    stage_job,
+    stage_job_event,
     task,
     task_set,
     task_set_member,
@@ -547,6 +549,33 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 select(attempt.c.id, attempt.c.state).where(attempt.c.run_id == run_id)
             ).all()
             assert len(attempts) == 1 and attempts[0][1] == "queued"
+            solve_jobs = (
+                connection.execute(
+                    select(
+                        stage_job.c.id,
+                        stage_job.c.attempt_id,
+                        stage_job.c.stage,
+                        stage_job.c.state,
+                        stage_job.c.queue_class,
+                        stage_job.c.input_digest,
+                    ).where(stage_job.c.attempt_id == attempts[0][0])
+                )
+                .mappings()
+                .all()
+            )
+            assert len(solve_jobs) == 1
+            assert solve_jobs[0]["stage"] == "solve"
+            assert solve_jobs[0]["state"] == "queued"
+            assert solve_jobs[0]["queue_class"] == "solve"
+            assert solve_jobs[0]["input_digest"].startswith("sha256:")
+            assert (
+                connection.execute(
+                    select(stage_job_event.c.event_kind).where(
+                        stage_job_event.c.job_id == solve_jobs[0]["id"]
+                    )
+                ).scalar_one()
+                == "job_created"
+            )
             budget = connection.execute(
                 select(budget_account.c.hard_limit_micro_usd).where(
                     budget_account.c.scope_kind == "run",

@@ -17,6 +17,9 @@ locals {
 
   long_running = { for name, svc in var.services : name => svc if svc.desired_count > 0 }
   with_port    = { for name, svc in var.services : name => svc if svc.port != null }
+  service_connect_servers = {
+    for name, svc in var.services : name => svc if name == "api" && svc.port != null
+  }
 
   base_environment = {
     PCB_ENVIRONMENT    = var.environment
@@ -36,6 +39,14 @@ resource "aws_ecs_cluster" "this" {
     value = "enhanced"
   }
   tags = local.tags
+}
+
+# The web server calls the API directly for server-rendered pages and authenticated
+# same-origin proxy routes. Service Connect provides a stable private endpoint for both.
+resource "aws_service_discovery_http_namespace" "control" {
+  name        = local.name
+  description = "Private ECS service endpoints for ${var.environment}"
+  tags        = local.tags
 }
 
 # ---------------------------------------------------------------- network
@@ -73,6 +84,16 @@ resource "aws_vpc_security_group_ingress_rule" "services_from_alb" {
   from_port                    = each.value.port
   to_port                      = each.value.port
   referenced_security_group_id = aws_security_group.alb.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "services_from_control" {
+  for_each                     = local.service_connect_servers
+  security_group_id            = var.control_security_group_id
+  description                  = "Service Connect traffic to ${each.key}"
+  ip_protocol                  = "tcp"
+  from_port                    = each.value.port
+  to_port                      = each.value.port
+  referenced_security_group_id = var.control_security_group_id
 }
 
 resource "aws_lb" "public" {
@@ -166,7 +187,19 @@ resource "aws_ecs_task_definition" "this" {
       ]
       command         = each.value.command
       linuxParameters = { initProcessEnabled = true, capabilities = { drop = ["ALL"] } }
-      portMappings    = each.value.port == null ? [] : [{ containerPort = each.value.port, protocol = "tcp" }]
+      portMappings    = each.value.port == null ? [] : [{ name = each.key, containerPort = each.value.port, protocol = "tcp", appProtocol = "http" }]
+      healthCheck = each.value.port == null ? null : {
+        command = [
+          "CMD-SHELL",
+          each.value.role == "web" ?
+          "node -e \"fetch('http://127.0.0.1:${each.value.port}${each.value.health_path}').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1))\"" :
+          "python -c \"from urllib.request import urlopen; urlopen('http://127.0.0.1:${each.value.port}${each.value.health_path}', timeout=2)\"",
+        ]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 30
+      }
       environment = [
         for key, value in merge(local.base_environment, { PCB_ROLE = each.value.role }, each.value.environment) :
         { name = key, value = value }
@@ -218,6 +251,7 @@ resource "aws_ecs_service" "this" {
   task_definition                    = aws_ecs_task_definition.this[each.key].arn
   desired_count                      = each.value.desired_count
   launch_type                        = "FARGATE"
+  platform_version                   = "LATEST"
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
   enable_execute_command             = false
@@ -233,6 +267,24 @@ resource "aws_ecs_service" "this" {
     subnets          = var.control_subnet_ids
     security_groups  = [var.control_security_group_id]
     assign_public_ip = false
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.control.arn
+
+    dynamic "service" {
+      for_each = each.key == "api" ? [each.value] : []
+      content {
+        port_name      = each.key
+        discovery_name = each.key
+
+        client_alias {
+          dns_name = each.key
+          port     = service.value.port
+        }
+      }
+    }
   }
 
   dynamic "load_balancer" {

@@ -71,8 +71,8 @@ variable "services" {
     error_message = "Every service image must be pinned by @sha256 digest."
   }
   validation {
-    condition     = contains(keys(var.services), "api") && contains(keys(var.services), "web")
-    error_message = "services must include api and web (the ALB routes to both)."
+    condition     = contains(keys(var.services), "api") && contains(keys(var.services), "web") && var.services["api"].port != null && var.services["web"].port != null
+    error_message = "services must include api and web with ports (the ALB and Service Connect route to both)."
   }
 }
 

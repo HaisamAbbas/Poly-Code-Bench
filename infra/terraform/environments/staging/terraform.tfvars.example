@@ -22,17 +22,20 @@ alb_certificate_arn            = "arn:aws:acm:REQUIRED"
 cdn_certificate_arn            = "arn:aws:acm:us-east-1:REQUIRED:certificate/REQUIRED"
 domain_names                   = ["staging.REQUIRED-domain"]
 alert_email_endpoints          = ["REQUIRED-oncall@example.invalid"]
-monthly_budget_usd             = 0  # REQUIRED: replace with an owner-approved positive alert threshold.
+monthly_budget_usd             = 0 # REQUIRED: replace with an owner-approved positive alert threshold.
 
+# Bootstrap-safe defaults: no task or schedule starts with placeholder image digests.
+# After infrastructure and the deployed manifest exist, publish reviewed images and raise only
+# services whose command/runtime has a verified implementation.
 services = {
   "api" = {
     role          = "api"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/api@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
     port          = 8000
-    command       = ["uvicorn", "polycodebench_api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    command       = ["uvicorn", "polycodebench_api.app:app", "--host", "0.0.0.0", "--port", "8000"]
     environment = {
       PCB_PUBLIC_RELEASE_BACKEND = "postgres"
       PCB_PUBLICATION_TARGET     = "staging:test-board"
@@ -43,15 +46,23 @@ services = {
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/web@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
     port          = 3000
+    health_path   = "/"
+    environment = {
+      PCB_PUBLIC_API_URL    = "http://api:8000/v1"
+      PCB_OIDC_ISSUER       = "https://REQUIRED-oidc-issuer"
+      PCB_OIDC_CLIENT_ID    = "REQUIRED-public-client-id"
+      PCB_OIDC_REDIRECT_URI = "https://staging.REQUIRED-domain/auth/callback"
+      PCB_WEB_ORIGIN        = "https://staging.REQUIRED-domain"
+    }
   }
   "scheduler" = {
     role          = "scheduler"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/scheduler@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 256
     memory        = 512
-    desired_count = 1
+    desired_count = 0
     command       = ["pcb-scheduler", "reap", "--watch"]
   }
   "model-gateway" = {
@@ -59,35 +70,35 @@ services = {
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/model-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "judge-gateway" = {
     role          = "judge-gateway"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/judge-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "solve-supervisor" = {
     role          = "solve-supervisor"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/solve-supervisor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "eval-supervisor" = {
     role          = "eval-supervisor"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/eval-supervisor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "scorer" = {
     role          = "scorer"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-staging/scorer@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "publisher" = {
     role          = "publisher"
@@ -122,20 +133,4 @@ services = {
   }
 }
 
-schedules = {
-  "orphan-sweep" = {
-    service    = "ops-reaper"
-    expression = "rate(5 minutes)"
-    command    = ["pcb-ops", "orphans", "sweep", "--provider", "ec2"]
-  }
-  "artifact-gc" = {
-    service    = "ops-reaper"
-    expression = "cron(30 1 * * ? *)"
-    command    = ["pcb-ops", "artifacts", "collect-garbage"]
-  }
-  "restore-rehearsal" = {
-    service    = "restore-operator"
-    expression = "cron(0 6 1 1,4,7,10 ? *)"
-    command    = ["pcb-ops", "restore", "rehearse", "--target", "aws-pitr"]
-  }
-}
+schedules = {}

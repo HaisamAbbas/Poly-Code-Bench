@@ -22,7 +22,7 @@ alb_certificate_arn            = "arn:aws:acm:REQUIRED"
 cdn_certificate_arn            = "arn:aws:acm:us-east-1:REQUIRED:certificate/REQUIRED"
 domain_names                   = ["REQUIRED-domain"]
 alert_email_endpoints          = ["REQUIRED-oncall@example.invalid"]
-monthly_budget_usd             = 0  # REQUIRED owner-approved cap
+monthly_budget_usd             = 0 # REQUIRED owner-approved cap
 
 services = {
   "api" = {
@@ -32,7 +32,7 @@ services = {
     memory        = 1024
     desired_count = 2
     port          = 8000
-    command       = ["uvicorn", "polycodebench_api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    command       = ["uvicorn", "polycodebench_api.app:app", "--host", "0.0.0.0", "--port", "8000"]
     environment = {
       PCB_PUBLIC_RELEASE_BACKEND = "postgres"
       PCB_PUBLICATION_TARGET     = "production:board"
@@ -45,6 +45,14 @@ services = {
     memory        = 1024
     desired_count = 2
     port          = 3000
+    health_path   = "/"
+    environment = {
+      PCB_PUBLIC_API_URL    = "http://api:8000/v1"
+      PCB_OIDC_ISSUER       = "https://REQUIRED-oidc-issuer"
+      PCB_OIDC_CLIENT_ID    = "REQUIRED-public-client-id"
+      PCB_OIDC_REDIRECT_URI = "https://REQUIRED-domain/auth/callback"
+      PCB_WEB_ORIGIN        = "https://REQUIRED-domain"
+    }
   }
   "scheduler" = {
     role          = "scheduler"

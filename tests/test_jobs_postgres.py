@@ -15,12 +15,17 @@ from uuid import UUID, uuid4
 import pytest
 from migration_support import require_migrated_through
 from polycodebench_core.application_errors import LeaseLost, PersistenceConflict
+from polycodebench_core.canonical import canonical_document_bytes, canonical_document_digest
 from polycodebench_core.jobs import (
     CapacitySlotSpec,
     JobDefinition,
     JobDependencySpec,
     StageOutcome,
     WorkerRegistrationSpec,
+)
+from polycodebench_orchestration.solve.worker_runtime import (
+    DatabaseSandboxSpecFactory,
+    SolveWorkerResourceSpec,
 )
 from polycodebench_orchestration.worker import WorkerService
 from polycodebench_persistence.artifacts import ArtifactRepository
@@ -130,24 +135,51 @@ def _register_worker(
     resource_class: str = "small",
 ) -> UUID:
     resource_artifacts = ArtifactRepository(database.engine, store, max_upload_bytes=500_000)
-    resource_artifact = _verified_upload(
-        resource_artifacts,
-        f"worker resource configuration {label} {uuid4()}".encode(),
-        domain=f"p07-resource-{uuid4().hex}",
+    resource = SolveWorkerResourceSpec.model_validate(
+        {
+            "schema_version": 1,
+            "kind": "resource_spec",
+            "resource_class": resource_class,
+            "lane": "solve",
+            "image": IMAGE,
+            "image_digest": IMAGE_DIGEST,
+            "cpu_millis": 1000,
+            "memory_bytes": 512 * 1024**2,
+            "disk_bytes": 128 * 1024**2,
+            "pids_limit": 128,
+            "timeout_seconds": 600,
+            "ttl_seconds": 900,
+            "executable_workspace": False,
+        },
+        strict=True,
     )
-    config_id = uuid4()
-    with database.engine.begin() as connection:
-        connection.execute(
-            insert(config_document).values(
-                id=config_id,
-                kind="resource_spec",
-                version_label="prompt07-local-v1",
-                digest="sha256:" + hashlib.sha256(str(config_id).encode()).hexdigest(),
-                canonical_artifact_id=resource_artifact,
-                schema_version=1,
-                document={"resource_class": resource_class, "lane": "solve"},
+    resource_digest = canonical_document_digest(resource)
+    with database.engine.connect() as connection:
+        config_id = connection.execute(
+            select(config_document.c.id).where(
+                config_document.c.kind == "resource_spec",
+                config_document.c.digest == resource_digest,
             )
+        ).scalar_one_or_none()
+    if config_id is None:
+        resource_artifact = _verified_upload(
+            resource_artifacts,
+            canonical_document_bytes(resource),
+            domain="worker-config",
         )
+        config_id = uuid4()
+        with database.engine.begin() as connection:
+            connection.execute(
+                insert(config_document).values(
+                    id=config_id,
+                    kind="resource_spec",
+                    version_label=resource_digest[7:19],
+                    digest=resource_digest,
+                    canonical_artifact_id=resource_artifact,
+                    schema_version=1,
+                    document=resource.model_dump(mode="json"),
+                )
+            )
     return _repo(database).register_worker(
         WorkerRegistrationSpec(
             workload_identity=f"worker-{label}-{uuid4()}",
@@ -201,6 +233,48 @@ def test_run_solve_job_is_claimable_by_its_frozen_resource_class(
     assert claim is not None
     assert claim.scope_id == attempt_id
     assert claim.resource_class == resource_class
+
+
+def test_local_sandbox_spec_uses_verified_slot_and_frozen_task_image(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    resource_class = f"sandbox-{uuid4().hex}"
+    ids = _seed(database.engine, samples_per_task=1, resource_class=resource_class)
+    created = RunCreationService(PostgresRunRepository(database.engine)).create(
+        Principal("prompt07-sandbox-spec-fixture", frozenset({Role.OPERATOR})),
+        _request(ids, samples_per_task=1),
+        f"prompt07-sandbox-spec-{uuid4()}",
+    )
+    worker_id = _register_worker(
+        database,
+        object_store,
+        label="sandbox-spec",
+        resource_class=resource_class,
+    )
+    repository = PostgresJobRepository(
+        database.engine, campaign_concurrency=4, provider_concurrency=100
+    )
+    claim = repository.claim(worker_id)
+    assert claim is not None and claim.scope_id == created.attempt_ids[0]
+
+    factory = DatabaseSandboxSpecFactory(
+        scheduler_engine=database.engine,
+        solve_engine=database.engine,
+        allowed_images={IMAGE: IMAGE_DIGEST},
+    )
+    spec = factory(claim)
+    assert spec.image == IMAGE
+    assert spec.image_digest == IMAGE_DIGEST
+    assert spec.cpu_millis == 1000
+    assert spec.disk_bytes == 128 * 1024**2
+
+    refused = DatabaseSandboxSpecFactory(
+        scheduler_engine=database.engine,
+        solve_engine=database.engine,
+        allowed_images={"docker.io/library/python:latest": IMAGE_DIGEST},
+    )
+    with pytest.raises(ValueError, match="not approved"):
+        refused(claim)
 
 
 def _definition(

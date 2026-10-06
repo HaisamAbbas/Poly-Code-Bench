@@ -38,6 +38,10 @@ from sqlalchemy import insert, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
+TASK_RUNTIME_IMAGE_DIGEST = (
+    "sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b"
+)
+
 
 def _test_url() -> str:
     value = os.environ.get("PCB_TEST_DATABASE_URL")
@@ -122,7 +126,19 @@ def _seed(
                 cluster_id="cluster",
                 stratum_id="stratum",
                 schema_version=1,
-                document={"task": "fixture", "runtime": {"resource_class": resource_class}},
+                document={
+                    "task": "fixture",
+                    "runtime": {
+                        "schema_version": 1,
+                        "kind": "task_runtime",
+                        "image_digest": TASK_RUNTIME_IMAGE_DIGEST,
+                        "language_plugin_id": "python",
+                        "language_plugin_version": "local-fixture-v1",
+                        "build_recipe_digest": digest_for("task"),
+                        "test_recipe_digest": digest_for("artifact"),
+                        "resource_class": resource_class,
+                    },
+                },
             )
         )
         connection.execute(

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "fixture_kind": "synthetic_test",
+  "verified_at": "2026-10-06",
+  "database": {
+    "engine": "PostgreSQL 16",
+    "lifecycle": "disposable local test container",
+    "schema_revision": "f17b6b04a237"
+  },
+  "command": "uv run pytest tests/test_public_api_submissions_postgres.py -q",
+  "result": "4 passed",
+  "verified_behavior": {
+    "api_database_role": "pcb_test_login with least-privilege submission roles",
+    "bounded_approval_creates": {
+      "runs": 1,
+      "queued_attempts": 1,
+      "queued_solve_jobs": 1,
+      "job_creation_events": 1
+    },
+    "interrupted_approval_recovery": "reuses the same run and solve job",
+    "approval_replay": "does not create duplicate run, attempt, or solve job",
+    "provider_endpoint_requests": 0,
+    "live_model_spend": 0
+  },
+  "limitations": [
+    "This proves durable queue creation and idempotent approval only; no solve worker processed the queued job.",
+    "The fixture is synthetic test data and is not benchmark evidence or a live benchmark result."
+  ]
+}

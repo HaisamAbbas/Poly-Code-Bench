@@ -10,6 +10,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - [x] Add repeatable local OIDC with Keycloak and validate the submitter login callback.
 - [x] Exercise a metadata-only submission through the browser into PostgreSQL; verify owner isolation and that no model call or run is created.
 - [x] Exercise submitter database grants, transaction-local row scope, idempotent retry and owner isolation against PostgreSQL.
+- [x] Enqueue one durable solve job and creation event per attempt atomically with an approved bounded run; verify approval recovery/replay creates no duplicate job and performs no provider request against disposable PostgreSQL.
 - [x] Provide a safe local environment/bootstrap path for credentials, database migrations/grants, and synthetic release seeding.
 - [x] Run browser coverage against the real local API/database/provider and preserve screenshots under `.cache/`.
 - [x] Review local service exposure and distinguish local development from an internet deployment.
@@ -38,5 +39,6 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - Both staging and production Terraform configurations validate locally; no plan/apply or provider API request was run.
 - Production bootstrap guard: both Terraform roots validate in an isolated Linux container; all deployment tests pass 26/26. Four provider-free plan cases confirm disabled placeholders pass, enabling a placeholder is refused, a resolved image is allowed, and fractional counts are refused. The production example has eight always-on service roles at count zero and no schedules. Evidence is in `docs/implementation/evidence/prompt-33/production-bootstrap-safety.json`.
 - Last submission DB check: 11 synthetic requests remained pending with no resulting run; `run` and `call_delivery` were empty, and the browser observed no provider endpoint request.
+- Approved-run queue evidence: four submission PostgreSQL integration cases passed against a disposable PostgreSQL 16 database using separate API and migration roles. One bounded synthetic approval produced exactly one queued run, attempt, solve job, and creation event; the interrupted approval retry reused the run/job, and no provider endpoint was contacted. Evidence is in `docs/implementation/evidence/prompt-33/approved-run-queue-2026-10-06.json`.
 - Port 8000 is already owned by another local Uvicorn process and was left untouched.
 - No cloud resource, real model-provider credential, verified Alibaba/OCI trial quota, or public hostname is configured. The AWS staging bootstrap remains disabled by default.

@@ -997,9 +997,11 @@ oracle whose expected value was derived by running the target records that fact
 - **D-33-08 - Lifecycle prefixes are reserved.** `provisional`, `debug` and `cancelled-logs` carry
   bucket expiry rules, so `S3ArtifactStore` refuses them as encryption domains; canonical evidence
   keys can never expire by lifecycle.
-- **D-33-09 - Sandbox launches must use the reviewed lane template.** The EC2 driver supplies the
-  exact lane-specific Terraform launch template to `RunInstances`; it does not repeat mutable
-  AMI/network settings as request overrides. Per-stage ownership tags are sent at creation, and
-  the live instance and security group are checked before the first guest-control message. This
-  keeps the runtime aligned with IAM's `ec2:LaunchTemplate` condition and prevents guest
-  initialization on an instance that violates the private, no-role sandbox policy.
+- **D-33-09 - Sandbox launches must use a pinned, reviewed lane template.** The EC2 driver supplies
+  the exact lane-specific Terraform launch template and numeric version to `RunInstances`; it does
+  not repeat mutable AMI/network settings as request overrides. The environment manifest records
+  the deployed version and reconciliation compares it with Terraform outputs. Per-stage ownership
+  tags are sent at creation, and the live instance and security group are checked before the first
+  guest-control message. This keeps the runtime aligned with IAM's `ec2:LaunchTemplate` condition
+  and prevents guest initialization on an instance that violates the private, no-role sandbox
+  policy.

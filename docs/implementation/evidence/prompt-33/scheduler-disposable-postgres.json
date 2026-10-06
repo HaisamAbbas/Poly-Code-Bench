@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-06",
+  "environment_class": "local disposable Docker containers; not staging",
+  "fixture_kind": "synthetic_test_only",
+  "postgres": {
+    "image": "postgres:17.6",
+    "migration_head": "b390a26f17cd",
+    "database_name": "pcb_scheduler_test",
+    "persistent_volume": false
+  },
+  "object_store": {
+    "image": "chrislusf/seaweedfs:4.48",
+    "isolated_container": true,
+    "persistent_volume": false
+  },
+  "integration_tests": {
+    "command": "uv run --offline --locked --all-packages pytest tests/test_scheduler_regressions.py tests/test_operations_postgres.py -q",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0
+  },
+  "scheduler_image_smoke": {
+    "command": "pcb-ops identity verify --role scheduler --exec -- pcb-scheduler reap --limit 100",
+    "exit_code": 0,
+    "output": "[]",
+    "read_only_root": true,
+    "uid": 10001,
+    "verified_service_identity": "local-development"
+  },
+  "cleanup": {
+    "disposable_containers_removed": true,
+    "test_database_removed_with_container": true
+  },
+  "cloud_resources_used": false,
+  "provider_calls": 0,
+  "live_model_calls": 0,
+  "staging_postgres_tested": false
+}

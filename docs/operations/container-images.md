@@ -58,13 +58,16 @@ The API, web, and scheduler images built locally on 2026-10-06. The API and web 
 exercised against the local API's synthetic internal test release. The API identity guard and
 health route passed. A Playwright browser smoke on the web image rendered that release and its
 synthetic-data notice, moved focus with Tab, passed at 375 px and 1440 px without document overflow,
-and reported no page errors. The scheduler identity guard launched `pcb-scheduler --help` in the
-container without AWS credentials or database access. Screenshots are in the ignored local cache,
-not the repository.
+and reported no page errors. The scheduler identity guard launched `pcb-scheduler --help` without
+AWS credentials; its read-only image also ran `reap --limit 100` against a disposable migrated
+PostgreSQL 17.6 database and returned an empty batch. Sixteen scheduler/operations PostgreSQL
+integration cases passed with a separate disposable object store. The scheduler has not been
+tested against staging PostgreSQL. Sanitized details are in
+[`scheduler-disposable-postgres.json`](../implementation/evidence/prompt-33/scheduler-disposable-postgres.json).
+Screenshots are in the ignored local cache, not the repository.
 
 These images are not a complete staging service set. The scheduler image only runs lease recovery;
 the model/judge gateways, solve/evaluation supervisors, scorer, and publisher still need the
 long-running work-processing modes and validated runtime images. Do not raise their Terraform
-counts or treat the scheduler as a substitute. The scheduler has not yet been exercised against a
-staging database. No image was pushed to ECR; AWS account access, deployment inputs, and a spend
-authorization are not available.
+counts or treat the scheduler as a substitute. No image was pushed to ECR; AWS account access,
+deployment inputs, and a spend authorization are not available.

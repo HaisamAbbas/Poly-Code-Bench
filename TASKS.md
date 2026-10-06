@@ -17,7 +17,9 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - [x] Build pinned production-shaped API and web images; verify read-only/non-root runtime, API health, and the web image against the actual local API release.
 - [x] Prepare the AWS service path with private API discovery, OIDC/HMAC secret references, and disabled staging bootstrap services/schedules.
 - [x] Run the Prompt 30/31/32 browser suites with isolated Next build directories and refreshed synthetic-only screenshots/results.
-- [ ] Build and verify the remaining long-running scheduler, model/judge gateway, solve/evaluation supervisor, scorer and publisher runtimes; complete staging E2E-42/43 before raising their task counts.
+- [x] Export the identity guard's verified principal as `PCB_SERVICE_IDENTITY`, required for service audit attribution.
+- [x] Build the scheduler lease-reaper image and verify its guarded CLI startup as a non-root, read-only container; it does not execute queued work.
+- [ ] Verify the scheduler reaper against a disposable staged PostgreSQL instance, and build the model/judge gateway, solve/evaluation supervisor, scorer and publisher work-processing runtimes; complete staging E2E-42/43 before raising their task counts.
 - [ ] Select and verify a cloud account/region and its actual trial quotas, expiry, network/domain inputs and owner-approved maximum spend. Alibaba/OCI require a separate target; the current Terraform is AWS-specific. Do not provision resources until those limits are confirmed.
 
 ## Current local evidence
@@ -29,6 +31,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - Latest public API release: `7c7fffc5-308f-4837-af58-1d18ba752b22`, verified as a synthetic internal test release. Production-shaped web container rendered its synthetic-data notice, table, and release selector against the host API; keyboard focus and 375/1440 px overflow checks passed with no page errors.
 - Browser suites: Prompt 30 4/4, Prompt 31 3/3, Prompt 32 2/2; refreshed reports/screenshots live under `docs/implementation/evidence/prompt-30/`, `prompt-31/`, and `prompt-32/`. These artifacts use test fixtures only.
 - API image: read-only root, UID/GID 10001, `/healthz` returns 200. Without a database/release sync it correctly has no release rows; staging must inject PostgreSQL and sync a verified publication before web services start.
+- Scheduler image: read-only root, UID/GID 10001; dev identity guard exports `local-development` and starts the scheduler CLI. The scheduler has not connected to a disposable staging database and only reaps expired leases; it does not execute queued work.
 - Both staging and production Terraform configurations validate locally; no plan/apply or provider API request was run.
 - Last submission DB check: 11 synthetic requests remained pending with no resulting run; `run` and `call_delivery` were empty, and the browser observed no provider endpoint request.
 - Port 8000 is already owned by another local Uvicorn process and was left untouched.

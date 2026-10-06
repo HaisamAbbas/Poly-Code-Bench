@@ -27,10 +27,11 @@ as bounded JSON from Secrets Manager; the initial export is empty and grants no 
 The control-services module advertises API through the environment-scoped ECS Service Connect
 name `api`, which is the URL baked into the web image. The web task health path is `/`.
 
-Only the API and web production image builds exist today. The other always-on Terraform roles do
-not yet have matching daemon commands and runtime images. Building these two images does not make
-E2E-42/E2E-43 deployable; do not scale roles without an implemented image and a passing local
-runtime check. Build details and the evidence scope are recorded in
+Production-shaped API, web, and scheduler lease-reaper image builds exist. The scheduler image is
+not a job worker. The model/judge gateways, solve/evaluation supervisors, scorer, and publisher do
+not yet have complete long-running work-processing modes and validated runtime images. These image
+builds do not make E2E-42/E2E-43 deployable; do not scale roles without an implemented mode and a
+passing runtime check. Build details and the evidence scope are recorded in
 [`container-images.md`](container-images.md).
 
 E2E-42 and E2E-43 need **no model or judge provider spend**. Provider outage is exercised against the gateway with egress denied, not against a live provider. Live pilot spend remains a separate authorization (Prompt 17).
@@ -77,9 +78,12 @@ docker build --platform linux/amd64 --file Dockerfile.api --build-arg `
   PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --tag pcb-api:staging .
 docker build --platform linux/amd64 --file Dockerfile.web --build-arg `
   PCB_PUBLIC_API_URL=http://api:8000/v1 --tag pcb-web:staging .
-#    Push the API image to the api and ops ECR repositories; push web separately. Resolve the
-#    resulting ECR digests and update only api, web, migrator, ops-reaper and restore-operator.
-#    Other long-running worker/gateway roles remain at 0 until their matching daemons are built.
+docker build --platform linux/amd64 --file Dockerfile.scheduler --build-arg `
+  PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --tag pcb-scheduler:staging .
+#    Push API to the api and ops ECR repositories, web to web, and scheduler to scheduler.
+#    Resolve immutable ECR digests and update only the matching task image references.
+#    Keep the scheduler count at 0 until its staged PostgreSQL connection/reaper behavior is
+#    verified. Other worker/gateway roles remain at 0 until their processing daemons are built.
 
 # 5. Schema (migrator task; refuses non-expand migrations)
 # Bootstrap PostgreSQL roles with provision_roles.sql before migration and apply
@@ -96,10 +100,12 @@ aws ecs run-task --cluster pcb-staging --task-definition pcb-staging-migrator --
 aws logs filter-log-events --log-group-name /pcb/staging/api --filter-pattern '"PCB_VERIFIED_ENVIRONMENT"'
 ```
 
-This bootstrap is infrastructure preparation, not the full staging acceptance run. Scheduler,
-model/judge gateways, solve/evaluation supervisors, scorer and publisher do not yet have complete
-long-running runtime images. Their Terraform example counts are therefore zero; the API and web
-images alone cannot pass E2E-42/E2E-43. Do not raise those counts or point them at the API image.
+This bootstrap is infrastructure preparation, not the full staging acceptance run. Although a
+scheduler image exists, it only reaps expired leases and has not been exercised against staging
+PostgreSQL. Model/judge gateways, solve/evaluation supervisors, scorer and publisher do not yet
+have complete long-running work-processing images. Their Terraform example counts remain zero;
+these API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise worker/gateway counts or
+point them at the API image.
 
 ## 3. Staging acceptance runs (E2E-42, E2E-43)
 

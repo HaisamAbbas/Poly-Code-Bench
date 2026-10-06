@@ -72,11 +72,28 @@ uv run --locked --all-packages pytest tests/test_operations_postgres.py
 
 Open `http://127.0.0.1:3001/leaderboard`. Sign-in at `/model-submissions` uses the local Keycloak account from `.env`. The API listens on `http://127.0.0.1:8010`; PostgreSQL and SeaweedFS remain on `127.0.0.1:55432` and `127.0.0.1:8333`.
 
+## Optional local solve worker
+
+The repository includes a development-only worker assembly. It registers one bounded Docker solve slot against the frozen task runtime and stores the typed resource spec as a verified internal artifact. It requires the local PostgreSQL and SeaweedFS services above; `bootstrap-db` provisions a separate `pcb_local_worker` login and finite artifact quotas. The login inherits a convenience role that combines the existing scheduler, solve, model-gateway and artifact-finalizer permissions for local development. Production deployments must use separate service identities.
+
+Registration is opt-in and does not claim work or contact a model endpoint:
+
+```powershell
+. .\scripts\load-local-env.ps1
+$env:PCB_LOCAL_WORKER_SETUP_ENABLED = 'true'
+uv run --locked --all-packages pcb-worker local-register
+Remove-Item Env:PCB_LOCAL_WORKER_SETUP_ENABLED
+```
+
+The command prints the worker ID. The generated `.env` keeps both worker setup and dispatch disabled. Do not enable dispatch until a finite run has been approved, its endpoint and secret reference are deliberately configured, and you intend to make that model request. When those conditions are met, an operator can run one claim with `pcb-worker local-run --worker-id <id>` or explicitly start `pcb-worker local-run --worker-id <id> --watch` after setting `$env:PCB_WORKER_DISPATCH_ENABLED = 'true'` in that process. The sandbox image must already exist locally; the worker does not pull or install it. Local execution uses the network-disabled, read-only, non-root Docker sandbox and is development evidence only.
+
+At the current local setup, there is no installed Ollama model and no approved local model endpoint, so the worker is registered but left idle. No model call is made by setup or registration. The run remains queued until an operator configures an endpoint and explicitly enables dispatch.
+
 To stop the containers, use `docker compose --profile local-auth down`. This does not delete the named database, object-store, or Keycloak volumes. Do not add `--volumes` unless you intentionally want to remove all local development data.
 
 ## Scope and deployment limits
 
-The local stack validates public projections, OIDC submitter sessions, metadata-only request persistence, ownership checks, reviewer API authorization, and bounded run/job creation. Approved runs create durable solve jobs, but this Compose stack has no solve, gateway, evaluation, scoring, or publication workers to consume them; their submitter progress therefore remains queued. Execution also requires a specifically approved endpoint, a provisioned secret reference where applicable, and a finite reviewed run plan. The local Ollama service currently has no installed models. This stack does not include production sandbox isolation, public DNS, or public HTTPS.
+The local stack validates public projections, OIDC submitter sessions, metadata-only request persistence, ownership checks, reviewer API authorization, and bounded run/job creation. An opt-in development solve worker can consume an approved solve job, but evaluation, scoring and publication workers are not assembled and the solve worker is intentionally not started by Compose. Execution requires a specifically approved endpoint, a provisioned secret reference where applicable, a finite reviewed run plan and a per-process dispatch opt-in. The local Ollama service currently has no installed models. This stack does not include production sandbox isolation, public DNS, or public HTTPS.
 
 For a no-cloud setup, Docker Compose, PostgreSQL, SeaweedFS and Keycloak are open-source local components; no paid AWS account is needed. The local API reads the signed, explicitly synthetic public release snapshots from PostgreSQL. SQLite is used only as the local source store that `seed` verifies and mirrors into PostgreSQL; the API does not read that source store. Staging/production mode also requires a shared PostgreSQL public-release catalog, so multiple API tasks do not depend on a writable local file. A publisher mirrors a source SQLite publication only after the release signature and typed public document verify:
 

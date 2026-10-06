@@ -29,6 +29,7 @@ LOCAL_OPS_DATABASE = "pcb_ops_rehearsal_source"
 LOCAL_ADMIN_ROLE = "polycodebench"
 LOCAL_API_ROLE = "pcb_local_api"
 LOCAL_PUBLISHER_ROLE = "pcb_local_publisher"
+LOCAL_WORKER_ROLE = "pcb_local_worker"
 REQUIRED_ENV = {
     "KEYCLOAK_ADMIN_USERNAME",
     "KEYCLOAK_ADMIN_PASSWORD",
@@ -39,6 +40,8 @@ REQUIRED_ENV = {
     "PCB_WEB_AUTH_SIGNING_KEY",
     "PCB_CURSOR_SIGNING_KEY",
     "PCB_LOCAL_API_PASSWORD",
+    "PCB_LOCAL_WORKER_PASSWORD",
+    "PCB_WORKER_DATABASE_URL",
     "PCB_DATABASE_URL",
     "PCB_PUBLISHER_DATABASE_URL",
     "PCB_MIGRATION_DATABASE_URL",
@@ -46,6 +49,10 @@ REQUIRED_ENV = {
     "PCB_LOCAL_POSTGRES_PASSWORD",
     "PCB_LOCAL_S3_ACCESS_KEY",
     "PCB_LOCAL_S3_SECRET_KEY",
+    "PCB_OBJECT_STORE_ENDPOINT",
+    "PCB_BUCKET_HIDDEN",
+    "PCB_BUCKET_INTERNAL",
+    "PCB_BUCKET_PUBLIC",
     "PCB_PUBLIC_RELEASE_BACKEND",
     "PCB_PUBLICATION_TARGET",
     "PCB_RELEASE_STORE_PATH",
@@ -55,6 +62,9 @@ REQUIRED_ENV = {
     "PCB_WEB_ORIGIN",
     "PCB_PUBLIC_API_URL",
     "PCB_API_IDENTITY_FILE",
+    "PCB_ENVIRONMENT",
+    "PCB_LOCAL_WORKER_SETUP_ENABLED",
+    "PCB_WORKER_DISPATCH_ENABLED",
 }
 
 
@@ -85,22 +95,39 @@ def prepare() -> dict[str, str]:
         generated_defaults = {
             "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
             "PCB_PUBLICATION_TARGET": "local:board",
+            "PCB_ENVIRONMENT": "dev",
+            "PCB_LOCAL_WORKER_SETUP_ENABLED": "false",
+            "PCB_WORKER_DISPATCH_ENABLED": "false",
+            "PCB_OBJECT_STORE_ENDPOINT": "http://127.0.0.1:8333",
+            "PCB_BUCKET_HIDDEN": "pcb-hidden-local",
+            "PCB_BUCKET_INTERNAL": "pcb-internal-local",
+            "PCB_BUCKET_PUBLIC": "pcb-public-local",
         }
         generated_secrets = {
             "PCB_LOCAL_POSTGRES_PASSWORD": secrets.token_urlsafe(32),
             "PCB_LOCAL_S3_ACCESS_KEY": secrets.token_urlsafe(24),
             "PCB_LOCAL_S3_SECRET_KEY": secrets.token_urlsafe(32),
+            "PCB_LOCAL_WORKER_PASSWORD": secrets.token_urlsafe(32),
         }
         allowed_generated = (
             set(generated_defaults)
             | set(generated_secrets)
-            | {"PCB_PUBLISHER_DATABASE_URL", "PCB_OPS_REHEARSAL_DATABASE_URL"}
+            | {
+                "PCB_PUBLISHER_DATABASE_URL",
+                "PCB_OPS_REHEARSAL_DATABASE_URL",
+                "PCB_WORKER_DATABASE_URL",
+            }
         )
         if missing and set(missing) <= allowed_generated:
             additions = {key: value for key, value in generated_defaults.items() if key in missing}
             additions.update(
                 {key: value for key, value in generated_secrets.items() if key in missing}
             )
+            if "PCB_LOCAL_WORKER_PASSWORD" in missing and "PCB_WORKER_DATABASE_URL" not in missing:
+                worker_password = urlsplit(values["PCB_WORKER_DATABASE_URL"]).password
+                if worker_password is None:
+                    raise RuntimeError("existing local worker database URL is invalid")
+                additions["PCB_LOCAL_WORKER_PASSWORD"] = unquote(worker_password)
             if "PCB_PUBLISHER_DATABASE_URL" in missing:
                 publisher_password = secrets.token_urlsafe(32)
                 additions["PCB_PUBLISHER_DATABASE_URL"] = (
@@ -116,6 +143,16 @@ def prepare() -> dict[str, str]:
                 additions["PCB_OPS_REHEARSAL_DATABASE_URL"] = _local_admin_database_url(
                     admin_password, LOCAL_OPS_DATABASE
                 )
+            if "PCB_WORKER_DATABASE_URL" in missing:
+                worker_password = additions.get(
+                    "PCB_LOCAL_WORKER_PASSWORD", values.get("PCB_LOCAL_WORKER_PASSWORD")
+                )
+                if not worker_password:
+                    raise RuntimeError("local worker credential generation failed")
+                additions["PCB_WORKER_DATABASE_URL"] = (
+                    f"postgresql+psycopg://{LOCAL_WORKER_ROLE}:{quote(worker_password, safe='')}"
+                    f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+                )
             with ENV_PATH.open("a", encoding="utf-8", newline="\n") as stream:
                 stream.writelines(f"{name}={value}\n" for name, value in sorted(additions.items()))
             values.update(additions)
@@ -128,6 +165,7 @@ def prepare() -> dict[str, str]:
         api_password = secrets.token_urlsafe(32)
         publisher_password = secrets.token_urlsafe(32)
         local_postgres_password = secrets.token_urlsafe(32)
+        local_worker_password = secrets.token_urlsafe(32)
         values = {
             "KEYCLOAK_ADMIN_USERNAME": "pcb-local-admin",
             "KEYCLOAK_ADMIN_PASSWORD": secrets.token_urlsafe(32),
@@ -138,6 +176,7 @@ def prepare() -> dict[str, str]:
             "PCB_WEB_AUTH_SIGNING_KEY": secrets.token_hex(32),
             "PCB_CURSOR_SIGNING_KEY": secrets.token_hex(32),
             "PCB_LOCAL_API_PASSWORD": api_password,
+            "PCB_LOCAL_WORKER_PASSWORD": local_worker_password,
             "PCB_DATABASE_URL": (
                 f"postgresql+psycopg://{LOCAL_API_ROLE}:{api_password}"
                 f"@127.0.0.1:55432/{LOCAL_DATABASE}"
@@ -149,12 +188,20 @@ def prepare() -> dict[str, str]:
             "PCB_MIGRATION_DATABASE_URL": _local_admin_database_url(
                 local_postgres_password, LOCAL_DATABASE
             ),
+            "PCB_WORKER_DATABASE_URL": (
+                f"postgresql+psycopg://{LOCAL_WORKER_ROLE}:{quote(local_worker_password, safe='')}"
+                f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+            ),
             "PCB_OPS_REHEARSAL_DATABASE_URL": _local_admin_database_url(
                 local_postgres_password, LOCAL_OPS_DATABASE
             ),
             "PCB_LOCAL_POSTGRES_PASSWORD": local_postgres_password,
             "PCB_LOCAL_S3_ACCESS_KEY": secrets.token_urlsafe(24),
             "PCB_LOCAL_S3_SECRET_KEY": secrets.token_urlsafe(32),
+            "PCB_OBJECT_STORE_ENDPOINT": "http://127.0.0.1:8333",
+            "PCB_BUCKET_HIDDEN": "pcb-hidden-local",
+            "PCB_BUCKET_INTERNAL": "pcb-internal-local",
+            "PCB_BUCKET_PUBLIC": "pcb-public-local",
             "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
             "PCB_PUBLICATION_TARGET": "local:board",
             "PCB_RELEASE_STORE_PATH": ".cache/polycodebench-local-release-store.sqlite3",
@@ -165,6 +212,8 @@ def prepare() -> dict[str, str]:
             "PCB_PUBLIC_API_URL": "http://127.0.0.1:8010/v1",
             "PCB_API_IDENTITY_FILE": ".cache/polycodebench-local-identities.json",
             "PCB_ENVIRONMENT": "dev",
+            "PCB_LOCAL_WORKER_SETUP_ENABLED": "false",
+            "PCB_WORKER_DISPATCH_ENABLED": "false",
         }
         missing = sorted(REQUIRED_ENV - values.keys())
         if missing:
@@ -336,6 +385,16 @@ def bootstrap_database(values: dict[str, str] | None = None) -> None:
     if publisher_password is None:
         raise RuntimeError("local publisher database URL is invalid")
     publisher_password = unquote(publisher_password).replace("'", "''")
+    worker_password = values["PCB_LOCAL_WORKER_PASSWORD"].replace("'", "''")
+    worker_role = LOCAL_WORKER_ROLE
+    worker_url = values["PCB_WORKER_DATABASE_URL"]
+    worker_url_password = urlsplit(worker_url).password
+    if (
+        worker_url_password is None
+        or unquote(worker_url_password) != values["PCB_LOCAL_WORKER_PASSWORD"]
+    ):
+        raise RuntimeError("local worker database URL does not match its generated credential")
+    worker_url_password_sql = worker_password
     role_sql = f"""\
 SELECT format('CREATE ROLE {LOCAL_API_ROLE} LOGIN PASSWORD %L', '{password}')
 WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_API_ROLE}')
@@ -351,6 +410,15 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_PUBL
 ALTER ROLE {LOCAL_PUBLISHER_ROLE} WITH LOGIN PASSWORD '{publisher_password}';
 GRANT pcb_publisher TO {LOCAL_PUBLISHER_ROLE};
 GRANT CONNECT ON DATABASE {db_name} TO {LOCAL_PUBLISHER_ROLE};
+SELECT format('CREATE ROLE {worker_role} LOGIN PASSWORD %L', '{worker_password}')
+WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{worker_role}')
+\\gexec
+ALTER ROLE {worker_role} WITH LOGIN PASSWORD '{worker_url_password_sql}';
+GRANT pcb_solve_worker TO {worker_role};
+GRANT CONNECT ON DATABASE {db_name} TO {worker_role};
+INSERT INTO artifact_quota (visibility, encryption_domain, max_bytes)
+VALUES ('internal', 'worker-config', 67108864), ('internal', 'solve-session', 1073741824)
+ON CONFLICT (visibility, encryption_domain) DO NOTHING;
 ALTER ROLE {LOCAL_ADMIN_ROLE} WITH LOGIN PASSWORD '{admin_password}';
 """
     run_compose_psql(db_name, role_sql)

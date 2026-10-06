@@ -16,6 +16,7 @@ GRANT USAGE ON SCHEMA public TO
     pcb_endpoint_administrator, pcb_curator, pcb_operator, pcb_reviewer,
     pcb_publisher, pcb_scheduler, pcb_solve_supervisor, pcb_evaluator,
     pcb_scorer, pcb_artifact_finalizer, pcb_administrator;
+GRANT USAGE ON SCHEMA public TO pcb_solve_worker;
 
 GRANT SELECT, INSERT ON model_submission TO pcb_submitter;
 GRANT SELECT, INSERT, UPDATE, DELETE ON idempotency_record TO pcb_submitter;

@@ -1,0 +1,37 @@
+{
+  "kind": "local_solve_worker_setup_evidence",
+  "schema_version": 1,
+  "environment": "loopback-development",
+  "test_data": "synthetic_internal",
+  "resource": {
+    "class": "local-fixture-small",
+    "digest": "sha256:f5fb99fa8247a24470c4613187f298cf46de61a07e137886e5aecba05c7d1685",
+    "slots": 1,
+    "artifact_verified": true
+  },
+  "worker_registration": {
+    "status": "active",
+    "idempotent_retry": true,
+    "local_setup_flag_default": "false"
+  },
+  "dispatch_check": {
+    "explicit_process_opt_in": true,
+    "queued_matching_jobs_before_claim": 0,
+    "claimed": false,
+    "persistent_dispatch_flag_default": "false"
+  },
+  "gateway_after_check": {
+    "call_intents": 0,
+    "call_deliveries": 0
+  },
+  "artifact_quotas_bytes": {
+    "worker-config": 67108864,
+    "solve-session": 1073741824
+  },
+  "limitations": [
+    "No model endpoint or installed local model is configured.",
+    "No provider request, model download, cloud operation, or benchmark result occurred.",
+    "The combined database role and Docker sandbox are for local development only.",
+    "Evaluation, scoring, and publication workers remain unassembled."
+  ]
+}

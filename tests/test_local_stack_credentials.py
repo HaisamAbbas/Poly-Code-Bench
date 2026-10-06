@@ -25,6 +25,7 @@ def test_local_prepare_generates_private_database_and_object_store_credentials(
         "PCB_LOCAL_POSTGRES_PASSWORD",
         "PCB_LOCAL_S3_ACCESS_KEY",
         "PCB_LOCAL_S3_SECRET_KEY",
+        "PCB_LOCAL_WORKER_PASSWORD",
         "PCB_WEB_AUTH_SIGNING_KEY",
         "PCB_CURSOR_SIGNING_KEY",
     )
@@ -32,14 +33,74 @@ def test_local_prepare_generates_private_database_and_object_store_credentials(
     assert all(len(value) >= 32 for value in credentials)
     assert len(set(credentials)) == len(credentials)
     assert all(second[name] == values[name] for name in credential_names)
-    assert make_url(values["PCB_MIGRATION_DATABASE_URL"]).password == values[
-        "PCB_LOCAL_POSTGRES_PASSWORD"
-    ]
+    assert (
+        make_url(values["PCB_MIGRATION_DATABASE_URL"]).password
+        == values["PCB_LOCAL_POSTGRES_PASSWORD"]
+    )
     assert (
         make_url(values["PCB_OPS_REHEARSAL_DATABASE_URL"]).database
         == local_stack.LOCAL_OPS_DATABASE
     )
+    assert make_url(values["PCB_WORKER_DATABASE_URL"]).username == local_stack.LOCAL_WORKER_ROLE
+    assert (
+        make_url(values["PCB_WORKER_DATABASE_URL"]).password == values["PCB_LOCAL_WORKER_PASSWORD"]
+    )
+    assert values["PCB_WORKER_DISPATCH_ENABLED"] == "false"
+    assert values["PCB_LOCAL_WORKER_SETUP_ENABLED"] == "false"
+    assert values["PCB_BUCKET_INTERNAL"] == "pcb-internal-local"
     assert values["PCB_LOCAL_POSTGRES_PASSWORD"] not in capsys.readouterr().out
+
+
+def test_local_prepare_adds_worker_settings_to_existing_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    env_path = tmp_path / ".env"
+    monkeypatch.setattr(local_stack, "ENV_PATH", env_path)
+    monkeypatch.setattr(local_stack, "REALM_IMPORT_DIR", tmp_path / "realm")
+    monkeypatch.setattr(local_stack, "IDENTITY_PATH", tmp_path / "identities.json")
+    original = local_stack.prepare()
+    omitted = {
+        "PCB_LOCAL_WORKER_PASSWORD",
+        "PCB_WORKER_DATABASE_URL",
+        "PCB_ENVIRONMENT",
+        "PCB_LOCAL_WORKER_SETUP_ENABLED",
+        "PCB_WORKER_DISPATCH_ENABLED",
+        "PCB_OBJECT_STORE_ENDPOINT",
+        "PCB_BUCKET_HIDDEN",
+        "PCB_BUCKET_INTERNAL",
+        "PCB_BUCKET_PUBLIC",
+    }
+    env_path.write_text(
+        "\n".join(
+            line
+            for line in env_path.read_text("utf-8").splitlines()
+            if line.split("=", 1)[0] not in omitted
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    upgraded = local_stack.prepare()
+
+    assert upgraded["PCB_LOCAL_WORKER_PASSWORD"]
+    assert (
+        make_url(upgraded["PCB_WORKER_DATABASE_URL"]).password
+        == upgraded["PCB_LOCAL_WORKER_PASSWORD"]
+    )
+    assert upgraded["PCB_LOCAL_API_PASSWORD"] == original["PCB_LOCAL_API_PASSWORD"]
+    assert upgraded["PCB_WORKER_DISPATCH_ENABLED"] == "false"
+
+    env_path.write_text(
+        "\n".join(
+            line
+            for line in env_path.read_text("utf-8").splitlines()
+            if line.split("=", 1)[0] != "PCB_LOCAL_WORKER_PASSWORD"
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    recovered = local_stack.prepare()
+    assert recovered["PCB_LOCAL_WORKER_PASSWORD"] == upgraded["PCB_LOCAL_WORKER_PASSWORD"]
 
 
 def test_compose_and_rehearsal_config_reference_generated_credentials() -> None:
@@ -77,6 +138,7 @@ def test_local_s3_client_requires_and_uses_ephemeral_credentials(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls: list[dict[str, object]] = []
+
     def fake_client(service: str, **kwargs: object) -> dict[str, object]:
         calls.append(kwargs)
         return kwargs

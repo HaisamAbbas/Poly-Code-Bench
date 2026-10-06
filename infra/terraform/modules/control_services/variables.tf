@@ -72,14 +72,15 @@ variable "services" {
   }
   validation {
     condition = alltrue([
-      for svc in values(var.services) : svc.desired_count >= 0 && (
+      for svc in values(var.services) : svc.desired_count >= 0 &&
+      svc.desired_count == floor(svc.desired_count) && (
         svc.desired_count == 0 || (
           !strcontains(svc.image, "REQUIRED") &&
           !endswith(svc.image, "@sha256:0000000000000000000000000000000000000000000000000000000000000000")
         )
       )
     ])
-    error_message = "Services with desired_count > 0 require a resolved, non-placeholder image digest."
+    error_message = "Service desired_count must be a nonnegative integer, and enabled services require resolved image digests."
   }
   validation {
     condition     = contains(keys(var.services), "api") && contains(keys(var.services), "web") && var.services["api"].port != null && var.services["web"].port != null

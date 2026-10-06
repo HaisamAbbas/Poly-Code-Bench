@@ -94,10 +94,9 @@ def test_production_example_keeps_unverified_services_and_schedules_disabled() -
         "utf-8"
     )
     assert "svc.desired_count >= 0" in control_services
+    assert "svc.desired_count == floor(svc.desired_count)" in control_services
     assert "svc.desired_count == 0 ||" in control_services
-    assert "Services with desired_count > 0 require a resolved, non-placeholder image digest." in (
-        control_services
-    )
+    assert "enabled services require resolved image digests." in control_services
 
 
 def test_verified_principal_not_a_string_decides_the_environment() -> None:

@@ -50,6 +50,7 @@ GRANT SELECT ON campaign, task_set, task_set_member, task_version, config_docume
     model_revision, endpoint_registration, run, attempt, budget_account
     TO pcb_submission_approver;
 GRANT INSERT, SELECT ON run, attempt TO pcb_submission_approver;
+GRANT INSERT ON stage_job, stage_job_event TO pcb_submission_approver, pcb_operator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON idempotency_record TO pcb_submission_approver;
 GRANT SELECT, INSERT ON budget_account, budget_resource TO pcb_submission_approver;
 GRANT INSERT ON audit_event TO pcb_submission_approver;

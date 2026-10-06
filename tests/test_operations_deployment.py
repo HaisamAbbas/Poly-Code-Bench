@@ -6,6 +6,7 @@ import ast
 import base64
 import copy
 import json
+import re
 from decimal import Decimal
 from pathlib import Path
 
@@ -78,6 +79,25 @@ def test_staging_budget_example_requires_owner_supplied_threshold() -> None:
     assert assignment.split("=", 1)[1].strip() == "0"
     variable = (ROOT / "infra/terraform/modules/telemetry/variables.tf").read_text("utf-8")
     assert "condition     = var.monthly_budget_usd > 0" in variable
+
+
+def test_production_example_keeps_unverified_services_and_schedules_disabled() -> None:
+    example = (ROOT / "infra/terraform/environments/production/terraform.tfvars.example").read_text(
+        "utf-8"
+    )
+    services, schedules = example.split("schedules =", maxsplit=1)
+    counts = re.findall(r"^\s*desired_count\s*=\s*(-?\d+)\s*$", services, re.MULTILINE)
+    assert len(counts) >= 8 and set(counts) == {"0"}
+    assert schedules.strip() == "{}"
+
+    control_services = (ROOT / "infra/terraform/modules/control_services/variables.tf").read_text(
+        "utf-8"
+    )
+    assert "svc.desired_count >= 0" in control_services
+    assert "svc.desired_count == 0 ||" in control_services
+    assert "Services with desired_count > 0 require a resolved, non-placeholder image digest." in (
+        control_services
+    )
 
 
 def test_verified_principal_not_a_string_decides_the_environment() -> None:

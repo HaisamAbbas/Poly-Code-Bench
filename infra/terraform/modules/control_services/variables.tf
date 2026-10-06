@@ -71,6 +71,17 @@ variable "services" {
     error_message = "Every service image must be pinned by @sha256 digest."
   }
   validation {
+    condition = alltrue([
+      for svc in values(var.services) : svc.desired_count >= 0 && (
+        svc.desired_count == 0 || (
+          !strcontains(svc.image, "REQUIRED") &&
+          !endswith(svc.image, "@sha256:0000000000000000000000000000000000000000000000000000000000000000")
+        )
+      )
+    ])
+    error_message = "Services with desired_count > 0 require a resolved, non-placeholder image digest."
+  }
+  validation {
     condition     = contains(keys(var.services), "api") && contains(keys(var.services), "web") && var.services["api"].port != null && var.services["web"].port != null
     error_message = "services must include api and web with ports (the ALB and Service Connect route to both)."
   }

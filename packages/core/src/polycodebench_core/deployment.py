@@ -77,6 +77,7 @@ class SandboxSection(_Strict):
     provider: Literal["local_docker", "ec2_vm"]
     approved_vm_image: str | None = None
     launch_templates: dict[str, str] = Field(default_factory=dict)
+    launch_template_versions: dict[str, str] = Field(default_factory=dict)
     lane_subnets: dict[str, str] = Field(default_factory=dict)
     guest_ttl_seconds: int = Field(ge=60, le=86_400)
     orphan_alert_grace_seconds: int = Field(default=600, ge=0, le=3_600)
@@ -169,6 +170,19 @@ class EnvironmentManifest(_Strict):
                     raise ValueError(f"role {role} must be an IAM role ARN in account {account}")
         if self.status == "deployed" and placeholders(self):
             raise ValueError("deployed manifests may not contain REQUIRED placeholders")
+        if self.status == "deployed" and self.sandbox.provider == "ec2_vm":
+            expected_lanes = {"solve", "grading", "admission", "performance"}
+            if set(self.sandbox.launch_templates) != expected_lanes:
+                raise ValueError("deployed AWS manifests require a template ID for every lane")
+            if set(self.sandbox.launch_template_versions) != expected_lanes:
+                raise ValueError(
+                    "deployed AWS manifests require a pinned version for every lane template"
+                )
+            if any(
+                not value.isdecimal() or int(value) < 1
+                for value in self.sandbox.launch_template_versions.values()
+            ):
+                raise ValueError("deployed AWS launch-template versions must be positive integers")
         if self.network.vpc_cidr and PLACEHOLDER not in self.network.vpc_cidr:
             ipaddress.ip_network(self.network.vpc_cidr)
         return self

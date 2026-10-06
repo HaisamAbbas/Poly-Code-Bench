@@ -43,6 +43,12 @@ def _deployed_staging() -> EnvironmentManifest:
     text = text.replace("REQUIRED-prefix", "pcbtest").replace("ami-REQUIRED", "ami-0abc")
     text = text.replace("lt-REQUIRED", "lt-0abc").replace("subnet-REQUIRED", "subnet-0abc")
     document = json.loads(text)
+    document["sandbox"]["launch_template_versions"] = {
+        "solve": "4",
+        "grading": "7",
+        "admission": "3",
+        "performance": "2",
+    }
     document["status"] = "deployed"
     return EnvironmentManifest.model_validate(document)
 
@@ -213,6 +219,17 @@ def test_shared_resources_across_environments_are_violations() -> None:
     assert {"bucket", "signing", "service", "cloud", "VPC"} <= kinds
 
 
+def test_deployed_aws_manifest_requires_positive_versions_for_all_lane_templates() -> None:
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["launch_template_versions"].pop("solve")
+    with pytest.raises(ValueError, match="pinned version for every lane template"):
+        EnvironmentManifest.model_validate(document)
+
+    document["sandbox"]["launch_template_versions"]["solve"] = "0"
+    with pytest.raises(ValueError, match="versions must be positive integers"):
+        EnvironmentManifest.model_validate(document)
+
+
 def test_ranked_releases_refuse_development_tier_results() -> None:
     refuse_inadmissible_tiers("exploratory", ["development", "production"])
     refuse_inadmissible_tiers("ranked", ["production"])
@@ -233,14 +250,20 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
         },
         "signing_secret_arns": {key: "arn" for key in manifest.secrets.signing_key_refs},
         "launch_template_ids": dict(manifest.sandbox.launch_templates),
+        "launch_template_versions": {
+            lane: int(version)
+            for lane, version in manifest.sandbox.launch_template_versions.items()
+        },
         "hardware_class": manifest.capacity.performance_hardware_class,
     }
     assert environments.reconcile(manifest, {"deployment": {"value": deployed}}) == []
     deployed["service_role_arns"]["rogue"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["bucket_names"]["hidden"] = "someone-elses-bucket"
+    deployed["launch_template_versions"]["solve"] = 999
     differences = environments.reconcile(manifest, deployed)
     assert any("rogue" in item for item in differences)
     assert any("bucket hidden" in item for item in differences)
+    assert any("launch template version solve" in item for item in differences)
 
 
 # ----------------------------------------------------------------------------- migrations

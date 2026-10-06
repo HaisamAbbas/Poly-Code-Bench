@@ -100,6 +100,14 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
     templates = deployment.get("launch_template_ids", {})
     for lane, template in sorted(manifest.sandbox.launch_templates.items()):
         compare(f"launch template {lane}", template, templates.get(lane))
+    template_versions = deployment.get("launch_template_versions", {})
+    for lane, version in sorted(manifest.sandbox.launch_template_versions.items()):
+        deployed_version = template_versions.get(lane)
+        compare(
+            f"launch template version {lane}",
+            version,
+            str(deployed_version) if deployed_version is not None else None,
+        )
     hardware = deployment.get("hardware_class")
     if manifest.capacity.performance_hardware_class is not None:
         compare("hardware class", manifest.capacity.performance_hardware_class, hardware)

@@ -55,6 +55,11 @@ sandbox:
     grading: lt-REQUIRED
     admission: lt-REQUIRED
     performance: lt-REQUIRED
+  launch_template_versions:
+    solve: REQUIRED
+    grading: REQUIRED
+    admission: REQUIRED
+    performance: REQUIRED
   lane_subnets:
     solve: subnet-REQUIRED
     grading: subnet-REQUIRED

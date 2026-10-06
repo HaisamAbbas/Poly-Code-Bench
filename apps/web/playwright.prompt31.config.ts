@@ -45,7 +45,10 @@ export default defineConfig({
       url: `${webOrigin}/leaderboard`,
       reuseExistingServer: false,
       timeout: 180_000,
-      env: { PCB_PUBLIC_API_URL: `${apiOrigin}/v1` },
+      env: {
+        PCB_PUBLIC_API_URL: `${apiOrigin}/v1`,
+        PCB_NEXT_DIST_DIR: ".next/prompt31-e2e",
+      },
     },
   ],
 });

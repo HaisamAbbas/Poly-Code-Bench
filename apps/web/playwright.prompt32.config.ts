@@ -71,6 +71,7 @@ export default defineConfig({
         PCB_OIDC_REDIRECT_URI: `${webOrigin}/auth/callback`,
         PCB_WEB_ORIGIN: webOrigin,
         PCB_WEB_AUTH_SIGNING_KEY: webAuthSigningKey,
+        PCB_NEXT_DIST_DIR: ".next/prompt32-e2e",
       },
     },
   ],

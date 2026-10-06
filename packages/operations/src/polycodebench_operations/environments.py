@@ -92,9 +92,22 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
         if not expected_ref.startswith("aws-sm:") or not isinstance(observed_arn, str):
             differences.append(f"{label}: manifest reference or deployed secret ARN is invalid")
             return
+        arn_parts = observed_arn.split(":")
+        if (
+            len(arn_parts) != 7
+            or arn_parts[0] != "arn"
+            or not arn_parts[1].startswith("aws")
+            or arn_parts[2] != "secretsmanager"
+            or arn_parts[3] != manifest.identity.region
+            or arn_parts[4] != manifest.identity.account_id
+            or arn_parts[5] != "secret"
+        ):
+            differences.append(
+                f"{label}: deployed secret ARN is outside the manifest AWS account/region"
+            )
+            return
         expected_name = expected_ref.removeprefix("aws-sm:")
-        marker = ":secret:"
-        actual_name = observed_arn.split(marker, maxsplit=1)[1] if marker in observed_arn else ""
+        actual_name = arn_parts[6]
         if actual_name != expected_name and not actual_name.startswith(expected_name + "-"):
             differences.append(
                 f"{label}: manifest secret reference does not match Terraform output"

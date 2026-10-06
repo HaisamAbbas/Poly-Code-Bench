@@ -285,9 +285,9 @@ def test_ranked_releases_refuse_development_tier_results() -> None:
 def test_reconcile_reports_drift_against_terraform_output() -> None:
     manifest = _deployed_staging()
 
-    def secret_arn(reference: str) -> str:
+    def secret_arn(reference: str, *, account: str = ACCOUNT, region: str = "eu-west-1") -> str:
         name = reference.removeprefix("aws-sm:")
-        return f"arn:aws:secretsmanager:eu-west-1:{ACCOUNT}:secret:{name}-AbCdEf"
+        return f"arn:aws:secretsmanager:{region}:{account}:secret:{name}-AbCdEf"
 
     deployed = {
         "environment": "staging",
@@ -330,7 +330,9 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     deployed["service_role_arns"]["rogue"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["operator_role_arns"]["release-approver"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["bucket_names"]["hidden"] = "someone-elses-bucket"
-    deployed["database_secret_arns"]["api"] = secret_arn("aws-sm:pcb/production/db/api")
+    deployed["database_secret_arns"]["api"] = secret_arn(
+        manifest.secrets.database_dsn_refs["api"], account="999999999999"
+    )
     signing_key_id = next(iter(manifest.secrets.signing_key_refs))
     deployed["signing_secret_arns"][signing_key_id] = secret_arn(
         "aws-sm:pcb/production/signing/rotated"
@@ -349,7 +351,10 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     assert any("rogue" in item for item in differences)
     assert any("operator role release-approver" in item for item in differences)
     assert any("bucket hidden" in item for item in differences)
-    assert any("database secret api" in item for item in differences)
+    assert any(
+        "database secret api" in item and "outside the manifest AWS account/region" in item
+        for item in differences
+    )
     assert any("signing key" in item for item in differences)
     assert any("cursor signing key" in item for item in differences)
     assert any("model secret namespace" in item for item in differences)

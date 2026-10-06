@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-06",
+  "scope": "manifest-gated EC2 solve-worker assembly and guest-control identity handling",
+  "result": "passed",
+  "tests": {
+    "command": "uv run pytest tests/test_sandbox.py tests/test_worker_runtime.py tests/test_operations_deployment.py",
+    "passed": 46,
+    "failed": 0,
+    "skipped": 1,
+    "skip_reason": "live Docker containment is opt-in"
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "strict_mypy": "passed"
+  },
+  "assertions": [
+    "STS assumed-role ARN is matched to the manifest IAM role by partition, account and role name",
+    "a mismatched role, account, non-role principal, template manifest or non-solve supervisor cannot assemble the AWS solve worker",
+    "the AWS worker provider receives only the solve supervisor's distinct lane templates, subnets and security groups",
+    "the guest SSH private key is fetched by its exact environment-and-role secret reference, written to a mode-0600 temporary file on POSIX, and removed after use",
+    "Terraform reconciliation compares the declared guest-control identity references with the secret ARNs"
+  ],
+  "external_effects": {
+    "aws_api_calls": 0,
+    "ec2_instances_created": 0,
+    "model_provider_calls": 0,
+    "secrets_read": 0
+  },
+  "limitations": [
+    "This is a worker assembly library layer; the production worker CLI/container image and administrative worker registration flow remain unimplemented.",
+    "No staging account, AMI, launch-template configuration, host known-hosts file, identity secret value or spend authorization is present, so no deployment was attempted."
+  ]
+}

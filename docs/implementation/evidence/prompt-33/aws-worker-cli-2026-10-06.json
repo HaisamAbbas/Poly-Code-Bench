@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-06",
+  "scope": "identity-gated AWS solve-worker registration and dispatch CLI, task configuration, and images",
+  "result": "passed locally; staging deployment unavailable",
+  "tests": {
+    "command": "uv run pytest tests/test_sandbox.py tests/test_worker_runtime.py tests/test_operations_deployment.py -q",
+    "passed": 49,
+    "failed": 0,
+    "skipped": 1,
+    "skip_reason": "live Docker containment is opt-in",
+    "assertions": [
+      "AWS worker commands require explicit setup or dispatch opt-in before client construction",
+      "worker manifest checks compare the live STS principal to the startup-guard identity and role",
+      "registration serializes capacity changes and refuses to exceed the environment manifest cap",
+      "registration creates a bounded, idempotent solve worker with a verified worker-config artifact",
+      "Terraform object-store endpoint and bucket injection is reconciled against the environment manifest",
+      "solve-worker guest SSH identity references are role-scoped, temporary and removed after use"
+    ]
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "strict_mypy": "passed",
+    "terraform_fmt": "passed",
+    "terraform_staging_init_validate": "passed with Terraform 1.13.5 and AWS provider 6.36.0",
+    "terraform_production_init_validate": "passed with Terraform 1.13.5 and AWS provider 6.36.0"
+  },
+  "local_images": {
+    "ops": {
+      "build": "docker build --platform linux/amd64 --file Dockerfile.ops --tag pcb-ops:local .",
+      "uid_gid": "10001:10001",
+      "smoke": "pcb-ops --help and pcb-worker ec2-register --help passed"
+    },
+    "solve_worker": {
+      "build": "docker build --platform linux/amd64 --file Dockerfile.solve-worker --tag pcb-solve-worker:local .",
+      "uid_gid": "10001:10001",
+      "smoke": "pcb-worker --help and non-root OpenSSH client startup passed"
+    }
+  },
+  "infrastructure_safety": {
+    "registration_enabled_by_default": false,
+    "dispatch_enabled_by_default": false,
+    "solve_supervisor_desired_count": 0,
+    "migrator_ec2_launch_permission": false,
+    "migrator_s3_access": "internal worker-config and provisional artifact prefixes only"
+  },
+  "external_effects": {
+    "aws_api_calls": 0,
+    "secrets_manager_reads": 0,
+    "worker_registrations": 0,
+    "ec2_instances_created": 0,
+    "ecr_pushes": 0,
+    "model_provider_calls": 0
+  },
+  "limitations": [
+    "No authorized staging account, region, budget, deployed manifest, guest AMI, host-key bundle, candidate image allowlist, or spend authorization is available.",
+    "The CLI and task path were tested locally with synthetic manifests and a fake STS client; no live AWS registration or dispatch was attempted.",
+    "Evaluation, judging, scoring and publication processors remain separate implementation work."
+  ]
+}

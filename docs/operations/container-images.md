@@ -1,7 +1,7 @@
 # Application container builds
 
-The repository builds pinned, multi-stage images for the public API, Next.js web app, and the
-scheduler lease reaper. All final images run as UID/GID `10001`, contain no local `.cache`,
+The repository builds pinned, multi-stage images for the public API, Next.js web app, the
+scheduler lease reaper, and the solve supervisor. All final images run as UID/GID `10001`, contain no local `.cache`,
 `.local`, `.protected`, `.env`, task-pack, or test-fixture data, and are suitable for read-only
 root filesystems with `/tmp` mounted writable. API and scheduler images include `pcb-ops` and the
 migration/configuration files their guarded commands need.
@@ -16,6 +16,9 @@ docker build --platform linux/amd64 --build-arg PCB_PUBLIC_API_URL=http://api:80
   --file Dockerfile.web --tag pcb-web:local .
 docker build --platform linux/amd64 --file Dockerfile.scheduler `
   --tag pcb-scheduler:local .
+docker build --platform linux/amd64 --file Dockerfile.ops --tag pcb-ops:local .
+docker build --platform linux/amd64 --file Dockerfile.solve-worker `
+  --tag pcb-solve-worker:local .
 ```
 
 `PCB_PUBLIC_API_URL` is captured by the Next build for its same-origin rewrites and read at
@@ -32,7 +35,8 @@ identity guard. Never build or publish a production image with the development m
 
 The scheduler image's default command is `pcb-scheduler reap --watch`. It recovers expired leases
 and emits metrics; it is **not** a job worker and does not execute queued model, judge, solve, score,
-or publication work. The startup identity guard exports the STS principal it verified as
+or publication work. The solve image runs the dedicated `pcb-worker ec2-run` command; it is not
+combined with the lease reaper. The startup identity guard exports the STS principal it verified as
 `PCB_SERVICE_IDENTITY`, which the scheduler uses for audit attribution.
 
 The API process requires `PCB_DATABASE_URL`, `PCB_CURSOR_SIGNING_KEY`,
@@ -66,8 +70,42 @@ tested against staging PostgreSQL. Sanitized details are in
 [`scheduler-disposable-postgres.json`](../implementation/evidence/prompt-33/scheduler-disposable-postgres.json).
 Screenshots are in the ignored local cache, not the repository.
 
-These images are not a complete staging service set. The scheduler image only runs lease recovery;
-the model/judge gateways, solve/evaluation supervisors, scorer, and publisher still need the
-long-running work-processing modes and validated runtime images. Do not raise their Terraform
-counts or treat the scheduler as a substitute. No image was pushed to ECR; AWS account access,
-deployment inputs, and a spend authorization are not available.
+The solve image defaults to a development manifest, an empty candidate-image allowlist and an
+empty guest known-hosts file, so it cannot dispatch work as built. A staging/production build must
+override `PCB_ENV_MANIFEST_SOURCE`, `PCB_CANDIDATE_IMAGE_ALLOWLIST_SOURCE` and
+`PCB_GUEST_KNOWN_HOSTS_SOURCE` with the reviewed deployed manifest, approved digest allowlist and
+pinned AMI guest host keys. The OpenSSH client package is version-pinned in the Dockerfile.
+
+The migrator's `ops` image is built from `Dockerfile.ops`; it contains both `pcb-ops` and the
+guarded `pcb-worker ec2-register` command. Its default development manifest and empty image
+allowlist cannot register a production worker. A staging/production build must override
+`PCB_ENV_MANIFEST_SOURCE`, `PCB_WORKER_RESOURCE_SPEC_SOURCE` and
+`PCB_CANDIDATE_IMAGE_ALLOWLIST_SOURCE` with the reviewed deployed manifest, bounded resource
+document and approved digest allowlist. The migrator task defaults
+`PCB_AWS_WORKER_SETUP_ENABLED=false`. A reviewed one-off ECS task override may run
+`pcb-worker ec2-register --resource-spec /etc/pcb/solve-resource-spec.json --image-allowlist /etc/pcb/candidate-image-allowlist.json`
+with that flag set to `true`; the command requires the live STS identity to match the startup
+identity guard and the manifest's migrator role. It creates a verified worker-config artifact and
+an idempotent solve registration only. Terraform supplies endpoint and bucket names, IAM limits
+the migrator to the worker-config/provisional prefixes, and registration enforces the manifest's
+aggregate capacity cap. The migrator has no EC2 launch permission. This setup command is separate
+from solve dispatch.
+
+The guest AMI must be built with the public half of the matching role-specific SSH key installed
+for the manifest's `sandbox.control_user` using `infra/sandbox/aws/guest/bootstrap-control.sh`;
+the private half belongs only in that supervisor role's Secrets Manager reference. The AMI build
+must also publish its pinned SSH host key for the solve image's known-hosts input. These key pairs,
+the AMI and the host-key manifest are not present in the local-only configuration.
+
+Before raising `solve-supervisor.desired_count` above zero, an operator must provision the
+role-specific guest-control secret, register a worker through that one-off migrator task, set the
+returned worker ID in the solve task environment, and explicitly set
+`PCB_WORKER_DISPATCH_ENABLED=true`. Until then the tfvars examples keep the service at zero and
+dispatch false. The run command rechecks the live STS principal and manifest, verifies the object
+store matches manifest values, uses strict SSH host-key checking and the EC2 provider's lane and
+guest isolation checks. Local ops and solve images built and smoke-checked on 2026-10-06 as UID
+10001; their default manifests/allowlists refuse production actions. No production image build,
+worker registration, queue dispatch, guest launch, ECR push or model call has been performed. The
+AWS account, approved AMI, host-key bundle, production candidate allowlist and spend authorization
+remain unavailable. The evaluation, judging, scoring and publication processors still need their
+own long-running modes and validated images.

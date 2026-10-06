@@ -47,6 +47,15 @@ The value appears only in the outgoing request header, never in stored requests,
 audit rows, exceptions or the CLI, and any echo of it in a response body is replaced with
 `[REDACTED]` before the bytes are stored.
 
+Staging and production use AWS Secrets Manager instead of environment values. The container
+entrypoint verifies its STS role against the environment manifest first; the resolver then
+requires that verified environment to match `PCB_ENVIRONMENT`. `model-gateway` and
+`solve-supervisor` can resolve only `pcb/<env>/model/<name>`, while `judge-gateway` can resolve
+only `pcb/<env>/judge/<name>`. Existing endpoint references retain their logical
+`secret://models/<name>` form. IAM grants `GetSecretValue` only under the role's environment path.
+An operator must provision the secret value separately; Terraform and this change create no
+provider credentials. Development and integration continue to use the local environment resolver.
+
 ## Capability model
 
 `adapter.capabilities()` is the wire ceiling of the adapter. The registration's declared

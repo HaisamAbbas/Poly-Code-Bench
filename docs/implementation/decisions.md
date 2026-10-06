@@ -1005,3 +1005,9 @@ oracle whose expected value was derived by running the target records that fact
   guest-control message. This keeps the runtime aligned with IAM's `ec2:LaunchTemplate` condition
   and prevents guest initialization on an instance that violates the private, no-role sandbox
   policy.
+- **D-33-10 - Provider credentials resolve from the verified service role.** Development keeps
+  the environment resolver. Staging and production require identity-guard output matching the
+  claimed environment, then resolve model credentials only under `pcb/<env>/model/*` for the
+  model gateway and solve supervisor, and judge credentials only under `pcb/<env>/judge/*` for
+  the judge gateway. IAM remains the resource boundary. Provider values are provisioned separately
+  by an operator and are not inputs to Terraform state or the deployment manifest.

@@ -91,6 +91,14 @@
 - Fake-EC2 policy verification: `tests/test_sandbox.py` passed 11 tests (one opt-in live-Docker case skipped). The negative case gives the fake instance a public IP and confirms that no guest command is sent. The deployed-manifest test rejects missing and non-positive launch-template versions; Terraform reconciliation checks the pinned version. The provider and deployment suite passed 38 tests (one opt-in live-Docker skip); Ruff, formatting and strict mypy passed. Terraform formatting and staging/production `init -backend=false` plus `validate` passed with the pinned Terraform 1.13/AWS 6.36 toolchain.
 - No AWS API was called and no VM was created. A production worker runtime/CLI, approved guest AMI and launch-template deployment remain open; this fixes the existing driver/IAM mismatch only.
 
-Decisions: D-33-01 to D-33-09 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
+## Provider credential resolution follow-up (2026-10-06)
+
+- Replaced production use of process environment credentials with a Secrets Manager resolver. Staging/production selection now requires the verified environment emitted by `pcb-ops identity verify` to match the claimed environment, plus an allowed verified STS role. Model gateway and solve supervisor resolve only `pcb/<env>/model/*`; judge gateway resolves only `pcb/<env>/judge/*`. Development and integration retain the local resolver.
+- Granted the solve supervisor the same narrowly scoped model-secret read used by the accountable in-process `ModelGateway`; judge and model gateway permissions remain separately scoped. AWS errors are sanitized before reaching callers and returned credential values remain in the existing opaque `Secret` wrapper.
+- Verification: `tests/test_gateway_secrets.py`, `tests/test_model_gateway_units.py` and `tests/test_model_gateway_review_regressions.py`: 82 passed, 16 database-backed cases skipped because `PCB_TEST_DATABASE_URL` is not configured. Ruff and strict mypy passed for all changed Python; Terraform 1.13.5 `fmt -check` passed for the identity policy. The resolver test uses only a fake Secrets Manager client; zero AWS API calls and zero provider calls were made.
+- Adjacent wiring regression checks: `tests/test_worker_runtime.py` passed 3/3 and `tests/test_judge_cli.py` passed 10/10.
+- Operators still need to provision provider secret values out of band. No real credentials were requested, stored or used. Staging remains blocked on the deployment inputs listed above.
+
+Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

@@ -1,0 +1,27 @@
+{
+  "evidence_kind": "local_synthetic_test_queue_routing",
+  "recorded_on": "2026-10-06",
+  "database_scope": "pcb_local_web_test; local synthetic/test data",
+  "behavior": {
+    "solve_job_resource_class": "copied from frozen task_version.document.runtime.resource_class",
+    "scheduler_match": "a worker with the same allowed and slot resource class claims the queued attempt job",
+    "task_contract_limit": "64 characters, matching stage_job.resource_class and worker slot constraints",
+    "unmatched_class": "not eligible under the scheduler's exact resource-class predicate"
+  },
+  "verification": {
+    "tests/test_core_contracts.py": "12 passed",
+    "tests/test_jobs_postgres.py": "7 passed, 1 skipped (opt-in local Docker guest lifecycle)",
+    "tests/test_persistence_postgres.py": "4 passed using the local migration identity",
+    "tests/test_public_api_submissions_postgres.py": "4 passed using the restricted API role and separate migration identity",
+    "ruff_check_and_format": "passed",
+    "strict_mypy_production_modules": "passed for polycodebench_core.models and polycodebench_persistence.runs",
+    "git_diff_check": "passed"
+  },
+  "safety": {
+    "release_or_benchmark_data": "none; fixtures are synthetic",
+    "provider_endpoint_contacted": false,
+    "model_call_or_download": false,
+    "cloud_resource_created": false
+  },
+  "limitation": "This verifies durable queue routing and scheduler claim eligibility only. The local stack still has no solve, gateway, evaluation, scoring, or publication worker runtime to execute the claimed job."
+}

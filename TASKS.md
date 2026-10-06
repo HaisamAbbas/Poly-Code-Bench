@@ -10,7 +10,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - [x] Add repeatable local OIDC with Keycloak and validate the submitter login callback.
 - [x] Exercise a metadata-only submission through the browser into PostgreSQL; verify owner isolation and that no model call or run is created.
 - [x] Exercise submitter database grants, transaction-local row scope, idempotent retry and owner isolation against PostgreSQL.
-- [x] Enqueue one durable solve job and creation event per attempt atomically with an approved bounded run; verify approval recovery/replay creates no duplicate job and performs no provider request against disposable PostgreSQL.
+- [x] Enqueue one durable solve job and creation event per attempt atomically with an approved bounded run, route it using the frozen task runtime resource class, and verify a matching scheduler worker can claim it. PostgreSQL approval recovery/replay creates no duplicate job and performs no provider request; synthetic-only evidence is in `docs/implementation/evidence/prompt-33/local-queue-routing-2026-10-06.json`.
 - [x] Return persisted attempt and solve-job state counts on the owning submitter's status view; verify API role access, responsive browser rendering and synthetic-only evidence.
 - [x] Provide a safe local environment/bootstrap path for credentials, database migrations/grants, and synthetic release seeding.
 - [x] Run browser coverage against the real local API/database/provider and preserve screenshots under `.cache/`.

@@ -13,6 +13,12 @@
     ],
     "terraform_reconciliation_compares": [
       "region",
+      "operator_role_arns",
+      "database_secret_arns",
+      "signing_secret_arns",
+      "cursor_secret_arn",
+      "model_and_judge_secret_namespaces",
+      "vpc_cidr",
       "approved_guest_ami_id",
       "guest_instance_type",
       "launch_template_ids_and_versions",
@@ -23,7 +29,8 @@
     "cross_environment_isolation_checks": [
       "launch_template_id_reuse",
       "subnet_reuse",
-      "security_group_reuse"
+      "security_group_reuse",
+      "role_and_secret_namespace_reuse"
     ],
     "deployment_tests": {
       "result": "passed",

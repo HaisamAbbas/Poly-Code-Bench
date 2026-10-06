@@ -128,6 +128,8 @@ class FakeRunSummary:
         return {
             "status": self.status,
             "attempt_count": 2,
+            "attempt_counts": {"queued": 2},
+            "solve_job_counts": {"queued": 2},
             "completed_count": 0,
             "failed_count": 0,
             "spent_micro_usd": 0,
@@ -417,6 +419,11 @@ async def _assert_submission_lifecycle(app: FastAPI, endpoints: FakeEndpointRepo
                 headers=_token_headers("submitter-token-00000001"),
             )
             assert updated_status.json()["data"]["run_status"] == "running"
+            assert updated_status.json()["data"]["run_progress"] == {
+                "schema_version": 1,
+                "attempt_states": {"queued": 2},
+                "solve_job_states": {"queued": 2},
+            }
             assert "secret://" not in updated_status.text
     finally:
         socket.getaddrinfo = original_getaddrinfo

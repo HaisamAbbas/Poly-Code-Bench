@@ -134,10 +134,16 @@ def _with_run_status(request: Request, result: dict[str, object]) -> dict[str, o
         if summary is not None:
             state = summary.get("status")
             result["run_status"] = state if isinstance(state, str) else "queued"
+            result["run_progress"] = {
+                "attempt_states": summary.get("attempt_counts", {}),
+                "solve_job_states": summary.get("solve_job_counts", {}),
+            }
         else:
             result["run_status"] = "queued"
+            result["run_progress"] = None
     else:
         result["run_status"] = None
+        result["run_progress"] = None
     return result
 
 

@@ -81,6 +81,15 @@ class PostgresRunRepository:
                     .group_by(attempt.c.state)
                 ).all()
             }
+            solve_job_counts = {
+                str(state): int(count)
+                for state, count in connection.execute(
+                    select(stage_job.c.state, func.count())
+                    .select_from(stage_job.join(attempt, stage_job.c.attempt_id == attempt.c.id))
+                    .where(attempt.c.run_id == run_id, stage_job.c.stage == "solve")
+                    .group_by(stage_job.c.state)
+                ).all()
+            }
             budget = (
                 connection.execute(
                     select(
@@ -96,7 +105,11 @@ class PostgresRunRepository:
                 .mappings()
                 .one_or_none()
             )
-        result: dict[str, object] = {"status": str(status), "attempt_counts": attempt_counts}
+        result: dict[str, object] = {
+            "status": str(status),
+            "attempt_counts": attempt_counts,
+            "solve_job_counts": solve_job_counts,
+        }
         if budget is not None:
             result["budget_micro_usd"] = {
                 "limit": int(budget["hard_limit_micro_usd"]),

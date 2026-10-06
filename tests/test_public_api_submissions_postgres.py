@@ -527,6 +527,11 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
             )
             assert owner_status.status_code == 200, owner_status.text
             assert owner_status.json()["data"]["run_status"] == "queued"
+            assert owner_status.json()["data"]["run_progress"] == {
+                "schema_version": 1,
+                "attempt_states": {"queued": 1},
+                "solve_job_states": {"queued": 1},
+            }
             return submission_id, run_id, ids
 
     try:

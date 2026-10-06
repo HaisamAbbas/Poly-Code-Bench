@@ -2015,6 +2015,16 @@
             "title": "Row Version",
             "type": "integer"
           },
+          "run_progress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubmissionRunProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "run_status": {
             "anyOf": [
               {
@@ -2084,7 +2094,8 @@
           "row_version",
           "rejection_reason",
           "resulting_run_id",
-          "run_status"
+          "run_status",
+          "run_progress"
         ],
         "title": "ModelSubmission",
         "type": "object"
@@ -3566,6 +3577,39 @@
           "resulting_run_id"
         ],
         "title": "SubmissionReviewView",
+        "type": "object"
+      },
+      "SubmissionRunProgress": {
+        "additionalProperties": false,
+        "description": "Counts from the submitter's own run; values are persisted scheduler states.",
+        "properties": {
+          "attempt_states": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Attempt States",
+            "type": "object"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "solve_job_states": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Solve Job States",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema_version",
+          "attempt_states",
+          "solve_job_states"
+        ],
+        "title": "SubmissionRunProgress",
         "type": "object"
       },
       "TaskSummary": {

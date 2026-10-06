@@ -75,6 +75,13 @@ class ModelSubmissionInput(PublicationModel):
         return self
 
 
+class SubmissionRunProgress(PublicationModel):
+    """Counts from the submitter's own run; values are persisted scheduler states."""
+
+    attempt_states: dict[str, int]
+    solve_job_states: dict[str, int]
+
+
 class ModelSubmission(PublicationModel):
     """Submitter-safe status. Review notes and internal plan identities are not returned here."""
 
@@ -94,6 +101,7 @@ class ModelSubmission(PublicationModel):
     rejection_reason: str | None = Field(default=None, max_length=2000)
     resulting_run_id: str | None = Field(default=None, max_length=64)
     run_status: str | None = Field(default=None, max_length=32)
+    run_progress: SubmissionRunProgress | None = None
 
 
 class SubmissionReviewView(PublicationModel):

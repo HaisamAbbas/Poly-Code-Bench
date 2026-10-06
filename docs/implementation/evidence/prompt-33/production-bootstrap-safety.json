@@ -10,7 +10,13 @@
   },
   "terraform_guard": {
     "nonnegative_integer_desired_count_required": true,
-    "placeholder_digest_forbidden_when_enabled": true
+    "placeholder_digest_forbidden_when_enabled": true,
+    "isolated_variable_only_plan_cases": {
+      "placeholder_disabled": "passed",
+      "placeholder_enabled": "blocked_by_validation",
+      "resolved_enabled": "passed",
+      "fractional_count": "blocked_by_validation"
+    }
   },
   "terraform_validate": {
     "staging": true,

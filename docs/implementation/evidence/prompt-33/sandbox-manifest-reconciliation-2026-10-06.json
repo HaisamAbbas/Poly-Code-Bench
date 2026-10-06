@@ -17,6 +17,7 @@
       "database_secret_arns",
       "signing_secret_arns",
       "cursor_secret_arn",
+      "secret_arn_partition_account_region_and_resource_name",
       "model_and_judge_secret_namespaces",
       "vpc_cidr",
       "approved_guest_ami_id",

@@ -41,8 +41,27 @@ def _deployed_staging() -> EnvironmentManifest:
     text = json.dumps(document)
     text = text.replace("REQUIRED-account", ACCOUNT).replace("REQUIRED-region", "eu-west-1")
     text = text.replace("REQUIRED-prefix", "pcbtest").replace("ami-REQUIRED", "ami-0abc")
+    text = text.replace("REQUIRED-guest-instance-type", "m7i.large")
     text = text.replace("lt-REQUIRED", "lt-0abc").replace("subnet-REQUIRED", "subnet-0abc")
+    text = text.replace("sg-REQUIRED", "sg-0abc")
     document = json.loads(text)
+    document["sandbox"]["lane_subnets"] = {
+        "solve": "subnet-0a01",
+        "grading": "subnet-0a02",
+        "admission": "subnet-0a03",
+    }
+    document["sandbox"]["lane_security_groups"] = {
+        "solve": "sg-0a01",
+        "grading": "sg-0a02",
+        "admission": "sg-0a03",
+    }
+    document["sandbox"]["control_security_group_id"] = "sg-0a04"
+    document["sandbox"]["launch_templates"] = {
+        "solve": "lt-0a01",
+        "grading": "lt-0a02",
+        "admission": "lt-0a03",
+        "performance": "lt-0a04",
+    }
     document["sandbox"]["launch_template_versions"] = {
         "solve": "4",
         "grading": "7",
@@ -216,7 +235,7 @@ def test_shared_resources_across_environments_are_violations() -> None:
     production = EnvironmentManifest.model_validate(production_doc)
     violations = separation_violations([staging, production])
     kinds = {violation.split(" ")[0] for violation in violations}
-    assert {"bucket", "signing", "service", "cloud", "VPC"} <= kinds
+    assert {"bucket", "signing", "service", "cloud", "VPC", "sandbox"} <= kinds
 
 
 def test_deployed_aws_manifest_requires_positive_versions_for_all_lane_templates() -> None:
@@ -227,6 +246,32 @@ def test_deployed_aws_manifest_requires_positive_versions_for_all_lane_templates
 
     document["sandbox"]["launch_template_versions"]["solve"] = "0"
     with pytest.raises(ValueError, match="versions must be positive integers"):
+        EnvironmentManifest.model_validate(document)
+
+
+def test_deployed_aws_manifest_requires_distinct_guest_network_boundaries() -> None:
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["lane_security_groups"].pop("solve")
+    with pytest.raises(ValueError, match="security group for every lane"):
+        EnvironmentManifest.model_validate(document)
+
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["lane_security_groups"]["solve"] = document["sandbox"][
+        "control_security_group_id"
+    ]
+    with pytest.raises(ValueError, match="require distinct security groups"):
+        EnvironmentManifest.model_validate(document)
+
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["lane_subnets"]["grading"] = document["sandbox"]["lane_subnets"]["solve"]
+    with pytest.raises(ValueError, match="distinct private subnets"):
+        EnvironmentManifest.model_validate(document)
+
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["launch_templates"]["grading"] = document["sandbox"]["launch_templates"][
+        "solve"
+    ]
+    with pytest.raises(ValueError, match="distinct launch templates"):
         EnvironmentManifest.model_validate(document)
 
 
@@ -242,6 +287,7 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     deployed = {
         "environment": "staging",
         "account_id": ACCOUNT,
+        "region": manifest.identity.region,
         "service_role_arns": dict(manifest.identity.service_roles),
         "bucket_names": {
             "hidden": manifest.object_store.bucket_hidden,
@@ -249,21 +295,38 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
             "public": manifest.object_store.bucket_public,
         },
         "signing_secret_arns": {key: "arn" for key in manifest.secrets.signing_key_refs},
+        "approved_guest_ami_id": manifest.sandbox.approved_vm_image,
+        "guest_instance_type": manifest.sandbox.guest_instance_type,
         "launch_template_ids": dict(manifest.sandbox.launch_templates),
         "launch_template_versions": {
             lane: int(version)
             for lane, version in manifest.sandbox.launch_template_versions.items()
         },
+        "lane_subnet_ids": dict(manifest.sandbox.lane_subnets),
+        "guest_security_group_ids": dict(manifest.sandbox.lane_security_groups),
+        "control_security_group_id": manifest.sandbox.control_security_group_id,
         "hardware_class": manifest.capacity.performance_hardware_class,
     }
     assert environments.reconcile(manifest, {"deployment": {"value": deployed}}) == []
     deployed["service_role_arns"]["rogue"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["bucket_names"]["hidden"] = "someone-elses-bucket"
     deployed["launch_template_versions"]["solve"] = 999
+    deployed["lane_subnet_ids"]["solve"] = "subnet-0fff"
+    deployed["guest_security_group_ids"]["grading"] = "sg-0fff"
+    deployed["control_security_group_id"] = "sg-0ffe"
+    deployed["approved_guest_ami_id"] = "ami-0fff"
+    deployed["guest_instance_type"] = "m7i.xlarge"
+    deployed["region"] = "us-east-2"
     differences = environments.reconcile(manifest, deployed)
     assert any("rogue" in item for item in differences)
     assert any("bucket hidden" in item for item in differences)
     assert any("launch template version solve" in item for item in differences)
+    assert any("guest subnet solve" in item for item in differences)
+    assert any("guest security group grading" in item for item in differences)
+    assert any("control security group" in item for item in differences)
+    assert any("approved guest AMI" in item for item in differences)
+    assert any("guest instance type" in item for item in differences)
+    assert any("region" in item for item in differences)
 
 
 # ----------------------------------------------------------------------------- migrations

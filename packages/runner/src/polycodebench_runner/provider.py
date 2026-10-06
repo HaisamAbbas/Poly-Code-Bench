@@ -294,6 +294,8 @@ class Ec2VmSandboxProvider:
             raise ValueError("each execution lane requires its own approved launch template")
         if any(not value.startswith("lt-") for value in launch_template_by_lane.values()):
             raise ValueError("execution lane launch template ids are invalid")
+        if len(set(launch_template_by_lane.values())) != 3:
+            raise ValueError("execution lanes must not share launch templates")
         if set(launch_template_version_by_lane) != {"solve", "grading", "admission"}:
             raise ValueError("each execution lane requires a pinned launch template version")
         if any(value < 1 for value in launch_template_version_by_lane.values()):

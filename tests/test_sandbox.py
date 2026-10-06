@@ -324,6 +324,32 @@ def test_snapshot_rejects_parent_escape(monkeypatch: pytest.MonkeyPatch) -> None
         provider._snapshot(handle)
 
 
+def test_ec2_driver_rejects_shared_lane_launch_templates() -> None:
+    verifier = AwsWorkerIdentityVerifier(
+        sts_client=object(), expected_supervisor_arn="arn:aws:iam::123456789012:role/pcb-solve"
+    )
+    with pytest.raises(ValueError, match="must not share launch templates"):
+        Ec2VmSandboxProvider(
+            ec2_client=object(),
+            control_channel=object(),
+            worker_identity_verified=verifier,
+            approved_ami_id="ami-0123456789abcdef0",
+            launch_template_by_lane={
+                "solve": "lt-shared",
+                "grading": "lt-shared",
+                "admission": "lt-admission",
+            },
+            launch_template_version_by_lane={"solve": 1, "grading": 1, "admission": 1},
+            environment="staging",
+            supervisor_role="solve-supervisor",
+            control_security_group_id="sg-supervisor",
+            subnet_by_lane={"solve": "subnet-a", "grading": "subnet-b", "admission": "subnet-c"},
+            security_group_by_lane={"solve": "sg-a", "grading": "sg-b", "admission": "sg-c"},
+            instance_type="m7i.large",
+            candidate_image_digests={IMAGE: DIGEST},
+        )
+
+
 def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instance() -> None:
     class FakeSts:
         def get_caller_identity(self) -> dict[str, str]:

@@ -84,6 +84,7 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
 
     compare("environment", manifest.environment, deployment.get("environment"))
     compare("account_id", manifest.identity.account_id, deployment.get("account_id"))
+    compare("region", manifest.identity.region, deployment.get("region"))
     deployed_roles = deployment.get("service_role_arns", {})
     for role, arn in sorted(manifest.identity.service_roles.items()):
         compare(f"service role {role}", arn, deployed_roles.get(role))
@@ -97,17 +98,35 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
     for key_id in manifest.secrets.signing_key_refs:
         if key_id not in signing:
             differences.append(f"signing key {key_id}: no deployed secret")
+    sandbox = manifest.sandbox
+    compare(
+        "approved guest AMI", sandbox.approved_vm_image, deployment.get("approved_guest_ami_id")
+    )
+    compare(
+        "guest instance type", sandbox.guest_instance_type, deployment.get("guest_instance_type")
+    )
     templates = deployment.get("launch_template_ids", {})
-    for lane, template in sorted(manifest.sandbox.launch_templates.items()):
+    for lane, template in sorted(sandbox.launch_templates.items()):
         compare(f"launch template {lane}", template, templates.get(lane))
     template_versions = deployment.get("launch_template_versions", {})
-    for lane, version in sorted(manifest.sandbox.launch_template_versions.items()):
+    for lane, version in sorted(sandbox.launch_template_versions.items()):
         deployed_version = template_versions.get(lane)
         compare(
             f"launch template version {lane}",
             version,
             str(deployed_version) if deployed_version is not None else None,
         )
+    subnets = deployment.get("lane_subnet_ids", {})
+    for lane, subnet in sorted(sandbox.lane_subnets.items()):
+        compare(f"guest subnet {lane}", subnet, subnets.get(lane))
+    security_groups = deployment.get("guest_security_group_ids", {})
+    for lane, security_group in sorted(sandbox.lane_security_groups.items()):
+        compare(f"guest security group {lane}", security_group, security_groups.get(lane))
+    compare(
+        "control security group",
+        sandbox.control_security_group_id,
+        deployment.get("control_security_group_id"),
+    )
     hardware = deployment.get("hardware_class")
     if manifest.capacity.performance_hardware_class is not None:
         compare("hardware class", manifest.capacity.performance_hardware_class, hardware)

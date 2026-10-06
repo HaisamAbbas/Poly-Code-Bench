@@ -76,9 +76,12 @@ class SecretsSection(_Strict):
 class SandboxSection(_Strict):
     provider: Literal["local_docker", "ec2_vm"]
     approved_vm_image: str | None = None
+    guest_instance_type: str | None = None
     launch_templates: dict[str, str] = Field(default_factory=dict)
     launch_template_versions: dict[str, str] = Field(default_factory=dict)
     lane_subnets: dict[str, str] = Field(default_factory=dict)
+    lane_security_groups: dict[str, str] = Field(default_factory=dict)
+    control_security_group_id: str | None = None
     guest_ttl_seconds: int = Field(ge=60, le=86_400)
     orphan_alert_grace_seconds: int = Field(default=600, ge=0, le=3_600)
 
@@ -172,8 +175,11 @@ class EnvironmentManifest(_Strict):
             raise ValueError("deployed manifests may not contain REQUIRED placeholders")
         if self.status == "deployed" and self.sandbox.provider == "ec2_vm":
             expected_lanes = {"solve", "grading", "admission", "performance"}
+            guest_lanes = {"solve", "grading", "admission"}
             if set(self.sandbox.launch_templates) != expected_lanes:
                 raise ValueError("deployed AWS manifests require a template ID for every lane")
+            if len(set(self.sandbox.launch_templates.values())) != len(expected_lanes):
+                raise ValueError("deployed AWS execution lanes require distinct launch templates")
             if set(self.sandbox.launch_template_versions) != expected_lanes:
                 raise ValueError(
                     "deployed AWS manifests require a pinned version for every lane template"
@@ -183,6 +189,46 @@ class EnvironmentManifest(_Strict):
                 for value in self.sandbox.launch_template_versions.values()
             ):
                 raise ValueError("deployed AWS launch-template versions must be positive integers")
+            if set(self.sandbox.lane_subnets) != guest_lanes:
+                raise ValueError(
+                    "deployed AWS manifests require a private subnet for every guest lane"
+                )
+            if set(self.sandbox.lane_security_groups) != guest_lanes:
+                raise ValueError(
+                    "deployed AWS manifests require a guest security group for every lane"
+                )
+            if not self.sandbox.control_security_group_id:
+                raise ValueError(
+                    "deployed AWS manifests require the supervisor control security group"
+                )
+            if not self.sandbox.guest_instance_type:
+                raise ValueError("deployed AWS manifests require an approved guest instance type")
+            if not re.fullmatch(r"ami-[0-9a-f]+", self.sandbox.approved_vm_image or ""):
+                raise ValueError("deployed AWS manifests require a concrete approved guest AMI")
+            if any(
+                not re.fullmatch(r"lt-[0-9a-f]+", value)
+                for value in self.sandbox.launch_templates.values()
+            ):
+                raise ValueError("deployed AWS launch template IDs are invalid")
+            if any(
+                not re.fullmatch(r"subnet-[0-9a-f]+", value)
+                for value in self.sandbox.lane_subnets.values()
+            ):
+                raise ValueError("deployed AWS guest subnet IDs are invalid")
+            if len(set(self.sandbox.lane_subnets.values())) != len(guest_lanes):
+                raise ValueError("deployed AWS guest lanes require distinct private subnets")
+            security_groups = [
+                *self.sandbox.lane_security_groups.values(),
+                self.sandbox.control_security_group_id,
+            ]
+            if any(not re.fullmatch(r"sg-[0-9a-f]+", value) for value in security_groups):
+                raise ValueError("deployed AWS security group IDs are invalid")
+            if len(set(security_groups)) != len(security_groups):
+                raise ValueError("guest lanes and supervisors require distinct security groups")
+            if not re.fullmatch(
+                r"[a-z][a-z0-9-]+(?:\.[a-z0-9-]+)+", self.sandbox.guest_instance_type
+            ):
+                raise ValueError("deployed AWS guest instance type is invalid")
         if self.network.vpc_cidr and PLACEHOLDER not in self.network.vpc_cidr:
             ipaddress.ip_network(self.network.vpc_cidr)
         return self
@@ -238,6 +284,14 @@ def separation_violations(manifests: Iterable[EnvironmentManifest]) -> list[str]
         claim("cursor key", manifest.secrets.cursor_key_ref, env)
         for arn in {**manifest.identity.service_roles, **manifest.identity.operator_roles}.values():
             claim("service identity", arn, env)
+        sandbox = manifest.sandbox
+        for template in sandbox.launch_templates.values():
+            claim("sandbox launch template", template, env)
+        for subnet in sandbox.lane_subnets.values():
+            claim("sandbox subnet", subnet, env)
+        for group in sandbox.lane_security_groups.values():
+            claim("sandbox security group", group, env)
+        claim("sandbox control security group", sandbox.control_security_group_id, env)
         if env in {"staging", "production"}:
             claim("cloud account", manifest.identity.account_id, env)
         cidr = manifest.network.vpc_cidr

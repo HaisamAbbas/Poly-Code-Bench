@@ -52,6 +52,7 @@ secrets:
 sandbox:
   provider: ec2_vm
   approved_vm_image: ami-REQUIRED
+  guest_instance_type: REQUIRED-guest-instance-type
   launch_templates:
     solve: lt-REQUIRED
     grading: lt-REQUIRED
@@ -66,6 +67,11 @@ sandbox:
     solve: subnet-REQUIRED
     grading: subnet-REQUIRED
     admission: subnet-REQUIRED
+  lane_security_groups:
+    solve: sg-REQUIRED
+    grading: sg-REQUIRED
+    admission: sg-REQUIRED
+  control_security_group_id: sg-REQUIRED
   guest_ttl_seconds: 3600
   orphan_alert_grace_seconds: 600
 telemetry:

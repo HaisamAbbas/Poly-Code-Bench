@@ -8,6 +8,11 @@ output "environment" {
   description = "Environment name."
 }
 
+output "region" {
+  value       = var.region
+  description = "Region that owns the environment resources."
+}
+
 output "account_id" {
   value       = data.aws_caller_identity.current.account_id
   description = "Account the stack was applied to."
@@ -79,6 +84,16 @@ output "lane_subnet_ids" {
 output "control_security_group_id" {
   value       = module.network.control_security_group_id
   description = "Supervisor security group."
+}
+
+output "approved_guest_ami_id" {
+  value       = var.approved_guest_ami_id
+  description = "Reviewed AMI used by the disposable worker lanes."
+}
+
+output "guest_instance_type" {
+  value       = var.guest_instance_type
+  description = "Approved disposable worker guest class."
 }
 
 output "repository_urls" {

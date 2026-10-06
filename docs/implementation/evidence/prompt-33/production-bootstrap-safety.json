@@ -9,7 +9,7 @@
     "image_digests_are_placeholders": true
   },
   "terraform_guard": {
-    "nonnegative_desired_count_required": true,
+    "nonnegative_integer_desired_count_required": true,
     "placeholder_digest_forbidden_when_enabled": true
   },
   "terraform_validate": {

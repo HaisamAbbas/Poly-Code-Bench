@@ -20,7 +20,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - [x] Export the identity guard's verified principal as `PCB_SERVICE_IDENTITY`, required for service audit attribution.
 - [x] Build the scheduler lease-reaper image and verify its guarded CLI startup as a non-root, read-only container; it does not execute queued work.
 - [x] Verify scheduler reaping against disposable local PostgreSQL: migrated a throwaway PostgreSQL 17.6 container, ran 16 scheduler/operations integration cases with a separate throwaway object store, and ran the guarded scheduler image against that database.
-- [x] Make the production Terraform example bootstrap-safe: services default to zero, schedules are empty, and Terraform rejects enabling a service with a placeholder image digest.
+- [x] Make the production Terraform example bootstrap-safe: services default to zero, schedules are empty, and Terraform requires nonnegative integer counts plus resolved image digests before enabling a service.
 - [ ] Run the equivalent reaper smoke against staged PostgreSQL, and build the model/judge gateway, solve/evaluation supervisor, scorer and publisher work-processing runtimes; complete staging E2E-42/43 before raising their task counts.
 - [ ] Select and verify a cloud account/region and its actual trial quotas, expiry, network/domain inputs and owner-approved maximum spend. Alibaba/OCI require a separate target; the current Terraform is AWS-specific. Do not provision resources until those limits are confirmed.
 

@@ -344,8 +344,13 @@ data "aws_iam_policy_document" "service" {
   dynamic "statement" {
     for_each = contains(keys(local.lane_for_role), each.key) || each.key == "ops-reaper" ? [each.key] : []
     content {
-      sid       = "DescribeGuests"
-      actions   = ["ec2:DescribeInstances", "ec2:DescribeInstanceStatus", "ec2:DescribeTags"]
+      sid = "DescribeGuests"
+      actions = [
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeTags",
+      ]
       resources = ["*"]
     }
   }

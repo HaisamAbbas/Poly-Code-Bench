@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-06",
+  "environment_class": "loopback-only local development",
+  "fixture_kind": "synthetic_internal",
+  "checks": {
+    "api_health_http_status": 200,
+    "web_home_http_status": 200,
+    "oidc_discovery_matches_local_issuer": true,
+    "public_release_count": 2,
+    "public_release_fixture_kind": "synthetic_internal",
+    "leaderboard_row_count": 4,
+    "development_doctor_deployable": true,
+    "staging_doctor_deployable": false,
+    "staging_manifest_status": "template"
+  },
+  "cloud_resources_used": false,
+  "provider_calls": 0,
+  "live_model_calls": 0,
+  "private_data_recorded": false
+}

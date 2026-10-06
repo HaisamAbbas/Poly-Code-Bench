@@ -28,6 +28,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - API: `http://127.0.0.1:8010`, backed by `pcb_local_web_test` at migration `d8f971ea2b34`.
 - Web: `http://127.0.0.1:3001`; public routes and real Keycloak submission flow use the local API.
 - Release store: `.cache/polycodebench-local-release-store.sqlite3`; contains two synthetic display releases, not benchmark results.
+- Fresh 2026-10-06 smoke: API `/healthz` and web `/` returned HTTP 200; OIDC discovery matched the local issuer; `/v1/releases` returned 2 `synthetic_internal` releases and `/v1/leaderboard` returned 4 synthetic rows. `pcb-ops doctor --profile dev` passed; staging doctor correctly refused the template manifest. Sanitized evidence is in `docs/implementation/evidence/prompt-33/local-stack-health-2026-10-06.json`.
 - Browser evidence: `.cache/local-stack-browser/`; local screenshots only, containing synthetic account and request data.
 - Latest public API release: `7c7fffc5-308f-4837-af58-1d18ba752b22`, verified as a synthetic internal test release. Production-shaped web container rendered its synthetic-data notice, table, and release selector against the host API; keyboard focus and 375/1440 px overflow checks passed with no page errors.
 - Browser suites: Prompt 30 4/4, Prompt 31 3/3, Prompt 32 2/2; refreshed reports/screenshots live under `docs/implementation/evidence/prompt-30/`, `prompt-31/`, and `prompt-32/`. These artifacts use test fixtures only.

@@ -284,17 +284,36 @@ def test_ranked_releases_refuse_development_tier_results() -> None:
 
 def test_reconcile_reports_drift_against_terraform_output() -> None:
     manifest = _deployed_staging()
+
+    def secret_arn(reference: str) -> str:
+        name = reference.removeprefix("aws-sm:")
+        return f"arn:aws:secretsmanager:eu-west-1:{ACCOUNT}:secret:{name}-AbCdEf"
+
     deployed = {
         "environment": "staging",
         "account_id": ACCOUNT,
         "region": manifest.identity.region,
         "service_role_arns": dict(manifest.identity.service_roles),
+        "operator_role_arns": dict(manifest.identity.operator_roles),
         "bucket_names": {
             "hidden": manifest.object_store.bucket_hidden,
             "internal": manifest.object_store.bucket_internal,
             "public": manifest.object_store.bucket_public,
         },
-        "signing_secret_arns": {key: "arn" for key in manifest.secrets.signing_key_refs},
+        "database_secret_arns": {
+            role: secret_arn(reference)
+            for role, reference in manifest.secrets.database_dsn_refs.items()
+        },
+        "signing_secret_arns": {
+            key: secret_arn(reference)
+            for key, reference in manifest.secrets.signing_key_refs.items()
+        },
+        "cursor_secret_arn": secret_arn(str(manifest.secrets.cursor_key_ref)),
+        "secret_namespaces": {
+            "model": manifest.secrets.model_namespace.removeprefix("aws-sm:"),
+            "judge": manifest.secrets.judge_namespace.removeprefix("aws-sm:"),
+        },
+        "vpc_cidr": manifest.network.vpc_cidr,
         "approved_guest_ami_id": manifest.sandbox.approved_vm_image,
         "guest_instance_type": manifest.sandbox.guest_instance_type,
         "launch_template_ids": dict(manifest.sandbox.launch_templates),
@@ -309,7 +328,16 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     }
     assert environments.reconcile(manifest, {"deployment": {"value": deployed}}) == []
     deployed["service_role_arns"]["rogue"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
+    deployed["operator_role_arns"]["release-approver"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["bucket_names"]["hidden"] = "someone-elses-bucket"
+    deployed["database_secret_arns"]["api"] = secret_arn("aws-sm:pcb/production/db/api")
+    signing_key_id = next(iter(manifest.secrets.signing_key_refs))
+    deployed["signing_secret_arns"][signing_key_id] = secret_arn(
+        "aws-sm:pcb/production/signing/rotated"
+    )
+    deployed["cursor_secret_arn"] = secret_arn("aws-sm:pcb/production/api/cursor-signing-key")
+    deployed["secret_namespaces"]["model"] = "pcb/production/model/"
+    deployed["vpc_cidr"] = "10.60.0.0/16"
     deployed["launch_template_versions"]["solve"] = 999
     deployed["lane_subnet_ids"]["solve"] = "subnet-0fff"
     deployed["guest_security_group_ids"]["grading"] = "sg-0fff"
@@ -319,7 +347,13 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     deployed["region"] = "us-east-2"
     differences = environments.reconcile(manifest, deployed)
     assert any("rogue" in item for item in differences)
+    assert any("operator role release-approver" in item for item in differences)
     assert any("bucket hidden" in item for item in differences)
+    assert any("database secret api" in item for item in differences)
+    assert any("signing key" in item for item in differences)
+    assert any("cursor signing key" in item for item in differences)
+    assert any("model secret namespace" in item for item in differences)
+    assert any("VPC CIDR" in item for item in differences)
     assert any("launch template version solve" in item for item in differences)
     assert any("guest subnet solve" in item for item in differences)
     assert any("guest security group grading" in item for item in differences)

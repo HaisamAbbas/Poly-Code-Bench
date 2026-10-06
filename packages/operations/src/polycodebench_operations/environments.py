@@ -82,6 +82,24 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
         if expected != observed:
             differences.append(f"{label}: manifest {expected!r} != deployed {observed!r}")
 
+    def compare_secret_reference(
+        label: str, expected_ref: str | None, observed_arn: object
+    ) -> None:
+        if expected_ref is None:
+            if observed_arn is not None:
+                differences.append(f"{label}: deployed secret has no manifest reference")
+            return
+        if not expected_ref.startswith("aws-sm:") or not isinstance(observed_arn, str):
+            differences.append(f"{label}: manifest reference or deployed secret ARN is invalid")
+            return
+        expected_name = expected_ref.removeprefix("aws-sm:")
+        marker = ":secret:"
+        actual_name = observed_arn.split(marker, maxsplit=1)[1] if marker in observed_arn else ""
+        if actual_name != expected_name and not actual_name.startswith(expected_name + "-"):
+            differences.append(
+                f"{label}: manifest secret reference does not match Terraform output"
+            )
+
     compare("environment", manifest.environment, deployment.get("environment"))
     compare("account_id", manifest.identity.account_id, deployment.get("account_id"))
     compare("region", manifest.identity.region, deployment.get("region"))
@@ -90,14 +108,43 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
         compare(f"service role {role}", arn, deployed_roles.get(role))
     for role in sorted(set(deployed_roles) - set(manifest.identity.service_roles)):
         differences.append(f"service role {role}: deployed but not declared in the manifest")
+    deployed_operator_roles = deployment.get("operator_role_arns", {})
+    for role, arn in sorted(manifest.identity.operator_roles.items()):
+        compare(f"operator role {role}", arn, deployed_operator_roles.get(role))
+    for role in sorted(set(deployed_operator_roles) - set(manifest.identity.operator_roles)):
+        differences.append(f"operator role {role}: deployed but not declared in the manifest")
     buckets = deployment.get("bucket_names", {})
     compare("bucket hidden", manifest.object_store.bucket_hidden, buckets.get("hidden"))
     compare("bucket internal", manifest.object_store.bucket_internal, buckets.get("internal"))
     compare("bucket public", manifest.object_store.bucket_public, buckets.get("public"))
+    deployed_database_secrets = deployment.get("database_secret_arns", {})
+    for role, reference in sorted(manifest.secrets.database_dsn_refs.items()):
+        compare_secret_reference(
+            f"database secret {role}", reference, deployed_database_secrets.get(role)
+        )
+    for role in sorted(set(deployed_database_secrets) - set(manifest.secrets.database_dsn_refs)):
+        differences.append(f"database secret {role}: deployed but not declared in the manifest")
+    secret_namespaces = deployment.get("secret_namespaces", {})
+    compare(
+        "model secret namespace",
+        manifest.secrets.model_namespace.removeprefix("aws-sm:"),
+        secret_namespaces.get("model"),
+    )
+    compare(
+        "judge secret namespace",
+        manifest.secrets.judge_namespace.removeprefix("aws-sm:"),
+        secret_namespaces.get("judge"),
+    )
     signing = deployment.get("signing_secret_arns", {})
-    for key_id in manifest.secrets.signing_key_refs:
-        if key_id not in signing:
-            differences.append(f"signing key {key_id}: no deployed secret")
+    for key_id, reference in sorted(manifest.secrets.signing_key_refs.items()):
+        compare_secret_reference(f"signing key {key_id}", reference, signing.get(key_id))
+    for key_id in sorted(set(signing) - set(manifest.secrets.signing_key_refs)):
+        differences.append(f"signing key {key_id}: deployed but not declared in the manifest")
+    compare_secret_reference(
+        "cursor signing key", manifest.secrets.cursor_key_ref, deployment.get("cursor_secret_arn")
+    )
+    network_cidr = deployment.get("vpc_cidr")
+    compare("VPC CIDR", manifest.network.vpc_cidr, network_cidr)
     sandbox = manifest.sandbox
     compare(
         "approved guest AMI", sandbox.approved_vm_image, deployment.get("approved_guest_ami_id")

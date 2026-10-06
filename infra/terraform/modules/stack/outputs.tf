@@ -18,6 +18,11 @@ output "account_id" {
   description = "Account the stack was applied to."
 }
 
+output "vpc_cidr" {
+  value       = module.network.vpc_cidr
+  description = "Observed CIDR block of the environment VPC."
+}
+
 output "service_role_arns" {
   value       = module.identity.service_role_arns
   description = "Task role per process role."
@@ -46,6 +51,11 @@ output "database_instance_identifier" {
 output "database_secret_arns" {
   value       = module.keys.database_secret_arns
   description = "Per-role DSN secret references."
+}
+
+output "cursor_secret_arn" {
+  value       = module.keys.cursor_secret_arn
+  description = "API cursor-signing secret ARN."
 }
 
 output "signing_secret_arns" {

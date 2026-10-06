@@ -277,6 +277,9 @@ class Ec2VmSandboxProvider:
         control_channel: GuestControlChannel,
         worker_identity_verified: AwsWorkerIdentityVerifier,
         approved_ami_id: str,
+        launch_template_by_lane: dict[str, str],
+        environment: str,
+        supervisor_role: str,
         control_security_group_id: str,
         subnet_by_lane: dict[str, str],
         security_group_by_lane: dict[str, str],
@@ -286,6 +289,14 @@ class Ec2VmSandboxProvider:
     ) -> None:
         if not approved_ami_id.startswith("ami-") or not instance_type:
             raise ValueError("approved AMI and instance class are required")
+        if set(launch_template_by_lane) != {"solve", "grading", "admission"}:
+            raise ValueError("each execution lane requires its own approved launch template")
+        if any(not value.startswith("lt-") for value in launch_template_by_lane.values()):
+            raise ValueError("execution lane launch template ids are invalid")
+        if environment not in {"integration", "staging", "production"}:
+            raise ValueError("execution environment is invalid")
+        if supervisor_role not in {"solve-supervisor", "eval-supervisor", "admission-operator"}:
+            raise ValueError("sandbox supervisor role is invalid")
         if set(subnet_by_lane) != {"solve", "grading", "admission"}:
             raise ValueError("each execution lane requires its own subnet")
         if set(security_group_by_lane) != {"solve", "grading", "admission"}:
@@ -296,6 +307,9 @@ class Ec2VmSandboxProvider:
         self.channel = control_channel
         self.worker_identity_verified = worker_identity_verified
         self.approved_ami_id = approved_ami_id
+        self.launch_template_by_lane = dict(launch_template_by_lane)
+        self.environment = environment
+        self.supervisor_role = supervisor_role
         self.control_security_group_id = control_security_group_id
         self.subnet_by_lane = dict(subnet_by_lane)
         self.security_group_by_lane = dict(security_group_by_lane)
@@ -321,28 +335,19 @@ class Ec2VmSandboxProvider:
         expires = int(time.time()) + spec.ttl_seconds
         stage_capability = secrets.token_urlsafe(32)
         response = self.ec2.run_instances(
-            ImageId=self.approved_ami_id,
-            InstanceType=self.instance_type,
+            LaunchTemplate={
+                "LaunchTemplateId": self.launch_template_by_lane[spec.lane],
+                "Version": "$Default",
+            },
             MinCount=1,
             MaxCount=1,
-            NetworkInterfaces=[
-                {
-                    "DeviceIndex": 0,
-                    "SubnetId": self.subnet_by_lane[spec.lane],
-                    "Groups": [self.security_group_by_lane[spec.lane]],
-                    "AssociatePublicIpAddress": False,
-                    "DeleteOnTermination": True,
-                }
-            ],
-            MetadataOptions={"HttpEndpoint": "disabled", "HttpTokens": "required"},
-            BlockDeviceMappings=[
-                {"DeviceName": "/dev/xvda", "Ebs": {"DeleteOnTermination": True, "Encrypted": True}}
-            ],
             TagSpecifications=[
                 {
                     "ResourceType": "instance",
                     "Tags": [
                         {"Key": "pcb:owner", "Value": "polycodebench"},
+                        {"Key": "pcb:environment", "Value": self.environment},
+                        {"Key": "pcb:role", "Value": self.supervisor_role},
                         {"Key": "pcb:sandbox", "Value": sandbox_id},
                         {"Key": "pcb:stage", "Value": spec.stage_id},
                         {"Key": "pcb:fence", "Value": str(spec.fence)},
@@ -350,23 +355,48 @@ class Ec2VmSandboxProvider:
                         {"Key": "pcb:expires", "Value": str(expires)},
                         {"Key": "pcb:timeout", "Value": str(spec.timeout_seconds)},
                     ],
-                }
+                },
+                {
+                    "ResourceType": "volume",
+                    "Tags": [
+                        {"Key": "pcb:owner", "Value": "polycodebench"},
+                        {"Key": "pcb:environment", "Value": self.environment},
+                        {"Key": "pcb:role", "Value": self.supervisor_role},
+                        {"Key": "pcb:sandbox", "Value": sandbox_id},
+                        {"Key": "pcb:stage", "Value": spec.stage_id},
+                        {"Key": "pcb:fence", "Value": str(spec.fence)},
+                        {"Key": "pcb:lane", "Value": spec.lane},
+                        {"Key": "pcb:expires", "Value": str(expires)},
+                        {"Key": "pcb:timeout", "Value": str(spec.timeout_seconds)},
+                    ],
+                },
             ],
         )
         instances = response.get("Instances", [])
         if len(instances) != 1 or not instances[0].get("InstanceId"):
             raise SandboxError("EC2 did not return exactly one instance")
         instance_id = instances[0]["InstanceId"]
+        handle = SandboxHandle(
+            sandbox_id=sandbox_id,
+            stage_id=spec.stage_id,
+            fence=spec.fence,
+            lane=spec.lane,
+            driver="ec2_vm",
+            resource_id=instance_id,
+            expires_at_epoch=expires,
+            max_execution_seconds=spec.timeout_seconds,
+            isolation_tier="production",
+        )
         try:
             deadline = time.monotonic() + self.boot_timeout_seconds
             private_ip: str | None = None
             guest_ready = False
             while time.monotonic() < deadline:
                 self._require_worker()
-                described = self.ec2.describe_instances(InstanceIds=[instance_id])
-                reservation = described.get("Reservations", [])
-                current = reservation[0]["Instances"][0] if reservation else None
+                current = self._instance(handle)
                 if current and current.get("State", {}).get("Name") == "running":
+                    # Check AWS-side isolation before sending any guest-control request.
+                    self._verify_aws_instance_policy(handle)
                     private_ip = current.get("PrivateIpAddress")
                     if private_ip:
                         try:
@@ -396,37 +426,15 @@ class Ec2VmSandboxProvider:
             if private_ip is None or not guest_ready:
                 raise SandboxError("disposable VM did not become ready before its deadline")
         except BaseException:
-            cleanup_handle = SandboxHandle(
-                sandbox_id=sandbox_id,
-                stage_id=spec.stage_id,
-                fence=spec.fence,
-                lane=spec.lane,
-                driver="ec2_vm",
-                resource_id=instance_id,
-                expires_at_epoch=expires,
-                max_execution_seconds=spec.timeout_seconds,
-                isolation_tier="production",
-            )
             self._stage_capabilities[sandbox_id] = stage_capability
             try:
-                self._destroy(cleanup_handle)
+                self._destroy(handle)
             except Exception:
                 LOGGER.exception(
                     "failed guest cleanup could not be verified instance=%s", instance_id
                 )
             raise
         self._stage_capabilities[sandbox_id] = stage_capability
-        handle = SandboxHandle(
-            sandbox_id=sandbox_id,
-            stage_id=spec.stage_id,
-            fence=spec.fence,
-            lane=spec.lane,
-            driver="ec2_vm",
-            resource_id=instance_id,
-            expires_at_epoch=expires,
-            max_execution_seconds=spec.timeout_seconds,
-            isolation_tier="production",
-        )
         try:
             self._attest(handle)
         except BaseException:
@@ -444,6 +452,8 @@ class Ec2VmSandboxProvider:
         tags = {tag["Key"]: tag["Value"] for tag in instance.get("Tags", [])}
         expected = {
             "pcb:owner": "polycodebench",
+            "pcb:environment": self.environment,
+            "pcb:role": self.supervisor_role,
             "pcb:sandbox": handle.sandbox_id,
             "pcb:stage": handle.stage_id,
             "pcb:fence": str(handle.fence),
@@ -592,7 +602,7 @@ class Ec2VmSandboxProvider:
     async def attest(self, handle: SandboxHandle) -> IsolationAttestation:
         return await asyncio.to_thread(self._attest, handle)
 
-    def _attest(self, handle: SandboxHandle) -> IsolationAttestation:
+    def _verify_aws_instance_policy(self, handle: SandboxHandle) -> dict[str, Any]:
         instance = self._instance(handle)
         metadata = instance.get("MetadataOptions", {})
         interfaces = instance.get("NetworkInterfaces", [])
@@ -607,6 +617,7 @@ class Ec2VmSandboxProvider:
             or instance.get("IamInstanceProfile") is not None
             or instance.get("PublicIpAddress") is not None
             or instance.get("SubnetId") != self.subnet_by_lane[handle.lane]
+            or instance.get("InstanceType") != self.instance_type
             or instance.get("ImageId") != self.approved_ami_id
             or attached_groups != [expected_group]
             or any(interface.get("Association", {}).get("PublicIp") for interface in interfaces)
@@ -635,6 +646,10 @@ class Ec2VmSandboxProvider:
             raise SandboxError(
                 "EC2 lane security group is not restricted to supervisor control ingress"
             )
+        return instance
+
+    def _attest(self, handle: SandboxHandle) -> IsolationAttestation:
+        self._verify_aws_instance_policy(handle)
         guest = self.channel.invoke(
             self._private_ip(handle), "attest", self._scoped_payload(handle)
         )

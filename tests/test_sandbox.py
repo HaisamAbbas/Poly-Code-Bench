@@ -332,6 +332,7 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
     class FakeEc2:
         call: dict[str, object] = {}
         state = "running"
+        public_ip: str | None = None
 
         def run_instances(self, **kwargs: object) -> dict[str, object]:
             self.call = kwargs
@@ -351,12 +352,16 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
                                 "Tags": tags,
                                 "MetadataOptions": {"HttpEndpoint": "disabled"},
                                 "IamInstanceProfile": None,
-                                "PublicIpAddress": None,
+                                "PublicIpAddress": self.public_ip,
                                 "SubnetId": "subnet-c",
+                                "InstanceType": "m7i.large",
                                 "VpcId": "vpc-test",
                                 "ImageId": "ami-0123456789abcdef0",
                                 "NetworkInterfaces": [
-                                    {"Groups": [{"GroupId": "sg-c"}], "Association": {}}
+                                    {
+                                        "Groups": [{"GroupId": "sg-c"}],
+                                        "Association": {"PublicIp": self.public_ip},
+                                    }
                                 ],
                             }
                         ]
@@ -441,6 +446,13 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
         control_channel=channel,
         worker_identity_verified=verifier,
         approved_ami_id="ami-0123456789abcdef0",
+        launch_template_by_lane={
+            "solve": "lt-solve0123456789",
+            "grading": "lt-grading012345",
+            "admission": "lt-admission01234",
+        },
+        environment="staging",
+        supervisor_role="solve-supervisor",
         control_security_group_id="sg-supervisor",
         subnet_by_lane={"solve": "subnet-a", "grading": "subnet-b", "admission": "subnet-c"},
         security_group_by_lane={"solve": "sg-a", "grading": "sg-b", "admission": "sg-c"},
@@ -449,9 +461,15 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
     )
     handle = asyncio.run(provider.create(_spec()))
     assert handle.isolation_tier == "production"
+    assert ec2.call["LaunchTemplate"] == {
+        "LaunchTemplateId": "lt-admission01234",
+        "Version": "$Default",
+    }
+    launch_tags = ec2.call["TagSpecifications"][0]["Tags"]  # type: ignore[index]
+    assert {tag["Key"]: tag["Value"] for tag in launch_tags}["pcb:environment"] == "staging"
+    assert {tag["Key"]: tag["Value"] for tag in launch_tags}["pcb:lane"] == "admission"
+    assert "ImageId" not in ec2.call and "NetworkInterfaces" not in ec2.call
     assert "IamInstanceProfile" not in ec2.call
-    assert ec2.call["MetadataOptions"] == {"HttpEndpoint": "disabled", "HttpTokens": "required"}
-    assert ec2.call["NetworkInterfaces"][0]["AssociatePublicIpAddress"] is False  # type: ignore[index]
     capability = provider._stage_capabilities[handle.sandbox_id]
     assert len(capability) >= 32
     assert capability not in handle.model_dump_json()
@@ -472,6 +490,14 @@ def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instanc
     assert snapshot.archive_digest == f"sha256:{hashlib.sha256(b'').hexdigest()}"
     asyncio.run(provider.destroy(handle))
     assert handle.sandbox_id not in provider._stage_capabilities
+
+    # An unsafe launch-template change is rejected before the guest receives any command.
+    ec2.state = "running"
+    ec2.public_ip = "198.51.100.9"
+    channel.calls.clear()
+    with pytest.raises(SandboxError, match="no-role/no-metadata/private"):
+        asyncio.run(provider.create(_spec()))
+    assert channel.calls == []
 
 
 @pytest.mark.skipif(

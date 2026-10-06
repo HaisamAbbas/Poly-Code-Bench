@@ -9,9 +9,18 @@ verified in the owner's account before selecting or deploying a target.
 Alibaba offers product trials and separate solution trials. Product trials require a verified
 account, a supported payment method, no overdue balance, and no prior qualifying order for that
 product. Each user generally gets one trial per product. The ECS trial has stricter prior-use
-rules. The free-trial page currently advertises product-specific offers, including an ECS card;
-that does not show this account is eligible or that the whole application stack is covered. The
+rules. The public page currently advertises an ECS t5 offer of 1 vCPU/1 GB for one year; that
+does not show this account is eligible or that the whole application stack is covered. The
 offer card and account console are authoritative for instance shape, region, and duration.
+
+That ECS shape is too small to select as the host for the complete PolyCodeBench Compose stack
+(PostgreSQL, object store, Keycloak, API, web, and an optional worker); at most, it is a candidate
+for a pared-down demonstration after resource testing. ApsaraDB RDS supports PostgreSQL, but I
+did not verify an eligible RDS for PostgreSQL free-instance quota on the current public offer
+cards. Treat managed PostgreSQL as billable unless the account console shows an exact applicable
+quota. The ACK public card says the service is free to use, while its cluster documentation also
+requires an account balance of at least CNY 100 when creating a cluster with pay-as-you-go cloud
+resources. This does not establish free worker nodes or free networking.
 
 Alibaba solution trials are isolated POC environments, not general-purpose production accounts.
 The current rules describe a one-time initial 50-point grant for eligible users, with actual
@@ -67,6 +76,9 @@ Official sources, checked 2026-10-06:
 
 - [Alibaba Cloud Free Trial](https://www.alibabacloud.com/en/Free?_p_lc=1)
 - [Alibaba Cloud free trial rules](https://www.alibabacloud.com/help/en/user-center/product-overview/learn-about-free-trials)
+- [Alibaba Cloud ACK free-tier offer](https://www.alibabacloud.com/en/free?_p_lc=1&tags=always_free)
+- [Alibaba Cloud ACK limits and account-balance requirement](https://help.aliyun.com/en/ack/product-overview/limits)
+- [ApsaraDB RDS PostgreSQL support](https://www.alibabacloud.com/en/product/apsaradb-rds?_p_lc=1)
 - [Alibaba Cloud OSS new-user trial quota](https://www.alibabacloud.com/help/en/oss/free-quota-for-new-users)
 - [Alibaba Cloud KMS billing FAQ](https://www.alibabacloud.com/help/en/kms/key-management-service/product-overview/faq-2)
 - [Oracle Cloud Free Tier and FAQ](https://www.oracle.com/cloud/free/)

@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-10-06",
+  "environment_class": "local_postgresql_17_6",
+  "command": "uv run --offline --locked --all-packages pcb-ops migrate rehearse --admin-url <PCB_OPS_REHEARSAL_DATABASE_URL from ignored local .env>",
+  "head": "b390a26f17cd",
+  "previous_revision": "b9e04c7a1f38",
+  "schema_objects": 1064,
+  "models_match_schema": true,
+  "schema_identical": true,
+  "passed": true,
+  "steps": [
+    {
+      "step": "empty -> head",
+      "passed": true,
+      "returncode": 0,
+      "errors": []
+    },
+    {
+      "step": "alembic check (models == schema)",
+      "passed": true,
+      "returncode": 0,
+      "errors": []
+    },
+    {
+      "step": "empty -> b9e04c7a1f38",
+      "passed": true,
+      "returncode": 0,
+      "errors": []
+    },
+    {
+      "step": "b9e04c7a1f38 -> head",
+      "passed": true,
+      "returncode": 0,
+      "errors": []
+    }
+  ],
+  "temporary_migration_databases_remaining": 0,
+  "cloud_resources_used": false,
+  "provider_calls": 0
+}

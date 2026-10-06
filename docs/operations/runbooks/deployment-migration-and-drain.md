@@ -37,6 +37,7 @@ Current local validation:
   timeout.
 - PostgreSQL migration rehearsal passes from an empty schema and from `b9e04c7a1f38` to head;
   `alembic check` passes and both resulting schemas match (1,064 objects).
+  Current-tree output: `docs/implementation/evidence/prompt-33/migration-rehearsal-current-2026-10-06.json`.
 - `pcb-ops doctor --profile dev` passes. Staging remains a template with 29 unresolved
   owner-supplied inputs and requires a verified AWS principal; no staging resource has been
   provisioned.

@@ -55,14 +55,24 @@ Not covered by this variant: the selection reached 10 of the 11 strata (`unknown
 
 ## 3. Migration rehearsal
 
-`pcb-ops migrate rehearse`, run against a clean worktree of the committed HEAD:
+The original rehearsal snapshot recorded two real findings on the then-current tree: repair
+table schema drift (D-33-03) and a temporary second Alembic head while Prompt 32 was being
+integrated (D-33-04). That snapshot is historical; its failure statements do not describe the
+current migration state.
 
-- **empty → head**: pass.
-- **`b9e04c7a1f38` → head**: pass.
-- **Schemas identical**: 1,032 columns, constraints and triggers.
-- **`alembic check` (models == schema)**: **FAIL**. The Prompt 26 `repair_*` migration (`e5f6a7b8c9d0`) created foreign keys without `ON DELETE RESTRICT`, plus two indexes the models do not declare. Recorded as D-33-03.
+Follow-up validation on the current tree (2026-10-06):
 
-`pcb-ops migrate check` on the working tree **fails by design**: the concurrent Prompt 32 migration `a20c4e619d32` creates a second head. Both must be fixed before any deployment.
+- `alembic heads`: one head, `b390a26f17cd`.
+- `pcb-ops migrate check`: passes through `b390a26f17cd`, with no policy violations; the released
+  revision remains `e5f6a7b8c9d0` until a deployment advances it.
+- `alembic check` against the local PostgreSQL migration database: **No new upgrade operations
+  detected.**
+- The current PostgreSQL scratch rehearsal passed empty-to-head and `b9e04c7a1f38`-to-head
+  upgrades, schema equality and drift checking across 1,064 schema objects. Its sanitized output
+  is [`migration-rehearsal-current-2026-10-06.json`](../implementation/evidence/prompt-33/migration-rehearsal-current-2026-10-06.json).
+
+The saved `migration-rehearsal.json` remains unchanged as evidence of the earlier failed run. The
+repair migration and single-head chain are described in the current Prompt 33 report and runbook.
 
 ## 4. Load rehearsal (public API)
 

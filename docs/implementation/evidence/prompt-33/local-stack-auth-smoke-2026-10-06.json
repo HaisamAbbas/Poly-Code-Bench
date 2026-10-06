@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "local_public_site_and_submission_smoke",
+  "run_date": "2026-10-06",
+  "environment_class": "loopback-only local development",
+  "release_data_classification": "synthetic_internal",
+  "checks": {
+    "api_health_http_status": 200,
+    "leaderboard_http_status": 200,
+    "keycloak_oidc_login": "passed",
+    "synthetic_submission_persisted_to_postgres": "passed",
+    "owner_status_lookup": "passed",
+    "reviewer_queue_authorization": "passed",
+    "cross_owner_read": 404,
+    "anonymous_reviewer_read": 401,
+    "keyboard_focus_and_scroll": "passed",
+    "small_viewport_390px": "passed",
+    "submitted_endpoint_contacted": false
+  },
+  "artifacts": {
+    "screenshots": "ignored .cache/local-stack-browser/",
+    "private_or_credential_data_committed": false
+  },
+  "external_usage": {
+    "cloud_resources": false,
+    "provider_calls": 0,
+    "live_model_calls": 0
+  }
+}

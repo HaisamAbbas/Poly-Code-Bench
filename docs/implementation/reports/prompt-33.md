@@ -99,6 +99,17 @@
 - Adjacent wiring regression checks: `tests/test_worker_runtime.py` passed 3/3 and `tests/test_judge_cli.py` passed 10/10.
 - Operators still need to provision provider secret values out of band. No real credentials were requested, stored or used. Staging remains blocked on the deployment inputs listed above.
 
+## Local website and submission flow rerun (2026-10-06)
+
+- Reconnected the loopback API and web application to the already-running local PostgreSQL, SeaweedFS and Keycloak services. API `/healthz` and the release-backed `/leaderboard` returned HTTP 200.
+- `apps/web/tests/e2e/local-stack-auth.smoke.mjs` passed against the live local stack: Keycloak OIDC login, synthetic metadata submission persisted to PostgreSQL, owner status lookup, reviewer queue access, cross-owner 404, anonymous reviewer 401, keyboard focus and horizontal scrolling, and 390 px responsive layout. The test confirmed the submitted example endpoint was never contacted.
+- The displayed release is labelled `Synthetic internal test data`; it is not benchmark evidence. Desktop/mobile screenshots are retained only in ignored `.cache/local-stack-browser/`; the committed JSON records no account, request ID, or credential data. No cloud resource or model call was used.
+
+## Free cloud target review (2026-10-06)
+
+- Reviewed the current official Alibaba and OCI free-tier terms and recorded the account-specific checks in `docs/operations/free-cloud-target-review-2026-10.md`. Alibaba's listed ECS free offer is not enough to infer this account's quotas; solution trials are temporary and their data is deleted on expiry. OCI has an Always Free A1 option, but requires a different target and self-managed PostgreSQL for this application.
+- No provider was selected for deployment, and no account API or cloud resource was used. Alibaba remains the preferred candidate only if the owner's console confirms the exact compute, storage, PostgreSQL/secrets/registry entitlements and an approved residual-spend limit. The checked-in Terraform remains AWS-specific.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

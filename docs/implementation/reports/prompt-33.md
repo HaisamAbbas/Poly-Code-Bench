@@ -75,7 +75,14 @@
 - Extended the local bootstrap with a separate `pcb_local_worker` login, explicit-false setup/dispatch flags and 64 MiB/1 GiB internal artifact quotas. Bootstrapped and registered one `local-fixture-small` worker against the loopback PostgreSQL/SeaweedFS stack; a repeated registration reused the existing worker/config. A one-shot run with a process-only dispatch opt-in found zero matching queued jobs and claimed none. Gateway intent/delivery counts remained zero. Evidence: `docs/implementation/evidence/prompt-33/local-solve-worker-2026-10-06.json`.
 - Worker verification: 8 focused unit/bootstrap tests pass; `tests/test_jobs_postgres.py` 8 passed/1 opt-in Docker skip; `tests/test_persistence_postgres.py` 4 passed; `tests/test_public_api_submissions_postgres.py` 4 passed using the restricted API role and separate migration identity. Ruff and strict mypy pass for changed production Python. The wheel-installed `pcb-worker --help` command starts successfully.
 - Fresh public-flow browser rerun: Prompt 30 4/4, Prompt 31 3/3, Prompt 32 2/2. Results and refreshed screenshots are in the existing prompt evidence directories; each result file omits the machine-local Node executable path, and pages show synthetic test data only.
-- No endpoint was configured, no model was installed or called, no model was downloaded, and no cloud resource or public benchmark result was created. Judge/evaluation/scoring/publication processors and a production worker runtime remain open.
+- At the time of the original solve-worker verification, no endpoint or model was configured and no model was called or downloaded. No cloud resource or public benchmark result was created. Judge/evaluation/scoring/publication processors and a production worker runtime remain open.
+
+## Local inference follow-up (2026-10-06)
+
+- Installed the official Ollama `qwen2.5-coder:1.5b` model tag (digest `d7372fd82851`, 986 MB) on the workstation. The model was used only for one local smoke completion and two loopback conformance probes; no candidate, submitted endpoint, or task data was sent.
+- Registered and approved `http://127.0.0.1:11434/v1` in the local development database after basic-completion and input/output usage checks passed. Tool calling was not claimed or probed. The endpoint is confined by an explicit `127.0.0.1/32` policy.
+- `pcb-model plan` reports one planned call, compatible context/usage controls, strict-cap eligibility, and a USD 0 provider-fee ceiling. This is a plan only: no run, score, or release was created. Local power and hardware costs are outside that fee figure.
+- Evidence: `docs/implementation/evidence/prompt-33/local-ollama-smoke-2026-10-06.json`. This model is not calibrated or admitted for ranked releases. Production worker modes and judge/evaluation/scoring/publication processors remain open.
 
 Decisions: D-33-01 to D-33-08 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "kind": "local_model_endpoint_smoke_evidence",
+  "date": "2026-10-06",
+  "environment": "loopback-development",
+  "test_data": "conformance prompts only",
+  "model": {
+    "tag": "qwen2.5-coder:1.5b",
+    "ollama_tag_digest": "d7372fd82851",
+    "download_size_mb": 986,
+    "license": "Apache-2.0",
+    "sources": [
+      "https://ollama.com/library/qwen2.5-coder",
+      "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct"
+    ]
+  },
+  "endpoint": {
+    "id": "74ca55f2-c79d-44ca-b53b-0296989e3afd",
+    "url": "http://127.0.0.1:11434/v1",
+    "network_policy": "127.0.0.1/32",
+    "secret_reference": "none",
+    "approval_status": "approved_after_conformance",
+    "declared_native_tools": false,
+    "declared_context_tokens": 32768,
+    "usage_counters": ["input", "output"]
+  },
+  "conformance": {
+    "basic_completion": "passed",
+    "usage_counters": "passed",
+    "native_tool_call": "not_claimed_or_probed"
+  },
+  "budget_plan": {
+    "tasks": 1,
+    "samples": 1,
+    "planned_model_calls": 1,
+    "worst_case_provider_fee_micro_usd": 0,
+    "strict_cap_eligible": true,
+    "protocol_context_tokens": 32000,
+    "max_output_tokens": 64,
+    "compatible": true
+  },
+  "execution": {
+    "local_inference_requests": 3,
+    "hosted_provider_calls": 0,
+    "gateway_intents_created_by_smoke": 0,
+    "benchmark_run_created": false,
+    "candidate_code_submitted": false,
+    "score_created": false,
+    "release_published": false,
+    "cloud_resources_used": false
+  },
+  "limitations": [
+    "The local model was not quality-calibrated or admitted for ranked releases.",
+    "The zero provider-fee estimate excludes workstation electricity and hardware costs.",
+    "Endpoint registration and approval exist only in the workstation's local development database.",
+    "No public, held-out, or submitted task content was sent to the model."
+  ]
+}

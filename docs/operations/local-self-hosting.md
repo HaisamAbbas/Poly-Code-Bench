@@ -87,13 +87,31 @@ Remove-Item Env:PCB_LOCAL_WORKER_SETUP_ENABLED
 
 The command prints the worker ID. The generated `.env` keeps both worker setup and dispatch disabled. Do not enable dispatch until a finite run has been approved, its endpoint and secret reference are deliberately configured, and you intend to make that model request. When those conditions are met, an operator can run one claim with `pcb-worker local-run --worker-id <id>` or explicitly start `pcb-worker local-run --worker-id <id> --watch` after setting `$env:PCB_WORKER_DISPATCH_ENABLED = 'true'` in that process. The sandbox image must already exist locally; the worker does not pull or install it. Local execution uses the network-disabled, read-only, non-root Docker sandbox and is development evidence only.
 
-At the current local setup, there is no installed Ollama model and no approved local model endpoint, so the worker is registered but left idle. No model call is made by setup or registration. The run remains queued until an operator configures an endpoint and explicitly enables dispatch.
+The base Compose stack does not install or start a model server. The optional local Ollama smoke below is separate from Compose and does not create a run. The worker remains idle until an operator configures a concrete bounded run and explicitly enables dispatch.
+
+## Optional local model smoke
+
+Ollama is a self-hosted inference option; keep its listener on loopback. On 2026-10-06 this
+workstation pulled [`qwen2.5-coder:1.5b`](https://ollama.com/library/qwen2.5-coder) from the
+official Ollama library (986 MB, model tag digest `d7372fd82851`). Its
+[Hugging Face model card](https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct) identifies
+Apache-2.0 licensing. The local
+endpoint `http://127.0.0.1:11434/v1` passed the gateway's basic-completion and usage-counter
+conformance probes. The smoke declares tool calls unsupported, pins the model context to 32K,
+and passed a one-attempt planning check with a USD 0 provider-fee ceiling. Evidence:
+`docs/implementation/evidence/prompt-33/local-ollama-smoke-2026-10-06.json`.
+
+This only verifies local inference and endpoint accounting metadata. It did not submit task code,
+create or process a benchmark attempt, or produce a score. The model is not quality-calibrated or
+admitted for ranked releases; a zero provider-fee estimate excludes local electricity and hardware
+costs. The endpoint registration and approval live only in this machine's development database.
+No model server is exposed to the LAN or internet.
 
 To stop the containers, use `docker compose --profile local-auth down`. This does not delete the named database, object-store, or Keycloak volumes. Do not add `--volumes` unless you intentionally want to remove all local development data.
 
 ## Scope and deployment limits
 
-The local stack validates public projections, OIDC submitter sessions, metadata-only request persistence, ownership checks, reviewer API authorization, and bounded run/job creation. An opt-in development solve worker can consume an approved solve job, but evaluation, scoring and publication workers are not assembled and the solve worker is intentionally not started by Compose. Execution requires a specifically approved endpoint, a provisioned secret reference where applicable, a finite reviewed run plan and a per-process dispatch opt-in. The local Ollama service currently has no installed models. This stack does not include production sandbox isolation, public DNS, or public HTTPS.
+The local stack validates public projections, OIDC submitter sessions, metadata-only request persistence, ownership checks, reviewer API authorization, and bounded run/job creation. An opt-in development solve worker can consume an approved solve job, but evaluation, scoring and publication workers are not assembled and the solve worker is intentionally not started by Compose. Execution requires a specifically approved endpoint, a provisioned secret reference where applicable, a finite reviewed run plan and a per-process dispatch opt-in. The local Ollama conformance endpoint is not quality-calibrated and must not be used for ranked releases. This stack does not include production sandbox isolation, public DNS, or public HTTPS.
 
 For a no-cloud setup, Docker Compose, PostgreSQL, SeaweedFS and Keycloak are open-source local components; no paid AWS account is needed. The local API reads the signed, explicitly synthetic public release snapshots from PostgreSQL. SQLite is used only as the local source store that `seed` verifies and mirrors into PostgreSQL; the API does not read that source store. Staging/production mode also requires a shared PostgreSQL public-release catalog, so multiple API tasks do not depend on a writable local file. A publisher mirrors a source SQLite publication only after the release signature and typed public document verify:
 

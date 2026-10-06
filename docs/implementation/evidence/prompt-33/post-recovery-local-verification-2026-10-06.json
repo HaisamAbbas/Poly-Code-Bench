@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-06",
+  "environment_class": "loopback-only local development",
+  "fixture_kind": "synthetic_internal",
+  "checks": {
+    "compose_local_auth_config": "passed",
+    "postgresql_health": "healthy",
+    "object_store_readiness_http_status": 200,
+    "keycloak_oidc_discovery_http_status": 200,
+    "keycloak_oidc_issuer_matches_application": true,
+    "api_health_http_status": 200,
+    "web_production_build": "passed",
+    "public_pages_http_status": {
+      "/leaderboard": 200,
+      "/compare": 200,
+      "/tasks": 200,
+      "/languages/python": 200,
+      "/models/synthetic-code-a": 200,
+      "/tasks/synthetic-browse-task-001": 200,
+      "/scorecards/synthetic-scorecard-a": 200,
+      "/methodology/synthetic-ui-fixture-v1": 200,
+      "/model-submissions": 200
+    },
+    "every_public_page_displays_synthetic_test_data_notice": true,
+    "public_release_ids": [
+      "7c7fffc5-308f-4837-af58-1d18ba752b22",
+      "963f4252-8abd-40ff-a02a-2c569118458a"
+    ],
+    "public_release_fixture_kind": "synthetic_internal",
+    "submission_browser_smoke": {
+      "result": "passed",
+      "oidc_login": true,
+      "postgres_submission_and_owner_status": true,
+      "reviewer_queue_authorization": true,
+      "cross_owner_read_denied": true,
+      "anonymous_reviewer_read_denied": true,
+      "keyboard_focus_and_horizontal_scroll": true,
+      "mobile_viewport_width_px": 390,
+      "submitted_example_endpoint_requests": 0
+    },
+    "migration_compatibility": {
+      "result": "passed",
+      "head": "b390a26f17cd",
+      "violations": []
+    },
+    "terraform_validate": {
+      "terraform_version": "1.13.5",
+      "aws_provider_version": "6.36.0",
+      "staging": "passed",
+      "production": "passed",
+      "backend_enabled": false,
+      "plan_or_apply_run": false
+    }
+  },
+  "cloud_resources_used": false,
+  "provider_calls": 0,
+  "live_model_calls": 0,
+  "private_data_committed": false,
+  "screenshots_committed": false,
+  "staging_deployment_authorized": false
+}

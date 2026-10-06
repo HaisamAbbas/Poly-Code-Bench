@@ -16,6 +16,10 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const unexpectedEndpointRequests = [];
+  await page.route("https://api.example.com/**", async (route) => {
+    unexpectedEndpointRequests.push(route.request().url());
+    await route.abort("blockedbyclient");
+  });
   page.on("request", (request) => {
     if (request.url().startsWith("https://api.example.com/")) {
       unexpectedEndpointRequests.push(request.url());

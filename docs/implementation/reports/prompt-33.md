@@ -117,6 +117,14 @@
 - Reviewed the current official Alibaba and OCI free-tier terms and recorded the account-specific checks in `docs/operations/free-cloud-target-review-2026-10.md`. Alibaba's listed ECS free offer is not enough to infer this account's quotas; solution trials are temporary and their data is deleted on expiry. OCI has an Always Free A1 option, but requires a different target and self-managed PostgreSQL for this application.
 - No provider was selected for deployment, and no account API or cloud resource was used. Alibaba remains the preferred candidate only if the owner's console confirms the exact compute, storage, PostgreSQL/secrets/registry entitlements and an approved residual-spend limit. The checked-in Terraform remains AWS-specific.
 
+## Post-recovery local verification (2026-10-06)
+
+- After restarting the local services, the loopback PostgreSQL, object store, Keycloak OIDC discovery, API and web app returned healthy responses. The first manual discovery probe used the wrong realm path; the configured `polycodebench-local` realm then returned HTTP 200 and its issuer matched the application configuration.
+- All nine public routes returned HTTP 200 and displayed the synthetic test-data notice. The API exposed two `synthetic_internal` release projections; no benchmark result was presented as live data.
+- Re-ran the browser submission smoke: OIDC login, PostgreSQL-backed metadata/status, reviewer authorization, cross-owner denial, anonymous reviewer denial, keyboard interaction and the 390 px layout passed. The submitted example provider endpoint received zero requests.
+- `pnpm --filter @polycodebench/web build` passed (Next.js production build, TypeScript and static route generation). `pcb-ops migrate check` passed at `b390a26f17cd` with no violations. Terraform 1.13.5/AWS provider 6.36.0 `init -backend=false` and `validate` passed for staging and production; no plan/apply was run.
+- Evidence: `docs/implementation/evidence/prompt-33/post-recovery-local-verification-2026-10-06.json`. Browser screenshots remain only in the ignored local cache; no credentials, account identifiers or submission IDs were added to the repository. No cloud resource or model/provider call was used.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

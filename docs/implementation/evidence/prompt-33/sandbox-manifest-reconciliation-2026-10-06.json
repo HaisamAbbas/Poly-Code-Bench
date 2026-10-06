@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-06",
+  "environment_class": "offline validation and local unit tests",
+  "checks": {
+    "deployed_manifest_requires": [
+      "approved_guest_ami_id",
+      "guest_instance_type",
+      "pinned_launch_template_ids_and_versions",
+      "private_subnet_per_guest_lane",
+      "distinct_guest_security_group_per_lane",
+      "distinct_supervisor_control_security_group"
+    ],
+    "terraform_reconciliation_compares": [
+      "region",
+      "approved_guest_ami_id",
+      "guest_instance_type",
+      "launch_template_ids_and_versions",
+      "lane_subnet_ids",
+      "guest_security_group_ids",
+      "control_security_group_id"
+    ],
+    "cross_environment_isolation_checks": [
+      "launch_template_id_reuse",
+      "subnet_reuse",
+      "security_group_reuse"
+    ],
+    "deployment_tests": {
+      "result": "passed",
+      "passed": 28
+    },
+    "sandbox_tests": {
+      "result": "passed",
+      "passed": 12,
+      "opt_in_live_docker_case": "skipped"
+    },
+    "ec2_driver_rejects_shared_lane_launch_templates": true,
+    "ruff": "passed",
+    "strict_mypy": "passed",
+    "terraform_format_check": "passed",
+    "staging_terraform_validate": "passed",
+    "production_terraform_validate": "passed",
+    "terraform_version": "1.13.5",
+    "aws_provider_version": "6.36.0",
+    "backend_enabled": false,
+    "plan_or_apply_run": false
+  },
+  "cloud_resources_used": false,
+  "aws_api_calls": 0,
+  "staging_deployed": false,
+  "production_deployed": false
+}

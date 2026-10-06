@@ -12,7 +12,7 @@
 | 4 | Operator SSO role ARNs (named people, MFA) | `operator_principal_arns` |
 | 5 | Bucket name prefix (org slug) | `bucket_prefix` |
 | 6 | Domain for the staging test board, plus ACM certificates (regional and us-east-1) | `domain_names`, `alb_certificate_arn`, `cdn_certificate_arn` |
-| 7 | Approved guest AMI, built by the AMI pipeline from `infra/sandbox/aws/guest/bootstrap-control.sh`, with its image manifest/SBOM | `approved_guest_ami_id` |
+| 7 | Approved guest AMI and instance type, built by the AMI pipeline from `infra/sandbox/aws/guest/bootstrap-control.sh`, with its image manifest/SBOM; reconcile its three lane subnets/security groups and supervisor control security group from Terraform output | `approved_guest_ami_id`, `guest_instance_type`, `lane_subnet_ids`, `guest_security_group_ids`, `control_security_group_id` |
 | 8 | Public API/web image digests and the operations image digest, pushed to the environment's ECR; see the bootstrap cycle below | `services.*.image` |
 | 9 | On-call alert addresses | `alert_email_endpoints` |
 | 10 | Activation of the `pcb:environment` cost-allocation tag in Billing | budget filter |

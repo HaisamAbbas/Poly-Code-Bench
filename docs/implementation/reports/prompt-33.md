@@ -125,6 +125,13 @@
 - `pnpm --filter @polycodebench/web build` passed (Next.js production build, TypeScript and static route generation). `pcb-ops migrate check` passed at `b390a26f17cd` with no violations. Terraform 1.13.5/AWS provider 6.36.0 `init -backend=false` and `validate` passed for staging and production; no plan/apply was run.
 - Evidence: `docs/implementation/evidence/prompt-33/post-recovery-local-verification-2026-10-06.json`. Browser screenshots remain only in the ignored local cache; no credentials, account identifiers or submission IDs were added to the repository. No cloud resource or model/provider call was used.
 
+## Sandbox deployment-manifest reconciliation repair (2026-10-06)
+
+- The staging audit found that `pcb-ops env reconcile` checked launch templates but ignored Terraform's region, approved guest AMI/type, lane subnets and guest/supervisor security groups. Those values define the EC2 worker's actual network boundary, so a drifted deployed manifest could have been reported as reconciled.
+- The strict deployed manifest now requires all three guest lane subnets and distinct lane/control security groups, a concrete AMI, guest instance class, and all pinned lane templates. Reconciliation compares these fields with the Terraform deployment output; environment separation also rejects reuse of a subnet, launch template or security group across environments. Staging and production templates now identify each required value.
+- Verification: `tests/test_operations_deployment.py` passed 28/28 and `tests/test_sandbox.py` passed 12/12 runnable cases (the opt-in live-Docker case skipped); strict mypy, Ruff and Terraform formatting passed. Staging and production Terraform roots passed `init -backend=false` and `validate` with Terraform 1.13.5/AWS provider 6.36.0. No Terraform plan/apply or cloud API call was made. Evidence: `docs/implementation/evidence/prompt-33/sandbox-manifest-reconciliation-2026-10-06.json`.
+- Actual staging remains unprovisioned and the manifest remains a template. The deployment doctor still requires owner inputs, and the long-running production worker/evaluation/scoring/publishing runtimes remain separate implementation work before E2E-42/E2E-43 can pass.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

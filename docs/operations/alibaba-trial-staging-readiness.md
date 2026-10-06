@@ -28,9 +28,31 @@ Alibaba documents two different trial types:
   for a disposable POC, not a persistent staging environment. Point deductions follow cloud
   product billing cycles and may continue after the trial ends.
 
-Alibaba's OSS new-user offer currently lists 500 GB of Standard LRS capacity for one month for
-eligible individual accounts. It covers storage capacity only; other billable items remain
-chargeable. This quota alone does not establish that the private evidence-storage design is free.
+As of October 6, 2026, Alibaba's published ECS trial guide describes a three-month eligibility
+window backed by a finite quota: CNY 300 for personal verification or CNY 660 for enterprise
+verification, covering ECS instances and system disks. The maximum hourly covered rates are
+CNY 0.833 and CNY 1.833 respectively. At the maximum personal hourly rate, CNY 300 covers about
+15 continuous days, not three months of continuous runtime. The published traffic quota is
+20 GB/month in mainland China plus 200 GB/month outside mainland China. The guide lists seven
+ECS trial regions, all in China: Beijing, Hangzhou, Guangzhou, Chengdu, Ulanqab, Heyuan, and Hong
+Kong. The signed-in trial card remains authoritative for this account.
+
+ECS usage beyond the quota is pay-as-you-go. At expiry, a trial instance is not automatically
+released and continues on pay-as-you-go billing. Changing the instance type, attaching any data
+disk, or changing the network billing method can also cause uncovered charges. Therefore, a
+trial quota is not an account-wide spend cap and does not by itself make a remote host safe to
+create.
+
+As of September 8, 2026, Alibaba's OSS new-user offer lists 500 GB (individual) or 1 TB
+(enterprise) of Standard LRS capacity for one month, subject to account eligibility. It covers
+storage capacity only; other billable items remain chargeable, and use beyond the quota is
+pay-as-you-go. This quota alone does not establish that the private evidence-storage design is
+free.
+
+The published KMS software-instance trial is 14 days and automatically converts to
+pay-as-you-go unless the instance is released before expiry. Do not count this trial as a
+bounded or automatically expiring staging secret store; avoid enabling it for a disposable POC
+unless an owner has set a release reminder and verified the account's billing controls.
 
 The free-trial terms do not establish that this account has ACK, ECS, RDS PostgreSQL 17, OSS,
 KMS/Secrets Manager, or a registry quota in a compatible region. Nor do trial points or a budget

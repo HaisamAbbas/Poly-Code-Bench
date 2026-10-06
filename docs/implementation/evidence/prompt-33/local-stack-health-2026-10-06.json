@@ -7,6 +7,7 @@
     "api_health_http_status": 200,
     "web_home_http_status": 200,
     "oidc_discovery_matches_local_issuer": true,
+    "database_migration_revision": "b390a26f17cd",
     "public_release_count": 2,
     "public_release_fixture_kind": "synthetic_internal",
     "leaderboard_row_count": 4,

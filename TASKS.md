@@ -25,7 +25,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 
 ## Current local evidence
 
-- API: `http://127.0.0.1:8010`, backed by `pcb_local_web_test` at migration `d8f971ea2b34`.
+- API: `http://127.0.0.1:8010`, backed by `pcb_local_web_test` at migration `b390a26f17cd`.
 - Web: `http://127.0.0.1:3001`; public routes and real Keycloak submission flow use the local API.
 - Release store: `.cache/polycodebench-local-release-store.sqlite3`; contains two synthetic display releases, not benchmark results.
 - Fresh 2026-10-06 smoke: API `/healthz` and web `/` returned HTTP 200; OIDC discovery matched the local issuer; `/v1/releases` returned 2 `synthetic_internal` releases and `/v1/leaderboard` returned 4 synthetic rows. `pcb-ops doctor --profile dev` passed; staging doctor correctly refused the template manifest. Sanitized evidence is in `docs/implementation/evidence/prompt-33/local-stack-health-2026-10-06.json`.

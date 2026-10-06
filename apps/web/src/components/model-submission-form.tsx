@@ -206,7 +206,18 @@ function SubmissionStatus({ status }: { status: ModelSubmissionStatus }) {
         <dt>Request ID</dt><dd><code>{status.submission_id}</code></dd>
         <dt>Submitted</dt><dd>{new Date(status.submitted_at).toLocaleString()}</dd>
         {status.resulting_run_id ? <><dt>Run ID</dt><dd><code>{status.resulting_run_id}</code></dd></> : null}
+        {status.run_progress ? <>
+          <dt>Attempt states</dt><dd>{formatStateCounts(status.run_progress.attempt_states)}</dd>
+          <dt>Solve job states</dt><dd>{formatStateCounts(status.run_progress.solve_job_states)}</dd>
+        </> : null}
       </dl>
     </div>
   );
+}
+
+function formatStateCounts(states: Record<string, number>): string {
+  const entries = Object.entries(states).sort(([left], [right]) => left.localeCompare(right));
+  return entries.length
+    ? entries.map(([state, count]) => `${state}: ${count}`).join(", ")
+    : "No state counts yet.";
 }

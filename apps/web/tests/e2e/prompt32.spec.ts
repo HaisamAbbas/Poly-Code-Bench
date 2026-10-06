@@ -29,6 +29,43 @@ async function completeRequestForm(page: Page) {
   await page.getByLabel(/I am authorized to request evaluation/).check();
 }
 
+async function showApprovedProgressFixture(page: Page, submissionId: string) {
+  await page.route(`**/api/model-submissions/${submissionId}`, (route) => route.fulfill({
+    json: {
+      data: {
+        kind: "model_submission",
+        schema_version: 1,
+        submission_id: submissionId,
+        status: "approved",
+        model_name: "Synthetic Browser Candidate",
+        provider: "Synthetic Test Provider",
+        organization: null,
+        contact_email: "browser@example.org",
+        endpoint_url: "https://models.example.org/v1",
+        source_url: "https://models.example.org/model/card",
+        source_license: "Synthetic test-only permission",
+        permission_attested: true,
+        submitted_at: "2026-10-06T08:00:00Z",
+        row_version: 1,
+        rejection_reason: null,
+        resulting_run_id: "b8e3eacb-47e5-4623-ae6b-8a58fb58f583",
+        run_status: "queued",
+        run_progress: {
+          schema_version: 1,
+          attempt_states: { queued: 2 },
+          solve_job_states: { queued: 2 },
+        },
+      },
+      meta: { release_digest: `sha256:${"a".repeat(64)}` },
+    },
+  }));
+  await page.getByLabel("Request ID").fill(submissionId);
+  await page.getByRole("button", { name: "Check status" }).click();
+  const approvedStatus = page.locator(".submission-status.status-approved").last();
+  await expect(approvedStatus).toContainText("Solve job states");
+  await expect(approvedStatus.getByText("queued: 2", { exact: true }).last()).toBeVisible();
+}
+
 test("E2E-41 and E2E-39: OIDC request is pending and only the owner can track it", async ({ page, browser }) => {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const providerRequests: string[] = [];
@@ -67,6 +104,8 @@ test("E2E-41 and E2E-39: OIDC request is pending and only the owner can track it
   await page.getByRole("button", { name: "Check status" }).click();
   await expect(page.locator(".submission-status.status-pending").last()).toBeVisible();
   await expect(page.getByText("Pending review. No endpoint has been contacted and no run or charge exists.")).toBeVisible();
+  await showApprovedProgressFixture(page, requestId!);
+  await page.screenshot({ path: resolve(artifactDirectory, "submission-approved-progress-desktop.png"), fullPage: true });
   const crossOriginSignOut = await page.request.post("/auth/sign-out", {
     headers: { origin: "https://attacker.example.org" },
   });
@@ -106,9 +145,15 @@ test("E2E-25/26/40: unverified OIDC email is rejected and the sign-in flow works
   await expect(page.getByRole("button", { name: "Send for review" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toContainText("pending");
+  const requestId = await page.locator(".submission-status.status-pending dd code").first().textContent();
+  expect(requestId).toMatch(/^[0-9a-f-]{36}$/i);
   const narrow = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
   expect(narrow.document).toBeLessThanOrEqual(narrow.viewport + 1);
   await page.screenshot({ path: resolve(artifactDirectory, "submission-pending-mobile.png"), fullPage: true });
+  await showApprovedProgressFixture(page, requestId!);
+  const progressNarrow = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
+  expect(progressNarrow.document).toBeLessThanOrEqual(progressNarrow.viewport + 1);
+  await page.screenshot({ path: resolve(artifactDirectory, "submission-approved-progress-mobile.png"), fullPage: true });
 });
 
 test.beforeAll(() => mkdirSync(artifactDirectory, { recursive: true }));

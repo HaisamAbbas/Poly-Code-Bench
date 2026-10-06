@@ -1289,6 +1289,7 @@ export interface components {
             readonly resulting_run_id: string | null;
             /** Row Version */
             readonly row_version: number;
+            readonly run_progress: components["schemas"]["SubmissionRunProgress"] | null;
             /** Run Status */
             readonly run_status: string | null;
             /**
@@ -1895,6 +1896,26 @@ export interface components {
             readonly submission_id: string;
             /** Submitted At */
             readonly submitted_at: string;
+        };
+        /**
+         * SubmissionRunProgress
+         * @description Counts from the submitter's own run; values are persisted scheduler states.
+         */
+        readonly SubmissionRunProgress: {
+            /** Attempt States */
+            readonly attempt_states: {
+                readonly [key: string]: number;
+            };
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Solve Job States */
+            readonly solve_job_states: {
+                readonly [key: string]: number;
+            };
         };
         /**
          * TaskSummary

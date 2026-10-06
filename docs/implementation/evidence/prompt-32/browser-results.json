@@ -87,12 +87,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6858,
+                  "duration": 6820,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-06T07:45:46.139Z",
+                  "startTime": "2026-10-06T09:03:47.600Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -102,7 +102,7 @@
           ],
           "id": "ddd9ed034ca22af27fa2-8953ba736d5a44eac188",
           "file": "prompt32.spec.ts",
-          "line": 32,
+          "line": 69,
           "column": 5
         },
         {
@@ -121,12 +121,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3390,
+                  "duration": 4430,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-06T07:45:53.309Z",
+                  "startTime": "2026-10-06T09:03:54.706Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -136,7 +136,7 @@
           ],
           "id": "ddd9ed034ca22af27fa2-331cbc7466b0048c2499",
           "file": "prompt32.spec.ts",
-          "line": 95,
+          "line": 134,
           "column": 5
         }
       ]
@@ -144,8 +144,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-06T07:45:37.034Z",
-    "duration": 21467.642,
+    "startTime": "2026-10-06T09:03:41.011Z",
+    "duration": 19792.361,
     "expected": 2,
     "skipped": 0,
     "unexpected": 0,

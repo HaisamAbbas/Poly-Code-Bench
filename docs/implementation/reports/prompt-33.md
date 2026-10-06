@@ -102,6 +102,7 @@
 ## Local website and submission flow rerun (2026-10-06)
 
 - Reconnected the loopback API and web application to the already-running local PostgreSQL, SeaweedFS and Keycloak services. API `/healthz` and the release-backed `/leaderboard` returned HTTP 200.
+- Against the signed PostgreSQL release projection, all nine public pages returned HTTP 200 and rendered the synthetic-data notice: leaderboard, comparison, task explorer, language profile, model profile, task detail, scorecard/evidence, methodology and model submission. The API OpenAPI snapshot and generated TypeScript client parity checks passed.
 - `apps/web/tests/e2e/local-stack-auth.smoke.mjs` passed against the live local stack: Keycloak OIDC login, synthetic metadata submission persisted to PostgreSQL, owner status lookup, reviewer queue access, cross-owner 404, anonymous reviewer 401, keyboard focus and horizontal scrolling, and 390 px responsive layout. The test confirmed the submitted example endpoint was never contacted.
 - The displayed release is labelled `Synthetic internal test data`; it is not benchmark evidence. Desktop/mobile screenshots are retained only in ignored `.cache/local-stack-browser/`; the committed JSON records no account, request ID, or credential data. No cloud resource or model call was used.
 

@@ -7,6 +7,23 @@
   "checks": {
     "api_health_http_status": 200,
     "leaderboard_http_status": 200,
+    "release_backed_public_pages": {
+      "status": 200,
+      "synthetic_data_notice": true,
+      "routes": [
+        "/leaderboard",
+        "/compare",
+        "/tasks",
+        "/languages/{language}",
+        "/models/{modelConfigId}",
+        "/tasks/{taskId}",
+        "/scorecards/{scorecardId}",
+        "/methodology/{version}",
+        "/model-submissions"
+      ]
+    },
+    "rest_openapi_snapshot": "passed",
+    "generated_typescript_client_parity": "passed",
     "keycloak_oidc_login": "passed",
     "synthetic_submission_persisted_to_postgres": "passed",
     "owner_status_lookup": "passed",

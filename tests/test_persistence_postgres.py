@@ -62,7 +62,11 @@ def database() -> Database:
 
 
 def _seed(
-    engine: Engine, *, samples_per_task: int = 2, master_seed: str = "18446744073709551615"
+    engine: Engine,
+    *,
+    samples_per_task: int = 2,
+    master_seed: str = "18446744073709551615",
+    resource_class: str = "small",
 ) -> dict[str, object]:
     ids = {
         name: uuid4()
@@ -118,7 +122,7 @@ def _seed(
                 cluster_id="cluster",
                 stratum_id="stratum",
                 schema_version=1,
-                document={"task": "fixture"},
+                document={"task": "fixture", "runtime": {"resource_class": resource_class}},
             )
         )
         connection.execute(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -50,6 +51,17 @@ MAX_ATTEMPTS_PER_RUN = 100_000
 
 def _logical_key(scope_type: str, scope_id: UUID, key: str) -> str:
     return sha256_bytes(f"{scope_type}:{scope_id}:{key}".encode("ascii"))
+
+
+def _task_resource_class(document: object) -> str:
+    """Route a solve job to the resource class frozen into its task version."""
+    runtime = document.get("runtime") if isinstance(document, Mapping) else None
+    resource_class = runtime.get("resource_class") if isinstance(runtime, Mapping) else None
+    if not isinstance(resource_class, str) or not re.fullmatch(
+        r"[a-z0-9][a-z0-9._-]{0,63}", resource_class
+    ):
+        raise InvalidState("frozen task has no valid runtime resource class")
+    return resource_class
 
 
 class PostgresRunRepository:
@@ -309,7 +321,7 @@ class PostgresRunRepository:
             raise InvalidReference("model revision does not exist")
         members = (
             connection.execute(
-                select(task_version.c.id, task_version.c.digest)
+                select(task_version.c.id, task_version.c.digest, task_version.c.document)
                 .select_from(
                     task_set_member.join(
                         task_version, task_set_member.c.task_version_id == task_version.c.id
@@ -397,6 +409,7 @@ class PostgresRunRepository:
         solve_job_events: list[dict[str, object]] = []
         provider_key = str(request.get("endpoint_registration_id") or "system")
         for member in members:
+            resource_class = _task_resource_class(member["document"])
             for sample_index in range(samples_per_task):
                 attempt_id = uuid4()
                 seed = derive_sample_seed(master_seed, member["digest"], sample_index)
@@ -436,7 +449,7 @@ class PostgresRunRepository:
                         "state": "queued",
                         "required": True,
                         "queue_class": "solve",
-                        "resource_class": "default",
+                        "resource_class": resource_class,
                         "fairness_campaign_id": campaign_id,
                         "provider_key": provider_key,
                         "priority": 0,

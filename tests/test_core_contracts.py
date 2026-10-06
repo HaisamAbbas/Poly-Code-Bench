@@ -43,6 +43,7 @@ from polycodebench_core.models import (  # noqa: E402
     Candidate,
     ContractGraph,
     RunConfig,
+    TaskRuntime,
     TaskVersion,
 )
 from polycodebench_core.validation import parse_document, validate_document  # noqa: E402
@@ -279,6 +280,14 @@ def test_task_contract_rejects_unknown_paths_and_invalid_relations() -> None:
     same_bundle["hidden_bundle"] = same_bundle["visible_bundle"]
     with pytest.raises(PolyCodeBenchContractError):
         validate_document(TaskVersion, same_bundle)
+
+
+def test_task_resource_class_matches_scheduler_storage_limit() -> None:
+    runtime = task_value()["runtime"]
+    assert isinstance(runtime, dict)
+    TaskRuntime.model_validate(runtime)
+    with pytest.raises(ValidationError):
+        TaskRuntime.model_validate({**runtime, "resource_class": "r" * 65})
 
 
 def test_contract_graph_rejects_unresolved_run_and_artifact_references() -> None:

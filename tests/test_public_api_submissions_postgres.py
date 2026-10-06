@@ -262,7 +262,11 @@ def test_authenticated_submission_routes_use_postgres_roles(tmp_path: Path, engi
             review_headers = {"Authorization": "Bearer route-reviewer-token-00001"}
             queue = await client.get("/v1/admin/model-submissions", headers=review_headers)
             assert queue.status_code == 200
-            assert any(row["submission_id"] == submission_id for row in queue.json()["data"])
+            reviewed = await client.get(
+                f"/v1/admin/model-submissions/{submission_id}", headers=review_headers
+            )
+            assert reviewed.status_code == 200
+            assert reviewed.json()["data"]["submission_id"] == submission_id
 
             rejected = await client.post(
                 f"/v1/admin/model-submissions/{submission_id}/reject",
@@ -562,6 +566,7 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                         stage_job.c.stage,
                         stage_job.c.state,
                         stage_job.c.queue_class,
+                        stage_job.c.resource_class,
                         stage_job.c.input_digest,
                     ).where(stage_job.c.attempt_id == attempts[0][0])
                 )
@@ -572,6 +577,7 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
             assert solve_jobs[0]["stage"] == "solve"
             assert solve_jobs[0]["state"] == "queued"
             assert solve_jobs[0]["queue_class"] == "solve"
+            assert solve_jobs[0]["resource_class"] == "synthetic-test-small"
             assert solve_jobs[0]["input_digest"].startswith("sha256:")
             assert (
                 connection.execute(
@@ -717,7 +723,10 @@ def _seed_postgres_approval_plan(
                 cluster_id="synthetic-test",
                 stratum_id="synthetic-test",
                 schema_version=1,
-                document={"kind": "synthetic_test_task"},
+                document={
+                    "kind": "synthetic_test_task",
+                    "runtime": {"resource_class": "synthetic-test-small"},
+                },
             )
         )
         connection.execute(

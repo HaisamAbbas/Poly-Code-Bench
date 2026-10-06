@@ -321,7 +321,7 @@ class TaskRuntime(ContractModel):
     language_plugin_version: str = Field(min_length=1, max_length=64)
     build_recipe_digest: Digest
     test_recipe_digest: Digest
-    resource_class: Slug
+    resource_class: Annotated[Slug, Field(max_length=64)]
 
 
 class TaskOutputContract(ContractModel):

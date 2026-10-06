@@ -29,7 +29,9 @@ from polycodebench_persistence.jobs import PostgresJobRepository
 from polycodebench_persistence.models import (
     artifact,
     artifact_quota,
+    attempt,
     config_document,
+    run,
     stage_execution,
     stage_job,
     stage_job_event,
@@ -84,13 +86,35 @@ def object_store() -> S3ArtifactStore:
 
 
 def _attempt(database: Database) -> UUID:
+    """Create a scheduler-only attempt scope without preinstalling a solve job."""
     ids = _seed(database.engine, samples_per_task=1)
-    result = RunCreationService(PostgresRunRepository(database.engine)).create(
-        Principal("prompt07-integration", frozenset({Role.OPERATOR})),
-        _request(ids, samples_per_task=1),
-        f"prompt07-{uuid4()}",
-    )
-    return result.attempt_ids[0]
+    run_id = uuid4()
+    attempt_id = uuid4()
+    with database.engine.begin() as connection:
+        connection.execute(
+            insert(run).values(
+                id=run_id,
+                campaign_id=ids["campaign"],
+                config_document_id=ids["run_config"],
+                task_set_id=ids["task_set"],
+                model_revision_id=ids["model"],
+                status="queued",
+                created_by="prompt07-scheduler-fixture",
+                row_version=0,
+            )
+        )
+        connection.execute(
+            insert(attempt).values(
+                id=attempt_id,
+                run_id=run_id,
+                task_version_id=ids["task_version"],
+                sample_index=0,
+                seed=0,
+                state="queued",
+                row_version=0,
+            )
+        )
+    return attempt_id
 
 
 def _repo(database: Database) -> PostgresJobRepository:
@@ -103,6 +127,7 @@ def _register_worker(
     *,
     label: str,
     queue_class: str = "solve",
+    resource_class: str = "small",
 ) -> UUID:
     resource_artifacts = ArtifactRepository(database.engine, store, max_upload_bytes=500_000)
     resource_artifact = _verified_upload(
@@ -120,7 +145,7 @@ def _register_worker(
                 digest="sha256:" + hashlib.sha256(str(config_id).encode()).hexdigest(),
                 canonical_artifact_id=resource_artifact,
                 schema_version=1,
-                document={"resource_class": "small", "lane": "solve"},
+                document={"resource_class": resource_class, "lane": "solve"},
             )
         )
     return _repo(database).register_worker(
@@ -130,15 +155,52 @@ def _register_worker(
             hardware_class="local-docker-development",
             driver_identity="LocalDockerSandboxProvider",
             allowed_queue_classes=(queue_class,),
-            allowed_resource_classes=("small",),
+            allowed_resource_classes=(resource_class,),
             resource_spec_config_id=config_id,
             slots=(
                 CapacitySlotSpec(
-                    slot_key="slot-0", resource_class="small", resource_spec_config_id=config_id
+                    slot_key="slot-0",
+                    resource_class=resource_class,
+                    resource_spec_config_id=config_id,
                 ),
             ),
         )
     )
+
+
+def test_run_solve_job_is_claimable_by_its_frozen_resource_class(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    resource_class = f"routing-{uuid4().hex}"
+    ids = _seed(database.engine, samples_per_task=1, resource_class=resource_class)
+    created = RunCreationService(PostgresRunRepository(database.engine)).create(
+        Principal("prompt07-routing-fixture", frozenset({Role.OPERATOR})),
+        _request(ids, samples_per_task=1),
+        f"prompt07-routing-{uuid4()}",
+    )
+    attempt_id = created.attempt_ids[0]
+    wrong_worker_id = _register_worker(
+        database,
+        object_store,
+        label="wrong-task-resource",
+        resource_class=f"mismatch-{uuid4().hex}",
+    )
+    worker_id = _register_worker(
+        database,
+        object_store,
+        label="frozen-task-routing",
+        resource_class=resource_class,
+    )
+
+    repository = PostgresJobRepository(
+        database.engine, campaign_concurrency=4, provider_concurrency=100
+    )
+    assert repository.claim(wrong_worker_id) is None
+    claim = repository.claim(worker_id)
+
+    assert claim is not None
+    assert claim.scope_id == attempt_id
+    assert claim.resource_class == resource_class
 
 
 def _definition(
@@ -372,6 +434,7 @@ def test_job_dag_uses_gate_conditions_and_only_accepts_named_scheduler_skips(
             input_digest="sha256:" + "1" * 64,
             queue_class=f"dag-{uuid4().hex}",
             resource_class="small",
+            provider_key=provider_key,
             dependencies=(JobDependencySpec(parent_key="solve", condition="gate_pass"),),
         ),
         JobDefinition(
@@ -380,6 +443,7 @@ def test_job_dag_uses_gate_conditions_and_only_accepts_named_scheduler_skips(
             input_digest="sha256:" + "2" * 64,
             queue_class=f"dag-{uuid4().hex}",
             resource_class="small",
+            provider_key=provider_key,
             dependencies=(JobDependencySpec(parent_key="solve", condition="gate_fail"),),
         ),
     )

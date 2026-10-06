@@ -77,7 +77,22 @@ aws logs filter-log-events --log-group-name /pcb/staging/scheduler --filter-patt
 | Key rotation | Rotate during the withdrawal drill | Old manifest verifies as `retired`; revoked fails closed |
 | Restore (E2E-42) | database-object-store-restore.md §A staging steps 1–4 | `pcb-ops restore verify` passes; ten stratified scorecards replay; projection rebuilt; measured recovery time recorded; the rehearsal DB is deleted |
 | Alerts | Trigger each test condition above | Each required alert reaches the SNS topic |
-| Load | Run `scripts/ops_load_rehearsal.py` pointed at the CDN URL, or k6 with the same mix | Record cached p95. The 300 ms target is met only if measured |
+| Load | Run the explicit API-origin command below against the deployed public API/CDN origin after the load window and request count are approved | Record the selected release, per-route latency, ETag revalidations and errors. This measures API routes only; browser page timings require a separate browser load. The 300 ms target is met only if the intended cached path is measured |
+
+The load script's default mode starts a synthetic API on loopback; it does not accept or contact a
+CDN. For a staging rehearsal, use the explicit-target mode below. These commands are **[S]** and
+must not be run against a cloud origin until the owner has approved its request volume and
+exposure. The runner rejects values above 10,000 requests or concurrency 64; keep the 3,000/16
+profile below unless a separately reviewed load profile authorizes a change. They are read-only
+and do not call model providers.
+
+```bash
+export PCB_STAGING_PUBLIC_API_ORIGIN="https://<origin-from-the-reviewed-staging-deployment>"
+uv run --offline --locked --all-packages python scripts/ops_load_rehearsal.py \
+  --base-url "$PCB_STAGING_PUBLIC_API_ORIGIN" --confirm-target \
+  --requests 3000 --concurrency 16 \
+  --evidence docs/implementation/evidence/prompt-33/staging/public-api-load.json
+```
 
 The staging seed is the same synthetic rehearsal source, labelled `synthetic_internal`, published to `staging:test-board` only. **Nothing is published to a public board, and no benchmark result is published.** The API service uses `PCB_PUBLIC_RELEASE_BACKEND=postgres` and `PCB_PUBLICATION_TARGET=staging:test-board`; `pcb-ops releases sync-publication` verifies the local signed source release with the public keyring before mirroring the sanitized snapshots and pointer into PostgreSQL. The task definition supplies the API DSN and cursor-signing key only as Secrets Manager references. This staging path has not been provisioned or exercised against AWS.
 

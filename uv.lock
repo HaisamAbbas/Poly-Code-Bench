@@ -1196,6 +1196,7 @@ name = "polycodebench-orchestration"
 version = "0.1.0"
 source = { editable = "packages/orchestration" }
 dependencies = [
+    { name = "boto3" },
     { name = "polycodebench-core" },
     { name = "polycodebench-persistence" },
     { name = "polycodebench-runner" },
@@ -1204,6 +1205,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "boto3", specifier = "==1.43.105" },
     { name = "polycodebench-core", editable = "packages/core" },
     { name = "polycodebench-persistence", editable = "packages/persistence" },
     { name = "polycodebench-runner", editable = "packages/runner" },

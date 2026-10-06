@@ -8,6 +8,7 @@ dependencies = [
   "polycodebench-persistence==0.1.0",
   "polycodebench-runner==0.1.0",
   "polycodebench-services==0.1.0",
+  "boto3==1.43.105",
 ]
 
 [project.scripts]

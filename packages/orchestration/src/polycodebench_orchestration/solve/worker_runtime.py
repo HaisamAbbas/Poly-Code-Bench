@@ -45,7 +45,7 @@ from polycodebench_orchestration.gateway.adapters.base import BaseAdapter
 from polycodebench_orchestration.gateway.adapters.google import GoogleAdapter
 from polycodebench_orchestration.gateway.adapters.local import LocalEndpointAdapter
 from polycodebench_orchestration.gateway.adapters.openai_compatible import OpenAICompatibleAdapter
-from polycodebench_orchestration.gateway.secrets import EnvironmentSecretResolver
+from polycodebench_orchestration.gateway.secrets import configured_secret_resolver
 from polycodebench_orchestration.gateway.service import ModelGateway
 from polycodebench_orchestration.gateway.store import ArtifactResponseStore
 from polycodebench_orchestration.gateway.throttle import ThrottleRegistry
@@ -251,7 +251,7 @@ def build_local_solve_worker(
             artifacts, owner=f"solve-worker-{worker_id}", encryption_domain="solve-session"
         ),
         transport=PinnedHttpTransport(),
-        secrets=EnvironmentSecretResolver(secret_namespace),
+        secrets=configured_secret_resolver(secret_namespace),
         adapters=ADAPTERS,
         throttles=ThrottleRegistry(),
     )

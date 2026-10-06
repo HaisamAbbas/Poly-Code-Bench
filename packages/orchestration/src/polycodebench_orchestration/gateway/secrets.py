@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Mapping
-from typing import NoReturn, Protocol
+from typing import Literal, NoReturn, Protocol
 
 from polycodebench_core.endpoint_policy import parse_secret_ref
 from polycodebench_core.model_contracts import EndpointPolicyViolation
@@ -76,3 +76,90 @@ class EnvironmentSecretResolver:
         if not value:
             raise EndpointPolicyViolation("secret reference is not provisioned")
         return Secret(value)
+
+
+class SecretsManagerSecretResolver:
+    """Resolve one environment's model or judge credentials from AWS Secrets Manager."""
+
+    def __init__(
+        self,
+        namespace: str,
+        secret_prefix: str,
+        *,
+        client: object,
+        secret_class: Literal["model", "judge"] | None = None,
+    ) -> None:
+        if not re.fullmatch(r"[a-z][a-z0-9-]{0,62}", namespace):
+            raise ValueError("secret namespace is invalid")
+        match = re.fullmatch(r"pcb/(integration|staging|production)/(model|judge)/", secret_prefix)
+        if match is None:
+            raise ValueError("AWS secret prefix must name one environment's model or judge path")
+        expected_class = {"models": "model", "judges": "judge"}.get(namespace)
+        selected_class = secret_class or expected_class
+        if selected_class is not None and match.group(2) != selected_class:
+            raise ValueError("AWS secret prefix does not match the configured namespace")
+        self._namespace = namespace
+        self._secret_prefix = secret_prefix
+        self._client = client
+
+    def resolve(self, ref: str) -> Secret | None:
+        if ref == "none":
+            return None
+        namespace, name = parse_secret_ref(ref)
+        if namespace != self._namespace:
+            raise EndpointPolicyViolation("secret reference is outside the gateway namespace")
+        try:
+            response = self._client.get_secret_value(  # type: ignore[attr-defined]
+                SecretId=f"{self._secret_prefix}{name}"
+            )
+        except Exception:
+            raise EndpointPolicyViolation("secret reference is not provisioned") from None
+        value = response.get("SecretString")
+        if not isinstance(value, str) or not value:
+            raise EndpointPolicyViolation("secret reference is not provisioned")
+        try:
+            return Secret(value)
+        except ValueError:
+            raise EndpointPolicyViolation(
+                "secret value is not a valid provider credential"
+            ) from None
+
+
+def configured_secret_resolver(
+    namespace: str,
+    *,
+    environ: Mapping[str, str] | None = None,
+    secretsmanager_client: object | None = None,
+) -> SecretResolver:
+    """Select local environment secrets or the role-scoped production AWS namespace."""
+
+    source = os.environ if environ is None else environ
+    environment = source.get("PCB_ENVIRONMENT", "dev")
+    verified_environment = source.get("PCB_VERIFIED_ENVIRONMENT")
+    if environment not in {"staging", "production"} and verified_environment not in {
+        "staging",
+        "production",
+    }:
+        if verified_environment is not None and verified_environment != environment:
+            raise EndpointPolicyViolation("verified service environment does not match its claim")
+        return EnvironmentSecretResolver(namespace, source)
+    if verified_environment != environment:
+        raise EndpointPolicyViolation("AWS provider secrets require a verified service environment")
+    role = source.get("PCB_VERIFIED_ROLE", "")
+    if source.get("PCB_VERIFIED_BY") != "aws-sts" or role not in {
+        "solve-supervisor",
+        "model-gateway",
+        "judge-gateway",
+    }:
+        raise EndpointPolicyViolation("AWS provider secrets require a verified gateway role")
+    secret_class: Literal["model", "judge"] = "judge" if role == "judge-gateway" else "model"
+    if secretsmanager_client is None:
+        import boto3  # type: ignore[import-untyped]
+
+        secretsmanager_client = boto3.client("secretsmanager", region_name=source.get("AWS_REGION"))
+    return SecretsManagerSecretResolver(
+        namespace,
+        f"pcb/{environment}/{secret_class}/",
+        client=secretsmanager_client,
+        secret_class=secret_class,
+    )

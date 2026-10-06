@@ -42,7 +42,7 @@ from polycodebench_orchestration.gateway.adapters.openai_compatible import OpenA
 from polycodebench_orchestration.gateway.conformance import run_conformance
 from polycodebench_orchestration.gateway.endpoint_check import static_endpoint_check
 from polycodebench_orchestration.gateway.plan import plan_model_run
-from polycodebench_orchestration.gateway.secrets import EnvironmentSecretResolver
+from polycodebench_orchestration.gateway.secrets import configured_secret_resolver
 from polycodebench_orchestration.gateway.transport import PinnedHttpTransport
 
 EXIT_OK, EXIT_VALIDATION, EXIT_PERMISSION, EXIT_BLOCKED, EXIT_INFRA = 0, 2, 3, 4, 5
@@ -135,7 +135,7 @@ def _run(args: argparse.Namespace) -> int:
     try:
         endpoints = PostgresEndpointRepository(database.engine)
         namespace = os.environ.get("PCB_MODEL_SECRET_NAMESPACE", "models")
-        secrets = EnvironmentSecretResolver(namespace)
+        secrets = configured_secret_resolver(namespace)
         if args.command == "check":
             endpoint, status = endpoints.get_for_conformance(args.endpoint_id)
             report = static_endpoint_check(endpoint, secrets)

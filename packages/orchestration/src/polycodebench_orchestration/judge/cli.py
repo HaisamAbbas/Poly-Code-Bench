@@ -67,7 +67,7 @@ from polycodebench_orchestration.gateway.adapters.local import LocalEndpointAdap
 from polycodebench_orchestration.gateway.adapters.openai_compatible import (
     OpenAICompatibleAdapter,
 )
-from polycodebench_orchestration.gateway.secrets import EnvironmentSecretResolver
+from polycodebench_orchestration.gateway.secrets import configured_secret_resolver
 from polycodebench_orchestration.gateway.service import GatewayResult, ModelGateway
 from polycodebench_orchestration.gateway.store import ArtifactResponseStore
 from polycodebench_orchestration.gateway.throttle import ThrottleRegistry
@@ -97,7 +97,7 @@ class World:
             ledger=self.ledger,
             store=self.store,
             transport=PinnedHttpTransport(),
-            secrets=EnvironmentSecretResolver(
+            secrets=configured_secret_resolver(
                 os.environ.get("PCB_MODEL_SECRET_NAMESPACE", "models")
             ),
             adapters={

@@ -61,6 +61,11 @@ output "launch_template_ids" {
   description = "Lane launch templates."
 }
 
+output "launch_template_versions" {
+  value       = merge(module.workers.launch_template_versions, { performance = module.performance.launch_template_version })
+  description = "Pinned launch-template versions for the worker environment manifest."
+}
+
 output "guest_security_group_ids" {
   value       = module.workers.guest_security_group_ids
   description = "Lane guest security groups."

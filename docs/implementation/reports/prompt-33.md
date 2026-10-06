@@ -147,6 +147,11 @@
 - Verification: the sandbox, worker-runtime and deployment suites pass 49 tests (one opt-in live-Docker containment case skipped); strict mypy and Ruff pass. Terraform 1.13.5/AWS provider 6.36.0 `init -backend=false` and `validate` pass for both roots. Both images build locally as UID/GID 10001; ops CLI help, worker help, OpenSSH startup and opt-in refusal pass. No Terraform plan/apply, AWS API call, secret read, worker registration, guest launch, ECR push or model call was performed. Evidence: `docs/implementation/evidence/prompt-33/aws-worker-cli-2026-10-06.json`.
 - This closes the worker CLI/container/registration implementation gap. A real staging run still requires an authorized account, region, budget, operator principals, deployed manifest, approved AMI and launch templates, guest key/known-hosts bundle, candidate image allowlist, image digests and explicit spend authorization. Evaluation, judging, scoring and publication processors also remain unfinished.
 
+## Worker-registration audit follow-up (2026-10-06)
+
+- Production worker creation now writes `worker.register` to `audit_event` in the same PostgreSQL transaction as the worker and its capacity slots. The event records the verified STS actor, worker registration digest, lane/driver/resource identities and slot count; it contains no secret values. Idempotent replays reuse the registration and do not create duplicate audit events.
+- Verification: `tests/test_jobs_postgres.py::test_worker_registration_creates_an_atomic_audit_record` passed against the local `pcb_local_web_test` PostgreSQL database and loopback SeaweedFS. Ruff and strict mypy pass for the repository and CLI changes. No AWS, cloud storage, or model endpoint was contacted. Evidence: `docs/implementation/evidence/prompt-33/worker-registration-audit-2026-10-06.json`.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

@@ -396,7 +396,7 @@ def _register_ec2(args: argparse.Namespace) -> int:
         )
     if os.environ.get("PCB_WORKER_DISPATCH_ENABLED") == "true":
         raise ValueError("worker registration must run separately from queue dispatch")
-    manifest, _deployment = _read_aws_manifest("migrator")
+    manifest, deployment = _read_aws_manifest("migrator")
     resource = SolveWorkerResourceSpec.model_validate_json(
         args.resource_spec.read_text(encoding="utf-8"), strict=True
     )
@@ -604,7 +604,9 @@ def _register_ec2(args: argparse.Namespace) -> int:
                 ).scalar_one()
                 if registered_slots + args.slots > manifest.capacity.max_concurrency:
                     raise ValueError("AWS worker registration exceeds the environment capacity cap")
-                worker_id = PostgresJobRepository(database.engine).register_worker(registration)
+                worker_id = PostgresJobRepository(database.engine).register_worker(
+                    registration, actor_subject=deployment.principal
+                )
                 registered = True
         _emit(
             {

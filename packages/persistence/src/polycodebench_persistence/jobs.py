@@ -12,6 +12,7 @@ from polycodebench_core.application_errors import (
     LeaseLost,
     PersistenceConflict,
 )
+from polycodebench_core.canonical import canonical_json_bytes
 from polycodebench_core.jobs import JobClaim, JobDefinition, StageOutcome, WorkerRegistrationSpec
 from sqlalchemy import and_, func, insert, or_, select, text, update
 from sqlalchemy.engine import Connection, Engine
@@ -21,6 +22,7 @@ from polycodebench_persistence.errors import map_database_error
 from polycodebench_persistence.models import (
     artifact,
     attempt,
+    audit_event,
     campaign,
     capacity_slot,
     config_document,
@@ -233,7 +235,11 @@ class PostgresJobRepository:
         except DBAPIError as error:
             raise map_database_error(error) from None
 
-    def register_worker(self, spec: WorkerRegistrationSpec) -> UUID:
+    def register_worker(
+        self, spec: WorkerRegistrationSpec, *, actor_subject: str | None = None
+    ) -> UUID:
+        if actor_subject is not None and not 1 <= len(actor_subject) <= 255:
+            raise ValueError("worker registration audit actor is invalid")
         worker_id = uuid4()
         try:
             with self._engine.begin() as connection:
@@ -275,6 +281,31 @@ class PostgresJobRepository:
                             slot_key=slot.slot_key,
                             resource_class=slot.resource_class,
                             state="available",
+                        )
+                    )
+                if actor_subject is not None:
+                    registration_digest = (
+                        "sha256:"
+                        + hashlib.sha256(
+                            canonical_json_bytes(spec.model_dump(mode="json"))
+                        ).hexdigest()
+                    )
+                    connection.execute(
+                        insert(audit_event).values(
+                            actor_subject=actor_subject,
+                            action="worker.register",
+                            resource_type="worker_registration",
+                            resource_id=str(worker_id),
+                            after_digest=registration_digest,
+                            request_id=uuid4().hex,
+                            details={
+                                "lane": spec.lane,
+                                "hardware_class": spec.hardware_class,
+                                "driver_identity": spec.driver_identity,
+                                "queue_classes": list(spec.allowed_queue_classes),
+                                "resource_classes": list(spec.allowed_resource_classes),
+                                "slot_count": len(spec.slots),
+                            },
                         )
                     )
             return worker_id

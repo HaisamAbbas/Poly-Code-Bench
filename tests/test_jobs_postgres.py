@@ -35,6 +35,7 @@ from polycodebench_persistence.models import (
     artifact,
     artifact_quota,
     attempt,
+    audit_event,
     config_document,
     run,
     stage_execution,
@@ -133,6 +134,7 @@ def _register_worker(
     label: str,
     queue_class: str = "solve",
     resource_class: str = "small",
+    actor_subject: str | None = None,
 ) -> UUID:
     resource_artifacts = ArtifactRepository(database.engine, store, max_upload_bytes=500_000)
     resource = SolveWorkerResourceSpec.model_validate(
@@ -196,8 +198,37 @@ def _register_worker(
                     resource_spec_config_id=config_id,
                 ),
             ),
-        )
+        ),
+        actor_subject=actor_subject,
     )
+
+
+def test_worker_registration_creates_an_atomic_audit_record(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    actor = "arn:aws:sts::123456789012:assumed-role/pcb-staging-migrator/ecs-task-7"
+    worker_id = _register_worker(
+        database,
+        object_store,
+        label="audited-registration",
+        actor_subject=actor,
+    )
+    with database.engine.connect() as connection:
+        event = (
+            connection.execute(
+                select(audit_event).where(
+                    audit_event.c.resource_type == "worker_registration",
+                    audit_event.c.resource_id == str(worker_id),
+                )
+            )
+            .mappings()
+            .one()
+        )
+    assert event["actor_subject"] == actor
+    assert event["action"] == "worker.register"
+    assert event["after_digest"].startswith("sha256:")
+    assert event["details"]["lane"] == "solve"
+    assert event["details"]["slot_count"] == 1
 
 
 def test_run_solve_job_is_claimable_by_its_frozen_resource_class(

@@ -38,6 +38,11 @@ output "bucket_names" {
   description = "Artifact buckets."
 }
 
+output "object_store_endpoint" {
+  value       = "https://s3.${var.region}.${data.aws_partition.current.dns_suffix}"
+  description = "Regional S3 API endpoint used by application tasks."
+}
+
 output "database_endpoint" {
   value       = module.database.endpoint
   description = "Database host."
@@ -56,6 +61,11 @@ output "database_secret_arns" {
 output "cursor_secret_arn" {
   value       = module.keys.cursor_secret_arn
   description = "API cursor-signing secret ARN."
+}
+
+output "sandbox_control_identity_secret_arns" {
+  value       = module.keys.sandbox_control_identity_secret_arns
+  description = "Role-scoped guest-control SSH identity references."
 }
 
 output "signing_secret_arns" {

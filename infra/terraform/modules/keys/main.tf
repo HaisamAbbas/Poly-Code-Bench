@@ -21,7 +21,7 @@ locals {
   key_users = {
     data    = ["api", "scheduler", "model-gateway", "judge-gateway", "solve-supervisor", "eval-supervisor", "scorer", "publisher", "web", "migrator", "restore-operator", "ops-reaper"]
     hidden  = ["eval-supervisor", "admission-operator"]
-    secrets = ["api", "scheduler", "model-gateway", "judge-gateway", "solve-supervisor", "eval-supervisor", "scorer", "publisher", "web", "migrator", "restore-operator", "ops-reaper"]
+    secrets = ["api", "scheduler", "model-gateway", "judge-gateway", "solve-supervisor", "eval-supervisor", "admission-operator", "scorer", "publisher", "web", "migrator", "restore-operator", "ops-reaper"]
     signing = ["publisher"]
     logs    = []
   }
@@ -160,6 +160,17 @@ resource "aws_secretsmanager_secret" "cursor" {
   kms_key_id              = aws_kms_key.this["secrets"].arn
   recovery_window_in_days = 30
   tags                    = merge(local.tags, { "pcb:secret-class" = "api" })
+}
+
+# Each supervisor has a separate SSH client key for its forced-command guest channel.
+# Values are installed out of band; private key bytes are never written to Terraform state.
+resource "aws_secretsmanager_secret" "sandbox_control_identity" {
+  for_each                = toset(["solve-supervisor", "eval-supervisor", "admission-operator"])
+  name                    = "pcb/${var.environment}/sandbox/control-identity-${each.key}"
+  description             = "Forced-command SSH identity for ${each.key} disposable guests"
+  kms_key_id              = aws_kms_key.this["secrets"].arn
+  recovery_window_in_days = 30
+  tags                    = merge(local.tags, { "pcb:secret-class" = "sandbox-control", "pcb:role" = each.key })
 }
 
 # The empty identity export makes OIDC-only submitter auth deployable without a file mount.

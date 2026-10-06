@@ -13,6 +13,11 @@ output "cursor_secret_arn" {
   description = "API cursor signing key secret."
 }
 
+output "sandbox_control_identity_secret_arns" {
+  value       = { for role, secret in aws_secretsmanager_secret.sandbox_control_identity : role => secret.arn }
+  description = "Role-specific supervisor SSH identities; install private values out of band."
+}
+
 output "api_identity_secret_arn" {
   value       = aws_secretsmanager_secret.api_identity.arn
   description = "API identity-fingerprint export injected as PCB_API_IDENTITY_JSON."

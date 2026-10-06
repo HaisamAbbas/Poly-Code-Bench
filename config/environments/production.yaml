@@ -70,6 +70,11 @@ sandbox:
     grading: sg-REQUIRED
     admission: sg-REQUIRED
   control_security_group_id: sg-REQUIRED
+  control_user: pcb-control
+  control_identity_secret_refs:
+    solve-supervisor: aws-sm:pcb/production/sandbox/control-identity-solve-supervisor
+    eval-supervisor: aws-sm:pcb/production/sandbox/control-identity-eval-supervisor
+    admission-operator: aws-sm:pcb/production/sandbox/control-identity-admission-operator
   guest_ttl_seconds: 3600
   orphan_alert_grace_seconds: 600
 telemetry:

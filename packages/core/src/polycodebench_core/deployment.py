@@ -82,6 +82,8 @@ class SandboxSection(_Strict):
     lane_subnets: dict[str, str] = Field(default_factory=dict)
     lane_security_groups: dict[str, str] = Field(default_factory=dict)
     control_security_group_id: str | None = None
+    control_user: str = Field(default="pcb-control", pattern=r"^[a-z_][a-z0-9_-]{0,31}$")
+    control_identity_secret_refs: dict[str, str] = Field(default_factory=dict)
     guest_ttl_seconds: int = Field(ge=60, le=86_400)
     orphan_alert_grace_seconds: int = Field(default=600, ge=0, le=3_600)
 
@@ -176,6 +178,7 @@ class EnvironmentManifest(_Strict):
         if self.status == "deployed" and self.sandbox.provider == "ec2_vm":
             expected_lanes = {"solve", "grading", "admission", "performance"}
             guest_lanes = {"solve", "grading", "admission"}
+            expected_control_roles = {"solve-supervisor", "eval-supervisor", "admission-operator"}
             if set(self.sandbox.launch_templates) != expected_lanes:
                 raise ValueError("deployed AWS manifests require a template ID for every lane")
             if len(set(self.sandbox.launch_templates.values())) != len(expected_lanes):
@@ -201,6 +204,17 @@ class EnvironmentManifest(_Strict):
                 raise ValueError(
                     "deployed AWS manifests require the supervisor control security group"
                 )
+            if set(self.sandbox.control_identity_secret_refs) != expected_control_roles:
+                raise ValueError(
+                    "deployed AWS manifests require a distinct guest-control identity "
+                    "for each supervisor role"
+                )
+            for role, reference in self.sandbox.control_identity_secret_refs.items():
+                expected_reference = f"aws-sm:pcb/{env}/sandbox/control-identity-{role}"
+                if reference != expected_reference:
+                    raise ValueError(
+                        f"guest-control identity reference for {role} must be environment-scoped"
+                    )
             if not self.sandbox.guest_instance_type:
                 raise ValueError("deployed AWS manifests require an approved guest instance type")
             if not re.fullmatch(r"ami-[0-9a-f]+", self.sandbox.approved_vm_image or ""):
@@ -292,6 +306,8 @@ def separation_violations(manifests: Iterable[EnvironmentManifest]) -> list[str]
         for group in sandbox.lane_security_groups.values():
             claim("sandbox security group", group, env)
         claim("sandbox control security group", sandbox.control_security_group_id, env)
+        for role, reference in sandbox.control_identity_secret_refs.items():
+            claim(f"sandbox control identity {role}", reference, env)
         if env in {"staging", "production"}:
             claim("cloud account", manifest.identity.account_id, env)
         cidr = manifest.network.vpc_cidr

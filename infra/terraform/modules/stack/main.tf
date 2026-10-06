@@ -17,6 +17,8 @@ locals {
   }
 }
 
+data "aws_partition" "current" {}
+
 module "keys" {
   source          = "../keys"
   environment     = var.environment
@@ -144,6 +146,15 @@ module "control_services" {
   task_role_arns            = module.identity.service_role_arns
   services = {
     for name, service in var.services : name => merge(service, {
+      # Bucket names and endpoint are configuration, not credentials. Supply the same
+      # manifest-backed values to each task; the role policies still decide which prefixes
+      # each process can read or write.
+      environment = merge(try(service.environment, {}), {
+        PCB_OBJECT_STORE_ENDPOINT = "https://s3.${var.region}.${data.aws_partition.current.dns_suffix}"
+        PCB_BUCKET_HIDDEN         = module.artifacts.bucket_names["hidden"]
+        PCB_BUCKET_INTERNAL       = module.artifacts.bucket_names["internal"]
+        PCB_BUCKET_PUBLIC         = module.artifacts.bucket_names["public"]
+      })
       # Database credentials are passed as secret references owned by this stack, never as
       # plaintext environment variables in a tfvars file or task definition.
       secrets = merge(

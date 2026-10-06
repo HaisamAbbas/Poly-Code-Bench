@@ -130,6 +130,11 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
     compare("bucket hidden", manifest.object_store.bucket_hidden, buckets.get("hidden"))
     compare("bucket internal", manifest.object_store.bucket_internal, buckets.get("internal"))
     compare("bucket public", manifest.object_store.bucket_public, buckets.get("public"))
+    compare(
+        "object-store endpoint",
+        manifest.object_store.endpoint,
+        deployment.get("object_store_endpoint"),
+    )
     deployed_database_secrets = deployment.get("database_secret_arns", {})
     for role, reference in sorted(manifest.secrets.database_dsn_refs.items()):
         compare_secret_reference(
@@ -187,6 +192,20 @@ def reconcile(manifest: EnvironmentManifest, terraform_output: dict[str, Any]) -
         sandbox.control_security_group_id,
         deployment.get("control_security_group_id"),
     )
+    deployed_control_identities = deployment.get("sandbox_control_identity_secret_arns", {})
+    for role, reference in sorted(sandbox.control_identity_secret_refs.items()):
+        compare_secret_reference(
+            f"sandbox control identity {role}",
+            reference,
+            deployed_control_identities.get(role),
+        )
+    undeclared_control_roles = set(deployed_control_identities) - set(
+        sandbox.control_identity_secret_refs
+    )
+    for role in sorted(undeclared_control_roles):
+        differences.append(
+            f"sandbox control identity {role}: deployed but not declared in the manifest"
+        )
     hardware = deployment.get("hardware_class")
     if manifest.capacity.performance_hardware_class is not None:
         compare("hardware class", manifest.capacity.performance_hardware_class, hardware)

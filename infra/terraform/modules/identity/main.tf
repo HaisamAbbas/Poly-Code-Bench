@@ -225,7 +225,7 @@ data "aws_iam_policy_document" "service" {
   }
 
   dynamic "statement" {
-    for_each = contains(local.db_secret_roles, each.key) || contains(["model-gateway", "judge-gateway"], each.key) ? [1] : []
+    for_each = contains(local.db_secret_roles, each.key) || contains(["model-gateway", "judge-gateway"], each.key) || contains(keys(local.lane_for_role), each.key) ? [1] : []
     content {
       sid       = "SecretsKey"
       actions   = ["kms:Decrypt"]
@@ -254,6 +254,15 @@ data "aws_iam_policy_document" "service" {
   }
 
   dynamic "statement" {
+    for_each = contains(keys(local.lane_for_role), each.key) ? [each.key] : []
+    content {
+      sid       = "OwnGuestControlIdentity"
+      actions   = ["secretsmanager:GetSecretValue"]
+      resources = ["${local.secret_prefix}/sandbox/control-identity-${statement.value}-*"]
+    }
+  }
+
+  dynamic "statement" {
     for_each = each.key == "api" ? [1] : []
     content {
       sid       = "CursorKey"
@@ -278,6 +287,29 @@ data "aws_iam_policy_document" "service" {
       sid       = "InternalEvidenceWrite"
       actions   = ["s3:PutObject"]
       resources = ["${var.bucket_arns["internal"]}/*"]
+    }
+  }
+
+  # The migrator may create only immutable worker resource-spec evidence during an explicit
+  # registration operation. It cannot read other internal evidence or delete stored objects.
+  dynamic "statement" {
+    for_each = each.key == "migrator" ? [1] : []
+    content {
+      sid     = "RegisterWorkerConfigArtifact"
+      actions = ["s3:GetObject", "s3:PutObject"]
+      resources = [
+        "${var.bucket_arns["internal"]}/provisional/*",
+        "${var.bucket_arns["internal"]}/worker-config/*",
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = each.key == "migrator" ? [1] : []
+    content {
+      sid       = "WorkerConfigArtifactEncryption"
+      actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
+      resources = [var.key_arns["data"]]
     }
   }
 

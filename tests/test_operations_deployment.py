@@ -274,6 +274,18 @@ def test_deployed_aws_manifest_requires_distinct_guest_network_boundaries() -> N
     with pytest.raises(ValueError, match="distinct launch templates"):
         EnvironmentManifest.model_validate(document)
 
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["control_identity_secret_refs"]["solve-supervisor"] = (
+        "aws-sm:pcb/production/sandbox/control-identity-solve-supervisor"
+    )
+    with pytest.raises(ValueError, match="must be environment-scoped"):
+        EnvironmentManifest.model_validate(document)
+
+    document = _deployed_staging().model_dump(mode="json")
+    document["sandbox"]["control_identity_secret_refs"].pop("solve-supervisor")
+    with pytest.raises(ValueError, match="distinct guest-control identity"):
+        EnvironmentManifest.model_validate(document)
+
 
 def test_ranked_releases_refuse_development_tier_results() -> None:
     refuse_inadmissible_tiers("exploratory", ["development", "production"])
@@ -300,6 +312,7 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
             "internal": manifest.object_store.bucket_internal,
             "public": manifest.object_store.bucket_public,
         },
+        "object_store_endpoint": manifest.object_store.endpoint,
         "database_secret_arns": {
             role: secret_arn(reference)
             for role, reference in manifest.secrets.database_dsn_refs.items()
@@ -324,12 +337,17 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
         "lane_subnet_ids": dict(manifest.sandbox.lane_subnets),
         "guest_security_group_ids": dict(manifest.sandbox.lane_security_groups),
         "control_security_group_id": manifest.sandbox.control_security_group_id,
+        "sandbox_control_identity_secret_arns": {
+            role: secret_arn(reference)
+            for role, reference in manifest.sandbox.control_identity_secret_refs.items()
+        },
         "hardware_class": manifest.capacity.performance_hardware_class,
     }
     assert environments.reconcile(manifest, {"deployment": {"value": deployed}}) == []
     deployed["service_role_arns"]["rogue"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["operator_role_arns"]["release-approver"] = f"arn:aws:iam::{ACCOUNT}:role/rogue"
     deployed["bucket_names"]["hidden"] = "someone-elses-bucket"
+    deployed["object_store_endpoint"] = "https://s3.us-east-2.amazonaws.com"
     deployed["database_secret_arns"]["api"] = secret_arn(
         manifest.secrets.database_dsn_refs["api"], account="999999999999"
     )
@@ -344,6 +362,9 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     deployed["lane_subnet_ids"]["solve"] = "subnet-0fff"
     deployed["guest_security_group_ids"]["grading"] = "sg-0fff"
     deployed["control_security_group_id"] = "sg-0ffe"
+    deployed["sandbox_control_identity_secret_arns"]["solve-supervisor"] = secret_arn(
+        "aws-sm:pcb/production/sandbox/control-identity-solve-supervisor"
+    )
     deployed["approved_guest_ami_id"] = "ami-0fff"
     deployed["guest_instance_type"] = "m7i.xlarge"
     deployed["region"] = "us-east-2"
@@ -351,6 +372,7 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     assert any("rogue" in item for item in differences)
     assert any("operator role release-approver" in item for item in differences)
     assert any("bucket hidden" in item for item in differences)
+    assert any("object-store endpoint" in item for item in differences)
     assert any(
         "database secret api" in item and "outside the manifest AWS account/region" in item
         for item in differences
@@ -363,6 +385,7 @@ def test_reconcile_reports_drift_against_terraform_output() -> None:
     assert any("guest subnet solve" in item for item in differences)
     assert any("guest security group grading" in item for item in differences)
     assert any("control security group" in item for item in differences)
+    assert any("sandbox control identity solve-supervisor" in item for item in differences)
     assert any("approved guest AMI" in item for item in differences)
     assert any("guest instance type" in item for item in differences)
     assert any("region" in item for item in differences)

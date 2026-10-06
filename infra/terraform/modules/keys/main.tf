@@ -3,8 +3,9 @@
 # Key policies enforce identity, not request strings: every key denies use to any principal
 # whose IAM tag `pcb:environment` differs from this environment, and the hidden-bundle and
 # signing keys additionally deny every principal whose `pcb:role` tag is not allowlisted.
-# Secret VALUES are never managed here; operators write them out of band (runbook
-# docs/operations/runbooks/signing-key-rotation.md). Terraform state therefore holds no secret.
+# Credential and cryptographic secret VALUES are never managed here; operators write them out
+# of band (runbook docs/operations/runbooks/signing-key-rotation.md). The API identity export's
+# initial version is a non-sensitive empty schema document; no bearer or key material is stored.
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -156,6 +157,31 @@ resource "aws_secretsmanager_secret" "database" {
 resource "aws_secretsmanager_secret" "cursor" {
   name                    = "pcb/${var.environment}/api/cursor-signing-key"
   description             = "Public API pagination cursor HMAC key (32 bytes, hex)"
+  kms_key_id              = aws_kms_key.this["secrets"].arn
+  recovery_window_in_days = 30
+  tags                    = merge(local.tags, { "pcb:secret-class" = "api" })
+}
+
+# The empty identity export makes OIDC-only submitter auth deployable without a file mount.
+# Operators add hashed reviewer/admin token fingerprints out of band when those roles are enabled.
+resource "aws_secretsmanager_secret" "api_identity" {
+  name                    = "pcb/${var.environment}/api/identity-export"
+  description             = "Hashed API operator token identities; contains no bearer token values"
+  kms_key_id              = aws_kms_key.this["secrets"].arn
+  recovery_window_in_days = 30
+  tags                    = merge(local.tags, { "pcb:secret-class" = "api" })
+}
+
+resource "aws_secretsmanager_secret_version" "api_identity" {
+  secret_id     = aws_secretsmanager_secret.api_identity.id
+  secret_string = jsonencode({ schema_version = 1, principals = [] })
+}
+
+# The Next.js BFF and API share this HMAC key. Terraform creates only its reference;
+# an operator installs a randomly generated value before any public task is started.
+resource "aws_secretsmanager_secret" "web_auth_signing" {
+  name                    = "pcb/${var.environment}/api/web-auth-signing-key"
+  description             = "Shared HMAC key for short-lived web-to-API submitter assertions"
   kms_key_id              = aws_kms_key.this["secrets"].arn
   recovery_window_in_days = 30
   tags                    = merge(local.tags, { "pcb:secret-class" = "api" })

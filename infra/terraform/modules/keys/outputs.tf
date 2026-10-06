@@ -13,6 +13,16 @@ output "cursor_secret_arn" {
   description = "API cursor signing key secret."
 }
 
+output "api_identity_secret_arn" {
+  value       = aws_secretsmanager_secret.api_identity.arn
+  description = "API identity-fingerprint export injected as PCB_API_IDENTITY_JSON."
+}
+
+output "web_auth_signing_secret_arn" {
+  value       = aws_secretsmanager_secret.web_auth_signing.arn
+  description = "Shared web/API HMAC signing-key reference; its value is set out of band."
+}
+
 output "signing_secret_arns" {
   value       = { for id, secret in aws_secretsmanager_secret.signing : id => secret.arn }
   description = "Signing key secrets by key ID (PCB_SIGNING_KEY_REF values)."

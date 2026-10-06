@@ -60,8 +60,9 @@ class TokenDirectory:
 
     @classmethod
     def from_env(cls) -> TokenDirectory:
-        """Load trusted claims from ``PCB_API_IDENTITY_FILE`` without storing bearer values."""
-        configured = os.environ.get("PCB_API_IDENTITY_FILE")
+        """Load trusted claim fingerprints from a file or injected JSON secret."""
+        identity_file = os.environ.get("PCB_API_IDENTITY_FILE")
+        identity_json = os.environ.get("PCB_API_IDENTITY_JSON")
         web_auth_secret = os.environ.get("PCB_WEB_AUTH_SIGNING_KEY")
         environment = os.environ.get("PCB_ENVIRONMENT", "development")
         if web_auth_secret is not None and len(web_auth_secret.encode("utf-8")) < 32:
@@ -69,17 +70,29 @@ class TokenDirectory:
         if environment in {"staging", "production"} and not web_auth_secret:
             raise RuntimeError("PCB_WEB_AUTH_SIGNING_KEY is required outside development")
         web_auth_signing_key = web_auth_secret.encode("utf-8") if web_auth_secret else None
-        if not configured:
+        if identity_file is not None and identity_json is not None:
+            raise RuntimeError(
+                "configure only one of PCB_API_IDENTITY_FILE or PCB_API_IDENTITY_JSON"
+            )
+        if identity_file is None and identity_json is None:
             if environment in {"staging", "production"}:
-                raise RuntimeError("PCB_API_IDENTITY_FILE is required outside development")
+                raise RuntimeError(
+                    "PCB_API_IDENTITY_JSON or PCB_API_IDENTITY_FILE is required outside development"
+                )
             return cls({}, web_auth_signing_key=web_auth_signing_key)
+        source = "PCB_API_IDENTITY_JSON" if identity_json is not None else "PCB_API_IDENTITY_FILE"
         try:
-            identity_path = Path(configured)
-            if identity_path.stat().st_size > 4_000_000:
-                raise RuntimeError("PCB_API_IDENTITY_FILE exceeds the 4 MB configuration limit")
-            document = json.loads(identity_path.read_text(encoding="utf-8"))
+            if identity_json is not None:
+                if len(identity_json.encode("utf-8")) > 4_000_000:
+                    raise RuntimeError("PCB_API_IDENTITY_JSON exceeds the 4 MB configuration limit")
+                document = json.loads(identity_json)
+            else:
+                identity_path = Path(identity_file or "")
+                if identity_path.stat().st_size > 4_000_000:
+                    raise RuntimeError("PCB_API_IDENTITY_FILE exceeds the 4 MB configuration limit")
+                document = json.loads(identity_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
-            raise RuntimeError("PCB_API_IDENTITY_FILE is unreadable or invalid JSON") from error
+            raise RuntimeError(f"{source} is unreadable or invalid JSON") from error
         if (
             not isinstance(document, dict)
             or set(document) != {"schema_version", "principals"}
@@ -87,12 +100,12 @@ class TokenDirectory:
             or not isinstance(document["principals"], list)
             or len(document["principals"]) > 10_000
         ):
-            raise RuntimeError("PCB_API_IDENTITY_FILE does not match schema version 1")
+            raise RuntimeError(f"{source} does not match schema version 1")
         allowed_roles = {role.value for role in Role}
         fingerprints: dict[str, ApiPrincipal] = {}
         for item in document["principals"]:
             if not isinstance(item, dict) or set(item) != {"token_sha256", "principal"}:
-                raise RuntimeError("PCB_API_IDENTITY_FILE contains an invalid principal row")
+                raise RuntimeError(f"{source} contains an invalid principal row")
             fingerprint = item["token_sha256"]
             claims = item["principal"]
             if (
@@ -116,7 +129,7 @@ class TokenDirectory:
                 or isinstance(claims["expires_at"], bool)
                 or claims["expires_at"] <= int(datetime.now(UTC).timestamp())
             ):
-                raise RuntimeError("PCB_API_IDENTITY_FILE contains invalid or expired claims")
+                raise RuntimeError(f"{source} contains invalid or expired claims")
             fingerprints[fingerprint] = ApiPrincipal(
                 subject_id=claims["subject_id"],
                 roles=frozenset(claims["roles"]),

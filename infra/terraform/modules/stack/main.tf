@@ -152,7 +152,12 @@ module "control_services" {
           PCB_DATABASE_URL = module.keys.database_secret_arns[service.role]
         } : {},
         service.role == "api" ? {
-          PCB_CURSOR_SIGNING_KEY = module.keys.cursor_secret_arn
+          PCB_CURSOR_SIGNING_KEY   = module.keys.cursor_secret_arn
+          PCB_API_IDENTITY_JSON    = module.keys.api_identity_secret_arn
+          PCB_WEB_AUTH_SIGNING_KEY = module.keys.web_auth_signing_secret_arn
+        } : {},
+        service.role == "web" ? {
+          PCB_WEB_AUTH_SIGNING_KEY = module.keys.web_auth_signing_secret_arn
         } : {}
       )
     })

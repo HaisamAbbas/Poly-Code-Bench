@@ -98,11 +98,46 @@ def test_production_token_directory_requires_shared_web_auth_key(
 ) -> None:
     monkeypatch.setenv("PCB_ENVIRONMENT", "production")
     monkeypatch.delenv("PCB_API_IDENTITY_FILE", raising=False)
+    monkeypatch.delenv("PCB_API_IDENTITY_JSON", raising=False)
     monkeypatch.delenv("PCB_WEB_AUTH_SIGNING_KEY", raising=False)
 
     with pytest.raises(RuntimeError, match="PCB_WEB_AUTH_SIGNING_KEY is required"):
         TokenDirectory.from_env()
 
     monkeypatch.setenv("PCB_WEB_AUTH_SIGNING_KEY", "synthetic-production-test-signing-key-32-bytes")
-    with pytest.raises(RuntimeError, match="PCB_API_IDENTITY_FILE is required"):
+    with pytest.raises(RuntimeError, match="PCB_API_IDENTITY_JSON"):
+        TokenDirectory.from_env()
+
+
+def test_production_token_directory_loads_inline_identity_json(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    key = "synthetic-production-test-signing-key-32-bytes"
+    monkeypatch.setenv("PCB_ENVIRONMENT", "staging")
+    monkeypatch.setenv("PCB_WEB_AUTH_SIGNING_KEY", key)
+    monkeypatch.delenv("PCB_API_IDENTITY_FILE", raising=False)
+    monkeypatch.setenv("PCB_API_IDENTITY_JSON", '{"schema_version":1,"principals":[]}')
+
+    directory = TokenDirectory.from_env()
+    claims = _claims()
+
+    assert directory.resolve(_signed_token(key.encode(), claims)) == ApiPrincipal(
+        subject_id="https://issuer.example|subject-123",
+        roles=frozenset({"submitter"}),
+        email="person@example.org",
+        email_verified=True,
+        expires_at=claims["exp"],
+    )
+
+
+def test_identity_directory_sources_are_exclusive(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    identity_file = tmp_path / "identities.json"
+    identity_file.write_text('{"schema_version":1,"principals":[]}', encoding="utf-8")
+    monkeypatch.setenv("PCB_ENVIRONMENT", "development")
+    monkeypatch.setenv("PCB_API_IDENTITY_FILE", str(identity_file))
+    monkeypatch.setenv("PCB_API_IDENTITY_JSON", '{"schema_version":1,"principals":[]}')
+
+    with pytest.raises(RuntimeError, match="configure only one"):
         TokenDirectory.from_env()

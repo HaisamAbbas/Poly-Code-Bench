@@ -85,6 +85,12 @@ services = {
     cpu           = 512
     memory        = 1024
     desired_count = 0
+    command = [
+      "pcb-worker", "ec2-run", "--watch",
+      "--image-allowlist", "/etc/pcb/candidate-image-allowlist.json",
+      "--known-hosts", "/etc/pcb/guest-known-hosts"
+    ]
+    environment = { PCB_WORKER_DISPATCH_ENABLED = "false" }
   }
   "eval-supervisor" = {
     role          = "eval-supervisor"
@@ -114,6 +120,7 @@ services = {
     memory        = 512
     desired_count = 0
     command       = ["pcb-ops", "migrate", "upgrade"]
+    environment   = { PCB_AWS_WORKER_SETUP_ENABLED = "false" }
   }
   "ops-reaper" = {
     role          = "ops-reaper"

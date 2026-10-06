@@ -15,6 +15,13 @@ from typing import Literal
 from uuid import UUID
 
 from polycodebench_core.canonical import canonical_document_digest
+from polycodebench_core.deployment import (
+    CallerPrincipal,
+    DeploymentRefused,
+    EnvironmentManifest,
+    VerifiedDeployment,
+    resolve_deployment,
+)
 from polycodebench_core.jobs import JobClaim
 from polycodebench_core.model_contracts import ProviderKind
 from polycodebench_core.model_contracts import Strict as ContractStrict
@@ -33,7 +40,13 @@ from polycodebench_persistence.models import (
 from polycodebench_persistence.object_store import S3ArtifactStore
 from polycodebench_persistence.solve_state import PostgresSolveRepository
 from polycodebench_runner.contracts import SandboxSpec
-from polycodebench_runner.provider import LocalDockerSandboxProvider
+from polycodebench_runner.provider import (
+    AwsWorkerIdentityVerifier,
+    Ec2VmSandboxProvider,
+    GuestControlChannel,
+    LocalDockerSandboxProvider,
+    SandboxProvider,
+)
 from polycodebench_services.solve_budget_profiles import load_solve_budget_profiles
 from polycodebench_services.solve_protocols import load_protocol_directory
 from pydantic import Field, ValidationError, field_validator, model_validator
@@ -104,7 +117,7 @@ class DatabaseSandboxSpecFactory:
         allowed_images: Mapping[str, str],
     ) -> None:
         if not allowed_images:
-            raise ValueError("the local worker needs an immutable image allowlist")
+            raise ValueError("the worker needs an immutable image allowlist")
         self._scheduler_engine = scheduler_engine
         self._solve_engine = solve_engine
         self._allowed_images = dict(allowed_images)
@@ -184,7 +197,7 @@ class DatabaseSandboxSpecFactory:
         if resource.image_digest != runtime.image_digest:
             raise ValueError("worker image digest does not match the frozen task runtime")
         if self._allowed_images.get(resource.image) != runtime.image_digest:
-            raise ValueError("task image is not approved by the local worker allowlist")
+            raise ValueError("task image is not approved by the worker allowlist")
 
         return SandboxSpec(
             stage_id=claim.stage,
@@ -240,6 +253,140 @@ def build_local_solve_worker(
     secret_namespace: str = "models",
 ) -> WorkerService:
     """Compose the existing guarded solve path without enabling or registering a worker."""
+    sandbox = LocalDockerSandboxProvider(
+        allowed_images=dict(image_allowlist),
+        state_dir=state_dir,
+        provider_id=f"solve-worker-{worker_id.hex[:12]}",
+    )
+    return _build_solve_worker(
+        worker_id=worker_id,
+        scheduler_engine=scheduler_engine,
+        solve_engine=solve_engine,
+        gateway_engine=gateway_engine,
+        artifact_engine=artifact_engine,
+        object_store=object_store,
+        image_allowlist=image_allowlist,
+        sandbox=sandbox,
+        protocol_directory=protocol_directory,
+        budget_profile_file=budget_profile_file,
+        secret_namespace=secret_namespace,
+        secretsmanager_client=None,
+    )
+
+
+def build_ec2_solve_worker(
+    *,
+    worker_id: UUID,
+    manifest: EnvironmentManifest,
+    deployment: VerifiedDeployment,
+    scheduler_engine: Engine,
+    solve_engine: Engine,
+    gateway_engine: Engine,
+    artifact_engine: Engine,
+    object_store: S3ArtifactStore,
+    candidate_image_digests: Mapping[str, str],
+    protocol_directory: Path,
+    budget_profile_file: Path,
+    ec2_client: object,
+    sts_client: object,
+    secretsmanager_client: object,
+    control_channel: GuestControlChannel,
+) -> WorkerService:
+    """Assemble an EC2 solve worker from a deployed, identity-matched AWS manifest."""
+    if (
+        manifest.status != "deployed"
+        or manifest.environment not in {"staging", "production"}
+        or manifest.sandbox.provider != "ec2_vm"
+        or manifest.isolation_tier != "production"
+    ):
+        raise ValueError("AWS solve worker requires a deployed production-tier manifest")
+    if deployment.verified_by != "aws-sts":
+        raise ValueError("AWS solve worker requires an STS-verified deployment identity")
+    try:
+        resolved = resolve_deployment(
+            manifest,
+            claimed_environment=deployment.environment,
+            claimed_role=deployment.role,
+            caller=CallerPrincipal(
+                account_id=manifest.identity.account_id or "",
+                arn=deployment.principal,
+                verified_by="aws-sts",
+            ),
+        )
+    except DeploymentRefused:
+        raise ValueError("solve worker deployment identity does not match its manifest") from None
+    if resolved.role != "solve-supervisor":
+        raise ValueError("AWS solve worker requires the solve-supervisor role")
+    if not candidate_image_digests:
+        raise ValueError("AWS solve worker requires an approved candidate image allowlist")
+
+    sandbox = manifest.sandbox
+    guest_lanes = ("solve", "grading", "admission")
+    try:
+        launch_templates = {lane: sandbox.launch_templates[lane] for lane in guest_lanes}
+        launch_template_versions = {
+            lane: int(sandbox.launch_template_versions[lane]) for lane in guest_lanes
+        }
+        subnets = {lane: sandbox.lane_subnets[lane] for lane in guest_lanes}
+        security_groups = {lane: sandbox.lane_security_groups[lane] for lane in guest_lanes}
+        supervisor_arn = manifest.identity.service_roles["solve-supervisor"]
+        if sandbox.approved_vm_image is None or sandbox.guest_instance_type is None:
+            raise KeyError("guest instance settings")
+        if sandbox.control_security_group_id is None:
+            raise KeyError("control security group")
+    except (KeyError, ValueError):
+        raise ValueError("AWS solve worker manifest is missing sandbox deployment inputs") from None
+
+    provider = Ec2VmSandboxProvider(
+        ec2_client=ec2_client,
+        control_channel=control_channel,
+        worker_identity_verified=AwsWorkerIdentityVerifier(
+            sts_client=sts_client,
+            expected_supervisor_arn=supervisor_arn,
+        ),
+        approved_ami_id=sandbox.approved_vm_image,
+        launch_template_by_lane=launch_templates,
+        launch_template_version_by_lane=launch_template_versions,
+        environment=manifest.environment,
+        supervisor_role="solve-supervisor",
+        control_security_group_id=sandbox.control_security_group_id,
+        subnet_by_lane=subnets,
+        security_group_by_lane=security_groups,
+        instance_type=sandbox.guest_instance_type,
+        candidate_image_digests=dict(candidate_image_digests),
+    )
+    return _build_solve_worker(
+        worker_id=worker_id,
+        scheduler_engine=scheduler_engine,
+        solve_engine=solve_engine,
+        gateway_engine=gateway_engine,
+        artifact_engine=artifact_engine,
+        object_store=object_store,
+        image_allowlist=candidate_image_digests,
+        sandbox=provider,
+        protocol_directory=protocol_directory,
+        budget_profile_file=budget_profile_file,
+        secret_namespace="models",
+        secretsmanager_client=secretsmanager_client,
+    )
+
+
+def _build_solve_worker(
+    *,
+    worker_id: UUID,
+    scheduler_engine: Engine,
+    solve_engine: Engine,
+    gateway_engine: Engine,
+    artifact_engine: Engine,
+    object_store: S3ArtifactStore,
+    image_allowlist: Mapping[str, str],
+    sandbox: SandboxProvider,
+    protocol_directory: Path,
+    budget_profile_file: Path,
+    secret_namespace: str,
+    secretsmanager_client: object | None,
+) -> WorkerService:
+    """Wire shared solve services around an explicitly selected sandbox boundary."""
     artifacts = ArtifactRepository(artifact_engine, object_store, max_upload_bytes=512 * 1024**2)
     jobs = PostgresJobRepository(scheduler_engine)
     solve_repository = PostgresSolveRepository(solve_engine)
@@ -251,7 +398,9 @@ def build_local_solve_worker(
             artifacts, owner=f"solve-worker-{worker_id}", encryption_domain="solve-session"
         ),
         transport=PinnedHttpTransport(),
-        secrets=configured_secret_resolver(secret_namespace),
+        secrets=configured_secret_resolver(
+            secret_namespace, secretsmanager_client=secretsmanager_client
+        ),
         adapters=ADAPTERS,
         throttles=ThrottleRegistry(),
     )
@@ -259,11 +408,6 @@ def build_local_solve_worker(
     budget_profiles = load_solve_budget_profiles(budget_profile_file)
     assignment_loader = DatabaseAssignmentLoader(
         solve_engine, artifacts, protocols, budget_profiles
-    )
-    sandbox = LocalDockerSandboxProvider(
-        allowed_images=dict(image_allowlist),
-        state_dir=state_dir,
-        provider_id=f"solve-worker-{worker_id.hex[:12]}",
     )
     executor = SolveStageExecutor(
         load_assignment=assignment_loader,

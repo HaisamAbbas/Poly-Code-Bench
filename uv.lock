@@ -1201,6 +1201,7 @@ dependencies = [
     { name = "polycodebench-persistence" },
     { name = "polycodebench-runner" },
     { name = "polycodebench-services" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -1210,6 +1211,7 @@ requires-dist = [
     { name = "polycodebench-persistence", editable = "packages/persistence" },
     { name = "polycodebench-runner", editable = "packages/runner" },
     { name = "polycodebench-services", editable = "packages/services" },
+    { name = "pyyaml", specifier = "==6.0.3" },
 ]
 
 [[package]]

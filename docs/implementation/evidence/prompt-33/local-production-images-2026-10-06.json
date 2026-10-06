@@ -1,0 +1,49 @@
+{
+  "verified_at": "2026-10-06",
+  "environment": "local development; release data is synthetic_internal",
+  "images": [
+    {
+      "tag": "pcb-api:local-20261006-progress",
+      "manifest_digest": "sha256:f1a7278ef77dec26967d444aba0457e955219f96e5ea88ce279715d9e4148f08",
+      "configured_user": "10001:10001",
+      "build": "Dockerfile.api completed"
+    },
+    {
+      "tag": "pcb-web:local-20261006-host-api",
+      "manifest_digest": "sha256:6159412eb102d401c4c63fff27357f5a8201af7bfe91ccdbf95598d320f0603f",
+      "configured_user": "10001:10001",
+      "build": "Dockerfile.web completed; production routes generated"
+    }
+  ],
+  "api_contract_smoke": {
+    "route_prefix": "/v1",
+    "model_submission_has_run_progress": true,
+    "submission_run_progress_schema_present": true,
+    "synthetic_release_count": 2
+  },
+  "web_container": {
+    "api_origin": "host local API over Docker Desktop host gateway",
+    "read_only_root_filesystem": true,
+    "capabilities_dropped": ["ALL"],
+    "no_new_privileges": true,
+    "temporary_container_removed_after_check": true,
+    "browser_page_errors": 0,
+    "keyboard_tab_reaches_control": true,
+    "mobile_horizontal_overflow": false,
+    "pages": [
+      { "path": "/leaderboard", "http_status": 200, "synthetic_notice": true },
+      { "path": "/compare", "http_status": 200, "synthetic_notice": true },
+      { "path": "/tasks", "http_status": 200, "synthetic_notice": true }
+    ],
+    "viewport_widths_px": [375, 1440]
+  },
+  "screenshots": [
+    "local-production-web-leaderboard-desktop.png",
+    "local-production-web-leaderboard-mobile.png"
+  ],
+  "limits": [
+    "No cloud resources were created or contacted.",
+    "No model-provider endpoint was contacted.",
+    "Synthetic release rows are not live benchmark results."
+  ]
+}

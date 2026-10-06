@@ -10,6 +10,7 @@ import ipaddress
 import json
 import logging
 import os
+import re
 import secrets
 import subprocess
 import tarfile
@@ -181,14 +182,36 @@ class AwsWorkerIdentityVerifier:
     """Production badge gate bound to the supervisor's actual AWS principal ARN."""
 
     def __init__(self, *, sts_client: Any, expected_supervisor_arn: str) -> None:
-        if not expected_supervisor_arn.startswith("arn:"):
-            raise ValueError("expected supervisor principal ARN is required")
+        expected = re.fullmatch(
+            r"arn:(?P<partition>aws[a-z-]*):iam::(?P<account>\d{12}):role/(?P<path>(?:[\w+=,.@-]+/)*)?(?P<role>[\w+=,.@-]+)",
+            expected_supervisor_arn,
+        )
+        if expected is None or expected["path"]:
+            raise ValueError("expected supervisor IAM role ARN is invalid")
         self.sts = sts_client
         self.expected_supervisor_arn = expected_supervisor_arn
+        self._expected_partition = expected["partition"]
+        self._expected_account = expected["account"]
+        self._expected_role = expected["role"]
 
     def __call__(self) -> bool:
         identity = self.sts.get_caller_identity()
-        return str(identity.get("Arn", "")) == self.expected_supervisor_arn
+        caller_arn = str(identity.get("Arn", ""))
+        assumed = re.fullmatch(
+            r"arn:(?P<partition>aws[a-z-]*):sts::(?P<account>\d{12}):assumed-role/(?P<role>[\w+=,.@-]+)/(?P<session>[\w+=,.@-]+)",
+            caller_arn,
+        )
+        iam_role = re.fullmatch(
+            r"arn:(?P<partition>aws[a-z-]*):iam::(?P<account>\d{12}):role/(?P<path>(?:[\w+=,.@-]+/)*)?(?P<role>[\w+=,.@-]+)",
+            caller_arn,
+        )
+        caller = assumed or iam_role
+        return bool(
+            caller
+            and caller["partition"] == self._expected_partition
+            and caller["account"] == self._expected_account
+            and caller["role"] == self._expected_role
+        )
 
 
 class SshGuestControlChannel:

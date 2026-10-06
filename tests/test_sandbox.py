@@ -350,6 +350,33 @@ def test_ec2_driver_rejects_shared_lane_launch_templates() -> None:
         )
 
 
+def test_aws_worker_identity_accepts_only_matching_sts_role_sessions() -> None:
+    class FakeSts:
+        arn = "arn:aws:sts::123456789012:assumed-role/pcb-solve-supervisor/ecs-task-9"
+
+        def get_caller_identity(self) -> dict[str, str]:
+            return {"Arn": self.arn}
+
+    sts = FakeSts()
+    verifier = AwsWorkerIdentityVerifier(
+        sts_client=sts,
+        expected_supervisor_arn="arn:aws:iam::123456789012:role/pcb-solve-supervisor",
+    )
+    assert verifier()
+
+    sts.arn = "arn:aws:sts::123456789012:assumed-role/pcb-eval-supervisor/ecs-task-9"
+    assert not verifier()
+    sts.arn = "arn:aws:sts::999999999999:assumed-role/pcb-solve-supervisor/ecs-task-9"
+    assert not verifier()
+    sts.arn = "arn:aws:iam::123456789012:user/pcb-solve-supervisor"
+    assert not verifier()
+
+    with pytest.raises(ValueError, match="IAM role ARN"):
+        AwsWorkerIdentityVerifier(
+            sts_client=sts, expected_supervisor_arn="arn:aws:iam::123456789012:user/some-user"
+        )
+
+
 def test_ec2_driver_uses_verified_identity_scoped_capability_and_private_instance() -> None:
     class FakeSts:
         def get_caller_identity(self) -> dict[str, str]:

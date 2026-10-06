@@ -20,6 +20,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - [x] Export the identity guard's verified principal as `PCB_SERVICE_IDENTITY`, required for service audit attribution.
 - [x] Build the scheduler lease-reaper image and verify its guarded CLI startup as a non-root, read-only container; it does not execute queued work.
 - [x] Verify scheduler reaping against disposable local PostgreSQL: migrated a throwaway PostgreSQL 17.6 container, ran 16 scheduler/operations integration cases with a separate throwaway object store, and ran the guarded scheduler image against that database.
+- [x] Make the production Terraform example bootstrap-safe: services default to zero, schedules are empty, and Terraform rejects enabling a service with a placeholder image digest.
 - [ ] Run the equivalent reaper smoke against staged PostgreSQL, and build the model/judge gateway, solve/evaluation supervisor, scorer and publisher work-processing runtimes; complete staging E2E-42/43 before raising their task counts.
 - [ ] Select and verify a cloud account/region and its actual trial quotas, expiry, network/domain inputs and owner-approved maximum spend. Alibaba/OCI require a separate target; the current Terraform is AWS-specific. Do not provision resources until those limits are confirmed.
 
@@ -35,6 +36,7 @@ This checklist tracks the owner-approved local path and staging preparation whil
 - API image: read-only root, UID/GID 10001, `/healthz` returns 200. Without a database/release sync it correctly has no release rows; staging must inject PostgreSQL and sync a verified publication before web services start.
 - Scheduler image: read-only root, UID/GID 10001; dev identity guard exports `local-development` and runs `reap --limit 100` against disposable local PostgreSQL. Sixteen PostgreSQL scheduler/operations integration cases passed with a separate temporary object store. Staging PostgreSQL remains untested; the scheduler only reaps expired leases and does not execute queued work. Sanitized evidence is in `docs/implementation/evidence/prompt-33/scheduler-disposable-postgres.json`.
 - Both staging and production Terraform configurations validate locally; no plan/apply or provider API request was run.
+- Production bootstrap guard: both Terraform roots validate in an isolated Linux container; all deployment tests pass 26/26. The production example has eight always-on service roles at count zero and no schedules. Evidence is in `docs/implementation/evidence/prompt-33/production-bootstrap-safety.json`.
 - Last submission DB check: 11 synthetic requests remained pending with no resulting run; `run` and `call_delivery` were empty, and the browser observed no provider endpoint request.
 - Port 8000 is already owned by another local Uvicorn process and was left untouched.
 - No cloud resource, real model-provider credential, verified Alibaba/OCI trial quota, or public hostname is configured. The AWS staging bootstrap remains disabled by default.

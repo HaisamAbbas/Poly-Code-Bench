@@ -46,7 +46,8 @@ uv run --offline --locked --all-packages pcb-ops env validate
 uv run --offline --locked --all-packages pcb-ops migrate check     # current local tree passes
 
 # 1. Bootstrap the infrastructure with services/schedules left disabled (platform owner).
-#    The committed staging example sets every desired_count to 0 and schedules to {}.
+#    The committed staging and production examples set every desired_count to 0 and schedules to {}.
+#    The control-services module rejects nonzero services with unresolved placeholder image digests.
 #    Do not raise counts while the image fields still contain REQUIRED/zero-digest placeholders.
 cd infra/terraform/environments/staging
 cp backend.hcl.example backend.hcl && cp terraform.tfvars.example terraform.tfvars   # fill every REQUIRED

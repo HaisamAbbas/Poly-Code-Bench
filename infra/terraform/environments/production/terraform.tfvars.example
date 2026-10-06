@@ -1,5 +1,8 @@
-# production parameters. Every REQUIRED value is an owner-supplied deployment input
+# Production parameters. Every REQUIRED value is an owner-supplied deployment input
 # (T 25.3); none may be invented. Copy to terraform.tfvars (git-ignored).
+# Bootstrap-safe defaults: keep all services and schedules disabled until reviewed image digests,
+# approved deployment inputs, and runtime acceptance evidence exist. Enabling production services
+# requires an explicit edit to the private terraform.tfvars file and a reviewed plan.
 
 account_id                     = "REQUIRED-12-digit-account"
 region                         = "REQUIRED-region"
@@ -30,7 +33,7 @@ services = {
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/api@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 2
+    desired_count = 0
     port          = 8000
     command       = ["uvicorn", "polycodebench_api.app:app", "--host", "0.0.0.0", "--port", "8000"]
     environment = {
@@ -43,7 +46,7 @@ services = {
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/web@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 2
+    desired_count = 0
     port          = 3000
     health_path   = "/"
     environment = {
@@ -59,7 +62,7 @@ services = {
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/scheduler@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 256
     memory        = 512
-    desired_count = 1
+    desired_count = 0
     command       = ["pcb-scheduler", "reap", "--watch"]
   }
   "model-gateway" = {
@@ -67,35 +70,35 @@ services = {
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/model-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "judge-gateway" = {
     role          = "judge-gateway"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/judge-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "solve-supervisor" = {
     role          = "solve-supervisor"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/solve-supervisor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 2
+    desired_count = 0
   }
   "eval-supervisor" = {
     role          = "eval-supervisor"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/eval-supervisor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 2
+    desired_count = 0
   }
   "scorer" = {
     role          = "scorer"
     image         = "REQUIRED.dkr.ecr.REQUIRED.amazonaws.com/pcb-production/scorer@sha256:0000000000000000000000000000000000000000000000000000000000000000"
     cpu           = 512
     memory        = 1024
-    desired_count = 1
+    desired_count = 0
   }
   "publisher" = {
     role          = "publisher"
@@ -130,20 +133,4 @@ services = {
   }
 }
 
-schedules = {
-  "orphan-sweep" = {
-    service    = "ops-reaper"
-    expression = "rate(5 minutes)"
-    command    = ["pcb-ops", "orphans", "sweep", "--provider", "ec2"]
-  }
-  "artifact-gc" = {
-    service    = "ops-reaper"
-    expression = "cron(30 1 * * ? *)"
-    command    = ["pcb-ops", "artifacts", "collect-garbage"]
-  }
-  "restore-rehearsal" = {
-    service    = "restore-operator"
-    expression = "cron(0 6 1 1,4,7,10 ? *)"
-    command    = ["pcb-ops", "restore", "rehearse", "--target", "aws-pitr"]
-  }
-}
+schedules = {}

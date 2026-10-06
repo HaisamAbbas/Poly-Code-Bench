@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-06",
+  "environment_class": "local validation only; no cloud credentials used",
+  "production_template": {
+    "always_on_service_roles": 8,
+    "enabled_service_count": 0,
+    "scheduled_operations": 0,
+    "image_digests_are_placeholders": true
+  },
+  "terraform_guard": {
+    "nonnegative_desired_count_required": true,
+    "placeholder_digest_forbidden_when_enabled": true
+  },
+  "terraform_validate": {
+    "staging": true,
+    "production": true,
+    "terraform_version": "1.13",
+    "provider": "hashicorp/aws 6.36.0",
+    "backend_initialized": false,
+    "plan_run": false
+  },
+  "deployment_tests": {
+    "command": "uv run --offline --locked --all-packages pytest tests/test_operations_deployment.py -q",
+    "passed": 26,
+    "failed": 0
+  },
+  "ruff_check": true,
+  "terraform_format_check": true,
+  "provider_api_calls": 0,
+  "cloud_resources_created": 0
+}

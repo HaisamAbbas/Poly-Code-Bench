@@ -7,7 +7,7 @@ import {
 } from "@/lib/oidc-auth";
 import { readBoundedBody } from "@/lib/request-body";
 
-const API_BASE = (process.env.PCB_PUBLIC_API_URL ?? "http://127.0.0.1:8000/v1").replace(/\/$/, "");
+const API_BASE = (process.env.PCB_PUBLIC_API_URL ?? "http://127.0.0.1:8010/v1").replace(/\/$/, "");
 const MAX_BODY_BYTES = 12_000;
 const IDEMPOTENCY_KEY = /^[A-Za-z0-9._:-]{1,255}$/;
 

@@ -185,7 +185,7 @@ export function combineResources<A, B>(first: Resource<A>, second: Resource<B>):
   return { state: "ready", value: [first.value, second.value] };
 }
 
-const apiBase = (process.env.PCB_PUBLIC_API_URL ?? "http://127.0.0.1:8000/v1").replace(/\/$/, "");
+const apiBase = (process.env.PCB_PUBLIC_API_URL ?? "http://127.0.0.1:8010/v1").replace(/\/$/, "");
 
 export async function publicApi<T extends PublicReadEnvelope>(path: string): Promise<Resource<T>> {
   try {

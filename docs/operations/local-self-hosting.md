@@ -70,7 +70,7 @@ $env:PCB_OBJECT_STORE_ENDPOINT = 'http://127.0.0.1:8333'
 uv run --locked --all-packages pytest tests/test_operations_postgres.py
 ```
 
-Open `http://127.0.0.1:3001/leaderboard`. Sign-in at `/model-submissions` uses the local Keycloak account from `.env`. The API listens on `http://127.0.0.1:8010`; PostgreSQL and SeaweedFS remain on `127.0.0.1:55432` and `127.0.0.1:8333`.
+Open `http://127.0.0.1:3001/leaderboard`. Sign-in at `/model-submissions` uses the local Keycloak account from `.env`. The API listens on `http://127.0.0.1:8010`; the web app uses that port as its development fallback when `PCB_PUBLIC_API_URL` is unset. Loading `.env` is still required for OIDC sign-in. PostgreSQL and SeaweedFS remain on `127.0.0.1:55432` and `127.0.0.1:8333`.
 
 ## Optional local solve worker
 

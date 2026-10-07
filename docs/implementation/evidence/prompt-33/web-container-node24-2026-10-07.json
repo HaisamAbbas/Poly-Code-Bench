@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-10-07T05:26:04Z",
+  "environment": "local Windows Docker Desktop; API data from loopback PostgreSQL release projection",
+  "release": {
+    "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
+    "fixture_kind": "synthetic_internal",
+    "displayed_as_live_benchmark_results": false
+  },
+  "image": {
+    "tag": "pcb-web:local-20261007-node24",
+    "digest": "sha256:e7870e4a6c17fe97b7fa958870212c57301d28c05cb84d51a10b111b68cd745e",
+    "dockerfile": "Dockerfile.web",
+    "base_image": "node:24.21.0-trixie-slim@sha256:173f125896c3b47ddf056734c7ea789d04595a6a08769a8f78e0df642781fb66",
+    "configured_user": "10001:10001",
+    "build_api_origin": "http://host.docker.internal:8010/v1"
+  },
+  "runtime": {
+    "host_bind": "127.0.0.1:3002",
+    "read_only_root_filesystem": true,
+    "dropped_capabilities": ["ALL"],
+    "no_new_privileges": true,
+    "writable_path": "/tmp via bounded tmpfs",
+    "temporary_container_removed": true
+  },
+  "browser": {
+    "node_runtime": "24.21.0",
+    "release_backed_pages_http_200": [
+      "/leaderboard",
+      "/languages/python",
+      "/compare",
+      "/tasks",
+      "/tasks/synthetic-browse-task-001",
+      "/models/synthetic-code-a",
+      "/scorecards/synthetic-scorecard-a",
+      "/methodology/synthetic-ui-fixture-v1",
+      "/model-submissions"
+    ],
+    "synthetic_notice_visible_on_every_page": true,
+    "compatible_comparison_common_disclosed_tasks": 3,
+    "page_errors": 0,
+    "mobile_viewport_px": [390, 844],
+    "mobile_metrics_region_overflows_horizontally": true,
+    "mobile_metrics_keyboard_arrow_right_scrolls": true,
+    "screenshots": [
+      "local-production-web-container-node24-desktop.png",
+      "local-production-web-container-node24-mobile.png"
+    ]
+  },
+  "limits": {
+    "production_oidc_callback_tested": false,
+    "production_oidc_reason": "production callback requires HTTPS; the container check used loopback HTTP",
+    "model_or_judge_calls": 0,
+    "submitted_provider_endpoint_contacted": false,
+    "cloud_resources_created": 0
+  }
+}

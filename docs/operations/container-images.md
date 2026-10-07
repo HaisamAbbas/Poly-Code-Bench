@@ -109,3 +109,19 @@ worker registration, queue dispatch, guest launch, ECR push or model call has be
 AWS account, approved AMI, host-key bundle, production candidate allowlist and spend authorization
 remain unavailable. The evaluation, judging, scoring and publication processors still need their
 own long-running modes and validated images.
+
+## Current web image rebuild (2026-10-07)
+
+The current web source was rebuilt as `pcb-web:local-20261007-node24` from the pinned
+`node:24.21.0-trixie-slim` base. Its production container ran as UID/GID 10001 with a read-only
+root filesystem, all capabilities dropped, `no-new-privileges`, a bounded writable `/tmp` tmpfs,
+and a loopback-only host port. Against the real local PostgreSQL-backed synthetic release, all
+nine public pages returned HTTP 200 and showed the synthetic-data notice; the compatible
+comparison exposed the API's three common tasks. The 390 px metrics region scrolled with the
+keyboard, and Playwright reported no page errors. The temporary smoke container was removed after
+the check. OIDC was not exercised in this HTTP container check; the separate Node 24 Keycloak
+browser smoke passed in development mode, while production callback validation still requires
+HTTPS. Sanitized image/runtime data and screenshots:
+[`web-container-node24-2026-10-07.json`](../implementation/evidence/prompt-33/web-container-node24-2026-10-07.json),
+[`desktop`](../implementation/evidence/prompt-33/local-production-web-container-node24-desktop.png),
+[`mobile`](../implementation/evidence/prompt-33/local-production-web-container-node24-mobile.png).

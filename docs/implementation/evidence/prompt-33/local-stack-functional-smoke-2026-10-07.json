@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at_utc": "2026-10-07T05:23:17Z",
+  "captured_at_utc": "2026-10-07T05:26:04Z",
   "environment": "loopback-only local development",
   "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
   "fixture_kind": "synthetic_internal",
@@ -52,6 +52,10 @@
     "standalone_public_pages_rendered": 9,
     "standalone_api_fallback_without_environment": "passed; all nine release-backed pages rendered from the local API with PCB_PUBLIC_API_URL unset",
     "standalone_static_assets": "passed; built stylesheet served with HTTP 200",
+    "production_web_container_node24": "passed; current Dockerfile.web image rendered all nine PostgreSQL-backed synthetic pages",
+    "production_web_container_security": "passed; UID 10001, read-only root, all Linux capabilities dropped, no-new-privileges, writable /tmp tmpfs only, loopback port binding; smoke container removed",
+    "production_web_container_mobile": "passed at 390x844; metrics region scrolls horizontally with ArrowRight",
+    "production_web_container_page_errors": 0,
     "standalone_mobile_metrics_keyboard_scroll": "passed at 390x844",
     "standalone_http_sign_in": "unavailable as expected; production OIDC requires HTTPS and loopback here is HTTP",
     "development_release_backed_pages_rendered": 9,

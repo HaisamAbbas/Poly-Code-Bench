@@ -57,19 +57,23 @@ included item/quantity billable. A free quota is not a hard account spend cap.
 
 The object-store client now has an opt-in Alibaba OSS path using
 `PCB_OBJECT_STORE_PROVIDER=alibaba_oss`, `PCB_OBJECT_STORE_REGION=<region>`,
-`PCB_OBJECT_STORE_ADDRESSING_STYLE=virtual`, and the region's OSS S3 endpoint. The path signs
-OSS's `x-oss-forbid-overwrite` header for writes and uses `Content-MD5`; AWS S3 keeps conditional
-`If-None-Match` and SHA-256 request checksums. OSS does not implement S3 conditional `PutObject`
-headers, and its no-overwrite header is ineffective when bucket versioning is enabled or suspended.
+`PCB_OBJECT_STORE_ADDRESSING_STYLE=virtual`, `PCB_ALIBABA_RAM_ROLE_NAME=<attached-role>`, and the
+region's OSS S3 endpoint. It uses Alibaba's Credentials SDK with ECS RAM-role credentials and
+IMDSv2-only mode; Boto signing resolves the SDK's current temporary credentials per request and
+does not fall back to static AWS environment keys. It rejects HTTP, custom, or wrong-region OSS
+endpoints before resolving credentials. The path signs OSS's `x-oss-forbid-overwrite` header for
+writes and uses `Content-MD5`; AWS S3 keeps conditional `If-None-Match` and SHA-256 request
+checksums. OSS does not implement S3 conditional `PutObject` headers, and its no-overwrite header
+is ineffective when bucket versioning is enabled or suspended.
 See the official [S3 compatibility scope](https://www.alibabacloud.com/help/en/oss/developer-reference/compatibility-with-amazon-s3),
 [PutObject behavior](https://www.alibabacloud.com/help/en/oss/developer-reference/putobject),
 and [conditional PutObject error](https://www.alibabacloud.com/help/en/oss/user-guide/0017-00000245).
 
-This code path has only been checked against Botocore's signed request construction; it has not
-been tested against an OSS account. It does not configure Alibaba RAM-role credential refresh,
-create OSS bucket lifecycle policies, or validate the account's bucket versioning and trial
-quotas. Do not treat it as ready for cloud deployment until those items and real OSS reads/writes
-are verified with a budgeted account.
+This code path has only been checked with mocked rotating RAM-role credentials and Botocore's
+signed request construction; it has not been tested on an ECS instance or against an OSS account.
+It does not create OSS bucket lifecycle policies or validate the account's role attachment, bucket
+versioning, region, or trial quotas. Do not treat it as ready for cloud deployment until those
+items and real OSS reads/writes are verified with a budgeted account.
 
 ## Capacity and database cost reality check
 

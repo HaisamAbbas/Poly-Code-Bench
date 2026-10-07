@@ -9,18 +9,21 @@
     "targeted_claim_with_other_ready_job": "claimed only the requested job",
     "wrong_stage_target": "remained queued",
     "local_job_id_with_watch": "refused before opening the database",
+    "local_one_shot_without_job_id": "refused before opening the database",
     "ec2_worker_stage_filter": "solve"
   },
   "verification": {
-    "unit_and_cli_tests": "40 passed",
+    "unit_and_cli_tests": "41 passed",
     "postgres_claim_filter_tests": "2 passed",
     "strict_mypy": "3 source files, no issues",
     "ruff": "changed files clean and formatted",
     "container": {
       "image": "pcb-solve-worker:local-20261007",
-      "image_id": "sha256:47512d3efa122748ba56781e87161a9832026a8eef1205d578a7f6bb674ccfc1",
+      "image_id": "sha256:fd55a7d95abfcc9199a1a87b869536b8d667cb258d57a5c31e8dc29fc2587426",
       "user": "10001:10001",
-      "smoke": "local-run --help with non-root with a read-only root filesystem, no network, no capabilities, no-new-privileges"
+      "smoke": "pcb-worker local-run --help and unfiltered local-run refusal with a non-root user, read-only root filesystem, no network, no capabilities, and no-new-privileges",
+      "unfiltered_one_shot_exit": 2,
+      "unfiltered_one_shot_result": "refused with a clear --job-id message before database access"
     }
   },
   "dispatch_enabled": false,

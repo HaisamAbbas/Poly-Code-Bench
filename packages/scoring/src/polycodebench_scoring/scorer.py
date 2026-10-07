@@ -131,20 +131,39 @@ def score_evaluation(
     applicable_quality = _check_applicability(task, evidence)
     board = "six_dimension" if applicable_quality else "correctness_only"
 
-    blocking: list[BlockingReason] = list(_required_evidence_blocks(task, policy, evidence))
+    # A known failed/unknown gate stops optional quality work. Missing analyzer and judge
+    # evidence produced by that short circuit must not turn a failed gate into "needs review"
+    # or make an unknown gate look like a judge failure. Passing attempts still require every
+    # declared evidence stream before a score can be published.
+    blocking: list[BlockingReason] = (
+        list(_required_evidence_blocks(task, policy, evidence))
+        if evidence.gate.status == "pass"
+        else list(evidence.blocking)
+    )
     ledger = resolve_owners(
         evidence.security_issues,
         ownership,
         task_overrides=_task_overrides(task),
         penalty_for_severity=policy.security.penalty,
     )
-    blocking.extend(_issue_blocks(ledger, evidence))
+    if evidence.gate.status == "pass":
+        blocking.extend(_issue_blocks(ledger, evidence))
 
     gate_failed = evidence.gate.status == "fail"
     dimensions = _resolve_dimensions(
         policy, profile, evidence, ledger, applicable_quality, gate_failed
     )
-    blocking.extend(_item_blocks(dimensions))
+    if evidence.gate.status == "pass":
+        blocking.extend(_item_blocks(dimensions))
+        efficiency = dimensions[ScoreDimension.EFFICIENCY]
+        if efficiency.applicable and efficiency.raw_value is None:
+            blocking.append(
+                BlockingReason(
+                    reason_class="required_evidence",
+                    reference="efficiency.measurement",
+                    detail="the applicable performance lane has no complete measurement",
+                )
+            )
 
     # A failed correctness gate is a complete, publishable answer of zero - not missing evidence.
     # An unknown gate is the opposite: nothing can be said about this attempt.
@@ -524,15 +543,35 @@ def _efficiency_dimension(
     gate_failed: bool,
 ) -> _Dimension:
     measurement = evidence.efficiency
-    if measurement is None:
-        raise ScoringRefused(
-            ScoringRefusalCode.EFFICIENCY_INPUT_INVALID,
-            "efficiency is applicable but the manifest carries no measurement",
+    if gate_failed:
+        return _Dimension(
+            ScoreDimension.EFFICIENCY,
+            True,
+            None if measurement is None else Decimal(measurement.value or "0"),
+            (),
+            ("gated_by_correctness",),
+            "gated_by_correctness",
         )
-    if measurement.status in {"invalid", "incomplete"} or measurement.value is None:
+    if measurement is None:
+        return _Dimension(
+            ScoreDimension.EFFICIENCY,
+            True,
+            None,
+            (),
+            ("efficiency is applicable but the manifest carries no measurement",),
+        )
+    if measurement.status == "invalid":
         raise ScoringRefused(
             ScoringRefusalCode.EFFICIENCY_INPUT_INVALID,
             "; ".join(measurement.reasons) or f"performance lane is {measurement.status}",
+        )
+    if measurement.status == "incomplete" or measurement.value is None:
+        return _Dimension(
+            ScoreDimension.EFFICIENCY,
+            True,
+            None,
+            (),
+            measurement.reasons or ("performance lane is incomplete",),
         )
     reasons = measurement.reasons
     if measurement.time_ratio is not None and measurement.memory_ratio is not None:
@@ -656,7 +695,12 @@ def _rubric_rows(
 ) -> list[tuple[ItemExplanation, ScoreItem]]:
     dimension = resolved.dimension
     shares = {
-        item.item_id: (item.weight_bp if item.status == "measured" else 0)
+        item.item_id: (
+            item.weight_bp
+            if item.status == "measured"
+            or (resolved.gating_reason is not None and item.status != "not_applicable")
+            else 0
+        )
         for item in resolved.items
     }
     exact = split_exact(weight, shares)
@@ -664,6 +708,7 @@ def _rubric_rows(
     rows: list[tuple[ItemExplanation, ScoreItem]] = []
     for item in sorted(resolved.items, key=lambda entry: entry.item_id):
         measured = item.status == "measured" and resolved.gating_reason is None
+        item_applicable = item.status != "not_applicable"
         value = HUNDRED * item.normalized() if item.status == "measured" else None
         leaf = exact[item.item_id]
         contribution = dimension_share(leaf, value) if measured and value else Decimal(0)
@@ -675,7 +720,7 @@ def _rubric_rows(
                     item_id=item.item_id,
                     group=_group_for(item),
                     primary_owner=dimension,
-                    applicable=item.status == "measured",
+                    applicable=item_applicable,
                     status=_item_status(resolved, item),
                     raw_value=rendered,
                     nominal_weight_bp=item.weight_bp,
@@ -698,7 +743,7 @@ def _rubric_rows(
                     schema_version=1,
                     dimension=dimension,
                     item_id=item.item_id,
-                    applicable=item.status == "measured",
+                    applicable=item_applicable,
                     primary_owner=dimension,
                     raw_value=quantize_score(value) if value is not None else None,
                     effective_weight_bps=integers[item.item_id],
@@ -783,6 +828,8 @@ def _group_for(
 def _item_status(
     resolved: _Dimension, item: RubricItemEvidence
 ) -> Literal["measured", "not_applicable", "gated", "missing", "needs_review"]:
+    if item.status == "not_applicable":
+        return "not_applicable"
     if resolved.gating_reason:
         return "gated"
     return item.status

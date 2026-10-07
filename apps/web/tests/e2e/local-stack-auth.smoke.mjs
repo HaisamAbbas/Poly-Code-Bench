@@ -42,6 +42,55 @@ try {
   assert.ok(keyboardScrolled, "the mobile metrics region should scroll with the keyboard");
   await metricsRegion.evaluate((node) => { node.scrollLeft = 0; });
   await page.setViewportSize({ width: 1440, height: 1000 });
+
+  const releaseIndex = await fetch(`${apiOrigin}/v1/releases?limit=200`);
+  assert.equal(releaseIndex.status, 200, "the local release catalog should load from PostgreSQL");
+  const releaseEnvelope = await releaseIndex.json();
+  const releaseId = releaseEnvelope.meta.current_release_id;
+  const release = releaseEnvelope.data.find((row) => row.release_id === releaseId);
+  assert.equal(release?.fixture_kind, "synthetic_internal", "the local release must stay labeled synthetic");
+
+  const leaderboardResponse = await fetch(`${apiOrigin}/v1/leaderboard?release=${encodeURIComponent(releaseId)}&limit=200`);
+  assert.equal(leaderboardResponse.status, 200);
+  const leaderboardEnvelope = await leaderboardResponse.json();
+  const codeEntries = leaderboardEnvelope.data.filter((entry) => entry.metrics.some((metric) => metric.metric_id === "code_score"));
+  assert.ok(codeEntries.length >= 2, "the synthetic release should expose code model profiles");
+  const modelId = codeEntries[0].model_config_id;
+  const languageId = codeEntries[0].languages[0];
+  const scorecardId = codeEntries[0].evidence_url.replace(/^\/v1\/scorecards\//, "");
+  const taskResponse = await fetch(`${apiOrigin}/v1/tasks?release=${encodeURIComponent(releaseId)}&limit=1`);
+  assert.equal(taskResponse.status, 200);
+  const taskEnvelope = await taskResponse.json();
+  const taskId = taskEnvelope.data[0].task_id;
+  const compatibleCandidate = codeEntries.find((entry, index) =>
+    index > 0 && entry.run_mode === codeEntries[0].run_mode && entry.budget_profile_id === codeEntries[0].budget_profile_id,
+  );
+  assert.ok(compatibleCandidate, "the release should have one compatible code-model pair");
+  const compatibleModelIds = [codeEntries[0].model_config_id, compatibleCandidate.model_config_id];
+  const query = new URLSearchParams({ release: releaseId });
+  for (const compatibleModelId of compatibleModelIds) query.append("models", compatibleModelId);
+  const routes = [
+    `/leaderboard?release=${encodeURIComponent(releaseId)}`,
+    `/languages/${encodeURIComponent(languageId)}?release=${encodeURIComponent(releaseId)}`,
+    `/compare?${query.toString()}`,
+    `/tasks?release=${encodeURIComponent(releaseId)}`,
+    `/tasks/${encodeURIComponent(taskId)}?release=${encodeURIComponent(releaseId)}`,
+    `/models/${encodeURIComponent(modelId)}?release=${encodeURIComponent(releaseId)}`,
+    `/scorecards/${encodeURIComponent(scorecardId)}?release=${encodeURIComponent(releaseId)}`,
+    `/methodology/${encodeURIComponent(release.methodology_version)}?release=${encodeURIComponent(releaseId)}`,
+    "/model-submissions",
+  ];
+  for (const route of routes) {
+    const response = await page.goto(`${webOrigin}${route}`);
+    assert.equal(response?.status(), 200, `public page should load successfully: ${route.split("?")[0]}`);
+    await page.getByText("Synthetic internal test data", { exact: true }).waitFor();
+    const title = await page.getByRole("heading", { level: 1 }).innerText();
+    assert.ok(title.trim().length > 0, `public page should render its title: ${route.split("?")[0]}`);
+    if (route.startsWith("/compare?")) {
+      await page.getByText(/3 common disclosed tasks/).waitFor();
+    }
+  }
+
   await page.goto(`${webOrigin}/model-submissions`);
   await page.getByRole("link", { name: "Sign in with your account" }).click();
   await page.waitForURL("http://127.0.0.1:8080/**");
@@ -157,7 +206,7 @@ try {
   const anonymousReviewerResponse = await fetch(`${apiOrigin}/v1/admin/model-submissions?status=pending`);
   assert.equal(anonymousReviewerResponse.status, 401, "the review queue must reject anonymous requests");
 
-  console.log("Local Keycloak login, PostgreSQL submission, review authorization, owner isolation, keyboard access, and mobile layout passed.");
+  console.log(`All ${routes.length} PostgreSQL release-backed pages, Keycloak login, metadata-only submission, reviewer authorization, owner isolation, keyboard access, and mobile layout passed.`);
   console.log(`Screenshots: ${artifactDirectory}`);
 } finally {
   await browser.close();

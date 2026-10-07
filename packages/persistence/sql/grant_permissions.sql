@@ -75,9 +75,11 @@ GRANT SELECT, INSERT ON stage_execution TO pcb_scheduler;
 GRANT UPDATE (finished_at, result, failure_class, output_manifest_id) ON stage_execution TO pcb_scheduler;
 GRANT SELECT, INSERT ON stage_dependency, stage_job_event TO pcb_scheduler;
 GRANT SELECT ON attempt, run, campaign, evaluation, release, config_document, artifact TO pcb_scheduler;
+GRANT INSERT ON evaluation TO pcb_scheduler;
 GRANT UPDATE (status, row_version) ON run TO pcb_scheduler;
 GRANT UPDATE (state, failure_class, row_version) ON attempt TO pcb_scheduler;
-GRANT UPDATE (state, failure_class, row_version) ON evaluation TO pcb_scheduler;
+GRANT UPDATE (state, failure_class, gate, evidence_manifest_id, row_version)
+    ON evaluation TO pcb_scheduler;
 GRANT INSERT ON audit_event TO pcb_scheduler;
 
 GRANT SELECT ON run, task_version, task_set, task_set_member, config_document, model_revision TO pcb_solve_supervisor;

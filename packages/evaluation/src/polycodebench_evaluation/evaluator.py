@@ -436,7 +436,7 @@ class Evaluator:
         raw: dict[str, bytes] = {}
         raw_refs: list[RawArtifactRef] = []
         for path, data in build_run.outputs.items():
-            raw[path] = data
+            raw[f"build/{path}"] = data
             raw_refs.append(
                 RawArtifactRef(
                     stage="build",
@@ -487,7 +487,7 @@ class Evaluator:
             records.extend(recs)
             controls.append(control)
             for path, data in run.outputs.items():
-                raw[path] = data
+                raw[f"test/{group_plan.group_id}/r{repetition}/{path}"] = data
                 raw_refs.append(
                     RawArtifactRef(
                         stage=f"test:{group_plan.group_id}:r{repetition}",

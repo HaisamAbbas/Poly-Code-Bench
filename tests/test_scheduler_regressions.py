@@ -386,6 +386,66 @@ def test_evaluation_retry_exhaustion_is_infrastructure_blocked(database, object_
     assert tuple(row) == ("failed", "infra_blocked")
 
 
+@pytest.mark.parametrize(
+    ("gate", "expected_state", "expected_failure"),
+    (
+        ("pass", "ready", None),
+        ("fail", "ready", None),
+        ("unknown", "failed", "evaluator_incomplete"),
+    ),
+)
+def test_evaluation_evidence_and_gate_commit_with_its_leased_job(
+    database, gate, expected_state, expected_failure
+):
+    repo = PostgresJobRepository(database.engine)
+    evaluation_id = _evaluation(database, _attempt(database))
+    queue = f"review-evaluation-complete-{uuid4().hex}"
+    memory_store = _MemoryArtifactStore()
+    job_id = repo.create_dag(
+        scope_type="evaluation",
+        scope_id=evaluation_id,
+        actor="evaluation-completion-fixture",
+        jobs=(
+            JobDefinition(
+                key="evaluate",
+                stage="evaluate",
+                input_digest="sha256:" + "c" * 64,
+                queue_class=queue,
+                resource_class="small",
+            ),
+        ),
+    )["evaluate"]
+    worker_id = _register_worker(
+        database,
+        memory_store,
+        label="evaluation-complete",
+        queue_class=queue,
+    )
+    claim = repo.claim(worker_id)
+    assert claim is not None and claim.job_id == job_id
+    evidence_artifact = _verified_upload(
+        _artifact_repo(database, memory_store), b"private evaluation evidence"
+    )
+
+    repo.complete(
+        claim,
+        output_artifact_id=evidence_artifact,
+        outcome=StageOutcome(quality_gate=gate),
+        evaluation_gate=gate,
+    )
+
+    with database.engine.connect() as connection:
+        result = connection.execute(
+            select(
+                evaluation.c.state,
+                evaluation.c.gate,
+                evaluation.c.failure_class,
+                evaluation.c.evidence_manifest_id,
+            ).where(evaluation.c.id == evaluation_id)
+        ).one()
+    assert tuple(result) == (expected_state, gate, expected_failure, evidence_artifact)
+
+
 def test_event_details_cannot_override_authoritative_outcome(database, object_store):
     repo = PostgresJobRepository(database.engine)
     queue = f"review-event-{uuid4().hex}"

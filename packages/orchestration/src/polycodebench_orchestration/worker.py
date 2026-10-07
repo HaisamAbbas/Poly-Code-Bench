@@ -6,7 +6,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import UUID
 
 from polycodebench_core.application_errors import LeaseLost
@@ -29,6 +29,7 @@ from polycodebench_runner.provider import SandboxProvider
 class StageResult:
     output_artifact_id: UUID
     outcome: StageOutcome
+    evaluation_gate: Literal["pass", "fail", "unknown"] | None = None
 
 
 class StageExecutor(Protocol):
@@ -262,11 +263,19 @@ class WorkerService:
                 raise RuntimeError("stage executor returned before verified guest cleanup")
             if lease_lost.is_set() or not self.repository.dispatch_allowed(claim):
                 raise LeaseLost()
-            committed = self.repository.complete(
-                claim,
-                output_artifact_id=result.output_artifact_id,
-                outcome=result.outcome,
-            )
+            if result.evaluation_gate is None:
+                committed = self.repository.complete(
+                    claim,
+                    output_artifact_id=result.output_artifact_id,
+                    outcome=result.outcome,
+                )
+            else:
+                committed = self.repository.complete(
+                    claim,
+                    output_artifact_id=result.output_artifact_id,
+                    outcome=result.outcome,
+                    evaluation_gate=result.evaluation_gate,
+                )
             METRICS.inc(
                 "pcb_job_completions_total",
                 queue_class=safe_label(claim.queue_class),

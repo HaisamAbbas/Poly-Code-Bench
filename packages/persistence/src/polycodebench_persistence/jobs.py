@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+from dataclasses import dataclass
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 
@@ -12,8 +14,13 @@ from polycodebench_core.application_errors import (
     LeaseLost,
     PersistenceConflict,
 )
-from polycodebench_core.canonical import canonical_json_bytes
+from polycodebench_core.canonical import (
+    canonical_digest,
+    canonical_document_digest,
+    canonical_json_bytes,
+)
 from polycodebench_core.jobs import JobClaim, JobDefinition, StageOutcome, WorkerRegistrationSpec
+from polycodebench_core.models import TaskVersion
 from sqlalchemy import and_, func, insert, or_, select, text, update
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import DBAPIError
@@ -33,14 +40,24 @@ from polycodebench_persistence.models import (
     stage_execution,
     stage_job,
     stage_job_event,
+    task_version,
     worker_registration,
 )
+from polycodebench_persistence.models import candidate as candidate_table
 
 LEASE_SECONDS = 120
 HEARTBEAT_SECONDS = 30
 REAPER_SECONDS = 30
 RETRY_DELAYS_SECONDS = (10, 60)
 TERMINAL_JOB_STATES = frozenset({"succeeded", "dead", "cancelled", "skipped"})
+
+
+@dataclass(frozen=True)
+class EvaluationSchedule:
+    evaluation_id: UUID
+    job_id: UUID
+    input_digest: str
+    created: bool
 
 
 class PostgresJobRepository:
@@ -230,6 +247,248 @@ class PostgresJobRepository:
                         },
                     )
             return ids
+        except (InvalidReference, InvalidState, PersistenceConflict):
+            raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def schedule_evaluation(
+        self,
+        *,
+        attempt_id: UUID,
+        policy_config_id: UUID,
+        resource_class: str,
+        actor: str,
+    ) -> EvaluationSchedule:
+        """Atomically queue one explicit completed file attempt for frozen evaluation."""
+        if not actor or not actor.isascii() or len(actor) > 255:
+            raise ValueError("evaluation scheduling actor is invalid")
+        # Reuse the strict queue contract for labels before opening a transaction.
+        definition = JobDefinition(
+            key="evaluate",
+            stage="evaluate",
+            input_digest="sha256:" + "0" * 64,
+            queue_class="grading",
+            resource_class=resource_class,
+        )
+        try:
+            with self._engine.begin() as connection:
+                policy_artifact = artifact.alias("evaluation_policy_artifact")
+                source = (
+                    connection.execute(
+                        select(
+                            attempt.c.state.label("attempt_state"),
+                            attempt.c.candidate_artifact_id,
+                            attempt.c.task_version_id,
+                            run.c.id.label("run_id"),
+                            run.c.campaign_id,
+                            task_version.c.digest.label("task_digest"),
+                            task_version.c.document.label("task_document"),
+                            candidate_table.c.id.label("candidate_id"),
+                            candidate_table.c.payload_digest,
+                            candidate_table.c.submission_kind,
+                            candidate_table.c.payload,
+                            candidate_table.c.canonical_artifact_id,
+                            candidate_table.c.frozen_at,
+                            artifact.c.status.label("candidate_status"),
+                            artifact.c.visibility.label("candidate_visibility"),
+                            artifact.c.content_digest.label("candidate_artifact_digest"),
+                            config_document.c.kind.label("policy_kind"),
+                            config_document.c.digest.label("policy_digest"),
+                            policy_artifact.c.status.label("policy_artifact_status"),
+                            policy_artifact.c.visibility.label("policy_artifact_visibility"),
+                            policy_artifact.c.content_digest.label("policy_artifact_digest"),
+                        )
+                        .select_from(
+                            attempt.join(run, run.c.id == attempt.c.run_id)
+                            .join(task_version, task_version.c.id == attempt.c.task_version_id)
+                            .join(
+                                candidate_table,
+                                (candidate_table.c.attempt_id == attempt.c.id)
+                                & (candidate_table.c.revision == 1),
+                            )
+                            .join(
+                                artifact,
+                                artifact.c.id == candidate_table.c.canonical_artifact_id,
+                            )
+                            .join(
+                                config_document,
+                                config_document.c.id == policy_config_id,
+                            )
+                            .join(
+                                policy_artifact,
+                                policy_artifact.c.id == config_document.c.canonical_artifact_id,
+                            )
+                        )
+                        .where(attempt.c.id == attempt_id)
+                        .with_for_update(of=attempt)
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if source is None:
+                    raise InvalidReference("evaluation inputs or frozen policy do not exist")
+                if source["attempt_state"] != "completed":
+                    raise InvalidState("only a completed solve attempt can be evaluated")
+                if (
+                    source["candidate_artifact_id"] is None
+                    or source["candidate_artifact_id"] != source["canonical_artifact_id"]
+                    or source["submission_kind"] != "files"
+                    or not isinstance(source["payload"], dict)
+                    or source["payload"].get("validity") != "valid"
+                    or source["frozen_at"] is None
+                    or source["candidate_status"] != "verified"
+                    or source["candidate_visibility"] != "internal"
+                    or source["candidate_artifact_digest"] != source["payload_digest"]
+                ):
+                    raise InvalidState("attempt has no verified frozen file candidate")
+                if source["policy_kind"] != "frozen_scoring_policy":
+                    raise InvalidReference("evaluation requires a registered frozen scoring policy")
+                if (
+                    source["policy_artifact_status"] != "verified"
+                    or source["policy_artifact_visibility"] != "internal"
+                    or source["policy_artifact_digest"] != source["policy_digest"]
+                ):
+                    raise InvalidState("frozen scoring policy has no matching verified artifact")
+                try:
+                    task = TaskVersion.model_validate_json(
+                        json.dumps(source["task_document"]), strict=True
+                    )
+                    task_digest = canonical_document_digest(task)
+                    oracle_digest = canonical_document_digest(task.oracle)
+                except (TypeError, ValueError):
+                    raise InvalidState("evaluation task or policy document is invalid") from None
+                if (
+                    task_digest != source["task_digest"]
+                    or task.output_contract.submission_kind != "files"
+                ):
+                    raise InvalidState("evaluation task or policy digest is not canonical")
+
+                identity = {
+                    "kind": "evaluation_assignment_identity",
+                    "schema_version": 1,
+                    "attempt_id": str(attempt_id),
+                    "candidate_id": str(source["candidate_id"]),
+                    "candidate_digest": source["payload_digest"],
+                    "candidate_artifact_digest": source["candidate_artifact_digest"],
+                    "task_version_id": str(source["task_version_id"]),
+                    "task_digest": task_digest,
+                    "oracle_digest": oracle_digest,
+                    "policy_config_id": str(policy_config_id),
+                    "policy_digest": source["policy_digest"],
+                    "resource_class": definition.resource_class,
+                }
+                input_digest = canonical_digest(identity)
+                lock_key = f"pcb.evaluation:{attempt_id}:{policy_config_id}:{oracle_digest}"
+                connection.execute(
+                    text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
+                    {"lock_key": lock_key},
+                )
+                existing = (
+                    connection.execute(
+                        select(evaluation.c.id, evaluation.c.state).where(
+                            evaluation.c.attempt_id == attempt_id,
+                            evaluation.c.policy_config_id == policy_config_id,
+                            evaluation.c.oracle_digest == oracle_digest,
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if existing is not None:
+                    prior_job = (
+                        connection.execute(
+                            select(
+                                stage_job.c.id,
+                                stage_job.c.stage,
+                                stage_job.c.input_digest,
+                                stage_job.c.resource_class,
+                                stage_job.c.queue_class,
+                            ).where(stage_job.c.evaluation_id == existing["id"])
+                        )
+                        .mappings()
+                        .one_or_none()
+                    )
+                    if (
+                        prior_job is None
+                        or prior_job["stage"] != "evaluate"
+                        or prior_job["input_digest"] != input_digest
+                        or prior_job["resource_class"] != definition.resource_class
+                        or prior_job["queue_class"] != "grading"
+                    ):
+                        raise PersistenceConflict(
+                            "existing evaluation schedule is incomplete or changed"
+                        )
+                    return EvaluationSchedule(
+                        evaluation_id=existing["id"],
+                        job_id=prior_job["id"],
+                        input_digest=input_digest,
+                        created=False,
+                    )
+
+                evaluation_id = uuid4()
+                job_id = uuid4()
+                logical_key = _logical_key("evaluation", evaluation_id, "evaluate")
+                connection.execute(
+                    insert(evaluation).values(
+                        id=evaluation_id,
+                        attempt_id=attempt_id,
+                        policy_config_id=policy_config_id,
+                        oracle_digest=oracle_digest,
+                        state="queued",
+                        gate="unknown",
+                    )
+                )
+                connection.execute(
+                    insert(stage_job).values(
+                        id=job_id,
+                        evaluation_id=evaluation_id,
+                        stage=definition.stage,
+                        shard_key="",
+                        input_digest=input_digest,
+                        logical_key=logical_key,
+                        state="queued",
+                        required=True,
+                        queue_class="grading",
+                        resource_class=definition.resource_class,
+                        fairness_campaign_id=source["campaign_id"],
+                        provider_key="system",
+                        priority=0,
+                        max_deliveries=3,
+                    )
+                )
+                self._event(
+                    connection,
+                    job_id,
+                    "job_created",
+                    actor,
+                    details={"stage": "evaluate", "logical_key": logical_key},
+                )
+                connection.execute(
+                    insert(audit_event).values(
+                        id=uuid4(),
+                        actor_subject=actor,
+                        action="evaluation.schedule",
+                        resource_type="evaluation",
+                        resource_id=str(evaluation_id),
+                        before_digest=None,
+                        after_digest=input_digest,
+                        request_id=f"evaluation-schedule-{job_id}",
+                        details={
+                            "attempt_id": str(attempt_id),
+                            "job_id": str(job_id),
+                            "policy_config_id": str(policy_config_id),
+                            "oracle_digest": oracle_digest,
+                            "resource_class": definition.resource_class,
+                        },
+                    )
+                )
+                return EvaluationSchedule(
+                    evaluation_id=evaluation_id,
+                    job_id=job_id,
+                    input_digest=input_digest,
+                    created=True,
+                )
         except (InvalidReference, InvalidState, PersistenceConflict):
             raise
         except DBAPIError as error:
@@ -762,8 +1021,21 @@ class PostgresJobRepository:
                 return False
             return True
 
-    def complete(self, claim: JobClaim, *, output_artifact_id: UUID, outcome: StageOutcome) -> str:
+    def complete(
+        self,
+        claim: JobClaim,
+        *,
+        output_artifact_id: UUID,
+        outcome: StageOutcome,
+        evaluation_gate: Literal["pass", "fail", "unknown"] | None = None,
+    ) -> str:
         outcome = StageOutcome.model_validate(outcome.model_dump())
+        if evaluation_gate is not None and (
+            claim.scope_type != "evaluation"
+            or claim.stage != "evaluate"
+            or outcome.quality_gate != evaluation_gate
+        ):
+            raise InvalidState("evaluation completion gate does not match its leased stage")
         try:
             with self._engine.begin() as connection:
                 self._lock_scope(connection, claim.scope_type, claim.scope_id)
@@ -849,6 +1121,32 @@ class PostgresJobRepository:
                         row_version=stage_job.c.row_version + 1,
                     )
                 )
+                if evaluation_gate is not None:
+                    evaluation_row = (
+                        connection.execute(
+                            select(evaluation.c.state)
+                            .where(evaluation.c.id == claim.scope_id)
+                            .with_for_update()
+                        )
+                        .scalar_one_or_none()
+                    )
+                    if evaluation_row != "running":
+                        raise LeaseLost("evaluation is no longer running")
+                    completed = connection.execute(
+                        update(evaluation)
+                        .where(evaluation.c.id == claim.scope_id, evaluation.c.state == "running")
+                        .values(
+                            state="failed" if evaluation_gate == "unknown" else "ready",
+                            gate=evaluation_gate,
+                            failure_class=(
+                                "evaluator_incomplete" if evaluation_gate == "unknown" else None
+                            ),
+                            evidence_manifest_id=output_artifact_id,
+                            row_version=evaluation.c.row_version + 1,
+                        )
+                    ).rowcount
+                    if completed != 1:
+                        raise LeaseLost("evaluation completion lost its state transition")
                 slot = (
                     connection.execute(
                         select(capacity_slot)

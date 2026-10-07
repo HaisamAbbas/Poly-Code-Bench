@@ -13,6 +13,7 @@ from typing import Any, cast
 from uuid import UUID
 
 import yaml
+from polycodebench_core.canonical import canonical_document_digest
 from polycodebench_core.jobs import JobClaim
 from polycodebench_core.models import Candidate, TaskVersion
 from polycodebench_core.solve_contracts import PathForbidden, normalize_workspace_path
@@ -132,7 +133,13 @@ class DatabaseEvaluationAssignmentLoader:
         ):
             raise EvaluationAssignmentRejected("attempt has no valid frozen file candidate")
 
-        task = TaskVersion.model_validate(row["task_document"], strict=True)
+        task = TaskVersion.model_validate_json(
+            json.dumps(row["task_document"]), strict=True
+        )
+        if canonical_document_digest(task.oracle) != row["oracle_digest"]:
+            raise EvaluationAssignmentRejected(
+                "evaluation oracle identity differs from the frozen task"
+            )
         if task.output_contract.submission_kind != "files":
             raise EvaluationAssignmentRejected("this evaluator only accepts frozen file tasks")
         plugin_id = str(task.runtime.language_plugin_id)

@@ -35,6 +35,17 @@ satisfying the PostgreSQL backup and restore requirements. Oracle's current [Alw
 limits](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm#Database)
 list 20 sessions; older Oracle documentation showed 30.
 
+OCI also offers a separate managed **Database with PostgreSQL** service and added PostgreSQL 17
+support in April 2026. This service is not listed as Always Free. Its compute, storage,
+performance units, and networking are billed while the database is active. The smallest current
+flexible shape depends on its family: E5 starts at 1 OCPU/16 GB RAM and Standard3 at 2 OCPUs/32
+GB. It can be considered for a short trial-credit POC only after checking the selected region's
+shape availability and estimating the full cost against the account's remaining USD 300 credit
+and expiry date. Paid trial resources are reclaimed after the trial if the account is not
+upgraded. See [PostgreSQL 17 support](https://docs.oracle.com/en-us/iaas/releasenotes/postgresql/db-17.htm),
+[supported shapes](https://docs.oracle.com/en-us/iaas/Content/postgresql/supported-shapes.htm),
+and [billing](https://docs.oracle.com/en-us/iaas/Content/postgresql/billing.htm).
+
 ## Recommended scope if an eligible account exists
 
 A single A1 VM may be used for a time-boxed, private synthetic-data POC after verifying ARM64
@@ -85,6 +96,7 @@ cloud change to make while those values remain unknown.
 ## Official Oracle references
 
 - [OCI Free Tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier.htm): $300 promotional credit for up to 30 days, home-region constraints, and what happens after expiry.
+- [OCI Free Tier FAQ](https://www.oracle.com/cloud/free/faq/): sign-up verification and account/billing terms.
 - [Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm): A1/E2 shapes, memory and storage quotas, idle-instance reclamation, Object Storage and Vault allowances.
 - [Regions and availability domains](https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm): Free Tier and trial subscribed-region limit.
 - [Always Free Autonomous AI Database](https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/autonomous-always-free.html): database limits, network placement and backup restrictions.

@@ -179,6 +179,12 @@
 - Clarified the approved-request lifecycle in the submitter UI: queued/running refer to solve work, and completion explicitly says evaluation, scoring and publication did not happen. Prompt 32's queued/running/completed browser case passes with this distinction.
 - The website/API/database and local OIDC path now run together on this workstation. End-to-end benchmark execution still stops after bounded solve work: evaluation, judging, scoring and publication processors are not assembled. The solve worker remains opt-in and was not dispatched. Cloud staging remains blocked on account/trial quota, authorized spend, operator identities, domain/HTTPS and the other inputs in `docs/operations/staging-execution-plan.md`.
 
+## Exact one-job solve claim follow-up (2026-10-07)
+
+- Added optional job-ID and stage filters to the durable repository claim. The local one-shot CLI can target a named solve job; a miss leaves it untouched and cannot claim another ready job. Both local and EC2 solve entrypoints now restrict claims to the `solve` stage, and local `--job-id` is rejected with `--watch`.
+- Verification: `uv run --offline --locked --all-packages pytest tests/test_worker.py tests/test_worker_runtime.py -q` (40 passed); with the local test DB loaded, `pytest tests/test_jobs_postgres.py -k 'claim_filter or stage_filter' -q` (2 passed); strict mypy (3 source files), Ruff check/format, and a local `Dockerfile.solve-worker` build passed. The non-root, read-only, network-disabled container displayed the exact `local-run --help` option.
+- No worker was started, no queued job was claimed, and no local or hosted model endpoint was contacted. The shared test database contains unrelated synthetic queue fixtures, so the general dispatch flag remains false. Evaluation, judging, scoring, publication and cloud deployment remain open.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

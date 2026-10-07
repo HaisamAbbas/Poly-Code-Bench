@@ -639,6 +639,12 @@ keyboard/error/responsive cases also pass; browser-rendered load and staging CDN
 Local stack: `docker compose up -d` (PostgreSQL 17.6 on 127.0.0.1:55432, SeaweedFS on 8333).
 Terraform runs in `hashicorp/terraform:1.13`; nothing is applied.
 
+The local solve worker supports an exact one-shot `--job-id` filter, covered by worker unit and
+PostgreSQL claim-filter tests. The syntax and approval checks are documented in
+`docs/operations/local-self-hosting.md`. No solve dispatch was performed during this verification;
+the shared local database contains unrelated synthetic queue fixtures and the dispatch opt-in
+remains false.
+
 ```bash
 # IaC (no credentials needed)
 docker run --rm -v "$PWD/infra:/infra" -w /infra hashicorp/terraform:1.13 fmt -recursive -check

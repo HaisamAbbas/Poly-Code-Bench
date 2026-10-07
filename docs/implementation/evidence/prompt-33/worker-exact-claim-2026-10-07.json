@@ -1,0 +1,34 @@
+﻿{
+  "schema_version": 1,
+  "kind": "worker_exact_solve_claim_filter",
+  "verified_at": "2026-10-07",
+  "environment": "local synthetic PostgreSQL test database and offline worker container smoke",
+  "behavior": {
+    "claim_filters": ["exact_job_id", "solve_stage"],
+    "one_shot_target_miss_falls_back": false,
+    "targeted_claim_with_other_ready_job": "claimed only the requested job",
+    "wrong_stage_target": "remained queued",
+    "local_job_id_with_watch": "refused before opening the database",
+    "ec2_worker_stage_filter": "solve"
+  },
+  "verification": {
+    "unit_and_cli_tests": "40 passed",
+    "postgres_claim_filter_tests": "2 passed",
+    "strict_mypy": "3 source files, no issues",
+    "ruff": "changed files clean and formatted",
+    "container": {
+      "image": "pcb-solve-worker:local-20261007",
+      "image_id": "sha256:47512d3efa122748ba56781e87161a9832026a8eef1205d578a7f6bb674ccfc1",
+      "user": "10001:10001",
+      "smoke": "local-run --help with non-root with a read-only root filesystem, no network, no capabilities, no-new-privileges"
+    }
+  },
+  "dispatch_enabled": false,
+  "worker_started": false,
+  "model_or_judge_calls": 0,
+  "cloud_resources_created": 0,
+  "limitations": [
+    "This proves queue selection and CLI safety only; no solve job was dispatched.",
+    "Evaluation, judging, scoring, publication processors, production worker isolation and cloud staging remain open."
+  ]
+}

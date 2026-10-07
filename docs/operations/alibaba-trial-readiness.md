@@ -10,7 +10,7 @@ Alibaba deployment plan. Do not feed Alibaba credentials or region values into t
 The current no-cloud local stack remains the verified functional environment. Alibaba staging
 needs a separate design and Terraform provider/module set after the console values below are
 confirmed. OCI is another possible time-limited target; see
-[`oracle-trial-readiness.md`](oracle-trial-readiness.md) for its current fit and constraints.
+[`oracle-free-tier-readiness.md`](oracle-free-tier-readiness.md) for its current fit and constraints.
 
 ## Current official trial rules checked
 

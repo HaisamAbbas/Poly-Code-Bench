@@ -45,6 +45,13 @@ class StartupConfig(BaseModel):
     signing_key_ref: str | None = Field(default=None, min_length=1)
     public_api_base_url: HttpUrl | None = None
     object_store_endpoint: HttpUrl | None = None
+    object_store_provider: Literal["s3", "alibaba_oss"] = "s3"
+    object_store_region: str = Field(
+        default="us-east-1",
+        min_length=1,
+        max_length=64,
+        pattern=r"^[a-zA-Z0-9-]+$",
+    )
     object_store_addressing_style: Literal["path", "virtual"] = "path"
     bucket_hidden: str | None = Field(default=None, min_length=1)
     bucket_internal: str | None = Field(default=None, min_length=1)
@@ -112,6 +119,24 @@ class StartupConfig(BaseModel):
         ]
         if len(set(bucket_names)) != len(bucket_names):
             raise ValueError("artifact bucket names must be distinct")
+        if self.object_store_provider == "alibaba_oss":
+            if self.object_store_addressing_style != "virtual":
+                raise ValueError("Alibaba OSS requires virtual-hosted object addressing")
+            if any(
+                name
+                and (
+                    len(name) < 3
+                    or len(name) > 63
+                    or any(
+                        not (char.isascii() and (char.islower() or char.isdigit() or char == "-"))
+                        for char in name
+                    )
+                    or name[0] == "-"
+                    or name[-1] == "-"
+                )
+                for name in (self.bucket_hidden, self.bucket_internal, self.bucket_public)
+            ):
+                raise ValueError("Alibaba OSS bucket names must be DNS-compatible lowercase names")
         return self
 
 
@@ -129,6 +154,8 @@ ENV_KEYS = {
     "signing_key_ref": "PCB_SIGNING_KEY_REF",
     "public_api_base_url": "PCB_PUBLIC_API_BASE_URL",
     "object_store_endpoint": "PCB_OBJECT_STORE_ENDPOINT",
+    "object_store_provider": "PCB_OBJECT_STORE_PROVIDER",
+    "object_store_region": "PCB_OBJECT_STORE_REGION",
     "object_store_addressing_style": "PCB_OBJECT_STORE_ADDRESSING_STYLE",
     "bucket_hidden": "PCB_BUCKET_HIDDEN",
     "bucket_internal": "PCB_BUCKET_INTERNAL",

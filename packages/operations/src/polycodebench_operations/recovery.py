@@ -33,10 +33,15 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-import boto3
-from botocore.config import Config
+import boto3  # type: ignore[import-untyped]
+from botocore.config import Config  # type: ignore[import-untyped]
 from polycodebench_core.telemetry import MetricsRegistry
-from polycodebench_persistence.object_store import object_store_addressing_style
+from polycodebench_persistence.object_store import (
+    configure_oss_put_protection,
+    object_store_addressing_style,
+    object_store_provider,
+    object_store_region,
+)
 from polycodebench_publication.keyring import Keyring
 from polycodebench_publication.releases import ReleaseStore, content_digest, digest
 from sqlalchemy import create_engine, text
@@ -85,16 +90,26 @@ def _s3(
         return boto3.client("s3")
     if not access_key or not secret_key:
         raise RuntimeError("local object-store credentials are required for an emulator endpoint")
-    return boto3.client(
+    provider = object_store_provider()
+    client = boto3.client(
         "s3",
         endpoint_url=endpoint,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
-        region_name="us-east-1",
+        region_name=object_store_region(),
         config=Config(
-            s3={"addressing_style": object_store_addressing_style()}, signature_version="s3v4"
+            s3={"addressing_style": object_store_addressing_style()},
+            signature_version="s3v4",
+            **(
+                {"request_checksum_calculation": "when_required"}
+                if provider == "alibaba_oss"
+                else {}
+            ),
         ),
     )
+    if provider == "alibaba_oss":
+        configure_oss_put_protection(client)
+    return client
 
 
 def _engine(url: str) -> Engine:

@@ -5,9 +5,10 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
+import re
 from collections.abc import Iterator, Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import boto3  # type: ignore[import-untyped]
 from botocore.config import Config  # type: ignore[import-untyped]
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 
 
 RESERVED_LIFECYCLE_PREFIXES = frozenset({"provisional", "debug", "cancelled-logs"})
+ObjectStoreProvider = Literal["s3", "alibaba_oss"]
 
 
 class ObjectStoreError(RuntimeError):
@@ -35,6 +37,42 @@ def object_store_addressing_style(
     return cast(Literal["path", "virtual"], style)
 
 
+def object_store_provider(environ: Mapping[str, str] | None = None) -> ObjectStoreProvider:
+    """Validate the compatible object-store protocol variant."""
+    source = os.environ if environ is None else environ
+    provider = source.get("PCB_OBJECT_STORE_PROVIDER", "s3")
+    if provider not in {"s3", "alibaba_oss"}:
+        raise ValueError("PCB_OBJECT_STORE_PROVIDER must be s3 or alibaba_oss")
+    return cast(ObjectStoreProvider, provider)
+
+
+def object_store_region(environ: Mapping[str, str] | None = None) -> str:
+    """Return a validated signing region for the configured object-store endpoint."""
+    source = os.environ if environ is None else environ
+    region = source.get("PCB_OBJECT_STORE_REGION", "us-east-1")
+    if (
+        not region
+        or len(region) > 64
+        or any(not (char.isascii() and (char.isalnum() or char == "-")) for char in region)
+    ):
+        raise ValueError("PCB_OBJECT_STORE_REGION must be a region identifier")
+    return region
+
+
+def _add_oss_no_overwrite_header(request: Any, **kwargs: Any) -> None:
+    """Sign OSS's native no-overwrite control before the SigV4 request is finalized."""
+    request.headers["x-oss-forbid-overwrite"] = "true"
+
+
+def configure_oss_put_protection(client: Any) -> None:
+    """Use OSS's atomic overwrite prevention on a raw Botocore client."""
+    client.meta.events.register_first(
+        "before-sign.s3.PutObject",
+        _add_oss_no_overwrite_header,
+        unique_id="polycodebench-oss-no-overwrite",
+    )
+
+
 class S3ArtifactStore:
     """Private S3 adapter; callers supply visibility and never arbitrary keys."""
 
@@ -45,6 +83,7 @@ class S3ArtifactStore:
         buckets: dict[str, str],
         region_name: str = "us-east-1",
         addressing_style: Literal["path", "virtual"] = "path",
+        provider: ObjectStoreProvider = "s3",
     ) -> None:
         if set(buckets) != {"hidden", "internal", "public"} or len(set(buckets.values())) != 3:
             raise ValueError("three distinct artifact buckets are required")
@@ -52,13 +91,34 @@ class S3ArtifactStore:
             raise ValueError("object store endpoint must be an HTTP(S) URL")
         if addressing_style not in {"path", "virtual"}:
             raise ValueError("object-store addressing style must be path or virtual")
+        if provider not in {"s3", "alibaba_oss"}:
+            raise ValueError("object-store provider must be s3 or alibaba_oss")
+        if provider == "alibaba_oss" and addressing_style != "virtual":
+            raise ValueError("Alibaba OSS requires virtual-hosted object addressing")
+        if provider == "alibaba_oss" and any(
+            not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,61}[a-z0-9]", bucket)
+            for bucket in buckets.values()
+        ):
+            raise ValueError("Alibaba OSS bucket names must be DNS-compatible lowercase names")
         self._buckets = dict(buckets)
+        self._provider = provider
+        client_config = Config(
+            signature_version="s3v4",
+            s3={"addressing_style": addressing_style},
+            **(
+                {"request_checksum_calculation": "when_required"}
+                if provider == "alibaba_oss"
+                else {}
+            ),
+        )
         self._client: S3Client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
             region_name=region_name,
-            config=Config(signature_version="s3v4", s3={"addressing_style": addressing_style}),
+            config=client_config,
         )
+        if provider == "alibaba_oss":
+            configure_oss_put_protection(self._client)
 
     @classmethod
     def from_environment(
@@ -66,14 +126,42 @@ class S3ArtifactStore:
         *,
         endpoint_url: str,
         buckets: dict[str, str],
-        region_name: str = "us-east-1",
+        region_name: str | None = None,
     ) -> S3ArtifactStore:
-        """Build a client with provider-specific addressing from a non-secret setting."""
+        """Build a client with provider-specific signing and addressing settings."""
+        provider = object_store_provider()
         return cls(
             endpoint_url=endpoint_url,
             buckets=buckets,
-            region_name=region_name,
+            region_name=(object_store_region() if region_name is None else region_name),
             addressing_style=object_store_addressing_style(),
+            provider=provider,
+        )
+
+    def _put_object(self, *, bucket: str, key: str, body: bytes) -> None:
+        """Write bytes with backend-specific integrity and atomic no-overwrite controls."""
+        if self._provider == "alibaba_oss":
+            content_md5 = base64.b64encode(
+                hashlib.md5(body, usedforsecurity=False).digest()
+            ).decode("ascii")
+            self._client.put_object(
+                Bucket=bucket,
+                Key=key,
+                Body=body,
+                ContentLength=len(body),
+                ContentMD5=content_md5,
+                ContentType="application/octet-stream",
+            )
+            return
+        checksum = base64.b64encode(hashlib.sha256(body).digest()).decode("ascii")
+        self._client.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=body,
+            ContentLength=len(body),
+            ChecksumSHA256=checksum,
+            IfNoneMatch="*",
+            ContentType="application/octet-stream",
         )
 
     def ensure_buckets(self) -> None:
@@ -93,17 +181,8 @@ class S3ArtifactStore:
     def put_provisional(self, visibility: str, upload_id: str, body: bytes) -> str:
         bucket = self._bucket(visibility)
         key = f"provisional/{upload_id}"
-        checksum = base64.b64encode(hashlib.sha256(body).digest()).decode("ascii")
         try:
-            self._client.put_object(
-                Bucket=bucket,
-                Key=key,
-                Body=body,
-                ContentLength=len(body),
-                ChecksumSHA256=checksum,
-                IfNoneMatch="*",
-                ContentType="application/octet-stream",
-            )
+            self._put_object(bucket=bucket, key=key, body=body)
         except ClientError as error:
             if str(error.response.get("ResponseMetadata", {}).get("HTTPStatusCode")) == "412":
                 raise ObjectStoreError("provisional upload key already exists") from None
@@ -133,17 +212,8 @@ class S3ArtifactStore:
         if not _valid_digest(digest) or hashlib.sha256(body).hexdigest() != digest[7:]:
             raise ValueError("verified object digest does not match its bytes")
         key = f"{domain}/{digest[7:9]}/{digest[7:]}"
-        checksum = base64.b64encode(hashlib.sha256(body).digest()).decode("ascii")
         try:
-            self._client.put_object(
-                Bucket=self._bucket(visibility),
-                Key=key,
-                Body=body,
-                ContentLength=len(body),
-                ChecksumSHA256=checksum,
-                IfNoneMatch="*",
-                ContentType="application/octet-stream",
-            )
+            self._put_object(bucket=self._bucket(visibility), key=key, body=body)
         except ClientError as error:
             status = str(error.response.get("ResponseMetadata", {}).get("HTTPStatusCode"))
             code = str(error.response.get("Error", {}).get("Code", ""))

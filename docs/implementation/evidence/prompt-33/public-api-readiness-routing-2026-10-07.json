@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "kind": "api_readiness_and_public_cdn_routing",
+  "verified_at_utc": "2026-10-07T08:41:08Z",
+  "source_base_revision": "34b90d6608196894541b4e51ce70e9d2cb5b1226",
+  "checks": [
+    {
+      "command": "uv run --offline --locked pytest tests/test_public_api_readiness.py tests/test_public_delivery_paths.py -q",
+      "result": "4 passed",
+      "exit_code": 0
+    },
+    {
+      "command": "Terraform 1.13.5 fmt -check -recursive infra/terraform",
+      "result": "passed",
+      "exit_code": 0
+    },
+    {
+      "command": "Terraform 1.13.5 init -backend=false -input=false -lockfile=readonly && validate (staging)",
+      "result": "valid; locked hashicorp/aws 6.36.0",
+      "exit_code": 0
+    },
+    {
+      "command": "Terraform 1.13.5 init -backend=false -input=false -lockfile=readonly && validate (production)",
+      "result": "valid; locked hashicorp/aws 6.36.0",
+      "exit_code": 0
+    },
+    {
+      "command": "docker build --file Dockerfile.api --tag pcb-api-readiness-check:local .",
+      "result": "passed",
+      "image_id": "sha256:027cdd799e2a89a10f5e474a35efa9af08a681adb6045bf9dd8d7dd848ca3d30",
+      "exit_code": 0
+    },
+    {
+      "command": "loopback GET /readyz against built API container and execute its Dockerfile health-probe command",
+      "result": "HTTP 200 {status: ready}; probe passed",
+      "exit_code": 0
+    },
+    {
+      "command": "ASGI readiness and release-list probe with existing local PostgreSQL-backed API",
+      "result": "readyz=200; releases=200; release_count=2",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed (line-ending conversion warnings only)",
+      "exit_code": 0
+    }
+  ],
+  "routing": {
+    "cached_public_paths": [
+      "/v1/compare",
+      "/v1/languages/*",
+      "/v1/leaderboard",
+      "/v1/methodology/*",
+      "/v1/models/*",
+      "/v1/releases",
+      "/v1/releases/*",
+      "/v1/scorecards/*",
+      "/v1/tasks",
+      "/v1/tasks/*"
+    ],
+    "submission_and_admin_routes_cached": false,
+    "artifact_cache": "disabled",
+    "artifact_query_parameters_forwarded": [
+      "release",
+      "token"
+    ]
+  },
+  "cloud_api_calls": 0,
+  "terraform_plan_or_apply": false,
+  "model_calls": 0,
+  "benchmark_published": false,
+  "limitations": [
+    "No AWS staging deployment or live CloudFront request was performed.",
+    "The release data available locally is synthetic and is not represented as a live benchmark result."
+  ]
+}

@@ -200,3 +200,12 @@
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.
+
+
+## API readiness and public CDN routing follow-up (2026-10-07)
+
+- Replaced liveness-only API health checks with `/readyz`, which verifies the configured database connection and public release catalog. `/healthz` remains independent liveness. ALB and container checks now use readiness, and the ALB forwards that path to the API.
+- Corrected CloudFront public routing: the old `/v1/public/*` behavior did not match the API's actual `/v1/...` routes. The distribution now sends an explicit public-route allowlist to the API. Submission/admin paths stay out of cached behaviors. Public evidence artifacts use caching disabled and forward only the `release` and `token` query parameters.
+- Verification: readiness and CDN route regression tests: 4 passed. Local PostgreSQL-backed ASGI readiness returned 200 and the public release list returned 2 releases. The API image built as `pcb-api-readiness-check:local`; its loopback `/readyz` and the exact Dockerfile health-probe command passed. Terraform 1.13.5 formatting and `init -backend=false` plus `validate` passed for staging and production with the locked AWS provider 6.36.0.
+- These checks made no AWS API calls, plans, applies, model calls or benchmark publication. No staging endpoint or CDN behavior has been exercised; account authorization and deployment inputs remain outstanding. Local release fixtures are synthetic.
+- Evidence: `docs/implementation/evidence/prompt-33/public-api-readiness-routing-2026-10-07.json`.

@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
+import re
+from datetime import UTC, datetime
+from uuid import uuid4
+
 import pytest
 import scoring_support as s
 from polycodebench_core.canonical import canonical_digest
 from polycodebench_core.models import EvaluationState, ScoreDimension
 from polycodebench_evaluation.evidence import EvaluationEvidence, PropertyEvidence, ReviewItem
+from polycodebench_orchestration.grading.scoring import (
+    EvaluationScoringRejected,
+    _artifact_recorded_at,
+    _profile_source_digest,
+    scorecard_record,
+    scorer_source_digest,
+)
 from polycodebench_orchestration.grading.scoring_adapter import (
     ScoringAdapterRejected,
     evaluation_to_manifest,
@@ -172,3 +183,56 @@ def test_adapter_rejects_a_modified_report_digest(policy, ownership, profile) ->
 
     with pytest.raises(ScoringAdapterRejected, match="report digest"):
         _manifest(evidence, policy, ownership, profile)
+
+
+def test_persisted_scorecard_rows_preserve_status_weights_and_values(
+    policy, ownership, profile
+) -> None:  # type: ignore[no-untyped-def]
+    evidence = _evaluation()
+    task = s.frozen_task(
+        (ScoreDimension.CODE_QUALITY, ScoreDimension.IDIOMATIC),
+        required_analyzers=("bandit",),
+    )
+    manifest = _manifest(evidence, policy, ownership, profile)
+    outcome = score_evaluation(task, policy, manifest, ownership=ownership, profile=profile)
+
+    record = scorecard_record(
+        outcome,
+        evaluation_id=uuid4(),
+        evidence_artifact_id=uuid4(),
+        evidence_artifact_digest=s.DIGEST_A,
+        artifact_id=uuid4(),
+        artifact_digest=s.DIGEST_C,
+    )
+
+    assert len(record.items) == len(outcome.scorecard.items)
+    assert any(row.status == "missing" and row.applicable for row in record.items)
+    assert scorer_source_digest() == scorer_source_digest()
+    assert re.fullmatch(r"sha256:[0-9a-f]{64}", scorer_source_digest())
+
+
+def test_replay_timestamp_is_bound_to_verified_artifact_creation() -> None:
+    timestamp = datetime(2026, 10, 7, 8, 30, 12, 123456, tzinfo=UTC)
+
+    assert _artifact_recorded_at({"created_at": timestamp}) == "2026-10-07T08:30:12.123456Z"
+    with pytest.raises(EvaluationScoringRejected, match="stable creation time"):
+        _artifact_recorded_at({"created_at": timestamp.replace(tzinfo=None)})
+
+
+def test_profile_source_digest_binds_specific_config_and_profile_semantics(
+    tmp_path, profile
+) -> None:  # type: ignore[no-untyped-def]
+    shared = tmp_path / "profiles-v1.yaml"
+    specific = tmp_path / "python-profile-v1.yaml"
+    shared.write_text("shared: first\n", encoding="utf-8")
+    specific.write_text("python: first\n", encoding="utf-8")
+    initial = _profile_source_digest(profile, shared)
+
+    specific.write_text("python: second\n", encoding="utf-8")
+    changed_config = _profile_source_digest(profile, shared)
+    changed_profile = _profile_source_digest(
+        profile.model_copy(update={"profile_version": "python-profile-v2"}), shared
+    )
+
+    assert initial != changed_config
+    assert initial != changed_profile

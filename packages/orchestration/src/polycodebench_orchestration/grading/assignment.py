@@ -21,7 +21,9 @@ from polycodebench_evaluation.evaluator import baseline_from_package
 from polycodebench_evaluation.plan_runner import digest_files
 from polycodebench_persistence.artifacts import ArtifactRepository
 from polycodebench_persistence.models import (
+    artifact,
     attempt,
+    config_document,
     evaluation,
     task_version,
 )
@@ -33,6 +35,7 @@ from polycodebench_plugins_api import (
     TaskDraft,
     load_language_plugin,
 )
+from polycodebench_scoring.policy import FrozenScoringPolicy
 from polycodebench_services.task_packages import TaskPackageManifest
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
@@ -65,6 +68,11 @@ class EvaluationAssignment:
     overlay_files: Mapping[str, bytes]
     config_files: Mapping[str, bytes]
     allowed_paths: tuple[str, ...]
+    policy: FrozenScoringPolicy | None = None
+    policy_digest: str | None = None
+    evaluation_state: str = "running"
+    evaluation_gate: str = "unknown"
+    evidence_manifest_id: UUID | None = None
 
 
 class DatabaseEvaluationAssignmentLoader:
@@ -75,14 +83,22 @@ class DatabaseEvaluationAssignmentLoader:
         engine: Engine,
         artifacts: ArtifactRepository,
         plugin_allowlist: PluginAllowlist,
+        *,
+        allow_completed: bool = False,
     ) -> None:
         self._engine = engine
         self._artifacts = artifacts
         self._plugins = plugin_allowlist
+        self._allow_completed = allow_completed
 
     def __call__(self, claim: JobClaim) -> EvaluationAssignment:
         if claim.scope_type != "evaluation":
             raise EvaluationAssignmentRejected("evaluation stages require an evaluation scope")
+        return self.load(claim.scope_id)
+
+    def load(self, evaluation_id: UUID) -> EvaluationAssignment:
+        """Resolve an evaluation by identity for an evaluator or a post-run scorer."""
+        policy_artifact = artifact.alias("frozen_scoring_policy_artifact")
         with self._engine.connect() as connection:
             row = (
                 connection.execute(
@@ -92,6 +108,8 @@ class DatabaseEvaluationAssignmentLoader:
                         evaluation.c.policy_config_id,
                         evaluation.c.oracle_digest,
                         evaluation.c.state.label("evaluation_state"),
+                        evaluation.c.gate.label("evaluation_gate"),
+                        evaluation.c.evidence_manifest_id,
                         attempt.c.run_id,
                         attempt.c.task_version_id,
                         attempt.c.sample_index,
@@ -105,9 +123,24 @@ class DatabaseEvaluationAssignmentLoader:
                         candidate_table.c.payload,
                         candidate_table.c.canonical_artifact_id,
                         candidate_table.c.frozen_at,
+                        config_document.c.kind.label("policy_kind"),
+                        config_document.c.digest.label("policy_digest"),
+                        config_document.c.document.label("policy_document"),
+                        policy_artifact.c.status.label("policy_artifact_status"),
+                        policy_artifact.c.visibility.label("policy_artifact_visibility"),
+                        policy_artifact.c.encryption_domain.label("policy_artifact_domain"),
+                        policy_artifact.c.content_digest.label("policy_artifact_digest"),
                     )
                     .select_from(
-                        evaluation.join(attempt, attempt.c.id == evaluation.c.attempt_id)
+                        evaluation.join(
+                            config_document,
+                            config_document.c.id == evaluation.c.policy_config_id,
+                        )
+                        .join(
+                            policy_artifact,
+                            policy_artifact.c.id == config_document.c.canonical_artifact_id,
+                        )
+                        .join(attempt, attempt.c.id == evaluation.c.attempt_id)
                         .join(task_version, task_version.c.id == attempt.c.task_version_id)
                         .join(
                             candidate_table,
@@ -115,15 +148,36 @@ class DatabaseEvaluationAssignmentLoader:
                             & (candidate_table.c.revision == 1),
                         )
                     )
-                    .where(evaluation.c.id == claim.scope_id)
+                    .where(evaluation.c.id == evaluation_id)
                 )
                 .mappings()
                 .one_or_none()
             )
         if row is None:
             raise EvaluationAssignmentRejected("evaluation or its frozen candidate is missing")
-        if row["evaluation_state"] != "running" or row["attempt_state"] != "completed":
+        allowed_states = {"running", "ready", "failed"} if self._allow_completed else {"running"}
+        if row["evaluation_state"] not in allowed_states or row["attempt_state"] != "completed":
             raise EvaluationAssignmentRejected("evaluation does not own a completed solve attempt")
+        if (
+            row["policy_kind"] != "frozen_scoring_policy"
+            or row["policy_artifact_status"] != "verified"
+            or row["policy_artifact_visibility"] != "internal"
+            or row["policy_artifact_domain"] != "worker-config"
+            or row["policy_artifact_digest"] != row["policy_digest"]
+        ):
+            raise EvaluationAssignmentRejected("frozen scoring policy artifact is not verified")
+        try:
+            policy = FrozenScoringPolicy.model_validate_json(
+                json.dumps(row["policy_document"]), strict=True
+            )
+        except (TypeError, ValueError):
+            raise EvaluationAssignmentRejected(
+                "frozen scoring policy document is invalid"
+            ) from None
+        if canonical_document_digest(policy) != row["policy_digest"]:
+            raise EvaluationAssignmentRejected("frozen scoring policy digest is not canonical")
+        if self._allow_completed and row["evidence_manifest_id"] is None:
+            raise EvaluationAssignmentRejected("completed evaluation has no evidence artifact")
         if (
             row["candidate_artifact_id"] is None
             or row["candidate_artifact_id"] != row["canonical_artifact_id"]
@@ -133,9 +187,9 @@ class DatabaseEvaluationAssignmentLoader:
         ):
             raise EvaluationAssignmentRejected("attempt has no valid frozen file candidate")
 
-        task = TaskVersion.model_validate_json(
-            json.dumps(row["task_document"]), strict=True
-        )
+        task = TaskVersion.model_validate_json(json.dumps(row["task_document"]), strict=True)
+        if canonical_document_digest(task) != row["task_digest"]:
+            raise EvaluationAssignmentRejected("frozen task document digest is not canonical")
         if canonical_document_digest(task.oracle) != row["oracle_digest"]:
             raise EvaluationAssignmentRejected(
                 "evaluation oracle identity differs from the frozen task"
@@ -235,6 +289,15 @@ class DatabaseEvaluationAssignmentLoader:
             overlay_files=overlay_files,
             config_files=config_files,
             allowed_paths=tuple(str(path) for path in task.output_contract.allowed_paths),
+            policy=policy,
+            policy_digest=str(row["policy_digest"]),
+            evaluation_state=str(row["evaluation_state"]),
+            evaluation_gate=str(row["evaluation_gate"]),
+            evidence_manifest_id=(
+                UUID(str(row["evidence_manifest_id"]))
+                if row["evidence_manifest_id"] is not None
+                else None
+            ),
         )
 
     def _read_bundle(
@@ -326,9 +389,7 @@ def freeze_task_view(
     try:
         view = plugin.freeze_view(draft, task_digest, task.version)
     except Exception as error:
-        raise EvaluationAssignmentRejected(
-            "frozen task material cannot be interpreted"
-        ) from error
+        raise EvaluationAssignmentRejected("frozen task material cannot be interpreted") from error
     if (
         view.task_id != task.task_id
         or view.task_version != task.version

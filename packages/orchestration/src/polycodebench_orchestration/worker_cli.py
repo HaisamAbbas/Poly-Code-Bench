@@ -41,6 +41,7 @@ from polycodebench_persistence.models import (
     worker_registration,
 )
 from polycodebench_persistence.object_store import S3ArtifactStore
+from polycodebench_persistence.scoring import PostgresScoringRepository
 from polycodebench_plugins_api import load_allowlist
 from polycodebench_runner.provider import SshGuestControlChannel
 from polycodebench_scoring.loader import load_scoring_policy
@@ -48,6 +49,8 @@ from sqlalchemy import func, insert, select, text
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.engine import Engine
 
+from polycodebench_orchestration.grading.assignment import DatabaseEvaluationAssignmentLoader
+from polycodebench_orchestration.grading.scoring import DatabaseEvaluationScorer
 from polycodebench_orchestration.grading.worker_runtime import (
     GradingWorkerResourceSpec,
     build_local_evaluation_worker,
@@ -73,6 +76,8 @@ DEFAULT_GRADING_SANDBOX_STATE = ROOT / ".cache/local-grading-worker"
 DEFAULT_PLUGIN_ALLOWLIST = ROOT / "config/plugins/allowlist-v1.yaml"
 DEFAULT_LANGUAGE_IMAGE_IDENTITIES = ROOT / "config/images"
 DEFAULT_SCORING_POLICY = ROOT / "config/scoring/pilot-v1.yaml"
+DEFAULT_OWNERSHIP_POLICY = ROOT / "config/scoring/evidence_ownership.yaml"
+DEFAULT_LANGUAGE_PROFILE_SOURCE = ROOT / "config/languages/profiles-v1.yaml"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -126,6 +131,15 @@ def _parser() -> argparse.ArgumentParser:
     )
     grading_run.add_argument("--sandbox-state", type=Path, default=DEFAULT_GRADING_SANDBOX_STATE)
 
+    local_score = commands.add_parser(
+        "local-score-evaluation",
+        help="score one completed private evaluation without candidate or model execution",
+    )
+    local_score.add_argument("--evaluation-id", type=UUID, required=True)
+    local_score.add_argument("--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST)
+    local_score.add_argument("--ownership-policy", type=Path, default=DEFAULT_OWNERSHIP_POLICY)
+    local_score.add_argument("--profile-source", type=Path, default=DEFAULT_LANGUAGE_PROFILE_SOURCE)
+
     ec2_run = commands.add_parser(
         "ec2-run", help="run a pre-registered worker using the verified disposable-VM provider"
     )
@@ -155,6 +169,13 @@ def _worker_database() -> Database:
     url = os.environ.get("PCB_WORKER_DATABASE_URL") or os.environ.get("PCB_DATABASE_URL")
     if not url:
         raise ValueError("PCB_WORKER_DATABASE_URL or PCB_DATABASE_URL is required")
+    return Database(url)
+
+
+def _scorer_database() -> Database:
+    url = os.environ.get("PCB_SCORER_DATABASE_URL")
+    if not url:
+        raise ValueError("PCB_SCORER_DATABASE_URL is required for local scoring")
     return Database(url)
 
 
@@ -443,6 +464,53 @@ def _run_local_grading(args: argparse.Namespace) -> int:
         database.dispose()
 
 
+def _score_local_evaluation(args: argparse.Namespace) -> int:
+    _development_only()
+    if os.environ.get("PCB_LOCAL_SCORING_ENABLED") != "true":
+        raise ValueError(
+            "set PCB_LOCAL_SCORING_ENABLED=true to score one completed private evaluation"
+        )
+    actor = os.environ.get("PCB_SERVICE_IDENTITY")
+    if not actor:
+        raise ValueError("PCB_SERVICE_IDENTITY is required for scoring audit attribution")
+    database = _scorer_database()
+    try:
+        object_store = _object_store()
+        artifacts = ArtifactRepository(
+            database.engine, object_store, max_upload_bytes=512 * 1024**2
+        )
+        assignments = DatabaseEvaluationAssignmentLoader(
+            database.engine,
+            artifacts,
+            load_allowlist(args.plugin_allowlist),
+            allow_completed=True,
+        )
+        scorer = DatabaseEvaluationScorer(
+            assignments=assignments,
+            artifacts=artifacts,
+            scorecards=PostgresScoringRepository(database.engine),
+            ownership_path=args.ownership_policy,
+            profile_source_path=args.profile_source,
+            actor=actor,
+        )
+        outcome, written = scorer.score(args.evaluation_id)
+        _emit(
+            {
+                "evaluation_id": str(args.evaluation_id),
+                "scorecard_id": str(written.scorecard_id),
+                "created": written.created,
+                "gate": outcome.scorecard.gate.value,
+                "status": outcome.scorecard.status.value,
+                "total_score": outcome.scorecard.total_score,
+                "internal_only": True,
+                "not_for_ranking": True,
+            }
+        )
+        return 0
+    finally:
+        database.dispose()
+
+
 def _register_local_internal_config(
     *,
     admin_engine: Engine,
@@ -647,8 +715,7 @@ def _register_local_grading(args: argparse.Namespace) -> int:
                 or first["allowed_resource_classes"] != [resource.resource_class]
                 or len(existing) != args.slots
                 or any(
-                    row["resource_class"] != resource.resource_class
-                    or row["digest"] != digest
+                    row["resource_class"] != resource.resource_class or row["digest"] != digest
                     for row in existing
                 )
             ):
@@ -1080,7 +1147,13 @@ def main(argv: list[str] | None = None) -> int:
     identity = os.environ.get("PCB_SERVICE_IDENTITY") or "local-unverified"
     configure_logging(
         environment=os.environ.get("PCB_ENVIRONMENT", "dev"),
-        role="grading-worker" if args.command.startswith("local-grading-") else "solve-worker",
+        role=(
+            "scorer"
+            if args.command == "local-score-evaluation"
+            else "grading-worker"
+            if args.command.startswith("local-grading-")
+            else "solve-worker"
+        ),
         service_identity=identity,
     )
     try:
@@ -1104,6 +1177,8 @@ def main(argv: list[str] | None = None) -> int:
             return _enqueue_local_grading(args)
         if args.command == "local-grading-run":
             return _run_local_grading(args)
+        if args.command == "local-score-evaluation":
+            return _score_local_evaluation(args)
         if args.command == "ec2-run":
             return _run_ec2(args.worker_id, watch=args.watch, args=args)
         return _register_ec2(args)

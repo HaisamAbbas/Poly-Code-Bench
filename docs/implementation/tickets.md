@@ -207,7 +207,7 @@ Total registered tickets: 142. Every ticket is owned by the numbered prompt enco
 - Owner prompt: `04`.
 - Dependencies: Prompt 03 ·.
 - Implementation: `implemented (expired provisional and unreferenced canonical-object cleanup with in-flight finalization protection, audited retention holds, strict public metadata projection from separate object, inert attachment response)`.
-- Verification: `passed for quota release at upload expiry, provisional-byte retention through day 30 and cleanup after the retention interval; verified/held/published objects retained; distinct reviewer/publisher requirement, projection retry and unchanged private source key/visibility. Production policy validation and public routes remain pending`.
+- Verification: `passed for quota release at upload expiry, provisional-byte retention through day 30 and cleanup after the retention interval; verified/held/published objects retained; distinct reviewer/publisher requirement, projection retry and unchanged private source key/visibility. Controlled public routes pass locally; production policy validation remains pending`.
 - Required verification scope: E2E-03, E2E-26 storage subcases.
 - Evidence: packages/persistence/src/polycodebench_persistence/artifacts.py, packages/services/src/polycodebench_services/{artifacts.py,artifact_publication.py}, tests/test_artifacts_postgres.py, packages/persistence/README.md.
 - Acceptance criteria: — Add provisional garbage collection and allowlisted public projection/export support. DoD: referenced/published/held artifacts are retained; publication makes reviewed projection objects without changing a private object's ACL in place; downloads are inert and authorized.
@@ -1244,7 +1244,7 @@ Prompt 04 review follow-up (2026-09-30): upload finalization now locks the uploa
 - Owner prompt: `29`.
 - Dependencies: WP-16,18,19,20 complete ·.
 - Implementation: `implemented` (the web DTOs and API operations are generated from the checked-in FastAPI OpenAPI snapshot).
-- Verification: `passed` for client/server parity (`pnpm api:types:check` plus the runtime OpenAPI snapshot test); full E2E-26 artifact/privacy cases remain open.
+- Verification: client/server parity and local release-scoped binary artifact routes pass (`pnpm api:types:check`, runtime OpenAPI snapshot, E2E-26 artifact evidence); production IAM/bucket-policy denial remains open.
 - Required verification scope: E2E-25/26/28/39 API variants.
 - Evidence: `docs/implementation/reports/prompt-29.md`, `apps/web/src/lib/public-api.ts`, public API schemas and `tests/test_public_api_projections.py`.
 - Acceptance criteria: — Generate and validate OpenAPI/TypeScript clients and safe public response fixtures. DoD: schemas/client/server agree, and fixtures originate from real test-release generation with explicitly synthetic labels where appropriate.

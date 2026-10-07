@@ -30,7 +30,7 @@
                                     "SeaweedFS image signature provenance was not independently verified; the exact immutable image is approved for local development only",
                                     "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
                                     "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
-                                    "E2E-26 binary artifact-download routing and production IAM/bucket-policy denial remain unverified after Prompt 31 public task/scorecard/privacy/export subcases passed",
+                                    "E2E-26 local release-scoped binary artifact routes, restricted PostgreSQL catalog, SeaweedFS digest verification and Prompt 31 privacy/export browser cases pass; production IAM/bucket-policy denial remains open",
                                     "E2E-04 production execution and E2E-27 public/cohort filter variants remain with Prompts 16-17; the generic evaluator-worker variant passed in Prompt 12 at development tier only",
                                     "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
                                     "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
@@ -900,7 +900,7 @@
             "PCB-31-4": "implemented and verified: frozen release-pinned methodology, native/adapted labels, correction/withdrawal notice and successor links"
         },
         "e2e": {
-            "E2E-26": "partial overall; public task/scorecard hidden-ID and curated task-export probes passed, artifact binary route and production IAM remain",
+            "E2E-26": "partial overall; local release-scoped artifact routes, PostgreSQL public catalog and privacy/export browser probes pass; production IAM/bucket-policy denial remains open",
             "E2E-39": "passed for the public analysis journey from leaderboard through model, comparison, task and score evidence",
             "E2E-40": "partial overall; affected missingness, keyboard, viewport, lazy-payload and 64-task pagination cases passed; submission-page keyboard/error/responsive variants pass; declared-load run remains open"
         },
@@ -920,7 +920,7 @@
         },
         "e2e": {
             "E2E-25": "passed at the local service/API/PostgreSQL tier; six-role permission matrix, task/run write denials, separate release roles, MFA-gated admin routes, restricted API login, owner isolation and bounded approval recovery pass; production IAM is not claimed",
-            "E2E-26": "public task/export/owner-status privacy probes pass; binary artifact route and production IAM remain partial",
+            "E2E-26": "local artifact route/storage and public privacy/export probes pass; production IAM/bucket-policy denial remains partial",
             "E2E-39": "passed for leaderboard-to-evidence and leaderboard-to-submission/status journeys",
             "E2E-40": "page/accessibility/responsive/pagination cases pass; declared-load rehearsal remains partial",
             "E2E-41": "synthetic bounded request-to-approved-run/status lifecycle and PostgreSQL-backed create/reject/owner status/endpoint/run approval recovery pass locally; production IAM remains open"

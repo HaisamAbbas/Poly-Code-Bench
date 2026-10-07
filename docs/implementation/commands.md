@@ -630,8 +630,9 @@ Prompt 31's three browser cases pass, including the leaderboard → model → co
 scorecard journey, API/UI scalar equality, budget/protocol incompatibility, private-ID/export probes,
 withdrawal/successor navigation, keyboard activation, lazy payloads, responsive viewports and the
 64-task paginated list. Prompt 30 regression cases also pass 4/4. Current run artifacts are under
-`docs/implementation/evidence/prompt-31/`. E2E-26 remains partial for binary artifact-download
-routing and production IAM validation; E2E-40 submission-page variants remain Prompt 32 scope.
+`docs/implementation/evidence/prompt-31/`. E2E-26's release-scoped binary artifact routes pass
+locally; production IAM/bucket-policy validation remains open. Prompt 32 submission-page
+keyboard/error/responsive cases also pass; browser-rendered load and staging CDN checks remain open.
 
 ## Prompt 33 - Operations (verified commands)
 

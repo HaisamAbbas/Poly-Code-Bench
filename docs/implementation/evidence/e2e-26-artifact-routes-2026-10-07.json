@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "scenario": "E2E-26",
+  "verified_at": "2026-10-07",
+  "result": "partial",
+  "environment": "local synthetic/test API, PostgreSQL and SeaweedFS",
+  "verification": {
+    "public_api_regression": {
+      "result": "passed",
+      "tests_passed": 10,
+      "coverage": [
+        "Release membership gates link minting",
+        "Only approved public artifact metadata receives a short-lived link",
+        "Binary response is attachment-only, no-store, nosniff and ETag-bound",
+        "Hidden and unknown artifact probes return the same not-found response",
+        "Tokens bind the artifact and pinned release and expire at the expiry boundary",
+        "Oversized artifacts do not receive a usable download link",
+        "Public OpenAPI snapshot and generated TypeScript client match"
+      ]
+    },
+    "postgres_artifact_storage": {
+      "result": "passed",
+      "tests_passed": 6,
+      "coverage": [
+        "Release-backed API link minting and binary download through the PostgreSQL public catalog and SeaweedFS object store",
+        "Public artifact catalog view returns the approved projection and verified bytes",
+        "Restricted public-reader role can read the view and cannot select source artifact rows",
+        "Hidden source IDs remain absent from the public catalog",
+        "PostgreSQL and SeaweedFS artifact integrity and visibility regressions"
+      ]
+    },
+    "public_browser_regression": {
+      "result": "passed",
+      "tests_passed": 3,
+      "coverage": [
+        "E2E-39 leaderboard-to-evidence navigation",
+        "E2E-26 private-candidate and safe-export probes",
+        "E2E-40 keyboard, lazy-payload, pagination and responsive cases"
+      ]
+    },
+    "web_contract_and_build": {
+      "result": "passed",
+      "checks": [
+        "OpenAPI snapshot and generated TypeScript client check",
+        "Web typecheck and lint",
+        "Optimized Next.js production build"
+      ]
+    }
+  },
+  "totals": {
+    "tests_passed": 19,
+    "tests_failed": 0,
+    "tests_skipped": 0
+  },
+  "limitations": [
+    "This is local synthetic/test evidence and does not establish production IAM or object-store bucket policy denial.",
+    "No live benchmark result, provider contact or model spend is claimed."
+  ]
+}

@@ -44,6 +44,8 @@
 
 E2E-39 passes through the public analysis and submission/status journeys. PostgreSQL-backed submission/endpoint/approval/run recovery and audit integration passes locally. E2E-25's six-role task/run/release service matrix and submission admin-route role/MFA matrix now pass at the local tier; see `evidence/e2e-25-role-matrix-2026-10-07.json`. E2E-26 remains partial until binary artifact access and production IAM denial are exercised. E2E-40 page/accessibility/responsive cases pass, but browser-rendered load and staging CDN measurements remain open. WP-21 REST OpenAPI/client parity is verified; production OIDC provider registration, provider secret provisioning, and cloud/IAM validation remain deployment work.
 
+**E2E-26 status refresh (2026-10-07):** Local release-scoped public artifact links and binary downloads pass end to end through API wiring, PostgreSQL's public catalog and SeaweedFS. The API validates release membership, exact approved metadata, public-catalog admission, content digest/size, token release binding and expiry; hidden/unknown probes return the same 404. The restricted `pcb_public_reader` can read the catalog view but not source artifact rows. Prompt 31's three browser cases also pass. Evidence: `docs/implementation/evidence/e2e-26-artifact-routes-2026-10-07.json`. E2E-26 remains partial because production object-store IAM and bucket-policy denial are not available locally.
+
 **Status refresh (2026-10-07):** E2E-40's local API load rehearsal passed 3,000 read-only
 requests across 11 release-backed routes at concurrency 16, with 0 errors, p95 1,539.525 ms and
 750/750 ETag revalidations. The remaining E2E-40 gaps are browser-rendered page load under declared

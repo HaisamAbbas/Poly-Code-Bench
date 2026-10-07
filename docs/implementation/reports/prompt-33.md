@@ -212,7 +212,7 @@ Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` 
 
 ## Local listener refresh and OIDC recheck (2026-10-07)
 
-- A read-only live check found that the already-running local Uvicorn process had imported an older application module: `/healthz` returned 200 while the newly added `/readyz` returned 404. The identified repository process was gracefully stopped and relaunched from the current tree on its documented loopback port; `/healthz`, `/readyz`, and the PostgreSQL-backed release catalog then returned 200.
+- A read-only live check found that the already-running local Uvicorn process had imported an older application module: `/healthz` returned 200 while the newly added `/readyz` returned 404. The identified repository process was stopped and relaunched from the current tree on its documented loopback port; `/healthz`, `/readyz`, and the PostgreSQL-backed release catalog then returned 200.
 - The web app continued to serve `/leaderboard` and `/model-submissions` with HTTP 200 against that API. The documented Node 24 local OIDC browser smoke passed against the refreshed stack: all nine PostgreSQL-backed public pages, Keycloak login, metadata-only submission, reviewer authorization, owner isolation, keyboard access and mobile layout.
 - Screenshots remain only in gitignored `.cache/local-stack-browser/`. The smoke did not contact a submitted provider URL, call a model or judge, create cloud resources, or publish a benchmark release. Release content remains labelled `synthetic_internal`.
 - Evidence: `docs/implementation/evidence/prompt-33/local-listener-refresh-2026-10-07.json`.

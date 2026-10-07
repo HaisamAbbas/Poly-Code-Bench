@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "local_api_listener_refresh",
+  "verified_at_utc": "2026-10-07T08:54:17Z",
+  "environment": "loopback-only local development",
+  "api_origin": "http://127.0.0.1:8010",
+  "web_origin": "http://127.0.0.1:3001",
+  "initial_finding": {
+    "api_healthz": "HTTP 200",
+    "api_readyz": "HTTP 404; the long-running Uvicorn process had imported code before the readiness route was added"
+  },
+  "refresh": "Gracefully stopped the identified repository API process and relaunched the current source tree with the documented local environment.",
+  "api": {
+    "healthz": "HTTP 200",
+    "readyz": "HTTP 200 {status: ready}",
+    "release_catalog": "HTTP 200; 2 synthetic_internal releases"
+  },
+  "web": {
+    "leaderboard": "HTTP 200",
+    "model_submissions": "HTTP 200",
+    "local_oidc_browser_smoke": "passed; all 9 PostgreSQL-backed public pages, Keycloak login, metadata-only submission, reviewer authorization, owner isolation, keyboard access and mobile layout"
+  },
+  "browser_artifacts": ".cache/local-stack-browser (gitignored; not committed)",
+  "provider_endpoint_contacted": false,
+  "model_or_judge_calls": 0,
+  "cloud_resources_created": 0,
+  "benchmark_release_created": false,
+  "data_classification": "synthetic_internal only"
+}

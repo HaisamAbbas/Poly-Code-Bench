@@ -22,7 +22,10 @@ export default defineConfig({
   workers: 1,
   reporter: [
     ["list"],
-    ["json", { outputFile: resolve(artifacts, "browser-results.json") }],
+    ["./tests/e2e/sanitized-json-reporter.mjs", {
+      outputFile: resolve(artifacts, "browser-results.json"),
+      suiteName: "Prompt 30 public pages",
+    }],
   ],
   outputDir: resolve(repoRoot, ".cache/playwright/prompt30-results"),
   use: {

@@ -27,6 +27,8 @@ try {
   });
 
   await page.goto(`${webOrigin}/leaderboard`);
+  await page.getByText("Synthetic internal test data", { exact: true }).waitFor();
+  await page.getByText("These are not live benchmark results.", { exact: false }).waitFor();
   await page.screenshot({ path: resolve(artifactDirectory, "leaderboard-desktop.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: resolve(artifactDirectory, "leaderboard-mobile.png"), fullPage: true });

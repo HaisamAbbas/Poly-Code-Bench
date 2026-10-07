@@ -28,7 +28,10 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   expect: { timeout: 15_000 },
-  reporter: [["list"], ["json", { outputFile: resolve(artifacts, "browser-results.json") }]],
+  reporter: [["list"], ["./tests/e2e/sanitized-json-reporter.mjs", {
+    outputFile: resolve(artifacts, "browser-results.json"),
+    suiteName: "Prompt 32 model submission",
+  }]],
   outputDir: resolve(repoRoot, ".cache/playwright/prompt32-results"),
   use: {
     baseURL: webOrigin,

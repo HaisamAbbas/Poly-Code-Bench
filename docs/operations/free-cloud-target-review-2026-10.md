@@ -52,13 +52,14 @@ requires card verification; the temporary authorization hold is not a resource c
 [OCI trial terms](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier.htm), and the
 [OCI FAQ](https://www.oracle.com/cloud/free/faq/).
 
-For a no-spend private remote-development experiment, OCI's Always Free A1 shape appears more
-capable than Alibaba's one-year 1 GiB ECS card, but ARM64 build compatibility, home-region
-capacity, idle reclamation, and account eligibility still need checking. Alibaba's separate
-finite-quota ECS trial may offer enough RAM for a short private session, subject to the account
-console and the remaining quota; database/storage/network entitlements still need separate
-confirmation. Neither provider can close the repository's AWS staging gate, and neither should
-be selected until its exact console quota, billing exposure, and shutdown date are known.
+For a no-spend private remote-development experiment, OCI's Always Free A1 shape is substantially
+larger than Alibaba's one-year 1 GiB ECS card. Alibaba's separate finite-quota ECS trial may offer
+up to 8 GiB personal or 16 GiB enterprise outside Hong Kong, but only for a short duration when
+the selected instance consumes quota near the published maximum hourly rate. ARM64 compatibility,
+home-region/region capacity, idle reclamation, account eligibility, and the exact console quota
+still need checking for either provider. Database/storage/network entitlements also need separate
+confirmation. Neither provider can close the repository's AWS staging gate, and neither should be
+selected until its exact quota, billing exposure, and shutdown date are known.
 
 ## Required console facts before any cloud action
 

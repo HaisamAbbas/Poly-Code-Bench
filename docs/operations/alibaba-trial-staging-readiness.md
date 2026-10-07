@@ -24,6 +24,9 @@ Alibaba documents two different trial types:
   credit/debit cards with international payments enabled and PayTM for India; PayPal alone does
   not qualify. ECS additionally excludes accounts with a prior ECS/Simple Application Server
   purchase, pay-as-you-go bill, or trial order.
+- Alibaba's Free Tier page separately advertises an ECS t5 configuration with 1 vCPU and 1 GiB
+  for one year. Treat that small offer and the finite-quota ECS trial described below as distinct
+  entitlements; the public page does not show which path, if either, this account can claim.
 - **Solution trials** use trial points, are limited to at most 168 hours, are scoped to that
   solution, and delete the trial account/resources/data when ended or expired. They are suitable
   for a disposable POC, not a persistent staging environment. Point deductions follow cloud

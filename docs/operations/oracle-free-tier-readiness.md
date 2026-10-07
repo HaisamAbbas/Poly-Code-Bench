@@ -62,11 +62,13 @@ This check does not cover Python/Node dependencies or prove the combined stack f
 build the API and web app on an ARM64 Linux host and measure memory before using the VM.
 
 A local development-stack snapshot on October 7 reported about 1.47 GiB across the three Compose
-dependencies and the host API/web processes. This gives the 12 GB A1 shape substantially more
-observed memory headroom than Alibaba's currently advertised 1 GiB ECS t5 offer, but the snapshot
-does not include a VM's OS/Docker overhead and is not a production-image or sustained-load test.
-It supports considering OCI only for the previously described private proof of concept; it does
-not change the missing PostgreSQL, idle-reclamation, account-quota, or production-isolation gates.
+dependencies and the host API/web processes. The 12 GiB A1 shape has much more capacity than
+Alibaba's one-year 1-vCPU/1-GiB t5 card. Alibaba's separate finite-quota ECS trial can offer up to
+8 GiB personal or 16 GiB enterprise outside Hong Kong, but the quota may fund only a short run
+and the signed-in console must confirm the exact shape and remaining balance. The snapshot does
+not include a VM's OS/Docker overhead and is not a production-image or sustained-load test. It
+supports considering either service only for a private proof of concept; it does not change the
+missing PostgreSQL, idle-reclamation, account-quota, or production-isolation gates.
 See [`alibaba-local-capacity-snapshot-2026-10-07.json`](../implementation/evidence/prompt-33/alibaba-local-capacity-snapshot-2026-10-07.json)
 for the component measurements and limitations.
 

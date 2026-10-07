@@ -22,6 +22,7 @@ from polycodebench_plugins_api import (
     PlanOutput,
     ResourcePolicy,
 )
+from polycodebench_runner.contracts import SandboxHandle, SandboxSpec
 from polycodebench_runner.provider import LocalDockerSandboxProvider
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -90,6 +91,105 @@ def test_digest_files_is_order_independent_and_content_sensitive() -> None:
     a = digest_files({"a.py": b"1", "b.py": b"2"})
     assert a == digest_files({"b.py": b"2", "a.py": b"1"})
     assert a != digest_files({"a.py": b"1", "b.py": b"3"})
+
+
+class _RecordingProvider:
+    def __init__(self) -> None:
+        self.specs: list[SandboxSpec] = []
+        self.executions = 0
+        self.destroyed = 0
+
+    async def create(self, spec: SandboxSpec) -> SandboxHandle:
+        self.specs.append(spec)
+        return SandboxHandle(
+            stage_id=spec.stage_id,
+            fence=spec.fence,
+            lane=spec.lane,
+            driver="local_docker",
+            resource_id=f"guest-{len(self.specs)}",
+            expires_at_epoch=1_800_000_000,
+            max_execution_seconds=spec.timeout_seconds,
+            isolation_tier="development",
+        )
+
+    async def stage_inputs(self, handle: SandboxHandle, manifest) -> None:  # type: ignore[no-untyped-def]
+        return None
+
+    async def execute(self, handle, request):  # type: ignore[no-untyped-def]
+        self.executions += 1
+        raise AssertionError("unexpected guest execution")
+
+    async def snapshot(self, handle):  # type: ignore[no-untyped-def]
+        raise AssertionError("unexpected guest snapshot")
+
+    async def terminate(self, handle, reason):  # type: ignore[no-untyped-def]
+        return None
+
+    async def destroy(self, handle):  # type: ignore[no-untyped-def]
+        self.destroyed += 1
+
+
+def test_plan_validator_refuses_an_unapproved_image_before_guest_creation() -> None:
+    import asyncio
+
+    provider = _RecordingProvider()
+    plan = make_plan(("python", "-V"))
+    runner = PlanRunner(
+        provider,  # type: ignore[arg-type]
+        lane="grading",
+        plan_validator=lambda _plan: (_ for _ in ()).throw(ValueError("image not allowlisted")),
+    )
+
+    with pytest.raises(ValueError, match="not allowlisted"):
+        asyncio.run(runner.run(plan, {}, stage_id="grading-test"))
+
+    assert provider.specs == []
+
+
+def test_plan_runner_starts_sandbox_fences_after_the_claim_fence() -> None:
+    import asyncio
+
+    provider = _RecordingProvider()
+    plan = make_plan(("python", "-V"))
+    runner = PlanRunner(provider, lane="grading", first_fence=41)  # type: ignore[arg-type]
+
+    async def run_two() -> None:
+        async with runner.reserved_guest(plan, {}, stage_id="eval-a"):
+            pass
+        async with runner.reserved_guest(plan, {}, stage_id="eval-b"):
+            pass
+
+    asyncio.run(run_two())
+
+    assert [spec.fence for spec in provider.specs] == [42, 43]
+    assert provider.destroyed == 2
+
+
+def test_reserved_guest_revalidates_each_executed_plan() -> None:
+    import asyncio
+
+    provider = _RecordingProvider()
+    plan = make_plan(("python", "-V"))
+    rejected = make_plan(("python", "-V"), kind="evaluator")
+    accepted_digests = {plan.image_digest}
+    runner = PlanRunner(
+        provider,  # type: ignore[arg-type]
+        plan_validator=lambda item: (
+            None
+            if item.image_digest in accepted_digests
+            else (_ for _ in ()).throw(ValueError("image not allowlisted"))
+        ),
+    )
+
+    async def execute_rejected() -> None:
+        async with runner.reserved_guest(plan, {}, stage_id="eval-test") as guest:
+            await guest.execute(rejected, ("python", "-V"))
+
+    with pytest.raises(ValueError, match="not allowlisted"):
+        asyncio.run(execute_rejected())
+
+    assert provider.executions == 0
+    assert provider.destroyed == 1
 
 
 needs_docker = pytest.mark.skipif(

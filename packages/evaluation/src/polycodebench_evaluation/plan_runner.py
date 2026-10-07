@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import base64
 import json
-from collections.abc import AsyncIterator, Mapping, Sequence
+from collections.abc import AsyncIterator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Literal
@@ -31,6 +31,7 @@ from polycodebench_runner.provider import SandboxProvider
 DEADLINE_GRACE_SECONDS = 8
 KILL_EXIT_CODES = frozenset({124, 137})
 Lane = Literal["solve", "grading", "admission"]
+PlanValidator = Callable[[ExecutionPlan], None]
 
 
 class PlanInputError(ValueError):
@@ -113,6 +114,9 @@ class ReservedGuest:
         environment: Mapping[str, str] | None = None,
         timeout_seconds: int | None = None,
     ) -> ExecutionRecord:
+        self._runner._validate_plan(plan)
+        if plan.image_digest != self._plan.image_digest:
+            raise ValueError("reserved guest cannot execute a plan for another image")
         deadline = (
             timeout_seconds if timeout_seconds is not None else plan.resources.timeout_seconds
         )
@@ -190,16 +194,31 @@ class ReservedGuest:
 
 
 class PlanRunner:
-    def __init__(self, provider: SandboxProvider, *, lane: Lane = "admission") -> None:
+    def __init__(
+        self,
+        provider: SandboxProvider,
+        *,
+        lane: Lane = "admission",
+        first_fence: int = 0,
+        plan_validator: PlanValidator | None = None,
+    ) -> None:
+        if first_fence < 0:
+            raise ValueError("first fence must be non-negative")
         self._provider = provider
         self._lane = lane
-        self._fence = 0
+        self._fence = first_fence
+        self._plan_validator = plan_validator
+
+    def _validate_plan(self, plan: ExecutionPlan) -> None:
+        if self._plan_validator is not None:
+            self._plan_validator(plan)
 
     @asynccontextmanager
     async def reserved_guest(
         self, plan: ExecutionPlan, files: Mapping[str, bytes], *, stage_id: str
     ) -> AsyncIterator[ReservedGuest]:
         """Reserve one guest for a sequence of executions on a single physical worker."""
+        self._validate_plan(plan)
         self._fence += 1
         res = plan.resources
         spec = SandboxSpec(
@@ -228,6 +247,7 @@ class PlanRunner:
     async def run(
         self, plan: ExecutionPlan, files: Mapping[str, bytes], *, stage_id: str
     ) -> PlanRun:
+        self._validate_plan(plan)
         self._fence += 1
         res = plan.resources
         spec = SandboxSpec(

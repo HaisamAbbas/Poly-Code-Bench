@@ -1,0 +1,27 @@
+{
+  "verified_at": "2026-10-07",
+  "environment": "existing local PostgreSQL migration database",
+  "commands": [
+    {
+      "command": "uv run --offline --locked --all-packages alembic -c packages/persistence/alembic.ini check",
+      "result": "No new upgrade operations detected.",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run --offline --locked --all-packages alembic -c packages/persistence/alembic.ini current",
+      "result": "d4f082b91c33 (head)",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run --offline --locked --all-packages pcb-ops migrate check",
+      "result": {
+        "head": "d4f082b91c33",
+        "released_revision": "e5f6a7b8c9d0",
+        "violations": []
+      },
+      "exit_code": 0
+    }
+  ],
+  "database_changed": false,
+  "cloud_resources_used": false
+}

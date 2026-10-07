@@ -190,6 +190,13 @@
   - `docker build --platform linux/amd64 --file Dockerfile.solve-worker --tag pcb-solve-worker:local-20261007 .` — passed; image ID `sha256:d1c03066b5b6bf5dc20909331c826100b9a33b1d236c5952658d4e4897784406`, user `10001:10001`. Under a read-only root, no network, no capabilities and no-new-privileges, `local-run --help` shows `--job-id | --run-id`; targetless `local-run` exits 2 with “local one-shot requires --job-id or --run-id” before database access.
 - No worker was started, no queued job was claimed, and no local or hosted model endpoint was contacted. Dispatch remains disabled. Evaluation, judging, scoring, publication and cloud deployment remain open.
 
+## Current-tree migration consistency check (2026-10-07)
+
+- Rechecked the existing local PostgreSQL migration database against the current Alembic models. `alembic check` reports no new upgrade operations and `alembic current` reports `d4f082b91c33 (head)`.
+- `pcb-ops migrate check` reports current head `d4f082b91c33`, released revision `e5f6a7b8c9d0`, and no expand-only policy violations. The check did not apply migrations or modify the database.
+- This resolves the stale PCB-33-2 verification text that attributed schema drift to D-33-03. It is a current-database consistency check, not a fresh-database migration rehearsal or staging deployment; those remain unverified.
+- Evidence: `docs/implementation/evidence/prompt-33/migration-current-tree-check-2026-10-07.json`.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

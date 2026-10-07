@@ -190,11 +190,7 @@ export function ModelSubmissionForm({
 }
 
 function SubmissionStatus({ status }: { status: ModelSubmissionStatus }) {
-  const copy = status.status === "pending"
-    ? "Pending review. No endpoint has been contacted and no run or charge exists."
-    : status.status === "rejected"
-      ? `Rejected. ${status.rejection_reason ?? "The reviewer did not provide a public reason."}`
-      : `Approved. The authorized bounded run is ${status.run_status ?? "queued"}.`;
+  const copy = submissionStatusCopy(status);
   return (
     <div className={`submission-status status-${status.status}`} role="status" aria-live="polite">
       <div className="submission-status-heading">
@@ -213,6 +209,26 @@ function SubmissionStatus({ status }: { status: ModelSubmissionStatus }) {
       </dl>
     </div>
   );
+}
+
+function submissionStatusCopy(status: ModelSubmissionStatus): string {
+  if (status.status === "pending") {
+    return "Pending review. No endpoint has been contacted and no run or charge exists.";
+  }
+  if (status.status === "rejected") {
+    return `Rejected. ${status.rejection_reason ?? "The reviewer did not provide a public reason."}`;
+  }
+  if (!status.run_status) return "Approved. The bounded solve run has not been created yet.";
+  if (status.run_status === "completed") {
+    return "Solve work completed. This request has not been evaluated, scored, or published.";
+  }
+  if (status.run_status === "failed") {
+    return "Solve work failed. No evaluation or benchmark score was produced.";
+  }
+  if (status.run_status === "cancelled") {
+    return "Solve work was cancelled. No evaluation or benchmark score was produced.";
+  }
+  return `Approved. Solve work is ${status.run_status.replaceAll("_", " ")}. No evaluation result is available yet.`;
 }
 
 function formatStateCounts(states: Record<string, number>): string {

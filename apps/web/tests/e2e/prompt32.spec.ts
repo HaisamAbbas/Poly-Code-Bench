@@ -71,17 +71,20 @@ async function showApprovedProgressFixture(page: Page, submissionId: string) {
   await page.getByLabel("Request ID").fill(submissionId);
   await page.getByRole("button", { name: "Check status" }).click();
   const approvedStatus = page.locator(".submission-status.status-approved").last();
-  await expect(approvedStatus).toContainText("run is queued");
+  await expect(approvedStatus).toContainText("Solve work is queued");
+  await expect(approvedStatus).toContainText("No evaluation result is available yet");
   await expect(approvedStatus).toContainText("Solve job states");
   await expect(approvedStatus.getByText("queued: 2", { exact: true }).last()).toBeVisible();
 
   await page.getByRole("button", { name: "Check status" }).click();
-  await expect(approvedStatus).toContainText("run is running");
+  await expect(approvedStatus).toContainText("Solve work is running");
+  await expect(approvedStatus).toContainText("No evaluation result is available yet");
   await expect(approvedStatus.getByText("queued: 1, running: 1", { exact: true }).last()).toBeVisible();
   await expect(approvedStatus.getByText("leased: 1, queued: 1", { exact: true }).last()).toBeVisible();
 
   await page.getByRole("button", { name: "Check status" }).click();
-  await expect(approvedStatus).toContainText("run is completed");
+  await expect(approvedStatus).toContainText("Solve work completed");
+  await expect(approvedStatus).toContainText("not been evaluated, scored, or published");
   await expect(approvedStatus.getByText("completed: 2", { exact: true }).last()).toBeVisible();
   await expect(approvedStatus.getByText("succeeded: 2", { exact: true }).last()).toBeVisible();
 }

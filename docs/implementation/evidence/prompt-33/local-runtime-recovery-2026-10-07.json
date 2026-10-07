@@ -1,0 +1,47 @@
+{
+  "verified_at_utc": "2026-10-07T06:10:48Z",
+  "scope": "Loopback application stack after Docker Desktop was stopped",
+  "docker_desktop_server_version": "29.7.2",
+  "compose": {
+    "postgres": { "image": "postgres:17.6", "state": "healthy" },
+    "object_store": { "image": "seaweedfs:4.48", "state": "healthy" },
+    "oidc": { "image": "keycloak:26.8.0", "state": "healthy", "discovery": "ready" }
+  },
+  "database": {
+    "engine": "PostgreSQL",
+    "version": "17.6",
+    "alembic_revision": "c02ea53a4d17"
+  },
+  "api": {
+    "health": "ok",
+    "release_catalog_count": 2,
+    "selected_fixture_kind": "synthetic_internal",
+    "leaderboard_rows": 4,
+    "task_rows": 5
+  },
+  "web": {
+    "public_pages_http_200": 9,
+    "routes": [
+      "leaderboard",
+      "language profile",
+      "comparison",
+      "task browser",
+      "task detail",
+      "model profile",
+      "scorecard evidence",
+      "methodology",
+      "model submissions"
+    ]
+  },
+  "browser_smoke": {
+    "result": "passed",
+    "identity_provider": "local Keycloak realm",
+    "submission_and_owner_status": "passed",
+    "reviewer_authorization": "passed",
+    "cross_owner_denial": "passed",
+    "keyboard_and_mobile_390px": "passed",
+    "submitted_provider_endpoint_contacted": false
+  },
+  "external_cloud_or_model_calls": false,
+  "private_credentials_or_request_ids_recorded": false
+}

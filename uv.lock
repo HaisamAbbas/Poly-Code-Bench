@@ -1198,8 +1198,11 @@ source = { editable = "packages/orchestration" }
 dependencies = [
     { name = "boto3" },
     { name = "polycodebench-core" },
+    { name = "polycodebench-evaluation" },
     { name = "polycodebench-persistence" },
+    { name = "polycodebench-plugins-api" },
     { name = "polycodebench-runner" },
+    { name = "polycodebench-scoring" },
     { name = "polycodebench-services" },
     { name = "pyyaml" },
 ]
@@ -1208,8 +1211,11 @@ dependencies = [
 requires-dist = [
     { name = "boto3", specifier = "==1.43.105" },
     { name = "polycodebench-core", editable = "packages/core" },
+    { name = "polycodebench-evaluation", editable = "packages/evaluation" },
     { name = "polycodebench-persistence", editable = "packages/persistence" },
+    { name = "polycodebench-plugins-api", editable = "packages/plugins-api" },
     { name = "polycodebench-runner", editable = "packages/runner" },
+    { name = "polycodebench-scoring", editable = "packages/scoring" },
     { name = "polycodebench-services", editable = "packages/services" },
     { name = "pyyaml", specifier = "==6.0.3" },
 ]

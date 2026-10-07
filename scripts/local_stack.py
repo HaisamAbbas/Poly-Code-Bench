@@ -417,7 +417,8 @@ ALTER ROLE {worker_role} WITH LOGIN PASSWORD '{worker_url_password_sql}';
 GRANT pcb_solve_worker TO {worker_role};
 GRANT CONNECT ON DATABASE {db_name} TO {worker_role};
 INSERT INTO artifact_quota (visibility, encryption_domain, max_bytes)
-VALUES ('internal', 'worker-config', 67108864), ('internal', 'solve-session', 1073741824)
+VALUES ('internal', 'worker-config', 67108864), ('internal', 'solve-session', 1073741824),
+       ('internal', 'evaluation-evidence', 1073741824)
 ON CONFLICT (visibility, encryption_domain) DO NOTHING;
 ALTER ROLE {LOCAL_ADMIN_ROLE} WITH LOGIN PASSWORD '{admin_password}';
 """

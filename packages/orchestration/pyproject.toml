@@ -5,8 +5,11 @@ description = "PolyCodeBench durable job orchestration ownership boundary"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "polycodebench-core==0.1.0",
+  "polycodebench-evaluation==0.1.0",
+  "polycodebench-plugins-api==0.1.0",
   "polycodebench-persistence==0.1.0",
   "polycodebench-runner==0.1.0",
+  "polycodebench-scoring==0.1.0",
   "polycodebench-services==0.1.0",
   "boto3==1.43.105",
   "pyyaml==6.0.3",
@@ -21,8 +24,11 @@ pcb-worker = "polycodebench_orchestration.worker_cli:main"
 
 [tool.uv.sources]
 polycodebench-core = { workspace = true }
+polycodebench-evaluation = { workspace = true }
+polycodebench-plugins-api = { workspace = true }
 polycodebench-persistence = { workspace = true }
 polycodebench-runner = { workspace = true }
+polycodebench-scoring = { workspace = true }
 polycodebench-services = { workspace = true }
 
 [build-system]

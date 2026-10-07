@@ -14,6 +14,7 @@ import os
 import signal
 import sys
 from pathlib import Path
+from typing import cast
 from uuid import UUID, uuid4
 
 import boto3  # type: ignore[import-untyped]
@@ -40,10 +41,18 @@ from polycodebench_persistence.models import (
     worker_registration,
 )
 from polycodebench_persistence.object_store import S3ArtifactStore
+from polycodebench_plugins_api import load_allowlist
 from polycodebench_runner.provider import SshGuestControlChannel
+from polycodebench_scoring.loader import load_scoring_policy
 from sqlalchemy import func, insert, select, text
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.engine import Engine
 
+from polycodebench_orchestration.grading.worker_runtime import (
+    GradingWorkerResourceSpec,
+    build_local_evaluation_worker,
+    load_grading_resource_for_worker,
+)
 from polycodebench_orchestration.solve.control_identity import temporary_control_identity
 from polycodebench_orchestration.solve.worker_runtime import (
     SolveWorkerResourceSpec,
@@ -60,6 +69,10 @@ DEFAULT_IMAGE_ALLOWLIST = ROOT / "config/worker/local-image-allowlist.json"
 DEFAULT_PROTOCOL_DIRECTORY = ROOT / "config/protocols"
 DEFAULT_BUDGET_PROFILES = ROOT / "config/budgets/pilot-v1.yaml"
 DEFAULT_SANDBOX_STATE = ROOT / ".cache/local-solve-worker"
+DEFAULT_GRADING_SANDBOX_STATE = ROOT / ".cache/local-grading-worker"
+DEFAULT_PLUGIN_ALLOWLIST = ROOT / "config/plugins/allowlist-v1.yaml"
+DEFAULT_LANGUAGE_IMAGE_IDENTITIES = ROOT / "config/images"
+DEFAULT_SCORING_POLICY = ROOT / "config/scoring/pilot-v1.yaml"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -85,6 +98,33 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--protocol-directory", type=Path, default=DEFAULT_PROTOCOL_DIRECTORY)
     run.add_argument("--budget-profiles", type=Path, default=DEFAULT_BUDGET_PROFILES)
     run.add_argument("--sandbox-state", type=Path, default=DEFAULT_SANDBOX_STATE)
+
+    grading_register = commands.add_parser(
+        "local-grading-register", help="register one bounded local evaluator worker"
+    )
+    grading_register.add_argument("--slots", type=int, default=1)
+    grading_register.add_argument("--resource-class", default="local-grading-small")
+    grading_register.add_argument("--workload-identity", default="local-grading-worker-1")
+    grading_register.add_argument("--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST)
+    grading_register.add_argument("--scoring-policy", type=Path, default=DEFAULT_SCORING_POLICY)
+
+    grading_enqueue = commands.add_parser(
+        "local-grading-enqueue", help="queue one explicitly selected completed attempt"
+    )
+    grading_enqueue.add_argument("--attempt-id", type=UUID, required=True)
+    grading_enqueue.add_argument("--policy-config-id", type=UUID, required=True)
+    grading_enqueue.add_argument("--resource-class", default="local-grading-small")
+
+    grading_run = commands.add_parser(
+        "local-grading-run", help="run exactly one selected evaluation job"
+    )
+    grading_run.add_argument("--worker-id", type=UUID, required=True)
+    grading_run.add_argument("--job-id", type=UUID, required=True)
+    grading_run.add_argument("--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST)
+    grading_run.add_argument(
+        "--image-identities", type=Path, default=DEFAULT_LANGUAGE_IMAGE_IDENTITIES
+    )
+    grading_run.add_argument("--sandbox-state", type=Path, default=DEFAULT_GRADING_SANDBOX_STATE)
 
     ec2_run = commands.add_parser(
         "ec2-run", help="run a pre-registered worker using the verified disposable-VM provider"
@@ -367,6 +407,297 @@ def _run_local(
         _serve_worker(worker, stage="solve", run_id=run_id)
         return 0
     finally:
+        database.dispose()
+
+
+def _run_local_grading(args: argparse.Namespace) -> int:
+    _development_only()
+    if os.environ.get("PCB_WORKER_DISPATCH_ENABLED") != "true":
+        raise ValueError("set PCB_WORKER_DISPATCH_ENABLED=true to allow one local grading claim")
+    if not os.environ.get("PCB_SERVICE_IDENTITY"):
+        raise ValueError("PCB_SERVICE_IDENTITY is required for worker audit attribution")
+    database = _worker_database()
+    try:
+        resource = load_grading_resource_for_worker(database.engine, args.worker_id)
+        worker = build_local_evaluation_worker(
+            worker_id=args.worker_id,
+            scheduler_engine=database.engine,
+            evaluator_engine=database.engine,
+            artifact_engine=database.engine,
+            object_store=_object_store(),
+            plugin_allowlist_path=args.plugin_allowlist,
+            image_identity_directory=args.image_identities,
+            state_dir=args.sandbox_state,
+            resource=resource,
+        )
+        claimed = asyncio.run(worker.run_once(job_id=args.job_id, stage="evaluate"))
+        _emit(
+            {
+                "worker_id": str(args.worker_id),
+                "job_id": str(args.job_id),
+                "claimed": claimed,
+            }
+        )
+        return 0
+    finally:
+        database.dispose()
+
+
+def _register_local_internal_config(
+    *,
+    admin_engine: Engine,
+    artifacts: ArtifactRepository,
+    kind: str,
+    digest: str,
+    body: bytes,
+    document: dict[str, object],
+    owner: str,
+) -> UUID:
+    with admin_engine.begin() as connection:
+        connection.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
+            {"lock_key": f"pcb.local-config:{kind}:{digest}"},
+        )
+        config_row = connection.execute(
+            select(config_document.c.id, config_document.c.canonical_artifact_id).where(
+                config_document.c.kind == kind,
+                config_document.c.digest == digest,
+            )
+        ).one_or_none()
+        if config_row is None:
+            upload_id = artifacts.begin_upload(
+                owner=owner,
+                visibility="internal",
+                encryption_domain="worker-config",
+                expected_digest=digest,
+                expected_size=len(body),
+                media_type="application/json",
+            )
+            artifacts.upload(upload_id=upload_id, owner=owner, body=body)
+            artifact_id = artifacts.finalize(upload_id=upload_id, owner=owner)
+            config_id = uuid4()
+            connection.execute(
+                insert(config_document).values(
+                    id=config_id,
+                    kind=kind,
+                    version_label=digest[7:19],
+                    digest=digest,
+                    canonical_artifact_id=artifact_id,
+                    schema_version=1,
+                    document=document,
+                )
+            )
+            return config_id
+
+        config_id = config_row.id
+        source = connection.execute(
+            select(
+                artifact.c.status,
+                artifact.c.visibility,
+                artifact.c.encryption_domain,
+                artifact.c.content_digest,
+            ).where(artifact.c.id == config_row.canonical_artifact_id)
+        ).one_or_none()
+        if (
+            source is None
+            or source.status != "verified"
+            or source.visibility != "internal"
+            or source.encryption_domain != "worker-config"
+            or source.content_digest != digest
+        ):
+            raise ValueError(f"registered {kind} has no matching verified internal artifact")
+        return cast(UUID, config_id)
+
+
+def _enqueue_local_grading(args: argparse.Namespace) -> int:
+    _development_only()
+    if os.environ.get("PCB_LOCAL_GRADING_SCHEDULE_ENABLED") != "true":
+        raise ValueError(
+            "set PCB_LOCAL_GRADING_SCHEDULE_ENABLED=true to enqueue one selected attempt"
+        )
+    service_identity = os.environ.get("PCB_SERVICE_IDENTITY")
+    if not service_identity:
+        raise ValueError("PCB_SERVICE_IDENTITY is required for evaluation audit attribution")
+    database = _worker_database()
+    try:
+        scheduled = PostgresJobRepository(database.engine).schedule_evaluation(
+            attempt_id=args.attempt_id,
+            policy_config_id=args.policy_config_id,
+            resource_class=args.resource_class,
+            actor=service_identity,
+        )
+        _emit(
+            {
+                "evaluation_id": str(scheduled.evaluation_id),
+                "job_id": str(scheduled.job_id),
+                "input_digest": scheduled.input_digest,
+                "created": scheduled.created,
+                "dispatch_enabled": False,
+            }
+        )
+        return 0
+    finally:
+        database.dispose()
+
+
+def _register_local_grading(args: argparse.Namespace) -> int:
+    _development_only()
+    if os.environ.get("PCB_LOCAL_WORKER_SETUP_ENABLED") != "true":
+        raise ValueError(
+            "set PCB_LOCAL_WORKER_SETUP_ENABLED=true for explicit local grading registration"
+        )
+    if not 1 <= args.slots <= 8:
+        raise ValueError("local grading worker slots must be in [1,8]")
+    if not args.workload_identity.isascii() or not 1 <= len(args.workload_identity) <= 255:
+        raise ValueError("local grading workload identity is invalid")
+    service_identity = os.environ.get("PCB_SERVICE_IDENTITY")
+    admin_url = os.environ.get("PCB_MIGRATION_DATABASE_URL")
+    if not service_identity or not admin_url:
+        raise ValueError("service identity and migration database URL are required")
+
+    plugins = load_allowlist(args.plugin_allowlist)
+    policy = load_scoring_policy(args.scoring_policy)
+    resource = GradingWorkerResourceSpec(
+        schema_version=1,
+        kind="resource_spec",
+        resource_class=args.resource_class,
+        lane="grading",
+        max_parallel_evaluations=1,
+        plugin_allowlist_digest=canonical_document_digest(plugins),
+    )
+    body = canonical_document_bytes(resource)
+    digest = canonical_document_digest(resource)
+    policy_body = canonical_document_bytes(policy)
+    policy_digest = canonical_document_digest(policy)
+    database = _worker_database()
+    admin_database = Database(admin_url)
+    try:
+        object_store = _object_store()
+        artifacts = ArtifactRepository(
+            database.engine, object_store, max_upload_bytes=512 * 1024**2
+        )
+        with admin_database.engine.begin() as connection:
+            connection.execute(
+                postgres_insert(artifact_quota)
+                .values(
+                    visibility="internal",
+                    encryption_domain="worker-config",
+                    max_bytes=64 * 1024**2,
+                )
+                .on_conflict_do_nothing(
+                    index_elements=[artifact_quota.c.visibility, artifact_quota.c.encryption_domain]
+                )
+            )
+        config_id = _register_local_internal_config(
+            admin_engine=admin_database.engine,
+            artifacts=artifacts,
+            kind="resource_spec",
+            digest=digest,
+            body=body,
+            document=resource.model_dump(mode="json"),
+            owner="local-grading-resource-registration",
+        )
+        policy_id = _register_local_internal_config(
+            admin_engine=admin_database.engine,
+            artifacts=artifacts,
+            kind="frozen_scoring_policy",
+            digest=policy_digest,
+            body=policy_body,
+            document=policy.model_dump(mode="json"),
+            owner="local-grading-policy-registration",
+        )
+
+        with database.engine.connect() as connection:
+            existing = (
+                connection.execute(
+                    select(
+                        worker_registration.c.id,
+                        worker_registration.c.status,
+                        worker_registration.c.lane,
+                        worker_registration.c.hardware_class,
+                        worker_registration.c.driver_identity,
+                        worker_registration.c.allowed_queue_classes,
+                        worker_registration.c.allowed_resource_classes,
+                        capacity_slot.c.slot_key,
+                        capacity_slot.c.resource_class,
+                        config_document.c.digest,
+                    )
+                    .select_from(
+                        worker_registration.outerjoin(
+                            capacity_slot, capacity_slot.c.worker_id == worker_registration.c.id
+                        ).outerjoin(
+                            config_document,
+                            config_document.c.id == capacity_slot.c.resource_spec_config_id,
+                        )
+                    )
+                    .where(worker_registration.c.workload_identity == args.workload_identity)
+                    .order_by(capacity_slot.c.slot_key)
+                )
+                .mappings()
+                .all()
+            )
+        if existing:
+            first = existing[0]
+            if (
+                first["status"] != "active"
+                or first["lane"] != "grading"
+                or first["hardware_class"] != "local-docker-development"
+                or first["driver_identity"] != "LocalDockerSandboxProvider"
+                or first["allowed_queue_classes"] != ["grading"]
+                or first["allowed_resource_classes"] != [resource.resource_class]
+                or len(existing) != args.slots
+                or any(
+                    row["resource_class"] != resource.resource_class
+                    or row["digest"] != digest
+                    for row in existing
+                )
+            ):
+                raise ValueError("active grading worker identity has a different resource plan")
+            _emit(
+                {
+                    "worker_id": str(first["id"]),
+                    "policy_config_id": str(policy_id),
+                    "scoring_effective": policy.effective_for_scoring,
+                    "registered": False,
+                    "status": "active",
+                }
+            )
+            return 0
+
+        registration = WorkerRegistrationSpec(
+            workload_identity=args.workload_identity,
+            lane="grading",
+            hardware_class="local-docker-development",
+            driver_identity="LocalDockerSandboxProvider",
+            allowed_queue_classes=("grading",),
+            allowed_resource_classes=(resource.resource_class,),
+            resource_spec_config_id=config_id,
+            slots=tuple(
+                CapacitySlotSpec(
+                    slot_key=f"grading-slot-{index}",
+                    resource_class=resource.resource_class,
+                    resource_spec_config_id=config_id,
+                )
+                for index in range(args.slots)
+            ),
+        )
+        worker_id = PostgresJobRepository(database.engine).register_worker(
+            registration, actor_subject=service_identity
+        )
+        _emit(
+            {
+                "worker_id": str(worker_id),
+                "resource_class": resource.resource_class,
+                "slots": args.slots,
+                "policy_config_id": str(policy_id),
+                "scoring_effective": policy.effective_for_scoring,
+                "registered": True,
+                "dispatch_enabled": False,
+            }
+        )
+        return 0
+    finally:
+        admin_database.dispose()
         database.dispose()
 
 
@@ -749,7 +1080,7 @@ def main(argv: list[str] | None = None) -> int:
     identity = os.environ.get("PCB_SERVICE_IDENTITY") or "local-unverified"
     configure_logging(
         environment=os.environ.get("PCB_ENVIRONMENT", "dev"),
-        role="solve-worker",
+        role="grading-worker" if args.command.startswith("local-grading-") else "solve-worker",
         service_identity=identity,
     )
     try:
@@ -767,6 +1098,12 @@ def main(argv: list[str] | None = None) -> int:
                 watch=args.watch,
                 args=args,
             )
+        if args.command == "local-grading-register":
+            return _register_local_grading(args)
+        if args.command == "local-grading-enqueue":
+            return _enqueue_local_grading(args)
+        if args.command == "local-grading-run":
+            return _run_local_grading(args)
         if args.command == "ec2-run":
             return _run_ec2(args.worker_id, watch=args.watch, args=args)
         return _register_ec2(args)

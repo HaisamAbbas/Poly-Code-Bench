@@ -11,6 +11,7 @@ import polycodebench_orchestration.worker_cli as worker_cli_module
 import pytest
 import yaml
 from polycodebench_core.deployment import EnvironmentManifest, VerifiedDeployment
+from polycodebench_orchestration.grading.worker_runtime import load_grading_image_allowlist
 from polycodebench_orchestration.solve.control_identity import temporary_control_identity
 from polycodebench_orchestration.solve.worker_runtime import (
     SolveWorkerResourceSpec,
@@ -121,6 +122,15 @@ def test_local_image_allowlist_rejects_floating_or_mismatched_images(tmp_path: P
     invalid.write_text(json.dumps({malformed: DIGEST}), encoding="utf-8")
     with pytest.raises(ValueError, match="allowlist contains"):
         load_image_allowlist(invalid)
+
+
+def test_grading_image_allowlist_comes_from_versioned_language_identities() -> None:
+    images = load_grading_image_allowlist(Path("config/images"))
+
+    assert len(images) >= 20
+    assert all(reference.endswith("@" + digest) for reference, digest in images.items())
+    assert any("python-evaluator" in reference for reference in images)
+    assert any("javascript-evaluator" in reference for reference in images)
 
 
 def test_ec2_worker_assembly_requires_verified_solve_role_and_uses_manifest_lanes(
@@ -252,12 +262,40 @@ def test_worker_commands_are_inert_without_the_local_opt_in_flags(
 ) -> None:
     monkeypatch.setenv("PCB_ENVIRONMENT", "dev")
     monkeypatch.delenv("PCB_LOCAL_WORKER_SETUP_ENABLED", raising=False)
+    monkeypatch.delenv("PCB_LOCAL_GRADING_SCHEDULE_ENABLED", raising=False)
     monkeypatch.delenv("PCB_WORKER_DISPATCH_ENABLED", raising=False)
 
     assert worker_main(["local-register"]) == 2
     assert "worker configuration or operation failed" in capsys.readouterr().err
     job_id = UUID("22222222-2222-4222-8222-222222222222")
     assert worker_main(["local-run", "--job-id", str(job_id)]) == 2
+    assert "worker configuration or operation failed" in capsys.readouterr().err
+
+    worker_id = UUID("33333333-3333-4333-8333-333333333333")
+    evaluation_job_id = UUID("44444444-4444-4444-8444-444444444444")
+    assert worker_main(["local-grading-register"]) == 2
+    assert "worker configuration or operation failed" in capsys.readouterr().err
+    attempt_id = UUID("55555555-5555-4555-8555-555555555555")
+    policy_id = UUID("66666666-6666-4666-8666-666666666666")
+    assert worker_main(
+        [
+            "local-grading-enqueue",
+            "--attempt-id",
+            str(attempt_id),
+            "--policy-config-id",
+            str(policy_id),
+        ]
+    ) == 2
+    assert "worker configuration or operation failed" in capsys.readouterr().err
+    assert worker_main(
+        [
+            "local-grading-run",
+            "--worker-id",
+            str(worker_id),
+            "--job-id",
+            str(evaluation_job_id),
+        ]
+    ) == 2
     assert "worker configuration or operation failed" in capsys.readouterr().err
 
 

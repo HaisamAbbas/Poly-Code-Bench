@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "kind": "local_grading_pipeline_evidence",
+  "synthetic_only": true,
+  "date": "2026-10-07",
+  "checks": [
+    {
+      "name": "python_evaluator_real_docker_execution",
+      "result": "passed",
+      "test": "tests/test_evaluator_docker.py::test_evaluator_full_run_clean_reference",
+      "runtime_image": "pcb-python-runtime@sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "evaluator_image": "pcb-python-evaluator@sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99"
+    },
+    {
+      "name": "exact_evaluation_enqueue_and_replay",
+      "result": "passed",
+      "test": "tests/test_grading_scheduler_postgres.py::test_selected_completed_attempt_queues_one_frozen_evaluation",
+      "database": "disposable isolated PostgreSQL 16 test container",
+      "database_role": "pcb_solve_worker",
+      "assertions": [
+        "completed frozen file attempt required",
+        "evaluation and grading job committed together",
+        "same selected attempt replay returned the same evaluation and job IDs",
+        "scheduler audit record committed"
+      ]
+    },
+    {
+      "name": "evaluator_evidence_bundle_and_atomic_gate",
+      "result": "passed",
+      "tests": [
+        "tests/test_grading_executor.py",
+        "tests/test_scheduler_regressions.py::test_evaluation_evidence_and_gate_commit_with_its_leased_job"
+      ]
+    },
+    {
+      "name": "worker_static_contracts",
+      "result": "passed",
+      "checks": ["ruff", "mypy", "uv lock --check", "alembic check"]
+    }
+  ],
+  "policy": {
+    "id": "polycodebench-code-pilot-v1",
+    "effective_for_scoring": false,
+    "calibration_status": "pending"
+  },
+  "not_exercised": [
+    "scoring adapter and scorecard persistence",
+    "release publication",
+    "live model calls",
+    "cloud resources"
+  ]
+}

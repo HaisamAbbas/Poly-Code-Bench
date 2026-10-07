@@ -22,8 +22,8 @@ $roles$;
 GRANT pcb_curator, pcb_operator, pcb_reviewer, pcb_publisher, pcb_scheduler,
       pcb_solve_supervisor, pcb_evaluator, pcb_scorer TO pcb_administrator;
 GRANT pcb_artifact_finalizer TO pcb_administrator;
--- Development-only composition for the opt-in local worker. Deployments must
--- provision separate service identities for scheduler, solve, gateway and artifacts.
-GRANT pcb_scheduler, pcb_solve_supervisor, pcb_model_gateway, pcb_artifact_finalizer
+-- Development-only composition for exact-job local solve and grading workers. Deployments must
+-- provision separate service identities for scheduler, solve, evaluator, gateway and artifacts.
+GRANT pcb_scheduler, pcb_solve_supervisor, pcb_evaluator, pcb_model_gateway, pcb_artifact_finalizer
     TO pcb_solve_worker;
 GRANT USAGE, CREATE ON SCHEMA public TO pcb_migrator;

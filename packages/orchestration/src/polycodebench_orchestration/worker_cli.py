@@ -73,7 +73,7 @@ def _parser() -> argparse.ArgumentParser:
     register.add_argument("--slots", type=int, default=1)
     register.add_argument("--workload-identity", default="local-solve-worker-1")
 
-    run = commands.add_parser("local-run", help="run one solve job or watch the local queue")
+    run = commands.add_parser("local-run", help="run one exact solve job or watch the local queue")
     run.add_argument("--worker-id", type=UUID)
     run.add_argument("--job-id", type=UUID, help="claim only this queued solve job")
     run.add_argument("--watch", action="store_true")
@@ -317,7 +317,14 @@ def _run_local(
 ) -> int:
     _development_only()
     if watch and job_id is not None:
-        raise ValueError("--job-id is available only for a one-shot local worker run")
+        print("--job-id cannot be combined with --watch", file=sys.stderr)
+        return 2
+    if not watch and job_id is None:
+        print(
+            "local one-shot requires --job-id; use --watch for deliberate queue-wide processing",
+            file=sys.stderr,
+        )
+        return 2
     if os.environ.get("PCB_WORKER_DISPATCH_ENABLED") != "true":
         raise ValueError("set PCB_WORKER_DISPATCH_ENABLED=true to allow local queue claims")
     service_identity = os.environ.get("PCB_SERVICE_IDENTITY")

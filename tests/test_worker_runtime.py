@@ -256,7 +256,8 @@ def test_worker_commands_are_inert_without_the_local_opt_in_flags(
 
     assert worker_main(["local-register"]) == 2
     assert "worker configuration or operation failed" in capsys.readouterr().err
-    assert worker_main(["local-run"]) == 2
+    job_id = UUID("22222222-2222-4222-8222-222222222222")
+    assert worker_main(["local-run", "--job-id", str(job_id)]) == 2
     assert "worker configuration or operation failed" in capsys.readouterr().err
 
 
@@ -274,7 +275,31 @@ def test_exact_local_job_cannot_be_combined_with_watch(
     job_id = UUID("11111111-1111-4111-8111-111111111111")
 
     assert worker_main(["local-run", "--watch", "--job-id", str(job_id)]) == 2
-    assert "worker configuration or operation failed" in capsys.readouterr().err
+    assert "--job-id cannot be combined with --watch" in capsys.readouterr().err
+
+
+def test_local_one_shot_requires_exact_job_id(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("PCB_ENVIRONMENT", "dev")
+    monkeypatch.setenv("PCB_WORKER_DISPATCH_ENABLED", "true")
+    monkeypatch.setenv("PCB_SERVICE_IDENTITY", "test-local-worker")
+
+    database_accesses: list[bool] = []
+
+    def unexpected_database_access() -> None:
+        database_accesses.append(True)
+        raise RuntimeError("unfiltered one-shot reached the database")
+
+    monkeypatch.setattr(
+        worker_cli_module,
+        "_worker_database",
+        unexpected_database_access,
+    )
+
+    assert worker_main(["local-run"]) == 2
+    assert database_accesses == []
+    assert "local one-shot requires --job-id" in capsys.readouterr().err
 
 
 def test_ec2_worker_command_requires_an_explicit_dispatch_opt_in(

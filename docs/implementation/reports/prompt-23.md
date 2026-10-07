@@ -52,3 +52,12 @@ run passes 18/18 in the development sandbox. The pre-correction 17/18 report is 
 `docs/implementation/evidence/prompt-22-go-conformance-before-newline-fix.json`. This fixes that
 conformance finding only: C++ admission, a TypeScript task pack, complete E2E-15/35 coverage and
 Phase 4 remain open.
+
+## Status refresh — 2026-10-07
+
+The earlier C++-missing statement above reflects the original 2026-10-05 audit snapshot. The
+follow-up C++ development-sandbox executable admission passes 27/27 checks across eight authored
+variants (`docs/implementation/evidence/prompt-21-cpp-admission-followup.json`). This resolves the
+admission gap only: TypeScript still has no task pack, and quality admission, curator approval,
+race/concurrency coverage, and complete E2E-15/35 task-to-score paths remain open. See the current
+language coverage and Phase 4 reports for the reconciled gate.

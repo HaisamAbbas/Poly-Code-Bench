@@ -1,6 +1,6 @@
 ﻿# Phase 4 aggregate gate — BLOCKED
 
-Date: 2026-10-05
+Date: 2026-10-07 (status refresh)
 
 Phase 4 requires current evidence for Python, Rust, JavaScript, TypeScript, C, C++, Go and Java through plugin registration, admitted task, solve output contract, grading, scoring/replay and capability metadata. Plugin and image registration alone does not close this gate.
 
@@ -19,4 +19,4 @@ E2E-15 and E2E-35 remain PARTIAL. The detailed evidence, task counts, fixture va
 
 The Phase 2 pilot gate remains independently BLOCKED: expected attempts 144, completed 0, model-failed 0, infrastructure/pre-dispatch-blocked 144, provider deliveries 0. The missing authorization, model/judge configuration, active budget, calibrated review panel, production worker and run-start route remain recorded in docs/implementation/evidence/prompt-17-preflight.json.
 
-Next: resolve Go tool identity metadata, admit C++ task variants, create a TypeScript task pack, and execute the remaining required core paths. Prompt 24 remains gated until WP-19 and Phase 4 pass.
+Next: create a TypeScript task pack, refresh Python/Rust evidence, complete quality admission and curator approval, and execute the remaining language paths through grading, scoring and replay. C++ executable admission (27/27) and Go conformance (18/18) are already recorded; their broader language paths remain open. Prompt 24 remains gated until WP-19 and Phase 4 pass.

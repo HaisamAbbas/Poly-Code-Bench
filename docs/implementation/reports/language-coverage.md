@@ -1,14 +1,14 @@
 ﻿# Language extension coverage audit
 
-Date: 2026-10-05
+Date: 2026-10-07 (status refresh)
 Status: PARTIAL  
 Scope: Prompt 23 / WP-19. This report separates local contracts, historical container evidence, current development-sandbox admission, and missing task-backed paths. All authored fixture runs are internal engineering evidence, not model benchmark results.
 
 ## Audit result
 
-Java, C, Go and JavaScript have current development-sandbox executable admissions. All eight language plugin entry points and image identity sets are recorded in the administrative allowlist; that registration does not certify end-to-end language support. The audit test confirms the JavaScript task manifest exists and TypeScript still has none.
+Java, C, C++, Go and JavaScript have current development-sandbox executable admissions. All eight language plugin entry points and image identity sets are recorded in the administrative allowlist; that registration does not certify end-to-end language support. The audit test confirms the JavaScript task manifest exists and TypeScript still has none.
 
-E2E-15 and E2E-35 remain partial. C++ has local task/profile/plan checks but no current sandbox admission. JavaScript and TypeScript have distinct profiles and images; JavaScript has one admitted fixture pack while TypeScript has no pack of its own. Go executable admission remains current, and the corrected development-sandbox conformance run passes 18/18. Python and Rust evidence is reused from earlier prompts and is identified as historical.
+E2E-15 and E2E-35 remain partial. C++ executable admission passes 27/27 in the development sandbox, but local TSan is unsupported and race/concurrency coverage remains unverified. JavaScript and TypeScript have distinct profiles and images; JavaScript has one admitted fixture pack while TypeScript has no pack of its own. Go executable admission passes 24/24 and corrected development-sandbox conformance passes 18/18. Python and Rust evidence is reused from earlier prompts and is identified as historical.
 
 ## Profiles, toolchains, image identities, and task counts
 

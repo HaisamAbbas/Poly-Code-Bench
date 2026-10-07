@@ -4,26 +4,28 @@
   "verified_at": "2026-10-07",
   "environment": "local synthetic PostgreSQL test database and offline worker container smoke",
   "behavior": {
-    "claim_filters": ["exact_job_id", "solve_stage"],
+    "claim_filters": ["exact_job_id", "approved_run_id", "solve_stage"],
     "one_shot_target_miss_falls_back": false,
-    "targeted_claim_with_other_ready_job": "claimed only the requested job",
+    "targeted_claim_with_other_ready_job": "claimed only the requested job or a solve job belonging to the requested run",
     "wrong_stage_target": "remained queued",
     "local_job_id_with_watch": "refused before opening the database",
-    "local_one_shot_without_job_id": "refused before opening the database",
+    "local_run_id_with_watch": "accepted and remains scoped to the requested run",
+    "local_one_shot_without_job_or_run_id": "refused before opening the database",
     "ec2_worker_stage_filter": "solve"
   },
   "verification": {
-    "unit_and_cli_tests": "41 passed",
-    "postgres_claim_filter_tests": "2 passed",
+    "unit_and_cli_tests": "45 passed",
+    "postgres_claim_filter_tests": "3 passed, 10 deselected",
+    "approved_submission_run_scope_test": "1 passed, 3 deselected",
     "strict_mypy": "3 source files, no issues",
     "ruff": "changed files clean and formatted",
     "container": {
       "image": "pcb-solve-worker:local-20261007",
-      "image_id": "sha256:fd55a7d95abfcc9199a1a87b869536b8d667cb258d57a5c31e8dc29fc2587426",
+      "image_id": "sha256:d1c03066b5b6bf5dc20909331c826100b9a33b1d236c5952658d4e4897784406",
       "user": "10001:10001",
       "smoke": "pcb-worker local-run --help and unfiltered local-run refusal with a non-root user, read-only root filesystem, no network, no capabilities, and no-new-privileges",
       "unfiltered_one_shot_exit": 2,
-      "unfiltered_one_shot_result": "refused with a clear --job-id message before database access"
+      "unfiltered_one_shot_result": "refused with a clear --job-id or --run-id message before database access"
     }
   },
   "dispatch_enabled": false,

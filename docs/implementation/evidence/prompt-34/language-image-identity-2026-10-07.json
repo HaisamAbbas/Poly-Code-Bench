@@ -1,13 +1,18 @@
 {
   "schema_version": 1,
   "kind": "local_language_image_identity_audit",
-  "verified_at_utc": "2026-10-07T09:19:52+00:00",
-  "source_revision": "6aebad909ff0c631927703cccac84aac58f836e1",
+  "verified_at_utc": "2026-10-07T09:25:36+00:00",
+  "source_revision": "079bda5991e3247ce6917863a06c7bfa31f7b512",
   "environment": {
     "docker_engine": "29.7.2",
-    "scope": "local images only; no pull, build, container start, task execution, or provider access"
+    "scope": "local v1 tags mapped to language identities; no pull, build, container start, task execution, or provider access"
   },
   "command": "PowerShell read-only audit: uv run python - using config/plugins/allowlist-v1.yaml, docker image ls, docker image inspect, and docker info --format",
+  "counts": {
+    "allowlisted_digests": 24,
+    "present_digests": 24,
+    "languages": 8
+  },
   "languages": [
     {
       "language": "c",
@@ -132,12 +137,7 @@
   ],
   "result": "pass",
   "limitations": [
-    "Image presence and digest match do not prove the image is current with every source edit.",
+    "Digest presence is checked under the matching language-specific local v1 tag; it does not prove an image is freshly rebuilt from every source edit.",
     "This does not establish task admission, quality approval, end-to-end language coverage, production isolation, or benchmark results."
-  ],
-  "counts": {
-    "allowlisted_digests": 24,
-    "present_digests": 24,
-    "languages": 8
-  }
+  ]
 }

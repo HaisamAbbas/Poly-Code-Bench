@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "environment_class": "local loopback API origin; no CDN",
+  "target_mode": "explicit_api_origin",
+  "target_release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
+  "release_fixture_kind": "synthetic_internal",
+  "claim": "read-only API route measurement only; does not establish browser page timing or the A 15.3 300 ms staging target",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10"
+  },
+  "requests": 11,
+  "concurrency": 1,
+  "routes_exercised": [
+    "/v1/releases",
+    "/v1/releases/7c7fffc5-308f-4837-af58-1d18ba752b22",
+    "/v1/leaderboard",
+    "/v1/tasks",
+    "/v1/methodology/synthetic-ui-fixture-v1",
+    "/v1/models/synthetic-answer-only",
+    "/v1/languages/python",
+    "/v1/scorecards/synthetic-scorecard-answer",
+    "/v1/compare",
+    "/v1/tasks/synthetic-browse-task-001",
+    "/v1/tasks/synthetic-browse-task-001/content"
+  ],
+  "throughput_rps": 22.1,
+  "latency_ms": {
+    "p50": 45.076,
+    "p95": 47.636,
+    "p99": 47.777,
+    "max": 47.812,
+    "mean": 45.086
+  },
+  "revalidations_304": 2,
+  "revalidations": 2,
+  "error_rate": 0.0,
+  "errors": [],
+  "per_route": {
+    "/v1/releases": {
+      "requests": 1,
+      "p50_ms": 47.812,
+      "p95_ms": 47.812
+    },
+    "/v1/releases/7c7fffc5-308f-4837-af58-1d18ba752b22": {
+      "requests": 1,
+      "p50_ms": 44.922,
+      "p95_ms": 44.922
+    },
+    "/v1/leaderboard": {
+      "requests": 1,
+      "p50_ms": 41.251,
+      "p95_ms": 41.251
+    },
+    "/v1/tasks": {
+      "requests": 1,
+      "p50_ms": 45.325,
+      "p95_ms": 45.325
+    },
+    "/v1/methodology/synthetic-ui-fixture-v1": {
+      "requests": 1,
+      "p50_ms": 45.076,
+      "p95_ms": 45.076
+    },
+    "/v1/models/synthetic-answer-only": {
+      "requests": 1,
+      "p50_ms": 47.46,
+      "p95_ms": 47.46
+    },
+    "/v1/languages/python": {
+      "requests": 1,
+      "p50_ms": 46.785,
+      "p95_ms": 46.785
+    },
+    "/v1/scorecards/synthetic-scorecard-answer": {
+      "requests": 1,
+      "p50_ms": 43.626,
+      "p95_ms": 43.626
+    },
+    "/v1/compare": {
+      "requests": 1,
+      "p50_ms": 45.168,
+      "p95_ms": 45.168
+    },
+    "/v1/tasks/synthetic-browse-task-001": {
+      "requests": 1,
+      "p50_ms": 43.597,
+      "p95_ms": 43.597
+    },
+    "/v1/tasks/synthetic-browse-task-001/content": {
+      "requests": 1,
+      "p50_ms": 44.925,
+      "p95_ms": 44.925
+    }
+  }
+}

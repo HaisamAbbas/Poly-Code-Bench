@@ -138,3 +138,10 @@ leaderboard entries and the first 50 task rows. The temporary container and envi
 removed after the check; no database writes, provider calls or cloud resources were used. This
 verifies the current API image against local data only; it is not a staging deployment. Sanitized
 details: [`api-container-python312-2026-10-07.json`](../implementation/evidence/prompt-33/api-container-python312-2026-10-07.json).
+
+The same image then passed all 11 release-backed public GET routes, with zero errors, on the
+same synthetic release. The explicit-origin rehearsal sent one request per route (plus route
+discovery/warm-up), and two conditional requests returned 304. The observed 45.076 ms p50 and
+47.636 ms p95 describe this workstation and this small sample only; they are not an SLA or a
+staging performance claim. Details:
+[`api-container-routes-python312-2026-10-07.json`](../implementation/evidence/prompt-33/api-container-routes-python312-2026-10-07.json).

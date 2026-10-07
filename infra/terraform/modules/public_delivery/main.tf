@@ -2,7 +2,7 @@
 # public API / web origin (A 15.1, T 19.5, T 21).
 #
 #   /releases/*  /keys/*   -> public bucket via Origin Access Control (immutable objects)
-#   /v1/*  /healthz        -> ALB -> api (read-only public routes, short cache)
+#   allowlisted public /v1 routes -> ALB -> api (short cache; no submission/artifact routes)
 #   default                -> ALB -> web (Next.js)
 # The bucket stays private (public access block on); only this distribution can read it.
 
@@ -49,6 +49,22 @@ resource "aws_cloudfront_cache_policy" "api" {
     query_strings_config {
       query_string_behavior = "all"
     }
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "public_artifact" {
+  name = "${local.name}-public-artifact-token"
+  query_strings_config {
+    query_string_behavior = "whitelist"
+    query_strings {
+      items = ["release", "token"]
+    }
+  }
+  headers_config {
+    header_behavior = "none"
+  }
+  cookies_config {
+    cookie_behavior = "none"
   }
 }
 
@@ -117,13 +133,39 @@ resource "aws_cloudfront_distribution" "this" {
     compress                   = true
   }
 
+  dynamic "ordered_cache_behavior" {
+    for_each = toset([
+      "/v1/compare",
+      "/v1/languages/*",
+      "/v1/leaderboard",
+      "/v1/methodology/*",
+      "/v1/models/*",
+      "/v1/releases",
+      "/v1/releases/*",
+      "/v1/scorecards/*",
+      "/v1/tasks",
+      "/v1/tasks/*",
+    ])
+    content {
+      path_pattern               = ordered_cache_behavior.value
+      target_origin_id           = "control-alb"
+      viewer_protocol_policy     = "redirect-to-https"
+      allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+      cached_methods             = ["GET", "HEAD"]
+      cache_policy_id            = aws_cloudfront_cache_policy.api.id
+      response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+      compress                   = true
+    }
+  }
+
   ordered_cache_behavior {
-    path_pattern               = "/v1/public/*"
+    path_pattern               = "/v1/artifacts/*"
     target_origin_id           = "control-alb"
     viewer_protocol_policy     = "redirect-to-https"
     allowed_methods            = ["GET", "HEAD", "OPTIONS"]
     cached_methods             = ["GET", "HEAD"]
-    cache_policy_id            = aws_cloudfront_cache_policy.api.id
+    cache_policy_id            = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.public_artifact.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
     compress                   = true
   }

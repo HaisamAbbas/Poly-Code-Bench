@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-07",
+  "scope": "Loopback-only self-hosted website and API",
+  "environment": "Local PostgreSQL, SeaweedFS, Keycloak, FastAPI and Next.js",
+  "database": {
+    "engine": "PostgreSQL",
+    "alembic_revision": "d4f082b91c33"
+  },
+  "api_probe": {
+    "health": "ok",
+    "release_scoped_artifact_routes_in_openapi": true
+  },
+  "web_probe": {
+    "leaderboard_http_status": 200,
+    "keycloak_discovery_http_status": 200
+  },
+  "browser_smoke": {
+    "result": "passed",
+    "postgres_release_backed_public_pages": 9,
+    "keycloak_login": "passed",
+    "metadata_only_submission_and_owner_status": "passed",
+    "reviewer_authorization_and_owner_isolation": "passed",
+    "keyboard_and_mobile_layout": "passed",
+    "submitted_provider_endpoint_contacted": false,
+    "model_run_created": false
+  },
+  "data_label": "synthetic internal test data, not benchmark results",
+  "private_screenshot_location": "gitignored .cache/local-stack-browser",
+  "cloud_resources_or_model_spend": false
+}

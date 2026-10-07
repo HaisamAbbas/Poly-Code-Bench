@@ -2,6 +2,11 @@
 
 **Status: blocked on authorization.** Nothing has been provisioned, and no AWS call has been made. This plan is the exact remaining work for E2E-42 and E2E-43 in actual staging. The IaC is written and validated (`terraform validate` passes for both roots, with the AWS provider pinned at 6.36.0). The application-side tooling has been rehearsed locally (rehearsal-report-2026-10.md).
 
+The owner has since selected Alibaba Cloud as a possible trial target, but has not checked account
+entitlements, quotas, region, or shutdown date. This file remains AWS-specific. See
+[`alibaba-trial-readiness.md`](alibaba-trial-readiness.md) for current official trial terms and the
+console values needed before designing a separate provider target.
+
 ## 1. Inputs the owner must supply (T 25.3)
 
 | # | Input | Used by |

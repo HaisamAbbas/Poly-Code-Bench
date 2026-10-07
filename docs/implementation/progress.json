@@ -956,9 +956,16 @@
         "public_api_uncached_p95_ms": 443.3
       },
       "blockers": [
-        "No authorized staging AWS account/region, approved monthly cap (proposed USD 600 + 150 one-off), operator SSO principals, state backend, domain/certificates, approved guest AMI or service image digests: staging deployment and E2E-42/43 staging variants not run",
+        "No authorized staging cloud target: AWS account/inputs/spend cap are absent; the selected Alibaba trial account's region, product entitlements, quotas, billing behavior, spend cap and shutdown date remain unchecked, and this repository's Terraform is AWS-specific",
         "16 expired local development guests (provider local-default) found by dry-run sweep; not reclaimed because they belong to other sessions' work"
       ],
-      "next_action": "Staging remains blocked until the owner supplies an AWS account/region, SSO principals, state backend, deployment inputs and approved spend threshold. D-33-03/D-33-04 now pass local migration checks; then run staging plan sections 2-3."
+      "local_functional_stack_refresh": {
+        "date": "2026-10-07",
+        "result": "passed",
+        "evidence": "docs/implementation/evidence/prompt-33/local-functional-stack-2026-10-07.json",
+        "coverage": "Nine release-backed pages, current artifact-route API, Keycloak sign-in, metadata-only submission, reviewer authorization, owner isolation, keyboard and mobile layout",
+        "limitations": "Synthetic internal data; no provider URL or model run; production cloud/IAM remains blocked"
+      },
+      "next_action": "The Alibaba trial account and console entitlements remain unchecked. After region, resource quotas/expiry, billing behavior, maximum spend and shutdown date are known, prepare a provider-specific target; do not apply cloud resources before its plan is reviewed and authorized."
     }
 }

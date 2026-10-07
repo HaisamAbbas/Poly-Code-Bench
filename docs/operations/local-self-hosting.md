@@ -46,6 +46,8 @@ npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycod
 
 This browser smoke uses the generated local account, writes one synthetic metadata-only request per run, verifies the owner status path, reviewer queue and owner isolation, and saves local-only screenshots under `.cache/local-stack-browser/`. It does not contact the submitted provider URL or create a run.
 
+Local refresh on 2026-10-07 passed: all nine PostgreSQL release-backed pages, Keycloak login, reviewer authorization, owner isolation, keyboard access and mobile layout. The refreshed API also exposes the release-scoped artifact routes, with its catalog migration at `d4f082b91c33`. Sanitized evidence is in `docs/implementation/evidence/prompt-33/local-functional-stack-2026-10-07.json`; the browser screenshots remain in ignored `.cache/`.
+
 To run the PostgreSQL-backed submission/approval integration against the disposable local test database, set the opt-in test URLs from `.env` and run only that integration module:
 
 ```powershell

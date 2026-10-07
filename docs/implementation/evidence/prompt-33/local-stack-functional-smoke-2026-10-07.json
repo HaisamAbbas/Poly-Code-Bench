@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at_utc": "2026-10-07T04:57:39Z",
+  "captured_at_utc": "2026-10-07T05:00:00Z",
   "environment": "loopback-only local development",
   "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
   "fixture_kind": "synthetic_internal",
@@ -51,7 +51,8 @@
     "standalone_public_page": "passed; static CSS served with HTTP 200; actual PostgreSQL-backed synthetic release rendered",
     "standalone_mobile_metrics_keyboard_scroll": "passed at 390x844",
     "standalone_http_sign_in": "unavailable as expected; production OIDC requires HTTPS and loopback here is HTTP",
-    "development_oidc_browser_smoke": "passed; Keycloak login, PostgreSQL-backed metadata-only request/status, reviewer authorization, cross-owner isolation, keyboard access and mobile layout",
+    "development_release_backed_pages_rendered": 9,
+    "development_oidc_browser_smoke": "passed; all nine public pages rendered the PostgreSQL-backed release; Keycloak login, metadata-only request/status, reviewer authorization, cross-owner isolation, keyboard access and mobile layout",
     "provider_endpoint_contacted": false
   },
   "browser_suites": {

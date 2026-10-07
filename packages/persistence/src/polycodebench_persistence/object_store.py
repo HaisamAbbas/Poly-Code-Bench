@@ -9,6 +9,7 @@ import re
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, cast
+from urllib.parse import urlsplit
 
 import boto3  # type: ignore[import-untyped]
 from botocore.config import Config  # type: ignore[import-untyped]
@@ -16,6 +17,8 @@ from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
+else:
+    S3Client = Any
 
 
 RESERVED_LIFECYCLE_PREFIXES = frozenset({"provisional", "debug", "cancelled-logs"})
@@ -59,6 +62,15 @@ def object_store_region(environ: Mapping[str, str] | None = None) -> str:
     return region
 
 
+def object_store_ram_role_name(environ: Mapping[str, str] | None = None) -> str:
+    """Read the non-secret ECS RAM role name required for Alibaba OSS credentials."""
+    source = os.environ if environ is None else environ
+    role_name = source.get("PCB_ALIBABA_RAM_ROLE_NAME", "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", role_name):
+        raise ValueError("PCB_ALIBABA_RAM_ROLE_NAME must be a valid ECS RAM role name")
+    return role_name
+
+
 def _add_oss_no_overwrite_header(request: Any, **kwargs: Any) -> None:
     """Sign OSS's native no-overwrite control before the SigV4 request is finalized."""
     request.headers["x-oss-forbid-overwrite"] = "true"
@@ -73,6 +85,67 @@ def configure_oss_put_protection(client: Any) -> None:
     )
 
 
+def _validate_alibaba_oss_endpoint(endpoint_url: str, region_name: str) -> None:
+    """Keep temporary RAM-role credentials on Alibaba's regional HTTPS OSS endpoint."""
+    parsed = urlsplit(endpoint_url)
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != f"oss-{region_name}.aliyuncs.com"
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.port not in (None, 443)
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("Alibaba OSS requires its regional HTTPS endpoint")
+
+
+def create_s3_compatible_client(
+    *,
+    endpoint_url: str,
+    region_name: str,
+    addressing_style: Literal["path", "virtual"],
+    provider: ObjectStoreProvider,
+    ram_role_name: str | None = None,
+    access_key_id: str | None = None,
+    secret_access_key: str | None = None,
+) -> S3Client:
+    """Create a regional S3 client with the selected backend's signing and credential flow."""
+    if provider == "alibaba_oss":
+        _validate_alibaba_oss_endpoint(endpoint_url, region_name)
+        if addressing_style != "virtual":
+            raise ValueError("Alibaba OSS requires virtual-hosted object addressing")
+        if not ram_role_name:
+            raise ValueError("Alibaba OSS requires an attached ECS RAM role")
+        from polycodebench_persistence.alibaba_credentials import boto3_session_for_ram_role
+
+        from_config = Config(
+            signature_version="s3v4",
+            s3={"addressing_style": addressing_style},
+            request_checksum_calculation="when_required",
+        )
+        client = boto3_session_for_ram_role(ram_role_name).client(
+            "s3",
+            endpoint_url=endpoint_url,
+            region_name=region_name,
+            config=from_config,
+        )
+        configure_oss_put_protection(client)
+        return cast(S3Client, client)
+    return cast(
+        S3Client,
+        boto3.client(
+            "s3",
+            endpoint_url=endpoint_url,
+            region_name=region_name,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
+            config=Config(signature_version="s3v4", s3={"addressing_style": addressing_style}),
+        ),
+    )
+
+
 class S3ArtifactStore:
     """Private S3 adapter; callers supply visibility and never arbitrary keys."""
 
@@ -84,6 +157,7 @@ class S3ArtifactStore:
         region_name: str = "us-east-1",
         addressing_style: Literal["path", "virtual"] = "path",
         provider: ObjectStoreProvider = "s3",
+        ram_role_name: str | None = None,
     ) -> None:
         if set(buckets) != {"hidden", "internal", "public"} or len(set(buckets.values())) != 3:
             raise ValueError("three distinct artifact buckets are required")
@@ -102,23 +176,13 @@ class S3ArtifactStore:
             raise ValueError("Alibaba OSS bucket names must be DNS-compatible lowercase names")
         self._buckets = dict(buckets)
         self._provider = provider
-        client_config = Config(
-            signature_version="s3v4",
-            s3={"addressing_style": addressing_style},
-            **(
-                {"request_checksum_calculation": "when_required"}
-                if provider == "alibaba_oss"
-                else {}
-            ),
-        )
-        self._client: S3Client = boto3.client(
-            "s3",
+        self._client = create_s3_compatible_client(
             endpoint_url=endpoint_url,
             region_name=region_name,
-            config=client_config,
+            addressing_style=addressing_style,
+            provider=provider,
+            ram_role_name=ram_role_name,
         )
-        if provider == "alibaba_oss":
-            configure_oss_put_protection(self._client)
 
     @classmethod
     def from_environment(
@@ -130,12 +194,14 @@ class S3ArtifactStore:
     ) -> S3ArtifactStore:
         """Build a client with provider-specific signing and addressing settings."""
         provider = object_store_provider()
+        ram_role_name = object_store_ram_role_name() if provider == "alibaba_oss" else None
         return cls(
             endpoint_url=endpoint_url,
             buckets=buckets,
             region_name=(object_store_region() if region_name is None else region_name),
             addressing_style=object_store_addressing_style(),
             provider=provider,
+            ram_role_name=ram_role_name,
         )
 
     def _put_object(self, *, bucket: str, key: str, body: bytes) -> None:

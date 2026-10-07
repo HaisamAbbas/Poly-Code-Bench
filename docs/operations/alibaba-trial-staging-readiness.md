@@ -4,7 +4,8 @@
 account-specific product eligibility, quotas, region, expiry, and an approved spend ceiling
 have not been checked. No Alibaba API has been called and no cloud resource has been created.
 This document records the code boundary and the inputs needed before a deployable target can be
-selected.
+selected. Alibaba's general trial terms were rechecked against the official documentation on
+October 7, 2026; the signed-in console remains authoritative for account-specific offers.
 
 ## Can the linked free trial host this application?
 
@@ -27,6 +28,12 @@ Alibaba documents two different trial types:
   solution, and delete the trial account/resources/data when ended or expired. They are suitable
   for a disposable POC, not a persistent staging environment. Point deductions follow cloud
   product billing cycles and may continue after the trial ends.
+
+Alibaba's current general terms offer 50 initial solution-trial points once per user; completing
+a solution's first deployment can award another 5 points for that solution, up to 50 incentive
+points across eligible solutions. Points last one year, are applied at one point per US dollar of
+actual resource bills, and billing-cycle deductions can continue after a trial ends. This is not
+a zero-bill guarantee or an account-wide spending cap. See the [official solution-trial terms](https://www.alibabacloud.com/help/en/user-center/product-overview/learn-about-free-trials).
 
 As of October 6, 2026, Alibaba's published ECS trial guide describes a three-month eligibility
 window backed by a finite quota: CNY 300 for personal verification or CNY 660 for enterprise

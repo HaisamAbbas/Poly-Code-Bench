@@ -1,182 +1,48 @@
 {
-  "config": {
-    "configFile": "D:\\Poly-Code-Bench\\apps\\web\\playwright.prompt31.config.ts",
-    "rootDir": "D:/Poly-Code-Bench/apps/web/tests/e2e",
-    "failOnFlakyTests": false,
-    "forbidOnly": false,
-    "fullyParallel": false,
-    "globalSetup": "D:\\Poly-Code-Bench\\apps\\web\\tests\\e2e\\global-setup.ts",
-    "globalTeardown": null,
-    "globalTimeout": 0,
-    "grep": {},
-    "grepInvert": null,
-    "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
-    "preserveOutput": "always",
-    "projects": [
-      {
-        "outputDir": "D:/Poly-Code-Bench/.cache/playwright/prompt31-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
-        "id": "",
-        "name": "",
-        "testDir": "D:/Poly-Code-Bench/apps/web/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "prompt31.spec.ts"
-        ],
-        "timeout": 60000
-      }
-    ],
-    "quiet": false,
-    "reporter": [
-      [
-        "list",
-        null
-      ],
-      [
-        "json",
+  "schema_version": 1,
+  "suite": "Prompt 31 public analysis workflows",
+  "completed_at_utc": "2026-10-07T04:56:00.362Z",
+  "stats": {
+    "total": 3,
+    "expected": 3,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "duration_ms": 39083.918000000005
+  },
+  "tests": [
+    {
+      "title": " > prompt31.spec.ts > E2E-39 navigation: leaderboard → compatible comparison → disclosed task → score evidence",
+      "outcome": "expected",
+      "attempts": [
         {
-          "outputFile": "D:\\Poly-Code-Bench\\docs\\implementation\\evidence\\prompt-31\\browser-results.json"
+          "status": "passed",
+          "duration_ms": 17578,
+          "retry": 0
         }
       ]
-    ],
-    "reportSlowTests": {
-      "max": 5,
-      "threshold": 300000
     },
-    "shard": null,
-    "tags": [],
-    "updateSnapshots": "missing",
-    "updateSourceMethod": "patch",
-    "version": "1.61.0",
-    "workers": 1,
-    "webServer": null
-  },
-  "suites": [
     {
-      "title": "prompt31.spec.ts",
-      "file": "prompt31.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
+      "title": " > prompt31.spec.ts > E2E-39 and E2E-26: incompatible cohorts, private probes and safe public export",
+      "outcome": "expected",
+      "attempts": [
         {
-          "title": "E2E-39 navigation: leaderboard → compatible comparison → disclosed task → score evidence",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 60000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 12651,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:32:03.701Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "096999a8dbb0a5ba913c-e9e963b70e6c70ebb4b4",
-          "file": "prompt31.spec.ts",
-          "line": 20,
-          "column": 5
-        },
+          "status": "passed",
+          "duration_ms": 2698,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt31.spec.ts > E2E-40 affected cases: bounded task pagination, lazy payloads, keyboard operation and responsive layouts",
+      "outcome": "expected",
+      "attempts": [
         {
-          "title": "E2E-39 and E2E-26: incompatible cohorts, private probes and safe public export",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 60000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2264,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:32:16.611Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "096999a8dbb0a5ba913c-5b9cc1f9d45e93c16a58",
-          "file": "prompt31.spec.ts",
-          "line": 105,
-          "column": 5
-        },
-        {
-          "title": "E2E-40 affected cases: bounded task pagination, lazy payloads, keyboard operation and responsive layouts",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 60000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 4356,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:32:18.888Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "096999a8dbb0a5ba913c-76bb66bde3fe6f90b391",
-          "file": "prompt31.spec.ts",
-          "line": 144,
-          "column": 5
+          "status": "passed",
+          "duration_ms": 7123,
+          "retry": 0
         }
       ]
     }
-  ],
-  "errors": [],
-  "stats": {
-    "startTime": "2026-10-06T10:31:55.477Z",
-    "duration": 28986.344,
-    "expected": 3,
-    "skipped": 0,
-    "unexpected": 0,
-    "flaky": 0
-  }
+  ]
 }

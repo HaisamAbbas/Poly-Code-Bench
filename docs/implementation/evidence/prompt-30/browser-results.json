@@ -1,216 +1,59 @@
 {
-  "config": {
-    "configFile": "D:\\Poly-Code-Bench\\apps\\web\\playwright.config.ts",
-    "rootDir": "D:/Poly-Code-Bench/apps/web/tests/e2e",
-    "failOnFlakyTests": false,
-    "forbidOnly": false,
-    "fullyParallel": false,
-    "globalSetup": "D:\\Poly-Code-Bench\\apps\\web\\tests\\e2e\\global-setup.ts",
-    "globalTeardown": null,
-    "globalTimeout": 0,
-    "grep": {},
-    "grepInvert": null,
-    "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
-    "preserveOutput": "always",
-    "projects": [
-      {
-        "outputDir": "D:/Poly-Code-Bench/.cache/playwright/prompt30-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
-        "id": "",
-        "name": "",
-        "testDir": "D:/Poly-Code-Bench/apps/web/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "prompt30.spec.ts"
-        ],
-        "timeout": 30000
-      }
-    ],
-    "quiet": false,
-    "reporter": [
-      [
-        "list",
-        null
-      ],
-      [
-        "json",
+  "schema_version": 1,
+  "suite": "Prompt 30 public pages",
+  "completed_at_utc": "2026-10-07T04:55:10.689Z",
+  "stats": {
+    "total": 4,
+    "expected": 4,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "duration_ms": 20414.835
+  },
+  "tests": [
+    {
+      "title": " > prompt30.spec.ts > E2E-39 segment: release-backed leaderboard values link to their source scorecards",
+      "outcome": "expected",
+      "attempts": [
         {
-          "outputFile": "D:\\Poly-Code-Bench\\docs\\implementation\\evidence\\prompt-30\\browser-results.json"
+          "status": "passed",
+          "duration_ms": 1356,
+          "retry": 0
         }
       ]
-    ],
-    "reportSlowTests": {
-      "max": 5,
-      "threshold": 300000
     },
-    "shard": null,
-    "tags": [],
-    "updateSnapshots": "missing",
-    "updateSourceMethod": "patch",
-    "version": "1.61.0",
-    "workers": 1,
-    "webServer": null
-  },
-  "suites": [
     {
-      "title": "prompt30.spec.ts",
-      "file": "prompt30.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
+      "title": " > prompt30.spec.ts > E2E-39 segment: URL filters, metric sorting, release selection, and language diagnostics stay in scope",
+      "outcome": "expected",
+      "attempts": [
         {
-          "title": "E2E-39 segment: release-backed leaderboard values link to their source scorecards",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1585,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:31:32.957Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "656c2e0302ada7fe757c-7ab3cf895b4c06cc45e6",
-          "file": "prompt30.spec.ts",
-          "line": 13,
-          "column": 5
-        },
+          "status": "passed",
+          "duration_ms": 4576,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt30.spec.ts > E2E-40 subcase: code profiles expose measured dimensions and answer-only profiles omit code charts",
+      "outcome": "expected",
+      "attempts": [
         {
-          "title": "E2E-39 segment: URL filters, metric sorting, release selection, and language diagnostics stay in scope",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 5170,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:31:35.168Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "656c2e0302ada7fe757c-5a26c2aafccf06f672a1",
-          "file": "prompt30.spec.ts",
-          "line": 42,
-          "column": 5
-        },
+          "status": "passed",
+          "duration_ms": 3662,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt30.spec.ts > E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API error states",
+      "outcome": "expected",
+      "attempts": [
         {
-          "title": "E2E-40 subcase: code profiles expose measured dimensions and answer-only profiles omit code charts",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3289,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:31:40.353Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "656c2e0302ada7fe757c-2cc49edbde84dfeb00c9",
-          "file": "prompt30.spec.ts",
-          "line": 86,
-          "column": 5
-        },
-        {
-          "title": "E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API error states",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2349,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-06T10:31:43.657Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "656c2e0302ada7fe757c-41c8122f34b162effd77",
-          "file": "prompt30.spec.ts",
-          "line": 110,
-          "column": 5
+          "status": "passed",
+          "duration_ms": 2079,
+          "retry": 0
         }
       ]
     }
-  ],
-  "errors": [],
-  "stats": {
-    "startTime": "2026-10-06T10:31:23.486Z",
-    "duration": 24035.38,
-    "expected": 4,
-    "skipped": 0,
-    "unexpected": 0,
-    "flaky": 0
-  }
+  ]
 }

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scenario": "E2E-25",
+  "verified_at": "2026-10-07",
+  "result": "passed",
+  "environment": "local synthetic/test services and PostgreSQL 17.6",
+  "verification": {
+    "role_policy_and_route_suites": {
+      "result": "passed",
+      "tests_passed": 16,
+      "coverage": [
+        "Every declared permission across submitter, curator, operator, reviewer, publisher, and administrator roles",
+        "Submission review and approval route role and MFA matrix",
+        "Separate curator, reviewer, and publisher release lifecycle with denied cross-role mutations",
+        "PostgreSQL task admission denies operator writes and permits curator admission",
+        "PostgreSQL run creation denies curator writes without inserting a run and permits idempotent operator creation"
+      ]
+    },
+    "restricted_postgres_api_routes": {
+      "result": "passed",
+      "tests_passed": 2,
+      "coverage": [
+        "Actual restricted API login remains outside administrator and operator database roles",
+        "Submitter ownership, reviewer rejection, and audit route behavior",
+        "Endpoint review and one bounded queued run through approval and interruption recovery"
+      ]
+    }
+  },
+  "totals": {
+    "tests_passed": 18,
+    "tests_failed": 0,
+    "tests_skipped": 0
+  },
+  "limitations": [
+    "This is local synthetic/test evidence; it does not establish cloud identity federation or production IAM policy.",
+    "The queued approval fixture does not dispatch a model call or incur provider spend."
+  ]
+}

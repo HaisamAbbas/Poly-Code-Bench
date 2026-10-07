@@ -919,11 +919,11 @@
             "PCB-32-4": "release-backed submission page, typed request/error/status and responsive keyboard flow implemented"
         },
         "e2e": {
-            "E2E-25": "local API role/MFA/owner variants and PostgreSQL-backed submission route/RLS/audit cases pass; broader role/run routes remain partial",
+            "E2E-25": "passed at the local service/API/PostgreSQL tier; six-role permission matrix, task/run write denials, separate release roles, MFA-gated admin routes, restricted API login, owner isolation and bounded approval recovery pass; production IAM is not claimed",
             "E2E-26": "public task/export/owner-status privacy probes pass; binary artifact route and production IAM remain partial",
             "E2E-39": "passed for leaderboard-to-evidence and leaderboard-to-submission/status journeys",
             "E2E-40": "page/accessibility/responsive/pagination cases pass; declared-load rehearsal remains partial",
-            "E2E-41": "synthetic bounded request-to-approved-run/status lifecycle and PostgreSQL-backed create/reject/owner status/endpoint/run approval recovery pass locally; production IAM and full role-matrix cases remain open"
+            "E2E-41": "synthetic bounded request-to-approved-run/status lifecycle and PostgreSQL-backed create/reject/owner status/endpoint/run approval recovery pass locally; production IAM remains open"
         },
         "no_live_benchmark_results_claimed": true,
         "no_live_spend_or_provider_contact": true,

@@ -68,3 +68,12 @@ now mark defaulted response fields as required while keeping request defaults op
 client aliases those generated response models and constrains public reads to generated GET
 responses. `tests/test_public_api_openapi.py`, `pnpm api:types:check`, web typecheck/build/lint,
 Ruff, and strict mypy pass. The full private-artifact/production IAM gate remains open.
+
+### Status refresh — 2026-10-07
+
+E2E-25 now passes at the local service/API/PostgreSQL tier. The full six-role permission map,
+task/run write-denial behavior, distinct curator/reviewer/publisher release transitions, and
+MFA-gated submission administration are covered by the refreshed test matrix. The actual
+restricted PostgreSQL API login remains outside administrator/operator roles; bounded approval
+recovery and audit cases pass without model dispatch. Evidence: `evidence/e2e-25-role-matrix-2026-10-07.json`.
+E2E-26 production artifact/IAM denial and the complete E2E-28 cohort matrix remain open.

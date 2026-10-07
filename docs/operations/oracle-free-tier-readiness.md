@@ -3,7 +3,7 @@
 **Status: preparation only.** The owner linked Oracle's Free Tier page, but has not reported an
 Oracle account, selected a home region, checked account quotas, or approved a spend limit. No OCI
 API has been called and no cloud resource has been created. This assessment was checked against
-Oracle's official documentation on October 6, 2026; the signed-in console remains authoritative
+Oracle's official documentation on October 7, 2026; the signed-in console remains authoritative
 for the account's limits and available capacity.
 
 ## Can OCI Free Tier host this application?
@@ -28,10 +28,12 @@ site. It also means the user must check current resource activity and retention 
 treating a free VM as persistent hosting.
 
 The Always Free Autonomous AI Database is **not** a drop-in for this application: the current
-service is Oracle Database, while PolyCodeBench expects PostgreSQL. Oracle also documents that
-the Always Free database has no private endpoint/VCN placement, no long-term or manual backups,
-and a 30-session limit. Do not point the application at it or treat it as satisfying the
-PostgreSQL backup and restore requirements.
+service is Oracle Database, while PolyCodeBench expects PostgreSQL. Oracle documents that the
+Always Free database has no private endpoint/VCN placement, no long-term or manual backups, and
+a limit of 20 simultaneous database sessions. Do not point the application at it or treat it as
+satisfying the PostgreSQL backup and restore requirements. Oracle's current [Always Free resource
+limits](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm#Database)
+list 20 sessions; older Oracle documentation showed 30.
 
 ## Recommended scope if an eligible account exists
 

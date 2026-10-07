@@ -140,7 +140,7 @@ try {
   const submissionError = page.locator(".submission-error");
   assert.equal(unexpectedEndpointRequests.length, 0, "submitting metadata must not contact the provider endpoint");
 
-  let requestId = await page.locator("dd code").first().textContent();
+  let requestId = null;
   let expectedModelName = modelName;
   if (await submissionError.count()) {
     const errorText = await submissionError.innerText();
@@ -176,6 +176,7 @@ try {
       await page.locator(".submission-status").innerText(),
       /Pending review\. No endpoint has been contacted and no run or charge exists\./,
     );
+    requestId = await page.locator("dd code").first().textContent();
   }
 
   await page.getByRole("button", { name: "Check status" }).click();

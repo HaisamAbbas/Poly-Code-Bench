@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "suite": "Prompt 30 public pages",
-  "completed_at_utc": "2026-10-07T04:55:10.689Z",
+  "completed_at_utc": "2026-10-07T05:14:44.744Z",
   "stats": {
     "total": 4,
     "expected": 4,
     "unexpected": 0,
     "skipped": 0,
     "flaky": 0,
-    "duration_ms": 20414.835
+    "duration_ms": 19601.548000000003
   },
   "tests": [
     {
@@ -17,7 +17,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 1356,
+          "duration_ms": 1151,
           "retry": 0
         }
       ]
@@ -28,7 +28,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 4576,
+          "duration_ms": 3494,
           "retry": 0
         }
       ]
@@ -39,7 +39,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 3662,
+          "duration_ms": 2793,
           "retry": 0
         }
       ]
@@ -50,7 +50,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 2079,
+          "duration_ms": 1756,
           "retry": 0
         }
       ]

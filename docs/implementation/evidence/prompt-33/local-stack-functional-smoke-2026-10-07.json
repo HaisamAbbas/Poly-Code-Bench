@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at_utc": "2026-10-07T05:00:00Z",
+  "captured_at_utc": "2026-10-07T05:15:47Z",
   "environment": "loopback-only local development",
   "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
   "fixture_kind": "synthetic_internal",
@@ -48,28 +48,36 @@
   },
   "web": {
     "production_build": "passed; TypeScript and seven-page route generation completed",
-    "standalone_public_page": "passed; static CSS served with HTTP 200; actual PostgreSQL-backed synthetic release rendered",
+    "standalone_public_pages_rendered": 9,
+    "standalone_api_fallback_without_environment": "passed; all nine release-backed pages rendered from the local API with PCB_PUBLIC_API_URL unset",
+    "standalone_static_assets": "passed; built stylesheet served with HTTP 200",
     "standalone_mobile_metrics_keyboard_scroll": "passed at 390x844",
     "standalone_http_sign_in": "unavailable as expected; production OIDC requires HTTPS and loopback here is HTTP",
     "development_release_backed_pages_rendered": 9,
+    "development_api_fallback_without_environment": "passed; all nine release-backed pages rendered from the local API with PCB_PUBLIC_API_URL unset",
     "development_oidc_browser_smoke": "passed; all nine public pages rendered the PostgreSQL-backed release; Keycloak login, metadata-only request/status, reviewer authorization, cross-owner isolation, keyboard access and mobile layout",
+    "development_rate_limit_fallback": "passed; the local smoke reused an owner-visible synthetic request after the intended 429 limit without leaving the owner status path",
+    "approved_submission_status": "Prompt 32 E2E explicitly distinguishes completed solve work from evaluation, scoring and publication, which are still unavailable",
     "provider_endpoint_contacted": false
   },
   "browser_suites": {
     "prompt_30": {
       "passed": 4,
       "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "rerun_after_local_api_fallback_change": true
     },
     "prompt_31": {
       "passed": 3,
       "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "rerun_after_local_api_fallback_change": true
     },
     "prompt_32": {
       "passed": 2,
       "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "rerun_after_local_api_fallback_change": true
     }
   },
   "privacy_and_spend": {

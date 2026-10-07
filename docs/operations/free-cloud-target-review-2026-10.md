@@ -7,14 +7,20 @@ quotas remain unchecked, and no spend ceiling or shutdown date has been approved
 cloud resources. The current Terraform targets AWS and cannot deploy to either provider.
 
 The Alibaba Free Trial page is login-dependent; its generic offers do not prove this account's
-eligibility or quota. The currently advertised ECS t5 offer is 1 vCPU / 1 GiB for one year, which
-is below a sensible size for the full stack. Product trials require a verified account and linked
-payment method, and the ECS trial is limited to new computing-product users. A past ECS or Simple
-Application Server purchase, bill, or trial can disqualify the account. Verify the exact offer in
-the signed-in console; see [current Free Trial offers](https://www.alibabacloud.com/en/free?_p_lc=1)
+eligibility or quota. The public Free Tier card advertises ECS t5 at 1 vCPU / 1 GiB for one year,
+which is below a sensible size for the full stack. Alibaba also documents a separate ECS trial:
+a three-month eligibility window with finite CNY 300 personal or CNY 660 enterprise quota, and
+larger selectable configurations (subject to identity type and region). At the maximum listed
+personal instance reference price of CNY 0.833/hour, the personal quota covers about 15 continuous
+days. These are different offers and must not be combined as one entitlement. The finite-quota
+trial could suit a short private synthetic-data POC if this account's console confirms a suitable
+shape and remaining quota; the instance is not automatically released at expiry and can become
+pay-as-you-go. Product trials require a verified account and linked payment method, and ECS has
+new-computing-user restrictions. Verify the exact offer in the signed-in console; see [Free Tier
+offers](https://www.alibabacloud.com/en/free?_p_lc=1), [ECS free-trial guide](https://help.aliyun.com/en/ecs/user-guide/ecs-free-trial)
 and [Alibaba's trial rules](https://www.alibabacloud.com/help/en/user-center/product-overview/learn-about-free-trials).
 
-That listed 1 GiB offer is below a sensible target for the complete site stack (API, web, OIDC,
+The one-year 1 GiB offer is below a sensible target for the complete site stack (API, web, OIDC,
 PostgreSQL, object store, monitoring and backups); this is an engineering estimate, not a vendor
 quota. OSS's new-user offer covers storage capacity only for one month; requests, traffic, and
 other excluded items may still be billable. The managed PostgreSQL 17 service is not established
@@ -47,12 +53,12 @@ requires card verification; the temporary authorization hold is not a resource c
 [OCI FAQ](https://www.oracle.com/cloud/free/faq/).
 
 For a no-spend private remote-development experiment, OCI's Always Free A1 shape appears more
-capable than the generic Alibaba ECS card, but ARM64 build compatibility, home-region capacity,
-idle reclamation, and account eligibility still need checking. Alibaba remains a possible
-time-boxed trial if the signed-in console shows a larger suitable instance and sufficient
-database/storage/network entitlements. Neither provider can close the repository's AWS staging
-gate, and neither should be selected until its exact console quota, billing exposure, and
-shutdown date are known.
+capable than Alibaba's one-year 1 GiB ECS card, but ARM64 build compatibility, home-region
+capacity, idle reclamation, and account eligibility still need checking. Alibaba's separate
+finite-quota ECS trial may offer enough RAM for a short private session, subject to the account
+console and the remaining quota; database/storage/network entitlements still need separate
+confirmation. Neither provider can close the repository's AWS staging gate, and neither should
+be selected until its exact console quota, billing exposure, and shutdown date are known.
 
 ## Required console facts before any cloud action
 

@@ -21,6 +21,15 @@ confirmed. OCI is another possible time-limited target; see
 - The current Free Tier page advertises an ECS t5 1-vCPU/1-GiB offer for one year, subject to
   account eligibility. That single small compute offer does not establish free database,
   object-store request/egress, DNS, registry, or secrets coverage. See [Free Tier](https://www.alibabacloud.com/en/Free).
+- Alibaba also publishes a **separate ECS free-trial guide** with a three-month eligibility
+  window and finite compute/system-disk quota (CNY 300 personal or CNY 660 enterprise). This is
+  not the same entitlement as the one-year t5 card. The guide permits larger selectable shapes
+  (up to 4 vCPU/8 GiB personal or 8 vCPU/16 GiB enterprise outside Hong Kong), but the quota is
+  consumed at the instance's hourly reference price: at CNY 0.833/hour, CNY 300 lasts about 15
+  continuous days. It lists seven regions, all in China, and warns that an instance is not
+  automatically released at expiry; uncovered use becomes pay-as-you-go. Whether this account
+  sees that offer, and which shape and region it can claim, must be checked in the console. See
+  the [ECS free-trial guide](https://help.aliyun.com/en/ecs/user-guide/ecs-free-trial).
 - The individual OSS trial currently advertises 500 GB of Standard LRS capacity for one month.
   It covers storage capacity only; other billable items are excluded and can be charged. It also
   requires identity verification, a valid payment method, and no prior OSS activation. See [OSS
@@ -46,12 +55,14 @@ included item/quantity billable. A free quota is not a hard account spend cap.
 
 ## Capacity and database cost reality check
 
-Alibaba's current Free Tier page advertises an ECS t5 offer with 1 vCPU and 1 GiB RAM for one
-year, subject to account eligibility. The measured local development stack currently reports
-about 1.47 GiB across its PostgreSQL, SeaweedFS, Keycloak, API and Next processes, before the
-operating system and Docker engine. That is not a production sizing benchmark, but it means we
-must not assume the full local stack fits on the advertised 1 GiB instance. The underlying
-workstation snapshot and its limitations are captured in
+The one-year Free Tier t5 card advertises 1 vCPU and 1 GiB RAM. The measured local development
+stack reports about 1.47 GiB across PostgreSQL, SeaweedFS, Keycloak, API and Next processes,
+before the operating system and Docker engine. That is not a production sizing benchmark, but it
+means the full local stack cannot be assumed to fit on that 1 GiB shape. The separate finite
+quota ECS trial may offer larger shapes, so it could support a short private synthetic-data POC
+if the console confirms a sufficient SKU, region, and remaining quota. It is not a persistent
+no-cost host: the quota is finite and instances continue on pay-as-you-go after expiry unless
+released. The underlying workstation snapshot and its limitations are captured in
 [`alibaba-local-capacity-snapshot-2026-10-07.json`](../implementation/evidence/prompt-33/alibaba-local-capacity-snapshot-2026-10-07.json).
 
 Managed PostgreSQL does not remove the cost uncertainty: Alibaba's PostgreSQL Serverless service

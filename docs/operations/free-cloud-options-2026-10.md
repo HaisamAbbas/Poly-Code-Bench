@@ -13,6 +13,15 @@ rules. The public page currently advertises an ECS t5 offer of 1 vCPU/1 GB for o
 does not show this account is eligible or that the whole application stack is covered. The
 offer card and account console are authoritative for instance shape, region, and duration.
 
+The one-year 1-vCPU/1-GiB t5 card is distinct from Alibaba's ECS free-trial guide, which describes
+a three-month eligibility window backed by finite CNY 300 personal or CNY 660 enterprise quota.
+That guide permits larger instance shapes, subject to identity and region, but quota is consumed
+at the selected instance's hourly rate: CNY 300 covers about 15 continuous days at CNY 0.833/hour.
+It may support a short private POC if the signed-in console confirms enough remaining quota and a
+suitable SKU. The instance does not automatically release at expiry, so continued use can be
+billed. Neither public offer establishes this account's entitlement. See the [ECS free-trial
+guide](https://help.aliyun.com/en/ecs/user-guide/ecs-free-trial).
+
 That ECS shape is too small to select as the host for the complete PolyCodeBench Compose stack
 (PostgreSQL, object store, Keycloak, API, web, and an optional worker); at most, it is a candidate
 for a pared-down demonstration after resource testing. ApsaraDB RDS supports PostgreSQL, but I

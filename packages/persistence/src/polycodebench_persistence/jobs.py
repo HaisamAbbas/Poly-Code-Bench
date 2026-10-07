@@ -565,6 +565,7 @@ class PostgresJobRepository:
                         .where(attempt.c.id == changed["attempt_id"], attempt.c.state == "queued")
                         .values(state="running", row_version=attempt.c.row_version + 1)
                     )
+                    self._mark_run_running(connection, changed["attempt_id"])
                 elif scope_kind == "evaluation":
                     connection.execute(
                         update(evaluation)
@@ -1166,6 +1167,7 @@ class PostgresJobRepository:
                 cancelled += self._cancel_scope(
                     connection, "evaluation", evaluation_id, actor=actor, reason=reason
                 )
+            self._update_run_completion(connection, scope_id)
         return cancelled
 
     def events(self, job_id: UUID) -> tuple[dict[str, object], ...]:
@@ -1529,6 +1531,7 @@ class PostgresJobRepository:
                         row_version=attempt.c.row_version + 1,
                     )
                 )
+                self._update_run_completion(connection, scope_id)
             elif scope_type == "evaluation" and any(
                 row.required and row.state == "dead" for row in jobs
             ):
@@ -1543,6 +1546,62 @@ class PostgresJobRepository:
                         row_version=evaluation.c.row_version + 1,
                     )
                 )
+
+    @staticmethod
+    def _mark_run_running(connection: Connection, attempt_id: UUID) -> None:
+        run_id = connection.execute(
+            select(attempt.c.run_id).where(attempt.c.id == attempt_id)
+        ).scalar_one_or_none()
+        if run_id is None:
+            raise InvalidReference("attempt has no parent run")
+        connection.execute(
+            update(run)
+            .where(run.c.id == run_id, run.c.status.in_(("planned", "queued")))
+            .values(status="running", row_version=run.c.row_version + 1)
+        )
+
+    @staticmethod
+    def _update_run_completion(connection: Connection, attempt_id: UUID) -> None:
+        run_id = connection.execute(
+            select(attempt.c.run_id).where(attempt.c.id == attempt_id)
+        ).scalar_one_or_none()
+        if run_id is None:
+            raise InvalidReference("attempt has no parent run")
+
+        # Serialize terminal checks for attempts that belong to the same run. The second
+        # completing attempt must observe the first one's committed state before deciding the
+        # aggregate run status, or concurrent completions can leave a fully finished run stuck
+        # in `running`.
+        run_status = connection.execute(
+            select(run.c.status).where(run.c.id == run_id).with_for_update()
+        ).scalar_one_or_none()
+        if run_status is None:
+            raise InvalidReference("attempt parent run does not exist")
+        if run_status in {"completed", "failed", "cancelled"}:
+            return
+
+        attempt_states = tuple(
+            connection.execute(select(attempt.c.state).where(attempt.c.run_id == run_id))
+            .scalars()
+            .all()
+        )
+        terminal = {"completed", "failed", "cancelled", "skipped"}
+        if not attempt_states or any(state not in terminal for state in attempt_states):
+            return
+
+        if run_status == "cancelling" or all(state == "cancelled" for state in attempt_states):
+            final_status = "cancelled"
+        elif any(state == "failed" for state in attempt_states):
+            final_status = "failed"
+        elif any(state == "cancelled" for state in attempt_states):
+            final_status = "cancelled"
+        else:
+            final_status = "completed"
+        connection.execute(
+            update(run)
+            .where(run.c.id == run_id, run.c.status == run_status)
+            .values(status=final_status, row_version=run.c.row_version + 1)
+        )
 
     def _set_scope_state(
         self, connection: Connection, scope_type: str, scope_id: UUID, state: str

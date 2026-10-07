@@ -72,9 +72,17 @@ class FakeRepository:
         self.failure_class: str | None = None
         self.registration_active = True
         self.registration_heartbeats = 0
+        self.last_claim_filter: tuple[UUID | None, str | None] | None = None
 
-    def claim(self, worker_id: UUID) -> JobClaim | None:
+    def claim(
+        self,
+        worker_id: UUID,
+        *,
+        job_id: UUID | None = None,
+        stage: str | None = None,
+    ) -> JobClaim | None:
         assert worker_id == UUID(self.job_claim.worker_id)
+        self.last_claim_filter = (job_id, stage)
         self.events.append("claim")
         claim = self.next_claim
         self.next_claim = None
@@ -295,6 +303,17 @@ def test_run_once_dispatches_one_claim_then_returns_idle() -> None:
         assert not await worker.run_once()
         assert events.count("claim") == 2 and events.count("execute") == 1
         assert repo.slot_state == "available"
+
+    _run(scenario)
+
+
+def test_run_once_forwards_exact_job_and_stage_filters() -> None:
+    async def scenario() -> None:
+        worker, repo, _sandbox, _executor, _events = _worker()
+        repo.next_claim = repo.job_claim
+        requested_job = uuid4()
+        assert await worker.run_once(job_id=requested_job, stage="solve")
+        assert repo.last_claim_filter == (requested_job, "solve")
 
     _run(scenario)
 

@@ -404,7 +404,13 @@ class PostgresJobRepository:
             self._unblock_dependents(connection, job_id)
             self._update_scope_completion(connection, _scope_type(job), _scope_id(job))
 
-    def claim(self, worker_id: UUID) -> JobClaim | None:
+    def claim(
+        self,
+        worker_id: UUID,
+        *,
+        job_id: UUID | None = None,
+        stage: str | None = None,
+    ) -> JobClaim | None:
         """Lock a capacity slot first, then one compatible ready job; never hold locks over work."""
         try:
             with self._engine.begin() as connection:
@@ -458,25 +464,30 @@ class PostgresJobRepository:
                     )
                     .scalar_subquery()
                 )
+                eligibility = [
+                    stage_job.c.state.in_(("queued", "retry_wait")),
+                    stage_job.c.queue_class.in_(worker["allowed_queue_classes"]),
+                    stage_job.c.resource_class == slot["resource_class"],
+                    stage_job.c.available_at <= func.now(),
+                    stage_job.c.deliveries < stage_job.c.max_deliveries,
+                    or_(
+                        stage_job.c.fairness_campaign_id.is_(None),
+                        campaign_load < self._campaign_concurrency,
+                    ),
+                    provider_load < self._provider_concurrency,
+                    self._scope_active_clause(),
+                    ~self._has_unsatisfied_dependency_clause(),
+                    ~select(capacity_slot.c.id)
+                    .where(capacity_slot.c.job_id == stage_job.c.id)
+                    .exists(),
+                ]
+                if job_id is not None:
+                    eligibility.append(stage_job.c.id == job_id)
+                if stage is not None:
+                    eligibility.append(stage_job.c.stage == stage)
                 eligible = (
                     select(stage_job)
-                    .where(
-                        stage_job.c.state.in_(("queued", "retry_wait")),
-                        stage_job.c.queue_class.in_(worker["allowed_queue_classes"]),
-                        stage_job.c.resource_class == slot["resource_class"],
-                        stage_job.c.available_at <= func.now(),
-                        stage_job.c.deliveries < stage_job.c.max_deliveries,
-                        or_(
-                            stage_job.c.fairness_campaign_id.is_(None),
-                            campaign_load < self._campaign_concurrency,
-                        ),
-                        provider_load < self._provider_concurrency,
-                        self._scope_active_clause(),
-                        ~self._has_unsatisfied_dependency_clause(),
-                        ~select(capacity_slot.c.id)
-                        .where(capacity_slot.c.job_id == stage_job.c.id)
-                        .exists(),
-                    )
+                    .where(*eligibility)
                     .order_by(
                         stage_job.c.priority.desc(),
                         campaign_load,

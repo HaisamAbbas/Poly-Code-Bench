@@ -67,15 +67,19 @@ class WorkerService:
         self.heartbeat_seconds = heartbeat_seconds
         self.revocation_poll_seconds = revocation_poll_seconds
 
-    async def run_once(self) -> bool:
-        claim = self.repository.claim(self.worker_id)
+    async def run_once(self, *, job_id: UUID | None = None, stage: str | None = None) -> bool:
+        claim = self.repository.claim(self.worker_id, job_id=job_id, stage=stage)
         if claim is None:
             return False
         await self.run_claim(claim)
         return True
 
     async def run_until_stopped(
-        self, stop: asyncio.Event, *, idle_poll_seconds: float = 1.0
+        self,
+        stop: asyncio.Event,
+        *,
+        idle_poll_seconds: float = 1.0,
+        stage: str | None = None,
     ) -> None:
         """Long-lived worker loop; stop prevents the next dispatch and drains current work."""
         if idle_poll_seconds <= 0:
@@ -83,7 +87,7 @@ class WorkerService:
         while not stop.is_set():
             if not self.repository.heartbeat_worker(self.worker_id):
                 return
-            if await self.run_once():
+            if await self.run_once(stage=stage):
                 continue
             try:
                 await asyncio.wait_for(

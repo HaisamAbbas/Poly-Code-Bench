@@ -292,6 +292,92 @@ def test_run_solve_job_is_claimable_by_its_frozen_resource_class(
     assert claim.resource_class == resource_class
 
 
+def test_claim_filter_never_falls_back_to_another_ready_job(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    repository = _repo(database)
+    first_attempt = _attempt(database)
+    second_attempt = _attempt(database)
+    provider_key = f"exact-job-filter-{uuid4().hex}"
+    definitions = (
+        JobDefinition(
+            key="solve",
+            stage="solve",
+            input_digest="sha256:" + "a" * 64,
+            queue_class="solve",
+            resource_class="small",
+            provider_key=provider_key,
+        ),
+    )
+    first_job = repository.create_dag(
+        scope_type="attempt",
+        scope_id=first_attempt,
+        jobs=definitions,
+        actor="exact-claim-filter-fixture",
+    )["solve"]
+    second_job = repository.create_dag(
+        scope_type="attempt",
+        scope_id=second_attempt,
+        jobs=definitions,
+        actor="exact-claim-filter-fixture",
+    )["solve"]
+    worker_id = _register_worker(
+        database,
+        object_store,
+        label="exact-job-filter",
+        resource_class="small",
+    )
+
+    claim = repository.claim(worker_id, job_id=second_job, stage="solve")
+
+    assert claim is not None
+    assert claim.job_id == second_job
+    with database.engine.connect() as connection:
+        states = dict(
+            connection.execute(
+                select(stage_job.c.id, stage_job.c.state).where(
+                    stage_job.c.id.in_((first_job, second_job))
+                )
+            ).all()
+        )
+    assert states == {first_job: "queued", second_job: "leased"}
+
+
+def test_claim_stage_filter_does_not_claim_a_different_stage(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    attempt_id = _attempt(database)
+    job_id = _repo(database).create_dag(
+        scope_type="attempt",
+        scope_id=attempt_id,
+        jobs=(
+            JobDefinition(
+                key="other-stage",
+                stage="finalize",
+                input_digest="sha256:" + "b" * 64,
+                queue_class="solve",
+                resource_class="small",
+            ),
+        ),
+        actor="exact-stage-filter-fixture",
+    )["other-stage"]
+    worker_id = _register_worker(
+        database,
+        object_store,
+        label="solve-stage-filter",
+        resource_class="small",
+    )
+
+    assert _repo(database).claim(worker_id, job_id=job_id, stage="solve") is None
+    with database.engine.connect() as connection:
+        assert (
+            connection.execute(
+                select(stage_job.c.state).where(stage_job.c.id == job_id)
+            ).scalar_one()
+            == "queued"
+        )
+
+
 def test_local_sandbox_spec_uses_verified_slot_and_frozen_task_image(
     database: Database, object_store: S3ArtifactStore
 ) -> None:

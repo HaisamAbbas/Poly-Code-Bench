@@ -145,3 +145,15 @@ discovery/warm-up), and two conditional requests returned 304. The observed 45.0
 47.636 ms p95 describe this workstation and this small sample only; they are not an SLA or a
 staging performance claim. Details:
 [`api-container-routes-python312-2026-10-07.json`](../implementation/evidence/prompt-33/api-container-routes-python312-2026-10-07.json).
+
+## API and web production-container pair (2026-10-07)
+
+Ran the restricted API and web images together, with the web server fetching release-backed data
+from the API container. All nine public pages returned 200 and showed the synthetic-data notice;
+Playwright recorded zero page errors. The 390 px mobile document had no horizontal overflow, and
+the metrics table scrolled with ArrowRight. Both temporary containers were removed. This checked
+the UI/API connection on a local exploratory test release; it did not exercise production OIDC or
+any model endpoint. Sanitized evidence and screenshots:
+[`api-web-container-pair-2026-10-07.json`](../implementation/evidence/prompt-33/api-web-container-pair-2026-10-07.json),
+[`desktop`](../implementation/evidence/prompt-33/api-web-container-pair-desktop.png),
+[`mobile`](../implementation/evidence/prompt-33/api-web-container-pair-mobile.png).

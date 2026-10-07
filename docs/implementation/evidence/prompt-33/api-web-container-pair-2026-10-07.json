@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-10-07T05:33:22Z",
+  "environment": "local Windows Docker Desktop; loopback-only; PostgreSQL-backed public release",
+  "images": {
+    "api": {
+      "tag": "pcb-api:local-20261007-python312",
+      "image_id": "sha256:624526b4afa6e7fbe1a13b373bf8a8be8aee9b824fc97945f2f52c6f5665ca8b",
+      "platform": "linux/amd64",
+      "user": "10001:10001"
+    },
+    "web": {
+      "tag": "pcb-web:local-20261007-node24",
+      "image_digest": "sha256:e7870e4a6c17fe97b7fa958870212c57301d28c05cb84d51a10b111b68cd745e",
+      "platform": "linux/amd64",
+      "user": "10001:10001"
+    }
+  },
+  "runtime": {
+    "api_host_binding": "127.0.0.1:8011",
+    "web_host_binding": "127.0.0.1:3002",
+    "both_root_filesystems_read_only": true,
+    "both_drop_all_capabilities": true,
+    "both_enable_no_new_privileges": true,
+    "writable_path": "/tmp; each container had a bounded 64 MiB tmpfs",
+    "api_postgres_endpoint": "host.docker.internal to the local loopback PostgreSQL port",
+    "temporary_containers_removed": true,
+    "temporary_environment_file_removed": true,
+    "temporary_browser_script_removed": true
+  },
+  "release": {
+    "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
+    "fixture_kind": "synthetic_internal",
+    "state": "published",
+    "scope": "exploratory",
+    "displayed_as_live_benchmark_results": false
+  },
+  "browser": {
+    "runtime": "Node 24.21.0",
+    "public_pages_http_200": 9,
+    "paths": [
+      "/leaderboard",
+      "/languages/python",
+      "/compare",
+      "/tasks",
+      "/tasks/synthetic-browse-task-001",
+      "/models/synthetic-code-a",
+      "/scorecards/synthetic-scorecard-a",
+      "/methodology/synthetic-ui-fixture-v1",
+      "/model-submissions"
+    ],
+    "synthetic_data_notice_visible_on_every_page": true,
+    "page_errors": 0,
+    "mobile_viewport_px": [390, 844],
+    "mobile_document_width_px": 390,
+    "mobile_metrics_region_overflows_horizontally": true,
+    "mobile_metrics_keyboard_arrow_right_scrolls": true,
+    "screenshots": [
+      "api-web-container-pair-desktop.png",
+      "api-web-container-pair-mobile.png"
+    ]
+  },
+  "privacy_and_spend": {
+    "submission_created": false,
+    "provider_or_model_calls": 0,
+    "database_writes": 0,
+    "cloud_resources_created": 0,
+    "oidc_login_tested": false
+  }
+}

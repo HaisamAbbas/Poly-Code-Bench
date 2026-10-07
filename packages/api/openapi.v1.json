@@ -1,6 +1,23 @@
 {
   "components": {
     "schemas": {
+      "ApiEnvelope_ArtifactRef_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ArtifactRef"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[ArtifactRef]",
+        "type": "object"
+      },
       "ApiEnvelope_ComparisonResult_": {
         "additionalProperties": false,
         "properties": {
@@ -287,6 +304,71 @@
           "meta"
         ],
         "title": "ApiEnvelope[list[TaskSummary]]",
+        "type": "object"
+      },
+      "ArtifactRef": {
+        "additionalProperties": false,
+        "description": "``GET /artifacts/{id}``: a controlled public download.\n\nCarries a signed, short-lived download path issued by the API, never a storage URL. A private\nartifact resolves to not-found, and a probe cannot obtain a usable token for one.",
+        "properties": {
+          "artifact_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Artifact Id",
+            "type": "string"
+          },
+          "content_type": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Content Type",
+            "type": "string"
+          },
+          "download_url": {
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Download Url",
+            "type": "string"
+          },
+          "expires_at": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Expires At",
+            "type": "string"
+          },
+          "kind": {
+            "const": "artifact_ref",
+            "default": "artifact_ref",
+            "title": "Kind",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "sha256": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "minimum": 0.0,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "artifact_id",
+          "content_type",
+          "size_bytes",
+          "sha256",
+          "download_url",
+          "expires_at"
+        ],
+        "title": "ArtifactRef",
         "type": "object"
       },
       "ComparisonFilters": {
@@ -4080,6 +4162,112 @@
           }
         },
         "summary": "Reject Model Submission"
+      }
+    },
+    "/v1/artifacts/{artifact_id}": {
+      "get": {
+        "description": "Mint a short-lived download URL only for an artifact in a published release.",
+        "operationId": "get_artifact_download_link_v1_artifacts__artifact_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "artifact_id",
+            "required": true,
+            "schema": {
+              "title": "Artifact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": true,
+            "schema": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_ArtifactRef_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Artifact Download Link"
+      }
+    },
+    "/v1/artifacts/{artifact_id}/download": {
+      "get": {
+        "description": "Serve one bounded, digest-checked object after release and token revalidation.",
+        "operationId": "download_public_artifact_v1_artifacts__artifact_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "artifact_id",
+            "required": true,
+            "schema": {
+              "title": "Artifact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": true,
+            "schema": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "maxLength": 512,
+              "minLength": 32,
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Public Artifact"
       }
     },
     "/v1/compare": {

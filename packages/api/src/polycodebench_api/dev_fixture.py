@@ -17,6 +17,7 @@ from uuid import uuid4
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from polycodebench_publication.aggregation import MetricDefinition
 from polycodebench_publication.projections import (
+    ArtifactRef,
     ContributionRow,
     Coverage,
     DimensionBreakdown,
@@ -642,7 +643,12 @@ def _task_contents() -> tuple[PublicTaskContent, ...]:
     return tuple(details)
 
 
-def create_synthetic_release(store: ReleaseStore, signer: SigningKey | None = None) -> str:
+def create_synthetic_release(
+    store: ReleaseStore,
+    signer: SigningKey | None = None,
+    *,
+    artifacts: tuple[ArtifactRef, ...] = (),
+) -> str:
     """Publish a generated fixture through the real local release lifecycle."""
     principal = ReleasePrincipal(subject_id="local-ui-fixture", roles=frozenset({"administrator"}))
     policy_digest = digest({"policy": "synthetic-ui-fixture-v1"})
@@ -654,7 +660,7 @@ def create_synthetic_release(store: ReleaseStore, signer: SigningKey | None = No
         disclosed_tasks=_tasks(),
         task_contents=_task_contents(),
         scorecards=_scorecards(draft_id, policy_digest),
-        artifacts=(),
+        artifacts=artifacts,
         methodology=Methodology(
             version="synthetic-ui-fixture-v1",
             methods=("Values are authored only to exercise public page states.",),

@@ -9,10 +9,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
+from polycodebench_core.application_errors import NotFound
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_publication.projections import (
+    ArtifactRef,
     ComparisonResult,
     LanguageProfile,
     LeaderboardEntry,
@@ -38,6 +41,10 @@ from polycodebench_publication.projections_query import (
     task_summaries,
     task_summary,
 )
+from polycodebench_publication.projections_query import (
+    artifact as artifact_projection,
+)
+from polycodebench_services.artifacts import ArtifactPrincipal
 from starlette.responses import Response
 
 from polycodebench_api.context import services_of
@@ -52,8 +59,10 @@ from polycodebench_api.documents import (
     registry_of,
     release_digest,
 )
+from polycodebench_api.download import mint_download_token, verify_download_token
 from polycodebench_api.envelope import (
     IMMUTABLE_CACHE,
+    NO_STORE,
     REVALIDATE_CACHE,
     SHORT_CACHE,
     ApiEnvelope,
@@ -431,6 +440,78 @@ def get_methodology(request: Request, version: str, release: str = LATEST) -> Re
             meta = single_meta(resolved, release_digest(document), is_exploratory(document))
             return respond(request, envelope(methods, meta), cache=_cache(pinned))
     raise ApiError("NOT_FOUND")
+
+
+@router.get("/artifacts/{artifact_id}", response_model=ApiEnvelope[ArtifactRef])
+def get_artifact_download_link(
+    request: Request,
+    artifact_id: str,
+    release: Annotated[str, Query(min_length=1, max_length=120)],
+) -> Response:
+    """Mint a short-lived download URL only for an artifact in a published release."""
+    services = services_of(request)
+    resolved, document, _ = load_public_document(services, release)
+    try:
+        reference = artifact_projection(document, artifact_id)
+    except PublicApiError:
+        raise ApiError("NOT_FOUND") from None
+    if services.artifact_access is None:
+        raise ApiError("DEPENDENCY_UNAVAILABLE")
+    try:
+        identifier = UUID(artifact_id)
+        services.artifact_access.public_metadata(
+            ArtifactPrincipal("public-api", frozenset({"public_reader"})),
+            identifier,
+            expected_digest=reference.sha256,
+            expected_size=reference.size_bytes,
+            expected_media_type=reference.content_type,
+        )
+    except (ValueError, NotFound):
+        raise ApiError("NOT_FOUND") from None
+    download_url, expires_at = mint_download_token(services, artifact_id, resolved)
+    result = reference.model_copy(update={"download_url": download_url, "expires_at": expires_at})
+    meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+    return respond(request, envelope(result, meta), cache=NO_STORE)
+
+
+@router.get("/artifacts/{artifact_id}/download", response_class=Response)
+def download_public_artifact(
+    request: Request,
+    artifact_id: str,
+    release: Annotated[str, Query(min_length=1, max_length=120)],
+    token: Annotated[str, Query(min_length=32, max_length=512)],
+) -> Response:
+    """Serve one bounded, digest-checked object after release and token revalidation."""
+    services = services_of(request)
+    if not verify_download_token(services, artifact_id, release, token):
+        raise ApiError("NOT_FOUND")
+    resolved, document, _ = load_public_document(services, release)
+    try:
+        reference = artifact_projection(document, artifact_id)
+        identifier = UUID(artifact_id)
+    except (PublicApiError, ValueError):
+        raise ApiError("NOT_FOUND") from None
+    if resolved != release:
+        raise ApiError("NOT_FOUND")
+    if services.artifact_access is None:
+        raise ApiError("DEPENDENCY_UNAVAILABLE")
+    downloaded = services.artifact_access.download(
+        ArtifactPrincipal("public-api", frozenset({"public_reader"})),
+        identifier,
+        expected_digest=reference.sha256,
+        expected_size=reference.size_bytes,
+        expected_media_type=reference.content_type,
+    )
+    return Response(
+        content=downloaded.body,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": downloaded.headers["Content-Disposition"],
+            "Cache-Control": NO_STORE,
+            "ETag": f'"{reference.sha256}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 __all__ = ["router", "single_meta"]

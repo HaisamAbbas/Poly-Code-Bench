@@ -11,11 +11,14 @@ from uuid import uuid4
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fastapi import FastAPI, Request
+from polycodebench_persistence.artifacts import PostgresPublicArtifactReader
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.endpoints import PostgresEndpointRepository
+from polycodebench_persistence.object_store import S3ArtifactStore
 from polycodebench_persistence.public_releases import PostgresPublicReleaseCatalog
 from polycodebench_persistence.runs import PostgresRunRepository
 from polycodebench_publication.releases import ReleaseStore, SigningKey
+from polycodebench_services.artifacts import ArtifactAccessService
 from polycodebench_services.model_endpoints import ModelEndpointService
 from polycodebench_services.runs import RunCreationService
 
@@ -57,6 +60,24 @@ def _cursor_key() -> bytes:
     return secrets.token_bytes(32)
 
 
+def _public_artifact_access(database: Database | None) -> ArtifactAccessService | None:
+    endpoint = os.environ.get("PCB_OBJECT_STORE_ENDPOINT")
+    if database is None or not endpoint:
+        return None
+    buckets = {
+        "hidden": os.environ.get("PCB_BUCKET_HIDDEN", "pcb-hidden"),
+        "internal": os.environ.get("PCB_BUCKET_INTERNAL", "pcb-internal"),
+        "public": os.environ.get("PCB_BUCKET_PUBLIC", "pcb-public"),
+    }
+    max_bytes = int(os.environ.get("PCB_ARTIFACT_MAX_BYTES", "10485760"))
+    reader = PostgresPublicArtifactReader(
+        database.engine,
+        S3ArtifactStore(endpoint_url=endpoint, buckets=buckets),
+        max_read_bytes=max_bytes,
+    )
+    return ArtifactAccessService(reader, max_download_bytes=max_bytes)
+
+
 def create_app(
     *,
     store: PublicReleaseCatalog | None = None,
@@ -67,6 +88,7 @@ def create_app(
     runs: RunSummarySource | None = None,
     submissions: SubmissionRepository | None = None,
     persistence_database: Database | None = None,
+    artifact_access: ArtifactAccessService | None = None,
 ) -> FastAPI:
     """Mount the established read routes over one reviewed release store.
 
@@ -149,6 +171,11 @@ def create_app(
             else (RunCreationService(postgres_runs) if postgres_runs is not None else None)
         ),
         endpoints=endpoint_service,
+        artifact_access=(
+            artifact_access
+            if artifact_access is not None
+            else _public_artifact_access(persistence_database)
+        ),
         target=os.environ.get("PCB_PUBLICATION_TARGET", "local:board"),
     )
     app = FastAPI(

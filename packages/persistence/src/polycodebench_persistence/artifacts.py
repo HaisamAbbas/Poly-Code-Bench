@@ -12,8 +12,9 @@ from polycodebench_core.application_errors import (
     InvalidState,
     NotFound,
     PersistenceConflict,
+    PersistenceUnavailable,
 )
-from sqlalchemy import and_, insert, or_, select, update
+from sqlalchemy import and_, insert, or_, select, text, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
@@ -824,3 +825,62 @@ class ArtifactRepository:
 def _is_expired(row: dict[str, object]) -> bool:
     expires_at = row["expires_at"]
     return isinstance(expires_at, datetime) and expires_at <= datetime.now(UTC)
+
+
+class PostgresPublicArtifactReader:
+    """Read only artifacts admitted by the database's public-release allowlist view."""
+
+    def __init__(self, engine: Engine, store: S3ArtifactStore, *, max_read_bytes: int) -> None:
+        if max_read_bytes < 0:
+            raise ValueError("maximum public artifact read size must be nonnegative")
+        self._engine = engine
+        self._store = store
+        self._max_read_bytes = max_read_bytes
+
+    def get_verified(self, artifact_id: UUID) -> dict[str, object]:
+        try:
+            with self._engine.connect() as connection:
+                row = (
+                    connection.execute(
+                        text(
+                            "SELECT id, content_digest, size_bytes, media_type, storage_key "
+                            "FROM public_artifact_catalog WHERE id = :artifact_id"
+                        ),
+                        {"artifact_id": artifact_id},
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+        if row is None:
+            raise NotFound()
+        return {**dict(row), "visibility": "public", "status": "verified"}
+
+    def read_verified(self, artifact_id: UUID) -> tuple[dict[str, object], bytes]:
+        record = self.get_verified(artifact_id)
+        try:
+            data = self._store.get_bytes(
+                "public", str(record["storage_key"]), max_bytes=self._max_read_bytes
+            )
+        except ObjectStoreError:
+            raise PersistenceUnavailable("public artifact storage read failed") from None
+        if (
+            len(data) != record["size_bytes"]
+            or "sha256:" + hashlib.sha256(data).hexdigest() != record["content_digest"]
+        ):
+            raise InvalidState("stored public artifact failed integrity verification")
+        return record, data
+
+    def is_publicly_released(self, artifact_id: UUID) -> bool:
+        try:
+            with self._engine.connect() as connection:
+                return (
+                    connection.execute(
+                        text("SELECT 1 FROM public_artifact_catalog WHERE id = :artifact_id"),
+                        {"artifact_id": artifact_id},
+                    ).first()
+                    is not None
+                )
+        except DBAPIError as error:
+            raise map_database_error(error) from None

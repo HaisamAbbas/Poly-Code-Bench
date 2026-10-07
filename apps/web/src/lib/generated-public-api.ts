@@ -106,6 +106,46 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/v1/artifacts/{artifact_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * Get Artifact Download Link
+         * @description Mint a short-lived download URL only for an artifact in a published release.
+         */
+        readonly get: operations["get_artifact_download_link_v1_artifacts__artifact_id__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/artifacts/{artifact_id}/download": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * Download Public Artifact
+         * @description Serve one bounded, digest-checked object after release and token revalidation.
+         */
+        readonly get: operations["download_public_artifact_v1_artifacts__artifact_id__download_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/v1/compare": {
         readonly parameters: {
             readonly query?: never;
@@ -346,6 +386,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ApiEnvelope[ArtifactRef] */
+        readonly ApiEnvelope_ArtifactRef_: {
+            readonly data: components["schemas"]["ArtifactRef"];
+            readonly meta: components["schemas"]["ResponseMeta"];
+        };
         /** ApiEnvelope[ComparisonResult] */
         readonly ApiEnvelope_ComparisonResult_: {
             readonly data: components["schemas"]["ComparisonResult"];
@@ -429,6 +474,39 @@ export interface components {
             /** Data */
             readonly data: readonly components["schemas"]["TaskSummary"][];
             readonly meta: components["schemas"]["ResponseMeta"];
+        };
+        /**
+         * ArtifactRef
+         * @description ``GET /artifacts/{id}``: a controlled public download.
+         *
+         *     Carries a signed, short-lived download path issued by the API, never a storage URL. A private
+         *     artifact resolves to not-found, and a probe cannot obtain a usable token for one.
+         */
+        readonly ArtifactRef: {
+            /** Artifact Id */
+            readonly artifact_id: string;
+            /** Content Type */
+            readonly content_type: string;
+            /** Download Url */
+            readonly download_url: string;
+            /** Expires At */
+            readonly expires_at: string;
+            /**
+             * Kind
+             * @default artifact_ref
+             * @constant
+             */
+            readonly kind: "artifact_ref";
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Sha256 */
+            readonly sha256: string;
+            /** Size Bytes */
+            readonly size_bytes: number;
         };
         /**
          * ComparisonFilters
@@ -2175,6 +2253,71 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["ApiEnvelope_SubmissionReviewView_"];
                 };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readonly get_artifact_download_link_v1_artifacts__artifact_id__get: {
+        readonly parameters: {
+            readonly query: {
+                readonly release: string;
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly artifact_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiEnvelope_ArtifactRef_"];
+                };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readonly download_public_artifact_v1_artifacts__artifact_id__download_get: {
+        readonly parameters: {
+            readonly query: {
+                readonly release: string;
+                readonly token: string;
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly artifact_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             readonly 422: {

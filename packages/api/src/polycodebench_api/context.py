@@ -9,6 +9,7 @@ from uuid import UUID
 
 from fastapi import Request
 from polycodebench_publication.releases import SigningKey
+from polycodebench_services.artifacts import ArtifactAccessService
 from polycodebench_services.model_endpoints import ModelEndpointService
 from polycodebench_services.runs import RunCreationService
 
@@ -99,6 +100,7 @@ class ApiServices:
     runs: RunSummarySource | None = None
     run_creation: RunCreationService | None = None
     endpoints: ModelEndpointService | None = None
+    artifact_access: ArtifactAccessService | None = None
     target: str = "local:board"
     artifact_ttl_seconds: int = 900
     submission_rate_limit: int = 5

@@ -58,18 +58,81 @@ class ArtifactAccessService:
         {"operator", "curator", "reviewer", "evaluator", "publisher", "administrator"}
     )
 
-    def __init__(self, reader: ArtifactReader) -> None:
+    def __init__(self, reader: ArtifactReader, *, max_download_bytes: int | None = None) -> None:
+        if max_download_bytes is not None and max_download_bytes < 0:
+            raise ValueError("maximum artifact download size must be nonnegative")
         self._reader = reader
+        self._max_download_bytes = max_download_bytes
 
-    def download(self, principal: ArtifactPrincipal, artifact_id: UUID) -> ArtifactDownload:
+    def public_metadata(
+        self,
+        principal: ArtifactPrincipal,
+        artifact_id: UUID,
+        *,
+        expected_digest: str | None = None,
+        expected_size: int | None = None,
+        expected_media_type: str | None = None,
+    ) -> dict[str, object]:
+        """Return only allowlisted metadata after proving the artifact is publicly released."""
         try:
             record = self._reader.get_verified(artifact_id)
         except NotFound:
             raise NotFound() from None
-        if not self._may_read(principal, artifact_id, str(record["visibility"])):
+        if (
+            record["visibility"] != "public"
+            or not self._may_read(principal, artifact_id, "public")
+            or not self._reader.is_publicly_released(artifact_id)
+            or (
+                self._max_download_bytes is not None
+                and (
+                    not isinstance(record["size_bytes"], int)
+                    or record["size_bytes"] > self._max_download_bytes
+                )
+            )
+        ):
             # Uniform 404 avoids turning UUID or digest knowledge into an oracle.
             raise NotFound()
-        if record["visibility"] == "public" and not self._reader.is_publicly_released(artifact_id):
+        if (
+            (expected_digest is not None and record["content_digest"] != expected_digest)
+            or (expected_size is not None and record["size_bytes"] != expected_size)
+            or (expected_media_type is not None and record["media_type"] != expected_media_type)
+        ):
+            raise NotFound()
+        return {
+            "artifact_id": str(artifact_id),
+            "content_digest": record["content_digest"],
+            "size_bytes": record["size_bytes"],
+            "media_type": record["media_type"],
+        }
+
+    def download(
+        self,
+        principal: ArtifactPrincipal,
+        artifact_id: UUID,
+        *,
+        expected_digest: str | None = None,
+        expected_size: int | None = None,
+        expected_media_type: str | None = None,
+    ) -> ArtifactDownload:
+        try:
+            record = self._reader.get_verified(artifact_id)
+        except NotFound:
+            raise NotFound() from None
+        visibility = str(record["visibility"])
+        if not self._may_read(principal, artifact_id, visibility):
+            raise NotFound()
+        if visibility == "public" and not self._reader.is_publicly_released(artifact_id):
+            raise NotFound()
+        if self._max_download_bytes is not None and (
+            not isinstance(record["size_bytes"], int)
+            or record["size_bytes"] > self._max_download_bytes
+        ):
+            raise NotFound()
+        if (
+            (expected_digest is not None and record["content_digest"] != expected_digest)
+            or (expected_size is not None and record["size_bytes"] != expected_size)
+            or (expected_media_type is not None and record["media_type"] != expected_media_type)
+        ):
             raise NotFound()
         _, body = self._reader.read_verified(artifact_id)
         return ArtifactDownload(
@@ -80,7 +143,7 @@ class ArtifactAccessService:
                 "Content-Disposition": f'attachment; filename="artifact-{artifact_id}"',
                 "X-Content-Type-Options": "nosniff",
                 "Cache-Control": "public, max-age=31536000, immutable"
-                if record["visibility"] == "public"
+                if visibility == "public"
                 else "private, no-store",
             },
         )

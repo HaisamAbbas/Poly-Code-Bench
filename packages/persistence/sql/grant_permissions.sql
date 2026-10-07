@@ -9,7 +9,7 @@ REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
 
 -- Public readers can only see published projections, never source tables.
 GRANT SELECT ON public_published_release, public_release_entry,
-    public_release_document, public_release_pointer TO pcb_public_reader;
+    public_release_document, public_release_pointer, public_artifact_catalog TO pcb_public_reader;
 
 GRANT USAGE ON SCHEMA public TO
     pcb_public_reader, pcb_submitter, pcb_submission_reviewer, pcb_submission_approver,

@@ -19,7 +19,9 @@ from polycodebench_api.context import ApiServices
 _SEPARATOR = "."
 
 
-def mint_download_token(services: ApiServices, artifact_id: str, release_id: str) -> tuple[str, str]:
+def mint_download_token(
+    services: ApiServices, artifact_id: str, release_id: str
+) -> tuple[str, str]:
     """Return ``(download_path, expires_at)`` for one public artifact of one release."""
     expires = int(time.time()) + services.artifact_ttl_seconds
     body = f"{artifact_id}|{release_id}|{expires}"
@@ -60,7 +62,7 @@ def verify_download_token(
         token_artifact, token_release, raw_expires = decoded.rsplit("|", 2)
     except (ValueError, UnicodeDecodeError):
         return False
-    if not raw_expires.isdigit() or int(raw_expires) < int(time.time()):
+    if not raw_expires.isdigit() or int(raw_expires) <= int(time.time()):
         return False
     return token_artifact == artifact_id and token_release == release_id
 

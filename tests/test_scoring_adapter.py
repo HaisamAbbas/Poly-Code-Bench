@@ -133,6 +133,7 @@ def test_passing_run_keeps_unproduced_judge_values_missing(policy, ownership, pr
 
     assert outcome.scorecard.status is EvaluationState.NEEDS_REVIEW
     assert outcome.scorecard.total_score is None
+    assert any(reason.reference == "policy.calibration" for reason in manifest.blocking)
     missing = [item for item in manifest.items if item.status == "missing"]
     assert missing
     assert all(item.score_bp is None for item in missing)

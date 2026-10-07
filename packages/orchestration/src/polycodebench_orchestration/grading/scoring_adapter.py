@@ -84,18 +84,42 @@ def evaluation_to_manifest(
     rubric_items = _rubric_items(task, evidence, policy, profile, bundle_ref)
     diagnostic_items = _diagnostic_items(evidence, profile)
     security_issues, unreviewed_security = _security_issues(evidence, bundle_ref)
-    blocking = (
-        tuple(
+    blocking_reasons = (
+        [
             BlockingReason(
                 reason_class="adjudication",
                 reference=f"review.{index}",
                 detail=f"{entry.reason}: {entry.detail}"[:400],
             )
             for index, entry in enumerate(evidence.reviews)
-        )
+        ]
         if evidence.gate == "pass"
-        else ()
+        else []
     )
+    if evidence.gate == "pass" and (
+        not policy.effective_for_scoring or policy.calibration_status != "measured"
+    ):
+        blocking_reasons.append(
+            BlockingReason(
+                reason_class="adjudication",
+                reference="policy.calibration",
+                detail="frozen scoring policy is not calibrated and effective for ranking",
+            )
+        )
+    if (
+        evidence.gate == "pass"
+        and ScoreDimension.IDIOMATIC in task.applicable_dimensions
+        and profile is not None
+        and not profile.effective_for_scoring
+    ):
+        blocking_reasons.append(
+            BlockingReason(
+                reason_class="adjudication",
+                reference=f"profile.{profile.language_id}.calibration",
+                detail="frozen language profile is not effective for scoring",
+            )
+        )
+    blocking = tuple(blocking_reasons)
 
     gate: GateVerdict
     if evidence.gate == "pass":

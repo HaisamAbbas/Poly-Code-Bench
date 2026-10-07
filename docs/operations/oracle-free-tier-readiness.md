@@ -61,6 +61,15 @@ SeaweedFS 4.48, and Keycloak 26.8.0 dependency images each publish a `linux/arm6
 This check does not cover Python/Node dependencies or prove the combined stack fits in 12 GB;
 build the API and web app on an ARM64 Linux host and measure memory before using the VM.
 
+A local development-stack snapshot on October 7 reported about 1.47 GiB across the three Compose
+dependencies and the host API/web processes. This gives the 12 GB A1 shape substantially more
+observed memory headroom than Alibaba's currently advertised 1 GiB ECS t5 offer, but the snapshot
+does not include a VM's OS/Docker overhead and is not a production-image or sustained-load test.
+It supports considering OCI only for the previously described private proof of concept; it does
+not change the missing PostgreSQL, idle-reclamation, account-quota, or production-isolation gates.
+See [`alibaba-local-capacity-snapshot-2026-10-07.json`](../implementation/evidence/prompt-33/alibaba-local-capacity-snapshot-2026-10-07.json)
+for the component measurements and limitations.
+
 This would test remote operation of the local development stack. It would **not** complete the
 repository's cloud staging gate or E2E-42/E2E-43. The checked-in staging plan uses AWS ECS, EC2,
 RDS PostgreSQL, S3, KMS, Secrets Manager, ECR, IAM/STS and AWS Budgets. Core deployment manifests

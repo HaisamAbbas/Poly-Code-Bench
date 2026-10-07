@@ -55,6 +55,8 @@ def test_local_prepare_generates_private_database_and_object_store_credentials(
     assert values["PCB_LOCAL_SCORING_ENABLED"] == "false"
     assert values["PCB_SERVICE_IDENTITY"] == "polycodebench-local-development"
     assert values["PCB_BUCKET_INTERNAL"] == "pcb-internal-local"
+    assert values["PCB_OBJECT_STORE_PROVIDER"] == "s3"
+    assert values["PCB_OBJECT_STORE_REGION"] == "us-east-1"
     assert values["PCB_OBJECT_STORE_ADDRESSING_STYLE"] == "path"
     assert values["PCB_LOCAL_POSTGRES_PASSWORD"] not in capsys.readouterr().out
 
@@ -77,6 +79,8 @@ def test_local_prepare_adds_worker_settings_to_existing_environment(
         "PCB_LOCAL_WORKER_SETUP_ENABLED",
         "PCB_WORKER_DISPATCH_ENABLED",
         "PCB_OBJECT_STORE_ENDPOINT",
+        "PCB_OBJECT_STORE_PROVIDER",
+        "PCB_OBJECT_STORE_REGION",
         "PCB_OBJECT_STORE_ADDRESSING_STYLE",
         "PCB_BUCKET_HIDDEN",
         "PCB_BUCKET_INTERNAL",

@@ -117,6 +117,11 @@
 - Reviewed the current official Alibaba and OCI free-tier terms and recorded the account-specific checks in `docs/operations/free-cloud-target-review-2026-10.md`. Alibaba's listed ECS free offer is not enough to infer this account's quotas; solution trials are temporary and their data is deleted on expiry. OCI has an Always Free A1 option, but requires a different target and self-managed PostgreSQL for this application.
 - No provider was selected for deployment, and no account API or cloud resource was used. Alibaba remains the preferred candidate only if the owner's console confirms the exact compute, storage, PostgreSQL/secrets/registry entitlements and an approved residual-spend limit. The checked-in Terraform remains AWS-specific.
 
+## Alibaba ECS offer distinction (2026-10-07)
+
+- Rechecked the official Alibaba offer pages. The one-year ECS t5 1-vCPU/1-GiB Free Tier card and the ECS guide's separate three-month finite-quota trial are distinct offer paths. The latter documents CNY 300 personal / CNY 660 enterprise quota, selectable larger configurations, and pay-as-you-go billing if an instance remains after expiry. At the maximum personal reference rate of CNY 0.833/hour, CNY 300 covers about 15 continuous days. This could enable a short private synthetic-data POC only if the signed-in console confirms an eligible sufficient SKU, region, and remaining quota; it does not provide a persistent no-cost host or remove the need for an owner-approved exposure cap and shutdown date.
+- Updated the operations readiness notes to preserve that distinction. No account was accessed and no resource or charge was created. Sources: [Alibaba Free Tier](https://www.alibabacloud.com/en/Free?_p_lc=1), [ECS free-trial guide](https://help.aliyun.com/en/ecs/user-guide/ecs-free-trial).
+
 ## Post-recovery local verification (2026-10-06)
 
 - After restarting the local services, the loopback PostgreSQL, object store, Keycloak OIDC discovery, API and web app returned healthy responses. The first manual discovery probe used the wrong realm path; the configured `polycodebench-local` realm then returned HTTP 200 and its issuer matched the application configuration.

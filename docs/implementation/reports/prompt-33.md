@@ -161,6 +161,14 @@
 - The temporary PostgreSQL server is stopped. Automatic execution review rejected recursive deletion of its verified temp-directory data, so those synthetic test files remain in the OS temp folder; no password or provider credential was provisioned or persisted.
 - Evidence: `docs/implementation/evidence/prompt-33/parent-run-lifecycle-2026-10-07.json`.
 
+## Local full-stack verification (2026-10-07)
+
+- Started the loopback Compose dependencies and ran the documented local bootstrap: PostgreSQL is healthy at the current migration head with scoped API roles; SeaweedFS is reachable; Keycloak OIDC discovery is ready. The signed `synthetic_internal` release projection is available through the actual PostgreSQL-backed API.
+- All 11 public API routes pass against that release. A compatible code-model comparison returns 3 common tasks and 6 paired task deltas; an incompatible pair is returned with both `protocol_mismatch` and `budget_mismatch` rather than silently combined.
+- `pnpm --filter @polycodebench/web build` passes with TypeScript and all seven public routes generated. The standalone production page serves static assets and actual release data; the 390 px metrics region scrolls with the keyboard. Production OIDC intentionally refuses HTTP loopback because production sign-in requires HTTPS. The local development server's full Keycloak submission smoke passes, including reviewer authorization and cross-owner isolation.
+- Browser suites remain green on the latest evidence: Prompt 30 4/4, Prompt 31 3/3, Prompt 32 2/2. The local form contacted no submitted provider endpoint; no model/judge call, cloud resource or benchmark release was created. Evidence: `docs/implementation/evidence/prompt-33/local-stack-functional-smoke-2026-10-07.json`.
+- The website/API/database and local OIDC path now run together on this workstation. End-to-end benchmark execution still stops after bounded solve work: evaluation, judging, scoring and publication processors are not assembled. The solve worker remains opt-in and was not dispatched. Cloud staging remains blocked on account/trial quota, authorized spend, operator identities, domain/HTTPS and the other inputs in `docs/operations/staging-execution-plan.md`.
+
 Decisions: D-33-01 to D-33-10 in `docs/implementation/decisions.md`. D-33-03 and D-33-04 are resolved in the current tree; staging authorization remains open.
 
 Next: provide the staging inputs in `docs/operations/staging-execution-plan.md` §1, then run plan §2–3 to close E2E-42/E2E-43. Prompt 34 — Perform the final integrated audit and repair pass — follows once Phase 7 is accepted, or by explicit authorization with Phase 7 recorded as blocked.

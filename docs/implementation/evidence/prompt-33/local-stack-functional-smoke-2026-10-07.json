@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-10-07T04:57:39Z",
+  "environment": "loopback-only local development",
+  "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
+  "fixture_kind": "synthetic_internal",
+  "services": {
+    "postgresql": "healthy; current migrations applied; scoped API roles configured",
+    "seaweedfs": "loopback endpoint reachable",
+    "keycloak": "OIDC discovery ready",
+    "api_healthz": "passed",
+    "web_development_server": "running on loopback"
+  },
+  "public_api": {
+    "routes_verified": [
+      "GET /v1/releases",
+      "GET /v1/releases/{release_id}",
+      "GET /v1/leaderboard",
+      "GET /v1/models/{model_config_id}",
+      "GET /v1/languages/{language_id}",
+      "GET /v1/compare",
+      "GET /v1/tasks",
+      "GET /v1/tasks/{task_id}",
+      "GET /v1/tasks/{task_id}/content",
+      "GET /v1/scorecards/{scorecard_id}",
+      "GET /v1/methodology/{version}"
+    ],
+    "compatible_comparison": {
+      "model_config_ids": [
+        "synthetic-code-a",
+        "synthetic-code-c"
+      ],
+      "common_tasks": 3,
+      "paired_task_deltas": 6,
+      "incompatibilities": 0
+    },
+    "incompatible_comparison": {
+      "model_config_ids": [
+        "synthetic-code-a",
+        "synthetic-code-b"
+      ],
+      "common_tasks": 0,
+      "incompatibility_codes": [
+        "protocol_mismatch",
+        "budget_mismatch"
+      ]
+    }
+  },
+  "web": {
+    "production_build": "passed; TypeScript and seven-page route generation completed",
+    "standalone_public_page": "passed; static CSS served with HTTP 200; actual PostgreSQL-backed synthetic release rendered",
+    "standalone_mobile_metrics_keyboard_scroll": "passed at 390x844",
+    "standalone_http_sign_in": "unavailable as expected; production OIDC requires HTTPS and loopback here is HTTP",
+    "development_oidc_browser_smoke": "passed; Keycloak login, PostgreSQL-backed metadata-only request/status, reviewer authorization, cross-owner isolation, keyboard access and mobile layout",
+    "provider_endpoint_contacted": false
+  },
+  "browser_suites": {
+    "prompt_30": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "prompt_31": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "prompt_32": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "privacy_and_spend": {
+    "synthetic_data_labeled_as_benchmark_results": false,
+    "real_credentials_or_personal_account_data_in_evidence": false,
+    "synthetic_test_identity_in_prompt32_screenshots": true,
+    "browser_screenshots_with_private_data_committed": false,
+    "model_or_judge_calls": 0,
+    "cloud_resources_created": 0
+  },
+  "remaining_local_gap": "The solve worker is opt-in and was not dispatched; evaluation, judging, scoring and publication processors are not assembled, so these synthetic submissions do not yield scores or releases.",
+  "remaining_staging_gate": "No cloud account, verified trial quota, authorized spend cap, operator identities, public HTTPS domain or deployment inputs are available; no cloud calls were made."
+}

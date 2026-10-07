@@ -2,21 +2,21 @@
     "schema_version":  1,
     "project":  "PolyCodeBench",
     "last_completed_prompt":  "32",
-    "active_prompt":  "33",
-    "active_scope":  "Prompt 33 remains active. The local web/API/PostgreSQL/OIDC runtime serves two explicitly synthetic release projections. Exact job/run/stage-filtered solve claims are implemented and verified; local dispatch remains disabled by default pending an explicit bounded target and dispatch opt-in. Evaluation, judging, scoring and publication processors are not assembled. Cloud staging needs a target account, actual quota/region, network inputs and owner-approved spend/shutdown envelope.",
+    "active_prompt":  "34",
+    "active_scope":  "Prompt 34 is active; the requirements/E2E matrices and source/evidence paths are being reconciled against the current repository. Prompt 33 local runtime and solve-queue mechanics pass on synthetic data, but evaluation/judging/scoring/publication workers remain unassembled. Continue local-only, keep shared queue dispatch disabled, and do not make model or cloud calls. Staging is blocked because the owner has no server/domain and has not checked Alibaba eligibility, quota, region or spend/shutdown terms.",
     "phase_status":  {
                          "phase_0":  "done",
                          "phase_1":  "done",
                          "phase_2":  "blocked",
                          "phase_3":  "blocked",
                          "phase_4":  "blocked",
-                         "phase_5":  "not_started",
+                         "phase_5":  "done",
                          "phase_6":  "blocked",
                          "phase_7":  "blocked",
-                         "phase_8":  "not_started"
+                         "phase_8":  "in_progress"
                      },
     "implementation_status":  "Prompt 26 self-repair implemented: polycodebench_core/{repair_contracts,repair_prompts}.py (self-repair-v1 protocol, pcb-repair-v1 prompt policy), polycodebench_orchestration/repair/session.py (round driver), polycodebench_persistence/repair_state.py + migration e5f6a7b8c9d0 (immutable rounds/deliveries, round-boundary checkpoint under CAS), solve_state candidate revisions, admitted adapted fixture taskpacks/self-repair/py-listsort-v1 and docs/implementation/self-repair-method.md. WP-20: all seven Track B families implemented (Prompts 24-28). Prompt 27 Q&A: polycodebench_core/{qa_contracts,qa_prompts}.py (pcb-qa-v1, read/search-only repo-qa-v1 protocol), polycodebench_evaluation/qa_grading.py, config/judging/qa-entailment-{rubric,panel}-v1.yaml, admitted cross-file fixture taskpacks/qa/py-configkit-qa-v1 and docs/implementation/qa-method.md. Prompt 28 implemented: plugins/suites/swebench prediction contracts and graders, config/protocols/prediction-v1.yaml, pcb-prediction-v1 prompt policy, two admitted task packs under taskpacks/prediction/, the Track B coverage audit and reports/suite-coverage.md. Prompt 30 implemented: release-backed leaderboard, language diagnostics and model profile in apps/web. Prompt 31 adds exact release/cohort comparisons, paginated disclosed task browsing, lazy inert public task content and JSON export, redacted scorecard contribution drilldowns, and historical-release methodology/correction views. Prompt 32 adds metadata-only submissions, verified identity/ownership, reviewer/admin gates, bounded idempotent approval, PostgreSQL storage wiring, and the release-backed submission page. Prompt 33 follow-up 2026-10-07: exact solve-job UUID, approved-run UUID, and stage claim filters in PostgresJobRepository/WorkerService and local worker CLI; both local and EC2 entrypoints restrict to solve stage, run-scoped watch remains bounded, and local one-shot requires a job or approved run target; evidence docs/implementation/evidence/prompt-33/worker-exact-claim-2026-10-07.json.",
-    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prompt 27: 32 Q&A tests passed; Prompt 28: 21 E2E-38 tests plus 22 suite tests passed with ruff/format and strict mypy. Prompt 30: four Playwright browser cases, optimized Next build, typecheck/lint and 24 focused API tests passed. Prompt 31: three Playwright cases passed for E2E-39 navigation, E2E-26 task privacy/export and E2E-40 keyboard/responsive/pagination; Prompt 30 regression Playwright suite 4/4 passed; 27 focused API/projection/release tests passed; optimized Next build, web typecheck/lint and scoped Ruff/format checks passed. Prompt 32: API suite 32/32 passed; Prompt 32 browser 2/2, Prompt 31 3/3, Prompt 30 4/4; Next build, web typecheck/lint, Ruff/format, migration single-head check and git diff check passed. Follow-up 2026-10-05: `tests/test_public_api_submissions_postgres.py` passed 3/3 on a disposable migrated local PostgreSQL database using `pcb_local_api` for HTTP/repository calls and a separate migration identity; covered per-subject concurrent rate limits, idempotent owner reads, authenticated create/reject routes, RLS isolation and durable audit events. The test database was removed. Prompt 33 follow-up 2026-10-07: worker/runtime unit and CLI 45 passed; PostgreSQL exact claim/run/stage filters 3 passed, and the approved-submission run-scope integration passed; strict mypy on 3 changed source modules and Ruff/format passed; Dockerfile.solve-worker rebuilt as a non-root image; --help and targetless one-shot refusal ran read-only/network-disabled. No queue job or model endpoint was contacted.",
+    "verification_status":  "Prompt 26: 22 repair tests passed (13 contract, 5 persistence on real PostgreSQL incl. immutable round rows and redelivery, 4 E2E-37 session incl. hidden-feedback isolation, exhausted round budget and restart mid-round); combined regression 161 passed / 12 skipped (PCB_TEST_DOCKER-gated) over solve/persistence/judging/core - the single failure in that run was this session's concurrent alembic downgrade/upgrade against the same test database, and the repair suites re-run green afterwards (9/9 and 22/22); ruff and mypy clean on changed modules; migration e5f6a7b8c9d0 reversible (downgrade then upgrade). Prompt 27: 32 Q&A tests passed; Prompt 28: 21 E2E-38 tests plus 22 suite tests passed with ruff/format and strict mypy. Prompt 30: four Playwright browser cases, optimized Next build, typecheck/lint and 24 focused API tests passed. Prompt 31: three Playwright cases passed for E2E-39 navigation, E2E-26 task privacy/export and E2E-40 keyboard/responsive/pagination; Prompt 30 regression Playwright suite 4/4 passed; 27 focused API/projection/release tests passed; optimized Next build, web typecheck/lint and scoped Ruff/format checks passed. Prompt 32: API suite 32/32 passed; Prompt 32 browser 2/2, Prompt 31 3/3, Prompt 30 4/4; Next build, web typecheck/lint, Ruff/format, migration single-head check and git diff check passed. Follow-up 2026-10-05: `tests/test_public_api_submissions_postgres.py` passed 3/3 on a disposable migrated local PostgreSQL database using `pcb_local_api` for HTTP/repository calls and a separate migration identity; covered per-subject concurrent rate limits, idempotent owner reads, authenticated create/reject routes, RLS isolation and durable audit events. The test database was removed. Prompt 33 follow-up 2026-10-07: worker/runtime unit and CLI 45 passed; PostgreSQL exact claim/run/stage filters 3 passed, and the approved-submission run-scope integration passed; strict mypy on 3 changed source modules and Ruff/format passed; Dockerfile.solve-worker rebuilt as a non-root image; --help and targetless one-shot refusal ran read-only/network-disabled. No queue job or model endpoint was contacted. Prompt34 local refresh 2026-10-07: docs/implementation/verify_prompt00.py passed 14 REQ, 24 WP, 43 E2E, 142 tickets and source hashes; read-only Docker check found all 34 allowlisted image digests across eight language identities; API /readyz and web /leaderboard returned HTTP 200. No image build/pull, container start, task run, model call or cloud action occurred.",
     "source_manifest":  "docs/implementation/source-manifest.json",
     "blockers_or_open_inputs":  [
                                     "Judge access is absent: no approved judge endpoint, credential, price snapshot or judge model configuration exists, so judge-panel-v1 reports provisioned: false and pcb-judge run exits 4 with JUDGE_PANEL_UNAVAILABLE rather than substituting another model",
@@ -30,8 +30,8 @@
                                     "Production object-store IAM/bucket policies, encryption/key management and deployed service-identity denial are not configured or validated; local SeaweedFS evidence is emulator-only",
                                     "Short-lived one-object stage transfer capabilities and stage-bound guest artifact channels remain unimplemented; Prompt 07 now supplies the lease/fence/capacity contract they must integrate with",
                                     "E2E-26 local release-scoped binary artifact routes, restricted PostgreSQL catalog, SeaweedFS digest verification and Prompt 31 privacy/export browser cases pass; production IAM/bucket-policy denial remains open",
-                                    "E2E-04 production execution and E2E-27 public/cohort filter variants remain with Prompts 16-17; the generic evaluator-worker variant passed in Prompt 12 at development tier only",
-                                    "Prompt 06 production driver validation deferred by the owner because cloud access is unavailable; no authorized AWS account/region, supervisor principal, approved AMI/image manifest, explicit cloud budget, AWS CLI, or Terraform CLI is available; no cloud calls were made",
+                                    "E2E-04 has Python/Rust fixture evidence but remains partial because TypeScript has no task pack and production execution is not verified. E2E-27 local registry, aggregation, public filters and browser scope checks pass on synthetic/internal data; live cohort and rights gates remain open.",
+                                    "Prompt 33 staging remains blocked: the owner has no server/domain and selected Alibaba trial preparation, but region, product eligibility, quotas, billing behavior, spend cap and shutdown date are unchecked. The checked-in Terraform is AWS-specific; no provider resources or cloud calls were made.",
                                     "Hosted provider credentials, approved public endpoints and explicit spend budgets are not configured: the OpenAI-compatible, Anthropic and Google adapters are untested against live endpoints; judge endpoints are not configured",
                                     "Production secret-store integration, operator-supplied price snapshots and context/capability declarations for real model configurations are deployment inputs",
                                     "Live model behaviour under the solve protocols (provider tool-call conventions, real token usage, the two-model pilot) is unverified; fixture-model evidence only until Prompt 17",
@@ -44,17 +44,17 @@
                                     "Prompt 17: common distinct judge endpoint/configuration and human calibration are absent; scoring remains inactive",
                                     "Prompt 17: production database, object-store endpoint, worker image, supervisor identity and authorized production execution target are absent",
                                     "Prompt 17: checkout has no operator run-start CLI or HTTP route; no executable dispatch command is available",
-                                    "Dedicated homogeneous performance hardware is not available: Prompt 13 measurements ran on shared CI (`hardware_gate: blocked_shared_ci`), which is valid regression evidence but cannot establish a production efficiency comparison or release a ranked efficiency claim",
+                                    "Dedicated homogeneous performance hardware is not available: E2E-19 measurements ran on shared CI and remain partial; E2E-20 canary invalidation/first-valid-block mechanics pass at development tier. Neither supports a production efficiency claim.",
                                     "Per-iteration memory is the guest process peak RSS, valid for the in-process Python workload; a workload that forks children needs per-iteration cgroup peak, which requires a guest image change and re-digesting every sealed Python manifest (D-13-11)",
-                                    "No admitted task declares a Rust performance workload, so the Rust side of the performance lane is contract-complete but unexercised (E2E-19/20 stay not_run overall)",
+                                    "No admitted task declares a Rust performance workload, so the Rust side of the performance lane remains unexercised; E2E-19 is partial and E2E-20 algorithmic controls pass on development fixtures.",
                                     "Prompt 15 scoring is verified only on synthetic fixtures at local_fixture tier: no production worker, no sealed hidden lane, no curator rights confirmation, and config/scoring/pilot-v1.yaml remains effective_for_scoring: false with calibration_status: pending",
-                                    "E2E-24 live-pilot replay and restored-environment replay remain with Prompt 17 and Prompt 33; only the clean-process archived-fixture replay variant is proven",
+                                    "E2E-24 clean-process fixture replay and Prompt 33 restored-environment replay pass locally; live-pilot replay remains blocked with E2E-31.",
                                     "The idiomatic and robustness residual-judge weight split (8000/2000) is a declared pilot parameter pending calibration (D-15-05)",
                                     "Prompt 18: public disclosed-security examples remain blocked pending owner-approved rights/transmission scope, public advisory and immutable pre-fix/fix revisions, isolated reproducers and clean controls in both languages, and curator-reviewed hidden oracle/source exposure policy; see config/track-a-public-security-source-requirement.json",
-                                    "Prompt 23: Java JDK/Maven/JUnit images have only a pinned recipe; runtime/evaluator/performance image digests, Docker probes and task admission are absent.",
-                                    "Prompt 23: JavaScript/TypeScript source plugins and entrypoints exist with separate profiles, but neither has an allowlist entry, task manifest, or complete runtime/evaluator image identity.",
-                                    "Prompt 23: Go module-root runner fix changed guest source; saved Go image guest digest and prior admission do not represent the current guest and require rebuild/re-admission.",
-                                    "Prompt 23: fresh Docker image verification/admission for C, C++, Go and Java was unavailable; Docker daemon was not available.",
+                                    "Java authored fixture admission passes 26/26 at development_sandbox tier. All three Java runtime/evaluator/performance digests in config/plugins/allowlist-v1.yaml are present locally (Prompt34 image audit); quality admission, production execution and a performance workload remain open.",
+                                    "JavaScript fixture admission passes 25/25 at development_sandbox tier. Distinct JavaScript and TypeScript profiles/images are registered and their six allowlisted digest identities are present locally (Prompt34); TypeScript still has no task pack, and quality/complete-path/production evidence remain open.",
+                                    "Go executable admission passes 24/24 and corrected development-sandbox conformance passes 18/18. All three allowlisted Go image digests are present locally (Prompt34); gosec still reports a dev version, and production/full-path evidence remains open.",
+                                    "Prompt34 verified exact local Docker image IDs against all 34 digests in the eight-language allowlist. This confirms image presence/identity only; it does not claim a fresh recipe rebuild, current task admission for every language, quality approval or production execution.",
                                     "Prompt 23 analyzer identity limitations: C++ Cppcheck is unknown, Go gosec reports dev, and a fresh RustSec advisory snapshot is absent."
                                 ],
     "evidence_summary":  {
@@ -133,7 +133,7 @@
                                      }
                                  }
 },
-    "exact_next_action":  "Continue Prompt 33 locally: map existing evaluator/judge/scorer/publisher services to durable stage jobs and implement the next independently verifiable synthetic-only processor; keep dispatch off on the shared test DB. For cloud staging, wait for owner-confirmed target account, quotas, region, spend ceiling and shutdown date before preparing or applying provider IaC.",
+    "exact_next_action":  "Continue local-only with a bounded synthetic evaluator-stage vertical slice: trace frozen candidate and task inputs through evaluation evidence, preserve inactive scoring gates, and do not enqueue or dispatch work on the shared queue. Record the evidence and impact map in Prompt 34. Cloud work stays unstarted until the selected trial quota/region/eligibility and a bounded spend/shutdown envelope are verified.",
     "prompt_statuses":  {
                             "00":  "done",
                             "01":  "done",
@@ -160,16 +160,16 @@
                             "22":  "done",
                             "23":  "partial",
                             "24":  "done",
-                            "25":  "not_started",
-                            "26":  "not_started",
-                            "27":  "not_started",
+                            "25":  "done",
+                            "26":  "done",
+                            "27":  "done",
                             "28":  "done",
                             "29":  "partial",
                             "30":  "done",
                             "31":  "done",
                             "32":  "done",
                             "33":  "blocked",
-                            "34":  "not_started"
+                            "34":  "in_progress"
                         },
     "last_resume_review":  {
                                "date":  "2026-09-30",
@@ -616,12 +616,12 @@
                                  "no_paid_or_remote_product_actions":  true
                              },
     "independent_prompt_authorization":  {
-                                             "active_prompt":  "23",
+                                             "active_prompt":  "34",
                                              "authorized_by_user":  true,
                                              "blocked_prompts":  [
-                                                                     "17"
+                                                                     "33"
                                                                  ],
-                                             "note":  "Prompt 17 remains blocked with its original attempt accounting and its gate is NOT waived. Prompt 23 was explicitly requested first; Prompt 21 (C++) was subsequently explicitly requested and implemented independently to close the C++ language-extension defects, without touching or claiming the Prompt 17 pilot prerequisite. Prompt 21 executable admission now passes 27/27 in the development sandbox across eight authored synthetic variants; E2E-15/35 remain partial with quality admission, curator approval and downstream scorer/replay pending. The local TSan runtime is unsupported; race/concurrency acceptance remains unverified and no race-detection claim is made. prompt_statuses[\u002721\u0027] = partial."
+                                             "note":  "The user explicitly directed continued work without pausing on 2026-10-07. Prompt 33 staging remains blocked; authorization here is only for safe local Prompt 34 audit and synthetic implementation, with no cloud provisioning or live model dispatch. No earlier scientific, spending, production or release gate is waived."
                                          },
     "prompt_18_completion":  {
                                  "date":  "2026-10-02",
@@ -682,7 +682,7 @@
                              },
     "prompt_14_resume_review":  {
                                     "date":  "2026-10-02",
-                                    "active_prompt":  "14",
+                                    "active_prompt":  "34",
                                     "baseline_commit":  "023416b",
                                     "working_tree_at_start":  "Prompt 13 work in progress in the shared tree (200 modified files plus untracked performance modules and tests); preserved, not reverted",
                                     "source_hashes":  "Architecture, Technical Spec and prompt pack unchanged from source-manifest.json",
@@ -782,7 +782,7 @@
                                                         "not_claimed":  [
                                                                             "no live model produced the graded predictions; the submissions are the fixtures' authored answers, so the evidence shows the grader, not model skill",
                                                                             "no production-worker run; grading ran at the local fixture tier",
-                                                                            "the repo_qa evidence pointer names Prompt 26's E2E-37 artifact because PCB-27 is still not_started",
+                                                                            "At the original Prompt 28 snapshot, Prompt 27 Q&A had not completed; Prompt 27 later completed and its E2E-38 evidence pointer is final (see reports/prompt-28.md follow-up and prompt_statuses[27]=done).",
                                                                             "quality admission remains pending for both prediction fixtures"
                                                                         ],
                                                         "next":  "Prompt 29 - implement the complete public API and projections."

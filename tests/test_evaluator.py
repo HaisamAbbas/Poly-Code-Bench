@@ -8,10 +8,12 @@ ambiguous baseline mappings stay reviewable instead of silently clean.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
-from polycodebench_core.models import Observation
+from polycodebench_core.identity import new_entity_id
+from polycodebench_core.models import Candidate, Observation
 from polycodebench_evaluation.evaluator import Evaluator, _family
 from polycodebench_lang_python import PythonLanguagePlugin
 from python_plugin_support import frozen
@@ -64,6 +66,40 @@ def _observation(**fields: Any) -> Observation:
 
 def _evaluator() -> Evaluator:
     return Evaluator(plugin, runner=None)  # type: ignore[arg-type]
+
+
+def test_rejected_evaluation_keeps_the_persisted_evaluation_identity() -> None:
+    view = frozen(plugin)
+    evaluation_id = new_entity_id()
+    candidate = Candidate(
+        schema_version=1,
+        kind="candidate",
+        candidate_id=new_entity_id(),
+        run_id=new_entity_id(),
+        task_id=view.task_id,
+        task_version=view.task_version,
+        sample_index=0,
+        submission_kind="source_bundle",
+        payload_digest="sha256:" + "2" * 64,
+        artifact_ids=[new_entity_id()],
+        frozen_at="2026-10-02T00:00:00.000000Z",
+    )
+
+    result = asyncio.run(
+        _evaluator().evaluate(
+            view=view,
+            candidate=candidate,
+            candidate_files={"solution.py": b"return 1"},
+            overlay={},
+            config={},
+            allowed_paths=("solution.py",),
+            baseline_files=None,
+            evaluation_id=evaluation_id,
+        )
+    )
+
+    assert result.evidence.evaluation_id == evaluation_id
+    assert result.evidence.gate == "fail"
 
 
 def test_duplicate_scanner_reports_share_key_owner_and_count_once() -> None:

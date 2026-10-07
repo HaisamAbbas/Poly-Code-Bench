@@ -376,8 +376,10 @@ class Evaluator:
         baseline_files: Mapping[str, bytes] | None,
         gate_policy: Mapping[str, Any] | None = None,
         label: str = "evaluation",
+        evaluation_id: str | None = None,
     ) -> Evaluation:
         plugin = self._plugin
+        persisted_evaluation_id = evaluation_id or new_entity_id()
 
         def reject(reason: str) -> Evaluation:
             evidence = self._empty_evidence(
@@ -389,6 +391,7 @@ class Evaluator:
                 baseline_files=baseline_files,
                 gate="fail",
                 reasons=(reason,),
+                evaluation_id=persisted_evaluation_id,
             )
             return Evaluation(evidence=evidence, raw={}, observations=[], baseline_observations=[])
 
@@ -413,6 +416,7 @@ class Evaluator:
                 baseline_files=baseline_files,
                 gate="fail",
                 reasons=("disallowed_paths:" + ",".join((disallowed + protected_hits)[:5]),),
+                evaluation_id=persisted_evaluation_id,
             ).model_copy(
                 update={
                     "allowed_paths_ok": False,
@@ -456,6 +460,7 @@ class Evaluator:
                 build_verdict=build_verdict,
                 build_detail=build_detail,
                 raw_refs=raw_refs,
+                evaluation_id=persisted_evaluation_id,
             )
             return Evaluation(evidence=evidence, raw=raw, observations=[], baseline_observations=[])
 
@@ -676,11 +681,11 @@ class Evaluator:
             baseline_files,
         )
         issues = self._issue_entries(issue_members, relations, profile, primary_of)
-        for obs in issues:
-            if obs.ambiguous:
+        for issue_evidence in issues:
+            if issue_evidence.ambiguous:
                 reviews.append(
                     ReviewItem(
-                        issue_key=obs.issue_key,
+                        issue_key=issue_evidence.issue_key,
                         reason="ambiguous_baseline_mapping",
                         detail="same family at a different location; auto-relation suppressed",
                     )
@@ -766,7 +771,7 @@ class Evaluator:
             cases=property_count,
         )
         evidence = EvaluationEvidence(
-            evaluation_id=new_entity_id(),
+            evaluation_id=persisted_evaluation_id,
             task_id=view.task_id,
             task_version=view.task_version,
             task_digest=view.task_digest,
@@ -842,9 +847,10 @@ class Evaluator:
         build_verdict: Literal["pass", "fail", "incomplete"] = "incomplete",
         build_detail: str = "not executed",
         raw_refs: list[RawArtifactRef] | None = None,
+        evaluation_id: str | None = None,
     ) -> EvaluationEvidence:
         evidence = EvaluationEvidence(
-            evaluation_id=new_entity_id(),
+            evaluation_id=evaluation_id or new_entity_id(),
             task_id=view.task_id,
             task_version=view.task_version,
             task_digest=view.task_digest,

@@ -30,6 +30,7 @@ LOCAL_ADMIN_ROLE = "polycodebench"
 LOCAL_API_ROLE = "pcb_local_api"
 LOCAL_PUBLISHER_ROLE = "pcb_local_publisher"
 LOCAL_WORKER_ROLE = "pcb_local_worker"
+LOCAL_SCORER_ROLE = "pcb_local_scorer"
 REQUIRED_ENV = {
     "KEYCLOAK_ADMIN_USERNAME",
     "KEYCLOAK_ADMIN_PASSWORD",
@@ -41,7 +42,9 @@ REQUIRED_ENV = {
     "PCB_CURSOR_SIGNING_KEY",
     "PCB_LOCAL_API_PASSWORD",
     "PCB_LOCAL_WORKER_PASSWORD",
+    "PCB_LOCAL_SCORER_PASSWORD",
     "PCB_WORKER_DATABASE_URL",
+    "PCB_SCORER_DATABASE_URL",
     "PCB_DATABASE_URL",
     "PCB_PUBLISHER_DATABASE_URL",
     "PCB_MIGRATION_DATABASE_URL",
@@ -63,8 +66,10 @@ REQUIRED_ENV = {
     "PCB_PUBLIC_API_URL",
     "PCB_API_IDENTITY_FILE",
     "PCB_ENVIRONMENT",
+    "PCB_SERVICE_IDENTITY",
     "PCB_LOCAL_WORKER_SETUP_ENABLED",
     "PCB_WORKER_DISPATCH_ENABLED",
+    "PCB_LOCAL_SCORING_ENABLED",
 }
 
 
@@ -96,8 +101,10 @@ def prepare() -> dict[str, str]:
             "PCB_PUBLIC_RELEASE_BACKEND": "postgres",
             "PCB_PUBLICATION_TARGET": "local:board",
             "PCB_ENVIRONMENT": "dev",
+            "PCB_SERVICE_IDENTITY": "polycodebench-local-development",
             "PCB_LOCAL_WORKER_SETUP_ENABLED": "false",
             "PCB_WORKER_DISPATCH_ENABLED": "false",
+            "PCB_LOCAL_SCORING_ENABLED": "false",
             "PCB_OBJECT_STORE_ENDPOINT": "http://127.0.0.1:8333",
             "PCB_BUCKET_HIDDEN": "pcb-hidden-local",
             "PCB_BUCKET_INTERNAL": "pcb-internal-local",
@@ -108,6 +115,7 @@ def prepare() -> dict[str, str]:
             "PCB_LOCAL_S3_ACCESS_KEY": secrets.token_urlsafe(24),
             "PCB_LOCAL_S3_SECRET_KEY": secrets.token_urlsafe(32),
             "PCB_LOCAL_WORKER_PASSWORD": secrets.token_urlsafe(32),
+            "PCB_LOCAL_SCORER_PASSWORD": secrets.token_urlsafe(32),
         }
         allowed_generated = (
             set(generated_defaults)
@@ -116,6 +124,7 @@ def prepare() -> dict[str, str]:
                 "PCB_PUBLISHER_DATABASE_URL",
                 "PCB_OPS_REHEARSAL_DATABASE_URL",
                 "PCB_WORKER_DATABASE_URL",
+                "PCB_SCORER_DATABASE_URL",
             }
         )
         if missing and set(missing) <= allowed_generated:
@@ -128,6 +137,11 @@ def prepare() -> dict[str, str]:
                 if worker_password is None:
                     raise RuntimeError("existing local worker database URL is invalid")
                 additions["PCB_LOCAL_WORKER_PASSWORD"] = unquote(worker_password)
+            if "PCB_LOCAL_SCORER_PASSWORD" in missing and "PCB_SCORER_DATABASE_URL" not in missing:
+                scorer_password = urlsplit(values["PCB_SCORER_DATABASE_URL"]).password
+                if scorer_password is None:
+                    raise RuntimeError("existing local scorer database URL is invalid")
+                additions["PCB_LOCAL_SCORER_PASSWORD"] = unquote(scorer_password)
             if "PCB_PUBLISHER_DATABASE_URL" in missing:
                 publisher_password = secrets.token_urlsafe(32)
                 additions["PCB_PUBLISHER_DATABASE_URL"] = (
@@ -153,6 +167,16 @@ def prepare() -> dict[str, str]:
                     f"postgresql+psycopg://{LOCAL_WORKER_ROLE}:{quote(worker_password, safe='')}"
                     f"@127.0.0.1:55432/{LOCAL_DATABASE}"
                 )
+            if "PCB_SCORER_DATABASE_URL" in missing:
+                scorer_password = additions.get(
+                    "PCB_LOCAL_SCORER_PASSWORD", values.get("PCB_LOCAL_SCORER_PASSWORD")
+                )
+                if not scorer_password:
+                    raise RuntimeError("local scorer credential generation failed")
+                additions["PCB_SCORER_DATABASE_URL"] = (
+                    f"postgresql+psycopg://{LOCAL_SCORER_ROLE}:{quote(scorer_password, safe='')}"
+                    f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+                )
             with ENV_PATH.open("a", encoding="utf-8", newline="\n") as stream:
                 stream.writelines(f"{name}={value}\n" for name, value in sorted(additions.items()))
             values.update(additions)
@@ -166,6 +190,7 @@ def prepare() -> dict[str, str]:
         publisher_password = secrets.token_urlsafe(32)
         local_postgres_password = secrets.token_urlsafe(32)
         local_worker_password = secrets.token_urlsafe(32)
+        local_scorer_password = secrets.token_urlsafe(32)
         values = {
             "KEYCLOAK_ADMIN_USERNAME": "pcb-local-admin",
             "KEYCLOAK_ADMIN_PASSWORD": secrets.token_urlsafe(32),
@@ -177,6 +202,7 @@ def prepare() -> dict[str, str]:
             "PCB_CURSOR_SIGNING_KEY": secrets.token_hex(32),
             "PCB_LOCAL_API_PASSWORD": api_password,
             "PCB_LOCAL_WORKER_PASSWORD": local_worker_password,
+            "PCB_LOCAL_SCORER_PASSWORD": local_scorer_password,
             "PCB_DATABASE_URL": (
                 f"postgresql+psycopg://{LOCAL_API_ROLE}:{api_password}"
                 f"@127.0.0.1:55432/{LOCAL_DATABASE}"
@@ -190,6 +216,10 @@ def prepare() -> dict[str, str]:
             ),
             "PCB_WORKER_DATABASE_URL": (
                 f"postgresql+psycopg://{LOCAL_WORKER_ROLE}:{quote(local_worker_password, safe='')}"
+                f"@127.0.0.1:55432/{LOCAL_DATABASE}"
+            ),
+            "PCB_SCORER_DATABASE_URL": (
+                f"postgresql+psycopg://{LOCAL_SCORER_ROLE}:{quote(local_scorer_password, safe='')}"
                 f"@127.0.0.1:55432/{LOCAL_DATABASE}"
             ),
             "PCB_OPS_REHEARSAL_DATABASE_URL": _local_admin_database_url(
@@ -212,8 +242,10 @@ def prepare() -> dict[str, str]:
             "PCB_PUBLIC_API_URL": "http://127.0.0.1:8010/v1",
             "PCB_API_IDENTITY_FILE": ".cache/polycodebench-local-identities.json",
             "PCB_ENVIRONMENT": "dev",
+            "PCB_SERVICE_IDENTITY": "polycodebench-local-development",
             "PCB_LOCAL_WORKER_SETUP_ENABLED": "false",
             "PCB_WORKER_DISPATCH_ENABLED": "false",
+            "PCB_LOCAL_SCORING_ENABLED": "false",
         }
         missing = sorted(REQUIRED_ENV - values.keys())
         if missing:
@@ -395,6 +427,15 @@ def bootstrap_database(values: dict[str, str] | None = None) -> None:
     ):
         raise RuntimeError("local worker database URL does not match its generated credential")
     worker_url_password_sql = worker_password
+    scorer_password = values["PCB_LOCAL_SCORER_PASSWORD"].replace("'", "''")
+    scorer_url = values["PCB_SCORER_DATABASE_URL"]
+    scorer_url_password = urlsplit(scorer_url).password
+    if (
+        scorer_url_password is None
+        or unquote(scorer_url_password) != values["PCB_LOCAL_SCORER_PASSWORD"]
+    ):
+        raise RuntimeError("local scorer database URL does not match its generated credential")
+    scorer_url_password_sql = scorer_password
     role_sql = f"""\
 SELECT format('CREATE ROLE {LOCAL_API_ROLE} LOGIN PASSWORD %L', '{password}')
 WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_API_ROLE}')
@@ -416,9 +457,16 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{worker_rol
 ALTER ROLE {worker_role} WITH LOGIN PASSWORD '{worker_url_password_sql}';
 GRANT pcb_solve_worker TO {worker_role};
 GRANT CONNECT ON DATABASE {db_name} TO {worker_role};
+SELECT format('CREATE ROLE {LOCAL_SCORER_ROLE} LOGIN PASSWORD %L', '{scorer_password}')
+WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{LOCAL_SCORER_ROLE}')
+\\gexec
+ALTER ROLE {LOCAL_SCORER_ROLE} WITH LOGIN PASSWORD '{scorer_url_password_sql}';
+GRANT pcb_scorer, pcb_artifact_finalizer TO {LOCAL_SCORER_ROLE};
+GRANT CONNECT ON DATABASE {db_name} TO {LOCAL_SCORER_ROLE};
 INSERT INTO artifact_quota (visibility, encryption_domain, max_bytes)
 VALUES ('internal', 'worker-config', 67108864), ('internal', 'solve-session', 1073741824),
-       ('internal', 'evaluation-evidence', 1073741824)
+       ('internal', 'evaluation-evidence', 1073741824),
+       ('internal', 'scoring-outcomes', 67108864)
 ON CONFLICT (visibility, encryption_domain) DO NOTHING;
 ALTER ROLE {LOCAL_ADMIN_ROLE} WITH LOGIN PASSWORD '{admin_password}';
 """

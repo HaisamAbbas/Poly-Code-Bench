@@ -26,6 +26,7 @@ def test_local_prepare_generates_private_database_and_object_store_credentials(
         "PCB_LOCAL_S3_ACCESS_KEY",
         "PCB_LOCAL_S3_SECRET_KEY",
         "PCB_LOCAL_WORKER_PASSWORD",
+        "PCB_LOCAL_SCORER_PASSWORD",
         "PCB_WEB_AUTH_SIGNING_KEY",
         "PCB_CURSOR_SIGNING_KEY",
     )
@@ -47,6 +48,12 @@ def test_local_prepare_generates_private_database_and_object_store_credentials(
     )
     assert values["PCB_WORKER_DISPATCH_ENABLED"] == "false"
     assert values["PCB_LOCAL_WORKER_SETUP_ENABLED"] == "false"
+    assert make_url(values["PCB_SCORER_DATABASE_URL"]).username == local_stack.LOCAL_SCORER_ROLE
+    assert (
+        make_url(values["PCB_SCORER_DATABASE_URL"]).password == values["PCB_LOCAL_SCORER_PASSWORD"]
+    )
+    assert values["PCB_LOCAL_SCORING_ENABLED"] == "false"
+    assert values["PCB_SERVICE_IDENTITY"] == "polycodebench-local-development"
     assert values["PCB_BUCKET_INTERNAL"] == "pcb-internal-local"
     assert values["PCB_LOCAL_POSTGRES_PASSWORD"] not in capsys.readouterr().out
 
@@ -62,7 +69,10 @@ def test_local_prepare_adds_worker_settings_to_existing_environment(
     omitted = {
         "PCB_LOCAL_WORKER_PASSWORD",
         "PCB_WORKER_DATABASE_URL",
+        "PCB_LOCAL_SCORER_PASSWORD",
+        "PCB_SCORER_DATABASE_URL",
         "PCB_ENVIRONMENT",
+        "PCB_SERVICE_IDENTITY",
         "PCB_LOCAL_WORKER_SETUP_ENABLED",
         "PCB_WORKER_DISPATCH_ENABLED",
         "PCB_OBJECT_STORE_ENDPOINT",
@@ -88,7 +98,13 @@ def test_local_prepare_adds_worker_settings_to_existing_environment(
         == upgraded["PCB_LOCAL_WORKER_PASSWORD"]
     )
     assert upgraded["PCB_LOCAL_API_PASSWORD"] == original["PCB_LOCAL_API_PASSWORD"]
+    assert upgraded["PCB_SERVICE_IDENTITY"] == "polycodebench-local-development"
     assert upgraded["PCB_WORKER_DISPATCH_ENABLED"] == "false"
+    assert upgraded["PCB_LOCAL_SCORER_PASSWORD"]
+    assert (
+        make_url(upgraded["PCB_SCORER_DATABASE_URL"]).password
+        == upgraded["PCB_LOCAL_SCORER_PASSWORD"]
+    )
 
     env_path.write_text(
         "\n".join(
@@ -101,6 +117,17 @@ def test_local_prepare_adds_worker_settings_to_existing_environment(
     )
     recovered = local_stack.prepare()
     assert recovered["PCB_LOCAL_WORKER_PASSWORD"] == upgraded["PCB_LOCAL_WORKER_PASSWORD"]
+    env_path.write_text(
+        "\n".join(
+            line
+            for line in env_path.read_text("utf-8").splitlines()
+            if line.split("=", 1)[0] != "PCB_LOCAL_SCORER_PASSWORD"
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    recovered = local_stack.prepare()
+    assert recovered["PCB_LOCAL_SCORER_PASSWORD"] == upgraded["PCB_LOCAL_SCORER_PASSWORD"]
 
 
 def test_compose_and_rehearsal_config_reference_generated_credentials() -> None:

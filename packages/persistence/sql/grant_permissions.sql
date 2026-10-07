@@ -118,6 +118,7 @@ GRANT INSERT ON audit_event TO pcb_reviewer, pcb_publisher;
 
 GRANT SELECT ON evaluation, observation, candidate, task_version, config_document TO pcb_scorer;
 GRANT SELECT, INSERT ON scorecard, score_item TO pcb_scorer;
+GRANT SELECT ON attempt, run TO pcb_scorer;
 GRANT INSERT ON audit_event TO pcb_scorer;
 
 GRANT SELECT ON evaluation, observation, judge_packet, judge_vote, artifact, scorecard, score_item, release TO pcb_reviewer;

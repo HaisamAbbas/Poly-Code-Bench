@@ -12,8 +12,10 @@ It is a plausible candidate for a **private, synthetic-data remote development p
 concept**, if the account can provision an Always Free Arm VM in its home region and the
 repository's containers and runtime fit the available resources. Oracle documents a total of
 2 OCPUs and 12 GB of memory for Ampere A1 Always Free compute, and 200 GB of block-volume storage
-for boot and block volumes combined. Those Always Free resources persist after the promotional
-credit period, subject to the account remaining active and OCI's idle-resource policy.
+for boot and block volumes combined. It also lists 20 GB of Always Free Object Storage with
+50,000 monthly API requests and one 10-Mbps Always Free load balancer. Those resources persist
+after the promotional credit period, subject to the account remaining active and OCI's
+idle-resource policy.
 
 The $300 promotional credit is separate: it expires when used or after 30 days. Paid resources
 created with promotional credits are reclaimed after the trial grace period unless the account
@@ -76,9 +78,11 @@ This would test remote operation of the local development stack. It would **not*
 repository's cloud staging gate or E2E-42/E2E-43. The checked-in staging plan uses AWS ECS, EC2,
 RDS PostgreSQL, S3, KMS, Secrets Manager, ECR, IAM/STS and AWS Budgets. Core deployment manifests
 accept AWS identity only, the guest sandbox uses EC2, and evidence storage uses the S3 adapter.
-There is no OCI identity verifier, object-store adapter, guest lifecycle driver, or OCI
-infrastructure root. A production-shaped OCI target therefore needs a separate implementation
-and a revised set of acceptance checks; a Compose VM cannot be relabeled as production isolation.
+There is no OCI identity verifier, OCI instance-principal credential integration, guest lifecycle
+driver, or OCI infrastructure root. The generic boto3 client can target S3-compatible endpoints,
+but OCI Object Storage has not been integration-tested and there is no validated OCI credential
+path. A production-shaped OCI target therefore needs a separate implementation and revised
+acceptance checks; a Compose VM cannot be relabeled as production isolation.
 
 The currently verified no-cloud path is still the loopback-only setup in
 [local-self-hosting.md](local-self-hosting.md). For Alibaba's alternative and its separate

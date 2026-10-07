@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "local_stack_capacity_snapshot",
+  "observed_at_utc": "2026-10-07T08:57:09Z",
+  "environment": "Windows development host; Compose PostgreSQL, SeaweedFS, Keycloak; host API and Next development server",
+  "container_working_set_mib": {
+    "postgres": 74.46,
+    "object_store": 148.8,
+    "keycloak": 727.6,
+    "subtotal": 950.86
+  },
+  "host_process_working_set_mib": {
+    "next_node": 437.8,
+    "api_python": 112.5,
+    "subtotal": 550.3
+  },
+  "reported_component_total_mib": 1501.16,
+  "interpretation": "The current development stack reports about 1.47 GiB across these components. This is a workstation snapshot, not a production sizing test; it excludes OS and Docker engine overhead, and runtime memory accounting and production image use can differ.",
+  "cloud_resources_created": 0,
+  "model_calls": 0
+}

@@ -5,7 +5,10 @@
 The owner has since selected Alibaba Cloud as a possible trial target, but has not checked account
 entitlements, quotas, region, or shutdown date. This file remains AWS-specific. See
 [`alibaba-trial-readiness.md`](alibaba-trial-readiness.md) for current official trial terms and the
-console values needed before designing a separate provider target.
+console values needed before designing a separate provider target. Oracle Cloud Free Tier was also
+reviewed as an alternative; see [`oracle-trial-readiness.md`](oracle-trial-readiness.md). No cloud
+target is ready to provision yet, so continue with the verified local stack until account, region,
+resource quotas, and an owner-approved trial envelope are known.
 
 ## 1. Inputs the owner must supply (T 25.3)
 

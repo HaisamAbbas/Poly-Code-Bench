@@ -229,3 +229,76 @@ def test_release_cli_preserves_permission_exit_code(tmp_path, capsys):
     )
     assert code == 3
     assert "publication refused" in capsys.readouterr().err
+
+
+def test_release_lifecycle_uses_separate_curator_reviewer_and_publisher_roles(tmp_path):
+    store = ReleaseStore(tmp_path / "role-matrix.db")
+    curator = ReleasePrincipal("curator-1", frozenset({"curator"}))
+    reviewer = ReleasePrincipal("reviewer-1", frozenset({"reviewer"}))
+    publisher = ReleasePrincipal("publisher-1", frozenset({"publisher"}))
+    operator = ReleasePrincipal("operator-1", frozenset({"operator"}))
+    signer = SigningKey("matrix-test-key", Ed25519PrivateKey.generate())
+
+    with pytest.raises(AuthorizationError):
+        draft(store, operator)
+    document = draft(store, curator)
+    with pytest.raises(AuthorizationError):
+        store.update(
+            publisher,
+            document["id"],
+            document["content"],
+            document["projection"],
+            document["version"],
+            "publisher-cannot-edit",
+        )
+
+    receipts = tuple(
+        ValidationEvidence(
+            check,
+            document["content_digest"],
+            digest({"receipt": check}),
+            digest({"receipt": check}),
+            "internal:role-matrix/" + check,
+        )
+        for check in sorted(REQUIRED_CHECKS)
+    )
+    with pytest.raises(AuthorizationError):
+        store.validate(reviewer, document["id"], receipts, document["version"], "reviewer-validate")
+    document = store.validate(curator, document["id"], receipts, document["version"], "validate")
+
+    with pytest.raises(AuthorizationError):
+        store.review(
+            curator, document["id"], "not a reviewer", document["version"], "curator-review"
+        )
+    document = store.review(
+        reviewer, document["id"], "Reviewed role matrix fixture", document["version"], "review"
+    )
+    with pytest.raises(AuthorizationError):
+        store.approve(
+            publisher, document["id"], "not a reviewer", document["version"], "publisher-approve"
+        )
+    document = store.approve(
+        reviewer, document["id"], "Approve exact fixture", document["version"], "approve"
+    )
+
+    with pytest.raises(AuthorizationError):
+        store.publish(reviewer, document["id"], signer, 0, document["version"], "reviewer-publish")
+    published = store.publish(publisher, document["id"], signer, 0, document["version"], "publish")
+    with pytest.raises(AuthorizationError):
+        store.withdraw(
+            reviewer,
+            published["id"],
+            "Not a publisher",
+            published["version"],
+            1,
+            "reviewer-withdraw",
+        )
+    withdrawn = store.withdraw(
+        publisher,
+        published["id"],
+        "Synthetic lifecycle complete",
+        published["version"],
+        1,
+        "withdraw",
+    )
+    assert withdrawn["state"] == "withdrawn"

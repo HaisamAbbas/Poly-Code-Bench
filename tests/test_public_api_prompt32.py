@@ -170,6 +170,9 @@ def _app(
                 "reviewer-1", frozenset({"reviewer"}), mfa=True
             ),
             "reviewer-token-no-mfa": ApiPrincipal("reviewer-no-mfa", frozenset({"reviewer"})),
+            "curator-token-00000001": ApiPrincipal("curator-1", frozenset({"curator"})),
+            "operator-token-0000001": ApiPrincipal("operator-1", frozenset({"operator"})),
+            "publisher-token-000001": ApiPrincipal("publisher-1", frozenset({"publisher"})),
             "public-reader-token-0001": ApiPrincipal("public-reader", frozenset()),
             "admin-token-no-mfa-01": ApiPrincipal("admin-no-mfa", frozenset({"administrator"})),
             "admin-token-mfa-0001": ApiPrincipal("admin-1", frozenset({"administrator"}), mfa=True),
@@ -463,6 +466,81 @@ def test_prompt32_unapproved_endpoint_is_not_contacted_or_run(tmp_path: Path) ->
             assert run_repo.calls == 0
             assert endpoints.contacts == 0
             assert endpoints.lookups == 1
+
+    asyncio.run(verify())
+
+
+def test_prompt32_admin_routes_enforce_the_role_and_mfa_matrix(tmp_path: Path) -> None:
+    app, _ = _app(tmp_path)
+    submission_id = "00000000-0000-4000-8000-000000000001"
+
+    async def verify() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            queue_cases = {
+                "submitter-token-00000001": 403,
+                "curator-token-00000001": 403,
+                "operator-token-0000001": 403,
+                "reviewer-token-no-mfa": 403,
+                "reviewer-token-00000001": 200,
+                "publisher-token-000001": 403,
+                "public-reader-token-0001": 403,
+                "admin-token-no-mfa-01": 403,
+                "admin-token-mfa-0001": 200,
+            }
+            for token, expected_status in queue_cases.items():
+                response = await client.get(
+                    "/v1/admin/model-submissions", headers=_token_headers(token)
+                )
+                assert response.status_code == expected_status, token
+
+            # Authorization runs before record lookup or run creation. Allowed roles reach the
+            # lookup and get not found; every other role is rejected without side effects.
+            review_cases = {
+                "submitter-token-00000001": 403,
+                "curator-token-00000001": 403,
+                "operator-token-0000001": 403,
+                "reviewer-token-no-mfa": 403,
+                "reviewer-token-00000001": 404,
+                "publisher-token-000001": 403,
+                "public-reader-token-0001": 403,
+                "admin-token-no-mfa-01": 403,
+                "admin-token-mfa-0001": 404,
+            }
+            for token, expected_status in review_cases.items():
+                response = await client.post(
+                    f"/v1/admin/model-submissions/{submission_id}/reject",
+                    headers={
+                        **_token_headers(token),
+                        "Idempotency-Key": f"matrix-reject-{token}",
+                    },
+                    json={"reason": "Role matrix fixture", "expected_version": 0},
+                )
+                assert response.status_code == expected_status, token
+
+            approval_cases = {
+                "submitter-token-00000001": 403,
+                "curator-token-00000001": 403,
+                "operator-token-0000001": 403,
+                "reviewer-token-no-mfa": 403,
+                "reviewer-token-00000001": 403,
+                "publisher-token-000001": 403,
+                "public-reader-token-0001": 403,
+                "admin-token-no-mfa-01": 403,
+                "admin-token-mfa-0001": 404,
+            }
+            for token, expected_status in approval_cases.items():
+                response = await client.post(
+                    f"/v1/admin/model-submissions/{submission_id}/approve",
+                    headers={
+                        **_token_headers(token),
+                        "Idempotency-Key": f"matrix-approve-{token}",
+                    },
+                    json=_approval_plan(),
+                )
+                assert response.status_code == expected_status, token
+
+        assert run_repo.calls == 0
 
     asyncio.run(verify())
 

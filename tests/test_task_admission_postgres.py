@@ -9,6 +9,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
+from polycodebench_core.application_errors import AuthorizationError
 from polycodebench_core.canonical import canonical_digest, canonical_document_digest
 from polycodebench_core.models import (
     AdmissionExecutionReport,
@@ -29,7 +30,7 @@ from polycodebench_persistence.tasks import PostgresTaskRepository
 from polycodebench_services.rbac import Principal, Role
 from polycodebench_services.task_packages import ImportedTaskPackage, TaskPackageImporter
 from polycodebench_services.tasks import TaskAdmissionService
-from sqlalchemy import insert, select, text, update
+from sqlalchemy import func, insert, select, text, update
 from sqlalchemy.engine import Engine, make_url
 
 
@@ -168,6 +169,28 @@ def test_task_registration_freeze_and_scored_split_denial(database: Database) ->
     principal = Principal(subject_id="local-prompt05-curator", roles=frozenset({Role.CURATOR}))
     repository = PostgresTaskRepository(database.engine)
     service = TaskAdmissionService(repository)
+    with database.engine.connect() as connection:
+        versions_before_denial = connection.execute(
+            select(func.count()).select_from(task_version)
+        ).scalar_one()
+    with pytest.raises(AuthorizationError):
+        service.freeze_task_version(
+            principal=Principal(
+                subject_id="operator-cannot-admit", roles=frozenset({Role.OPERATOR})
+            ),
+            document=document,
+            execution_report=execution_report,
+            manifest_digest=imported.manifest_digest,
+            manifest_artifact_id=manifest_id,
+            visible_artifact_id=visible_id,
+            hidden_artifact_id=hidden_id,
+            request_id=f"p05-denied-{uuid4()}",
+        )
+    with database.engine.connect() as connection:
+        assert (
+            connection.execute(select(func.count()).select_from(task_version)).scalar_one()
+            == versions_before_denial
+        )
     version_id = service.freeze_task_version(
         principal=principal,
         document=document,

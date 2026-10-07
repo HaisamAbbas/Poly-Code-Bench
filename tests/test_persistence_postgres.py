@@ -229,6 +229,17 @@ def test_concurrent_same_key_replays_one_atomic_run(database: Database) -> None:
     service = RunCreationService(PostgresRunRepository(database.engine))
     principal = Principal("integration-test", frozenset({Role.OPERATOR}))
     request = _request(ids)
+    with pytest.raises(AuthorizationError):
+        service.create(
+            Principal("curator-cannot-create-run", frozenset({Role.CURATOR})),
+            request,
+            f"denied-{uuid4()}",
+        )
+    with database.engine.connect() as connection:
+        assert (
+            connection.execute(select(run.c.id).where(run.c.campaign_id == ids["campaign"])).all()
+            == []
+        )
     barrier = Barrier(2)
     key = f"same-request-{uuid4()}"
 

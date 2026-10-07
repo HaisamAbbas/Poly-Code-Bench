@@ -125,3 +125,16 @@ HTTPS. Sanitized image/runtime data and screenshots:
 [`web-container-node24-2026-10-07.json`](../implementation/evidence/prompt-33/web-container-node24-2026-10-07.json),
 [`desktop`](../implementation/evidence/prompt-33/local-production-web-container-node24-desktop.png),
 [`mobile`](../implementation/evidence/prompt-33/local-production-web-container-node24-mobile.png).
+
+## Current API image rebuild (2026-10-07)
+
+The current `Dockerfile.api` source was rebuilt as `pcb-api:local-20261007-python312` for
+`linux/amd64`. The local container ran as UID/GID 10001 with a read-only root filesystem, all
+capabilities dropped, `no-new-privileges`, and only a bounded `/tmp` tmpfs writable. Its temporary
+port was bound to loopback and its minimal local environment connected to the existing local
+PostgreSQL catalog. Health, release index/detail, leaderboard and task-list reads all returned
+HTTP 200 for the published exploratory `synthetic_internal` release. The API returned four
+leaderboard entries and the first 50 task rows. The temporary container and environment file were
+removed after the check; no database writes, provider calls or cloud resources were used. This
+verifies the current API image against local data only; it is not a staging deployment. Sanitized
+details: [`api-container-python312-2026-10-07.json`](../implementation/evidence/prompt-33/api-container-python312-2026-10-07.json).

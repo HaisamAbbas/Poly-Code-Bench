@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-10-07T05:29:20Z",
+  "environment": "loopback-only local development",
+  "image": {
+    "tag": "pcb-api:local-20261007-python312",
+    "image_id": "sha256:624526b4afa6e7fbe1a13b373bf8a8be8aee9b824fc97945f2f52c6f5665ca8b",
+    "platform": "linux/amd64",
+    "python_runtime": "3.12.14",
+    "runtime_user": "10001:10001"
+  },
+  "runtime_security": {
+    "root_filesystem_read_only": true,
+    "capabilities_dropped": "ALL",
+    "no_new_privileges": true,
+    "writable_tmpfs": "/tmp; 64 MiB; nosuid,nodev",
+    "host_port_binding": "127.0.0.1:8011",
+    "temporary_container_removed": true,
+    "temporary_environment_file_removed": true
+  },
+  "checks": {
+    "healthz": 200,
+    "release_index": 200,
+    "release_detail": 200,
+    "leaderboard": 200,
+    "tasks": 200,
+    "current_release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
+    "release_state": "published",
+    "release_scope": "exploratory",
+    "exploratory": true,
+    "leaderboard_entries": 4,
+    "task_page_entries": 50,
+    "fixture_kind": "synthetic_internal"
+  },
+  "privacy_and_spend": {
+    "environment_values_recorded": false,
+    "identity_tokens_recorded": false,
+    "database_mutations": 0,
+    "provider_calls": 0,
+    "cloud_resources_created": 0
+  }
+}

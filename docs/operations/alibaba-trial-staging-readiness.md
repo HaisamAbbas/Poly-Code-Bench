@@ -53,6 +53,11 @@ disk, or changing the network billing method can also cause uncovered charges. T
 trial quota is not an account-wide spend cap and does not by itself make a remote host safe to
 create.
 
+The ECS trial is pay-as-you-go and does not satisfy ICP filing requirements for websites hosted
+in mainland China. Do not use that trial instance as a mainland-hosted public website. A private
+SSH-tunneled POC avoids public website exposure; a public deployment needs a separately reviewed
+region, domain, HTTPS, ICP, and billing plan.
+
 As of September 8, 2026, Alibaba's OSS new-user offer lists 500 GB (individual) or 1 TB
 (enterprise) of Standard LRS capacity for one month, subject to account eligibility. It covers
 storage capacity only; other billable items remain chargeable, and use beyond the quota is
@@ -77,14 +82,16 @@ for a time-boxed remote session: PostgreSQL, SeaweedFS, Keycloak, the API, and w
 development mode with synthetic release data. Bind services to loopback on the VM and reach them
 through an SSH tunnel; do not expose the development Keycloak, database, object store, or web
 ports to the internet. Restrict SSH to the operator's address and use a short-lived operator
-credential. This can exercise the site and API from another machine without adding Alibaba SDK
-support to the application.
+credential. The existing local Compose profile uses SeaweedFS, so this exercises the site and API
+remotely but does not exercise the new Alibaba OSS adapter. The public 1-vCPU/1-GiB t5 offer is
+below the measured local stack footprint; use a larger finite-quota trial shape only if its exact
+quota and region are confirmed.
 
 That option requires an ECS trial card that allows the selected instance, region, disk, and
 networking. It is temporary remote development, not a public website or the production-isolated
-cloud staging gate: it does not exercise Alibaba RAM integration, managed PostgreSQL/OSS, or the
-cloud VM sandbox driver. Keep only synthetic test data on it and explicitly release every
-resource by the trial expiry date.
+cloud staging gate: the default local Compose path does not exercise the Alibaba RAM-role/OSS
+request path, managed PostgreSQL, or the cloud VM sandbox driver. Keep only synthetic test data on
+it and explicitly release every resource by the trial expiry date.
 
 This is a separate alternative to the existing AWS staging plan. If the required project gate
 continues to require AWS staging, using this trial does not satisfy that gate; it can only support
@@ -100,12 +107,16 @@ The checked-in staging target is AWS-specific end to end:
   `ec2_vm` sandbox. `pcb-ops identity verify` verifies an AWS STS principal.
 - The production sandbox adapter and orphan reaper call EC2 APIs and validate AWS resource
   tags and supervisor identity.
-- `S3ArtifactStore` uses boto3 with S3 path-style addressing and sends `IfNoneMatch="*"` on
-  object writes. OSS requires virtual-hosted requests. Alibaba documents that OSS `PutObject`
-  rejects conditional headers, so changing only the endpoint or addressing style would break
-  the store's no-overwrite guarantee.
+- The artifact store has an opt-in OSS S3-compatibility path: virtual-hosted regional HTTPS,
+  ECS RAM-role credentials with IMDSv1 disabled, signed `x-oss-forbid-overwrite`, and
+  `Content-MD5`. The AWS S3 path retains `IfNoneMatch="*"` and SHA-256 request checksums. Unit
+  tests cover signed request construction and fail-closed endpoint selection, but there has been
+  no real ECS/OSS integration, lifecycle setup, account role check, or bucket-versioning test.
 - The deployment manifest's database, signing-key, and model-secret references use AWS
   Secrets Manager naming. Those references are not Alibaba secret resolution.
+- There is no Alibaba infrastructure root, environment identity verifier/manifest integration,
+  managed database/secrets wiring, or ECS guest lifecycle/isolation adapter. The OSS client by
+  itself does not make an Alibaba deployment target.
 
 The local Compose stack remains usable without any cloud account. Its release projections are
 synthetic internal test data and must continue to be labelled that way.
@@ -121,11 +132,10 @@ applied. It must remain a separate target; it must not reuse AWS state or AWS ma
 2. **Database:** Alibaba managed PostgreSQL 17, subject to region/trial availability and
    migration/extension compatibility checks. Keep it private to the control-plane network and
    use separate least-privilege database users for each service.
-3. **Evidence storage:** an OSS-native artifact adapter and three separate private buckets for
-   hidden, internal, and public material. Preserve the current immutable-key contract with OSS
-   `x-oss-forbid-overwrite`; verify all checksum, list, read, delete, and lifecycle behavior
-   before enabling the adapter. Do not use an irreversible WORM lock for disposable trial
-   staging.
+3. **Evidence storage:** integrate the existing opt-in OSS S3-compatibility client with three
+   separate private buckets for hidden, internal, and public material. Verify checksum, list,
+   read, delete, lifecycle, versioning, and recovery behavior against a real account before
+   enabling it. Do not use an irreversible WORM lock for disposable trial staging.
 4. **Secrets and signing:** Alibaba KMS/Secrets Manager with narrowly scoped RAM policies and
    versioned key references. Complete a key-rotation and restore rehearsal before considering
    this target trusted.
@@ -147,8 +157,9 @@ development-only deployment instead of weakening per-service credential boundari
    owner-approved maximum total exposure plus shutdown date.
 2. Add provider-specific manifest and identity verification using Alibaba STS; test refusal on
    wrong account, wrong RAM role, missing identity, and template manifests.
-3. Add and test an OSS-native object-store adapter that keeps immutable writes and visibility
-   separation. Do not route evidence through the existing path-style S3 adapter.
+3. Integrate and test the existing OSS S3-compatibility adapter in the separate Alibaba target.
+   Exercise real create/read/list/delete, digest verification, no-overwrite, bucket lifecycle,
+   versioning, recovery, and visibility separation before routing evidence to it.
 4. Add an Alibaba ECS guest lifecycle adapter and tagged orphan reaper. Test lane isolation,
    metadata denial, egress denial, ownership/fence validation, TTL cleanup, and failed-destroy
    handling before connecting it to a trusted environment.

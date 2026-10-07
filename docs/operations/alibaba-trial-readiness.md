@@ -44,6 +44,23 @@ confirmed. OCI is another possible time-limited target; see
 These offers can change, depend on account history and region, and may leave usage outside the
 included item/quantity billable. A free quota is not a hard account spend cap.
 
+## Capacity and database cost reality check
+
+Alibaba's current Free Tier page advertises an ECS t5 offer with 1 vCPU and 1 GiB RAM for one
+year, subject to account eligibility. The measured local development stack currently reports
+about 1.47 GiB across its PostgreSQL, SeaweedFS, Keycloak, API and Next processes, before the
+operating system and Docker engine. That is not a production sizing benchmark, but it means we
+must not assume the full local stack fits on the advertised 1 GiB instance. The underlying
+workstation snapshot and its limitations are captured in
+[`alibaba-local-capacity-snapshot-2026-10-07.json`](../implementation/evidence/prompt-33/alibaba-local-capacity-snapshot-2026-10-07.json).
+
+Managed PostgreSQL does not remove the cost uncertainty: Alibaba's PostgreSQL Serverless service
+bills both consumed RCUs and provisioned storage; storage expansion is enabled by default and the
+provisioned storage capacity is billed even when unused. Its minimum configuration and auto-pause
+settings do not make it a free database. OSS's one-month 500 GB individual offer covers Standard
+LRS storage only; requests and other excluded usage can still be billed. The actual console
+benefits and charges must be checked before choosing a design. [ECS free offer](https://www.alibabacloud.com/en/Free?_p_lc=1), [PostgreSQL Serverless billing and configuration](https://www.alibabacloud.com/help/en/rds/apsaradb-rds-for-postgresql/create-a-serverless-apsaradb-rds-for-postgresql-instance), [OSS trial coverage](https://www.alibabacloud.com/help/en/oss/free-quota-for-new-users).
+
 ## Console values required before an Alibaba target can be designed
 
 Record these values from the owner's console without sharing access keys or passwords:

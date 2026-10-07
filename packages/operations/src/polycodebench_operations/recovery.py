@@ -37,9 +37,10 @@ import boto3  # type: ignore[import-untyped]
 from botocore.config import Config  # type: ignore[import-untyped]
 from polycodebench_core.telemetry import MetricsRegistry
 from polycodebench_persistence.object_store import (
-    configure_oss_put_protection,
+    create_s3_compatible_client,
     object_store_addressing_style,
     object_store_provider,
+    object_store_ram_role_name,
     object_store_region,
 )
 from polycodebench_publication.keyring import Keyring
@@ -84,13 +85,23 @@ def _s3(
     access_key: str | None = None,
     secret_key: str | None = None,
 ) -> Any:
-    """Use explicit local credentials for emulators or the standard IAM chain for AWS."""
+    """Use explicit emulator keys, Alibaba ECS role credentials, or the AWS IAM chain."""
 
     if endpoint is None:
+        if object_store_provider() == "alibaba_oss":
+            raise RuntimeError("PCB_OBJECT_STORE_ENDPOINT is required for Alibaba OSS")
         return boto3.client("s3")
+    provider = object_store_provider()
+    if provider == "alibaba_oss":
+        return create_s3_compatible_client(
+            endpoint_url=endpoint,
+            region_name=object_store_region(),
+            addressing_style=object_store_addressing_style(),
+            provider=provider,
+            ram_role_name=object_store_ram_role_name(),
+        )
     if not access_key or not secret_key:
         raise RuntimeError("local object-store credentials are required for an emulator endpoint")
-    provider = object_store_provider()
     client = boto3.client(
         "s3",
         endpoint_url=endpoint,
@@ -98,17 +109,9 @@ def _s3(
         aws_secret_access_key=secret_key,
         region_name=object_store_region(),
         config=Config(
-            s3={"addressing_style": object_store_addressing_style()},
-            signature_version="s3v4",
-            **(
-                {"request_checksum_calculation": "when_required"}
-                if provider == "alibaba_oss"
-                else {}
-            ),
+            s3={"addressing_style": object_store_addressing_style()}, signature_version="s3v4"
         ),
     )
-    if provider == "alibaba_oss":
-        configure_oss_put_protection(client)
     return client
 
 

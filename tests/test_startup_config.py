@@ -69,16 +69,26 @@ def test_object_store_addressing_style_is_validated_and_provider_neutral() -> No
             "PCB_OBJECT_STORE_PROVIDER": "alibaba_oss",
             "PCB_OBJECT_STORE_REGION": "cn-hangzhou",
             "PCB_OBJECT_STORE_ADDRESSING_STYLE": "virtual",
+            "PCB_ALIBABA_RAM_ROLE_NAME": "pcb-public-app",
         }
     )
 
     assert result.object_store_provider == "alibaba_oss"
     assert result.object_store_region == "cn-hangzhou"
     assert result.object_store_addressing_style == "virtual"
+    assert result.alibaba_ram_role_name == "pcb-public-app"
     with pytest.raises(ValueError, match="invalid startup configuration"):
         load_startup_config({**base, "PCB_OBJECT_STORE_ADDRESSING_STYLE": "bucket-in-path"})
     with pytest.raises(ValueError, match="virtual-hosted"):
         load_startup_config({**base, "PCB_OBJECT_STORE_PROVIDER": "alibaba_oss"})
+    with pytest.raises(ValueError, match="attached ECS RAM role"):
+        load_startup_config(
+            {
+                **base,
+                "PCB_OBJECT_STORE_PROVIDER": "alibaba_oss",
+                "PCB_OBJECT_STORE_ADDRESSING_STYLE": "virtual",
+            }
+        )
     with pytest.raises(ValueError, match="invalid startup configuration"):
         load_startup_config({**base, "PCB_OBJECT_STORE_REGION": "cn/hangzhou"})
     with pytest.raises(ValueError, match="HTTPS"):

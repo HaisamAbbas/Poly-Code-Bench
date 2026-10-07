@@ -53,6 +53,9 @@ class StartupConfig(BaseModel):
         pattern=r"^[a-zA-Z0-9-]+$",
     )
     object_store_addressing_style: Literal["path", "virtual"] = "path"
+    alibaba_ram_role_name: str | None = Field(
+        default=None, min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"
+    )
     bucket_hidden: str | None = Field(default=None, min_length=1)
     bucket_internal: str | None = Field(default=None, min_length=1)
     bucket_public: str | None = Field(default=None, min_length=1)
@@ -122,6 +125,8 @@ class StartupConfig(BaseModel):
         if self.object_store_provider == "alibaba_oss":
             if self.object_store_addressing_style != "virtual":
                 raise ValueError("Alibaba OSS requires virtual-hosted object addressing")
+            if self.alibaba_ram_role_name is None:
+                raise ValueError("Alibaba OSS requires an attached ECS RAM role name")
             if any(
                 name
                 and (
@@ -157,6 +162,7 @@ ENV_KEYS = {
     "object_store_provider": "PCB_OBJECT_STORE_PROVIDER",
     "object_store_region": "PCB_OBJECT_STORE_REGION",
     "object_store_addressing_style": "PCB_OBJECT_STORE_ADDRESSING_STYLE",
+    "alibaba_ram_role_name": "PCB_ALIBABA_RAM_ROLE_NAME",
     "bucket_hidden": "PCB_BUCKET_HIDDEN",
     "bucket_internal": "PCB_BUCKET_INTERNAL",
     "bucket_public": "PCB_BUCKET_PUBLIC",

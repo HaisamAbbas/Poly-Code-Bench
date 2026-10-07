@@ -21,6 +21,7 @@ from polycodebench_api.errors import ApiError
 from polycodebench_api.postgres_submissions import PostgresSubmissionStore
 from polycodebench_api.submissions import SubmissionRate
 from polycodebench_core.canonical import canonical_digest
+from polycodebench_core.jobs import StageOutcome
 from polycodebench_core.model_contracts import (
     ModelCapabilities,
     PriceSnapshot,
@@ -29,6 +30,7 @@ from polycodebench_core.model_contracts import (
 )
 from polycodebench_core.model_planning import ModelConfig
 from polycodebench_persistence.database import Database
+from polycodebench_persistence.jobs import PostgresJobRepository
 from polycodebench_persistence.models import (
     artifact,
     attempt,
@@ -49,6 +51,12 @@ from polycodebench_persistence.models import (
 from polycodebench_publication.releases import ReleaseStore
 from sqlalchemy import create_engine, insert, select, text
 from sqlalchemy.engine import Engine, make_url
+from test_jobs_postgres import (
+    _artifact_repo,
+    _MemoryArtifactStore,
+    _register_worker,
+    _verified_upload,
+)
 
 REQUIRED_REVISION = "c41e1d8ab0f6"
 
@@ -342,9 +350,8 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
     assert role_state[6:] == (False, False)
 
     database = Database(_test_database_url())
-    migration_engine = create_engine(
-        _migration_check_url(_test_database_url()), pool_pre_ping=True, hide_parameters=True
-    )
+    scheduler_database = Database(_migration_check_url(_test_database_url()))
+    migration_engine = scheduler_database.engine
     release_store = ReleaseStore(Path(str(tmp_path)) / "approval-routes.sqlite3")
     owner_subject = f"approval-owner-{uuid4()}"
     tokens = TokenDirectory(
@@ -536,6 +543,55 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 "attempt_states": {"queued": 1},
                 "solve_job_states": {"queued": 1},
             }
+
+            memory_store = _MemoryArtifactStore()
+            worker_resource_class = f"synthetic-test-{ids['task_version'].hex[:16]}"
+            worker_id = _register_worker(
+                scheduler_database,
+                memory_store,
+                label="submission-run-status",
+                queue_class="solve",
+                resource_class=worker_resource_class,
+            )
+            scheduler = PostgresJobRepository(scheduler_database.engine)
+            claim = scheduler.claim(worker_id)
+            assert claim is not None
+            running_status = await request(
+                client,
+                "GET",
+                f"/v1/model-submissions/{submission_id}",
+                headers=owner_headers,
+            )
+            assert running_status.status_code == 200, running_status.text
+            assert running_status.json()["data"]["run_status"] == "running"
+            assert running_status.json()["data"]["run_progress"] == {
+                "schema_version": 1,
+                "attempt_states": {"running": 1},
+                "solve_job_states": {"leased": 1},
+            }
+
+            output = _verified_upload(
+                _artifact_repo(scheduler_database, memory_store),
+                b"synthetic PostgreSQL submission result",
+            )
+            scheduler.complete(
+                claim,
+                output_artifact_id=output,
+                outcome=StageOutcome(quality_gate="pass"),
+            )
+            completed_status = await request(
+                client,
+                "GET",
+                f"/v1/model-submissions/{submission_id}",
+                headers=owner_headers,
+            )
+            assert completed_status.status_code == 200, completed_status.text
+            assert completed_status.json()["data"]["run_status"] == "completed"
+            assert completed_status.json()["data"]["run_progress"] == {
+                "schema_version": 1,
+                "attempt_states": {"completed": 1},
+                "solve_job_states": {"succeeded": 1},
+            }
             return submission_id, run_id, ids
 
     try:
@@ -551,13 +607,13 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 .all()
             )
             assert len(run_rows) == 1
-            assert run_rows[0]["status"] == "queued"
+            assert run_rows[0]["status"] == "completed"
             assert run_rows[0]["campaign_id"] == ids["campaign"]
             assert run_rows[0]["config_document_id"] == ids["run_config"]
             attempts = connection.execute(
                 select(attempt.c.id, attempt.c.state).where(attempt.c.run_id == run_id)
             ).all()
-            assert len(attempts) == 1 and attempts[0][1] == "queued"
+            assert len(attempts) == 1 and attempts[0][1] == "completed"
             solve_jobs = (
                 connection.execute(
                     select(
@@ -575,18 +631,21 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
             )
             assert len(solve_jobs) == 1
             assert solve_jobs[0]["stage"] == "solve"
-            assert solve_jobs[0]["state"] == "queued"
+            assert solve_jobs[0]["state"] == "succeeded"
             assert solve_jobs[0]["queue_class"] == "solve"
-            assert solve_jobs[0]["resource_class"] == "synthetic-test-small"
+            assert solve_jobs[0]["resource_class"] == (
+                f"synthetic-test-{ids['task_version'].hex[:16]}"
+            )
             assert solve_jobs[0]["input_digest"].startswith("sha256:")
             assert (
                 connection.execute(
-                    select(stage_job_event.c.event_kind).where(
-                        stage_job_event.c.job_id == solve_jobs[0]["id"]
-                    )
-                ).scalar_one()
-                == "job_created"
-            )
+                    select(stage_job_event.c.event_kind)
+                    .where(stage_job_event.c.job_id == solve_jobs[0]["id"])
+                    .order_by(stage_job_event.c.event_seq)
+                )
+                .scalars()
+                .all()
+            ) == ["job_created", "job_claimed", "job_succeeded"]
             budget = connection.execute(
                 select(budget_account.c.hard_limit_micro_usd).where(
                     budget_account.c.scope_kind == "run",
@@ -624,7 +683,7 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 "model_submission.create",
             ]
     finally:
-        migration_engine.dispose()
+        scheduler_database.dispose()
         database.dispose()
 
 
@@ -687,6 +746,7 @@ def _seed_postgres_approval_plan(
             "master_seed": "42",
         },
     }
+    resource_class = f"synthetic-test-{ids['task_version'].hex[:16]}"
     with engine.begin() as connection:
         connection.execute(
             insert(artifact).values(
@@ -725,7 +785,7 @@ def _seed_postgres_approval_plan(
                 schema_version=1,
                 document={
                     "kind": "synthetic_test_task",
-                    "runtime": {"resource_class": "synthetic-test-small"},
+                    "runtime": {"resource_class": resource_class},
                 },
             )
         )

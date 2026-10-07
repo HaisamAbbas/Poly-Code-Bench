@@ -20,6 +20,7 @@ from sqlalchemy import event, func, insert, select, text, update
 from test_jobs_postgres import (
     _artifact_repo,
     _attempt,
+    _MemoryArtifactStore,
     _register_worker,
     _verified_upload,
 )
@@ -332,9 +333,11 @@ def test_parent_run_revocation_blocks_evaluation_dispatch_and_heartbeat(database
         repo.bind_guest(claim, "unauthorized-guest")
 
 
-def test_attempt_cancellation_cascades_to_active_evaluation(database, object_store):
+def test_attempt_cancellation_cascades_to_active_evaluation(database):
     repo = PostgresJobRepository(database.engine)
     scope = _attempt(database)
+    with database.engine.connect() as conn:
+        run_id = conn.execute(select(attempt.c.run_id).where(attempt.c.id == scope)).scalar_one()
     evaluation_id = _evaluation(database, scope)
     queue = f"review-cascade-{uuid4().hex}"
     repo.create_dag(
@@ -343,6 +346,7 @@ def test_attempt_cancellation_cascades_to_active_evaluation(database, object_sto
         actor="review",
         jobs=(_definition(queue_class=queue),),
     )
+    object_store = _MemoryArtifactStore()
     claim = repo.claim(_register_worker(database, object_store, label="cascade", queue_class=queue))
     assert repo.cancel_scope("attempt", scope, actor="review", reason="cascade") == 1
     with database.engine.connect() as conn:
@@ -351,6 +355,9 @@ def test_attempt_cancellation_cascades_to_active_evaluation(database, object_sto
                 select(evaluation.c.state).where(evaluation.c.id == evaluation_id)
             ).scalar_one()
             == "cancelled"
+        )
+        assert conn.execute(select(run.c.status).where(run.c.id == run_id)).scalar_one() == (
+            "cancelled"
         )
     assert repo.dispatch_allowed(claim) is False
     repo.confirm_slot_cleanup(claim, actor=claim.worker_id, destruction_verified=True)
@@ -448,4 +455,108 @@ def test_parallel_parent_completions_unblock_join_and_complete_scope(database, o
         assert (
             conn.execute(select(attempt.c.state).where(attempt.c.id == scope)).scalar_one()
             == "completed"
+        )
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected_attempt", "expected_run"),
+    [
+        (StageOutcome(), "completed", "completed"),
+        (StageOutcome(quality_gate="fail", model_failure=True), "failed", "failed"),
+    ],
+)
+def test_run_lifecycle_tracks_claim_and_terminal_attempt(
+    database, outcome, expected_attempt, expected_run
+):
+    repo = PostgresJobRepository(database.engine)
+    scope = _attempt(database)
+    queue = f"review-run-life-{uuid4().hex}"
+    repo.create_dag(
+        scope_type="attempt",
+        scope_id=scope,
+        actor="review",
+        jobs=(_definition(queue_class=queue),),
+    )
+    object_store = _MemoryArtifactStore()
+    worker = _register_worker(database, object_store, label="run-life", queue_class=queue)
+    with database.engine.connect() as conn:
+        run_id = conn.execute(select(attempt.c.run_id).where(attempt.c.id == scope)).scalar_one()
+        assert conn.execute(select(run.c.status).where(run.c.id == run_id)).scalar_one() == "queued"
+
+    claim = repo.claim(worker)
+    assert claim is not None
+    with database.engine.connect() as conn:
+        assert (
+            conn.execute(select(run.c.status).where(run.c.id == run_id)).scalar_one() == "running"
+        )
+
+    output = _verified_upload(_artifact_repo(database, object_store), b"run lifecycle result")
+    repo.complete(claim, output_artifact_id=output, outcome=outcome)
+    with database.engine.connect() as conn:
+        assert conn.execute(select(attempt.c.state).where(attempt.c.id == scope)).scalar_one() == (
+            expected_attempt
+        )
+        assert conn.execute(select(run.c.status).where(run.c.id == run_id)).scalar_one() == (
+            expected_run
+        )
+
+
+def test_scheduler_run_lifecycle_grant_is_column_scoped(database):
+    with database.engine.connect() as conn:
+        permissions = conn.execute(
+            text(
+                "SELECT has_column_privilege('pcb_scheduler', 'run', 'status', 'UPDATE'), "
+                "has_column_privilege('pcb_scheduler', 'run', 'row_version', 'UPDATE'), "
+                "has_column_privilege('pcb_scheduler', 'run', 'created_by', 'UPDATE')"
+            )
+        ).one()
+    assert tuple(permissions) == (True, True, False)
+
+
+def test_concurrent_attempt_completion_finishes_parent_run(database):
+    repo = PostgresJobRepository(database.engine)
+    object_store = _MemoryArtifactStore()
+    first_attempt = _attempt(database)
+    queue = f"review-run-join-{uuid4().hex}"
+    with database.engine.begin() as conn:
+        first = conn.execute(
+            select(attempt.c.run_id, attempt.c.task_version_id).where(attempt.c.id == first_attempt)
+        ).one()
+        second_attempt = uuid4()
+        conn.execute(
+            insert(attempt).values(
+                id=second_attempt,
+                run_id=first.run_id,
+                task_version_id=first.task_version_id,
+                sample_index=1,
+                seed=1,
+                state="queued",
+                row_version=0,
+            )
+        )
+    for scope in (first_attempt, second_attempt):
+        repo.create_dag(
+            scope_type="attempt",
+            scope_id=scope,
+            actor="review",
+            jobs=(_definition(queue_class=queue),),
+        )
+    workers = [
+        _register_worker(database, object_store, label="run-join", queue_class=queue)
+        for _ in range(2)
+    ]
+    claims = [repo.claim(worker) for worker in workers]
+    assert all(claim is not None for claim in claims)
+    output = _verified_upload(_artifact_repo(database, object_store), b"parallel run result")
+    start = Barrier(2)
+
+    def complete(claim):
+        start.wait(timeout=5)
+        return repo.complete(claim, output_artifact_id=output, outcome=StageOutcome())
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert list(pool.map(complete, claims)) == ["completed", "completed"]
+    with database.engine.connect() as conn:
+        assert conn.execute(select(run.c.status).where(run.c.id == first.run_id)).scalar_one() == (
+            "completed"
         )

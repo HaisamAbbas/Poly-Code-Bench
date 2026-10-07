@@ -69,7 +69,7 @@ def database() -> Database:
         pytest.fail("PCB_TEST_DATABASE_URL must use a dedicated database containing 'test'")
     instance = Database(url)
     with instance.engine.connect() as connection:
-        require_migrated_through(connection, "8ac42e1d09bf")
+        require_migrated_through(connection, "c02ea53a4d17")
     yield instance
     instance.dispose()
 
@@ -89,6 +89,32 @@ def object_store() -> S3ArtifactStore:
     )
     store.ensure_buckets()
     return store
+
+
+class _MemoryArtifactStore:
+    """Content-verifying object-store double for DB lifecycle integration tests."""
+
+    def __init__(self) -> None:
+        self.objects: dict[tuple[str, str], bytes] = {}
+
+    def put_provisional(self, visibility: str, upload_id: str, body: bytes) -> str:
+        key = f"provisional/{upload_id}"
+        self.objects[(visibility, key)] = body
+        return key
+
+    def put_verified(self, visibility: str, domain: str, digest: str, body: bytes) -> str:
+        key = f"{domain}/{digest[7:9]}/{digest[7:]}"
+        self.objects[(visibility, key)] = body
+        return key
+
+    def get_bytes(self, visibility: str, key: str, *, max_bytes: int) -> bytes:
+        body = self.objects[(visibility, key)]
+        if len(body) > max_bytes:
+            raise ValueError("fixture object exceeds its configured byte limit")
+        return body
+
+    def delete(self, visibility: str, key: str) -> None:
+        self.objects.pop((visibility, key), None)
 
 
 def _attempt(database: Database) -> UUID:

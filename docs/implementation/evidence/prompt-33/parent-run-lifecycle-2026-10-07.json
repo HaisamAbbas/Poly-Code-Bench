@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-10-07",
+  "environment_class": "temporary loopback-only PostgreSQL 18; no Compose services",
+  "fixture_kind": "synthetic_test_only",
+  "migration": {
+    "revision": "c02ea53a4d17",
+    "fresh_upgrade": "pass",
+    "downgrade_then_upgrade": "pass",
+    "alembic_check": "no new upgrade operations detected",
+    "scheduler_run_update_columns": ["status", "row_version"],
+    "scheduler_created_by_update": false
+  },
+  "run_lifecycle": {
+    "transitions": ["queued", "running", "completed"],
+    "attempt_model_failure_terminal_state": "failed",
+    "cancelled_single_attempt_terminal_state": "cancelled",
+    "concurrent_attempt_completion": "parent reaches completed",
+    "owner_status_api": "queued, running and completed states plus attempt/job counters verified"
+  },
+  "tests": {
+    "public_api_submissions_postgres": {
+      "command": "uv run --offline --locked --all-packages --group dev pytest tests/test_public_api_submissions_postgres.py -q --tb=short",
+      "passed": 4,
+      "failed": 0,
+      "provider_calls": 0,
+      "live_model_calls": 0
+    },
+    "scheduler_regressions": {
+      "command": "uv run --offline --locked --all-packages --group dev pytest tests/test_scheduler_regressions.py -q --tb=short",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 11,
+      "skip_reason": "loopback object-store endpoint is not configured"
+    },
+    "ruff": "pass",
+    "strict_mypy_persistence_jobs": "pass",
+    "format_and_diff_check": "pass"
+  },
+  "external_resources": {
+    "cloud_resources_used": false,
+    "cloud_api_calls": 0,
+    "object_store_calls": 0,
+    "provider_calls": 0,
+    "public_benchmark_results": 0
+  },
+  "cleanup": {
+    "temporary_database_cluster_stopped": true,
+    "temporary_database_files_removed": false,
+    "cleanup_rejected_by_execution_policy": true,
+    "temporary_database_credentials_persisted": false
+  },
+  "limitations": [
+    "The solve stage result was synthetic persistence evidence; no sandbox or model execution ran.",
+    "The scheduler regression module still has object-store-backed cases requiring the local Compose object store.",
+    "Evaluation, judging, scoring and publication processors remain unassembled.",
+    "No cloud staging resources were created or tested."
+  ]
+}

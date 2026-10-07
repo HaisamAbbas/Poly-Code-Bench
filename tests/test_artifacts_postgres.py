@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -12,14 +13,17 @@ from threading import Barrier
 from time import sleep
 from uuid import UUID, uuid4
 
+import httpx
 import pytest
+from polycodebench_api.app import create_app
+from polycodebench_api.dev_fixture import create_synthetic_release
 from polycodebench_core.application_errors import (
     AuthorizationError,
     InvalidState,
     NotFound,
     PersistenceConflict,
 )
-from polycodebench_persistence.artifacts import ArtifactRepository
+from polycodebench_persistence.artifacts import ArtifactRepository, PostgresPublicArtifactReader
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.models import (
     artifact,
@@ -29,6 +33,8 @@ from polycodebench_persistence.models import (
     artifact_upload,
 )
 from polycodebench_persistence.object_store import ObjectStoreError, S3ArtifactStore
+from polycodebench_publication.projections import ArtifactRef
+from polycodebench_publication.releases import ReleaseStore
 from polycodebench_services.artifact_publication import (
     PublicProjectionService,
     ReviewedMetadataProjection,
@@ -38,7 +44,7 @@ from polycodebench_services.artifacts import (
     ArtifactPrincipal,
     ArtifactUploadService,
 )
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import DBAPIError
@@ -363,7 +369,7 @@ def test_provisional_gc_retains_verified_data_and_releases_quota(
 
 
 def test_reviewed_projection_is_a_new_allowlisted_public_object(
-    database: Database, store: S3ArtifactStore
+    database: Database, store: S3ArtifactStore, tmp_path
 ) -> None:
     domain = f"projection-source-{uuid4().hex}"
     repo = _repository(database, store, domain)
@@ -427,6 +433,33 @@ def test_reviewed_projection_is_a_new_allowlisted_public_object(
     )
     after = repo.get_verified(source_id)
     public_record, public_bytes = repo.read_verified(public_id)
+    public_reader = PostgresPublicArtifactReader(database.engine, store, max_read_bytes=1024 * 1024)
+    catalog_record, catalog_bytes = public_reader.read_verified(public_id)
+    assert catalog_record["content_digest"] == public_record["content_digest"]
+    assert catalog_bytes == public_bytes
+    assert public_reader.is_publicly_released(public_id)
+    with pytest.raises(NotFound):
+        public_reader.get_verified(source_id)
+    with database.engine.connect() as connection:
+        connection.exec_driver_sql("SET ROLE pcb_public_reader")
+        visible_id = connection.execute(
+            text("SELECT id FROM public_artifact_catalog WHERE id = :artifact_id"),
+            {"artifact_id": public_id},
+        ).scalar_one()
+        assert visible_id == public_id
+        assert (
+            connection.execute(
+                text("SELECT id FROM public_artifact_catalog WHERE id = :artifact_id"),
+                {"artifact_id": source_id},
+            ).scalar_one_or_none()
+            is None
+        )
+        with pytest.raises(DBAPIError):
+            connection.execute(
+                text("SELECT id FROM artifact WHERE id = :artifact_id"),
+                {"artifact_id": source_id},
+            ).scalar_one_or_none()
+        connection.rollback()
     hold_id = repo.add_hold(
         artifact_id=source_id,
         actor=reviewer.subject_id,
@@ -461,6 +494,43 @@ def test_reviewed_projection_is_a_new_allowlisted_public_object(
         "schema_version",
         "version",
     }
+
+    release_store = ReleaseStore(tmp_path / "artifact-download.sqlite3")
+    release_id = create_synthetic_release(
+        release_store,
+        artifacts=(
+            ArtifactRef(
+                artifact_id=str(public_id),
+                content_type=str(public_record["media_type"]),
+                size_bytes=int(public_record["size_bytes"]),
+                sha256=str(public_record["content_digest"]),
+                download_url="https://ignored.example/object",
+                expires_at="2000-01-01T00:00:00+00:00",
+            ),
+        ),
+    )
+    app = create_app(
+        store=release_store,
+        cursor_key=b"postgres-artifact-download-test-signing-key",
+        persistence_database=database,
+    )
+    assert app.state.services.artifact_access is not None
+
+    async def fetch_artifact() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            link_response = await client.get(
+                f"/v1/artifacts/{public_id}", params={"release": release_id}
+            )
+            assert link_response.status_code == 200
+            link = link_response.json()["data"]
+            assert "ignored.example" not in link_response.text
+            downloaded = await client.get(link["download_url"])
+            assert downloaded.status_code == 200
+            assert downloaded.content == public_bytes
+            assert downloaded.headers["etag"] == f'"{public_record["content_digest"]}"'
+
+    asyncio.run(fetch_artifact())
 
 
 def test_concurrent_finalize_releases_a_reservation_once(

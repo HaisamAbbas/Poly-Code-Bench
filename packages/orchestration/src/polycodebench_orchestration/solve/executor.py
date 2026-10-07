@@ -68,10 +68,12 @@ class SolveStageExecutor:
     async def __call__(
         self,
         claim: JobClaim,
-        handle: SandboxHandle,
+        handle: SandboxHandle | None,
         sandbox: SandboxProvider,
         artifacts: ArtifactRepository,
     ) -> StageResult:
+        if handle is None:
+            raise RuntimeError("solve execution requires a worker-managed guest")
         assignment = self._load(claim)
         store = self._store_factory(artifacts)
         common = {

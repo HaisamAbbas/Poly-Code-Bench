@@ -36,6 +36,7 @@ from polycodebench_persistence.models import (
     artifact_quota,
     attempt,
     audit_event,
+    capacity_slot,
     config_document,
     run,
     stage_execution,
@@ -492,16 +493,86 @@ def test_local_sandbox_spec_uses_verified_slot_and_frozen_task_image(
 
 
 def _definition(
-    key: str = "solve", *, queue_class: str = "solve", provider_key: str = "fixture-provider"
+    key: str = "solve",
+    *,
+    queue_class: str = "solve",
+    provider_key: str = "fixture-provider",
+    stage: str = "solve",
 ) -> JobDefinition:
     return JobDefinition(
         key=key,
-        stage="solve",
+        stage=stage,
         input_digest="sha256:" + "0" * 64,
         queue_class=queue_class,
         resource_class="small",
         provider_key=provider_key,
     )
+
+
+def test_grading_worker_tracks_each_plan_guest_and_releases_only_clean_slots(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    repository = _repo(database)
+    attempt_id = _attempt(database)
+    queue_class = f"grading-{uuid4().hex}"
+    provider_key = f"grading-provider-{uuid4().hex}"
+    jobs = repository.create_dag(
+        scope_type="attempt",
+        scope_id=attempt_id,
+        jobs=(
+            _definition(
+                "evaluate-complete",
+                queue_class=queue_class,
+                provider_key=provider_key,
+                stage="evaluate",
+            ),
+            _definition(
+                "evaluate-retry",
+                queue_class=queue_class,
+                provider_key=provider_key,
+                stage="evaluate",
+            ),
+        ),
+        actor="scheduler",
+    )
+    worker_id = _register_worker(
+        database, object_store, label="grading-plan-guests", queue_class=queue_class
+    )
+    first = repository.claim(worker_id, stage="evaluate")
+    assert first is not None and first.job_id == jobs["evaluate-complete"]
+    repository.begin_dispatch(first)
+    repository.bind_guest(first, "plan-guest-1")
+    repository.unbind_guest(first, "plan-guest-1")
+    repository.bind_guest(first, "plan-guest-2")
+    repository.unbind_guest(first, "plan-guest-2")
+
+    with database.engine.connect() as connection:
+        slot = connection.execute(
+            select(capacity_slot).where(capacity_slot.c.id == first.slot_id)
+        ).mappings().one()
+    assert slot["state"] == "busy" and slot["guest_id"] is None
+
+    output_id = _verified_upload(_artifact_repo(database, object_store), b"evaluation evidence")
+    repository.complete(
+        first, output_artifact_id=output_id, outcome=StageOutcome(quality_gate="pass")
+    )
+    second = repository.claim(worker_id, stage="evaluate")
+    assert second is not None and second.job_id == jobs["evaluate-retry"]
+    repository.begin_dispatch(second)
+    repository.bind_guest(second, "plan-guest-retry")
+    repository.unbind_guest(second, "plan-guest-retry")
+    assert repository.fail(
+        second,
+        failure_class="grading_interrupted_after_cleanup",
+        failure_code="grading_retry",
+        sandbox_cleanup_verified=True,
+    ) == "retry_wait"
+
+    with database.engine.connect() as connection:
+        slot = connection.execute(
+            select(capacity_slot).where(capacity_slot.c.id == second.slot_id)
+        ).mappings().one()
+    assert slot["state"] == "available" and slot["guest_id"] is None
 
 
 def _artifact_repo(database: Database, store: S3ArtifactStore) -> ArtifactRepository:

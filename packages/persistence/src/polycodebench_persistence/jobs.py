@@ -683,6 +683,36 @@ class PostgresJobRepository:
                 details={"guest_id": guest_id},
             )
 
+    def unbind_guest(self, claim: JobClaim, guest_id: str) -> None:
+        """Record verified destruction of one plan guest while retaining its job slot."""
+        if not guest_id or len(guest_id) > 255:
+            raise InvalidState("guest identity is invalid")
+        with self._engine.begin() as connection:
+            self._lock_scope(connection, claim.scope_type, claim.scope_id)
+            self._assert_claim(connection, claim)
+            changed = connection.execute(
+                update(capacity_slot)
+                .where(
+                    capacity_slot.c.id == claim.slot_id,
+                    capacity_slot.c.job_id == claim.job_id,
+                    capacity_slot.c.fence == claim.fence,
+                    capacity_slot.c.worker_id == UUID(claim.worker_id),
+                    capacity_slot.c.state == "busy",
+                    capacity_slot.c.guest_id == guest_id,
+                )
+                .values(guest_id=None, row_version=capacity_slot.c.row_version + 1)
+            ).rowcount
+            if changed != 1:
+                raise LeaseLost("guest cleanup no longer belongs to this worker delivery")
+            self._event(
+                connection,
+                claim.job_id,
+                "guest_destroyed",
+                claim.worker_id,
+                fence=claim.fence,
+                details={"guest_id": guest_id},
+            )
+
     def heartbeat(self, claim: JobClaim) -> bool:
         with self._engine.begin() as connection:
             self._lock_scope(connection, claim.scope_type, claim.scope_id)
@@ -862,7 +892,14 @@ class PostgresJobRepository:
         except DBAPIError as error:
             raise map_database_error(error) from None
 
-    def fail(self, claim: JobClaim, *, failure_class: str, failure_code: str | None = None) -> str:
+    def fail(
+        self,
+        claim: JobClaim,
+        *,
+        failure_class: str,
+        failure_code: str | None = None,
+        sandbox_cleanup_verified: bool = False,
+    ) -> str:
         if not failure_class or len(failure_class) > 64:
             raise InvalidState("infrastructure failure class is invalid")
         with self._engine.begin() as connection:
@@ -911,7 +948,36 @@ class PostgresJobRepository:
                     row_version=stage_job.c.row_version + 1,
                 )
             )
-            self._queue_slot_cleanup(connection, claim.slot_id)
+            if sandbox_cleanup_verified:
+                slot = (
+                    connection.execute(
+                        select(capacity_slot)
+                        .where(capacity_slot.c.id == claim.slot_id)
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if (
+                    slot is None
+                    or slot["job_id"] != claim.job_id
+                    or slot["fence"] != claim.fence
+                    or str(slot["worker_id"]) != claim.worker_id
+                    or slot["state"] != "busy"
+                    or slot["guest_id"] is not None
+                ):
+                    raise LeaseLost("verified cleanup does not match the claimed empty slot")
+                self._free_slot(connection, claim.slot_id)
+                self._event(
+                    connection,
+                    claim.job_id,
+                    "sandbox_cleanup_confirmed",
+                    claim.worker_id,
+                    fence=claim.fence,
+                    details={"slot_id": str(claim.slot_id)},
+                )
+            else:
+                self._queue_slot_cleanup(connection, claim.slot_id)
             self._event(
                 connection,
                 claim.job_id,

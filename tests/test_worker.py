@@ -70,6 +70,7 @@ class FakeRepository:
         self.complete_error: Exception | None = None
         self.cleanup_error: Exception | None = None
         self.failure_class: str | None = None
+        self.guest_id: str | None = None
         self.registration_active = True
         self.registration_heartbeats = 0
         self.last_claim_filter: tuple[UUID | None, UUID | None, str | None] | None = None
@@ -107,6 +108,12 @@ class FakeRepository:
             raise self.bind_error
         if not self.authority:
             raise LeaseLost()
+        self.guest_id = guest_id
+
+    def unbind_guest(self, claim: JobClaim, guest_id: str) -> None:
+        assert claim == self.job_claim and self.guest_id == guest_id
+        self.events.append("unbind")
+        self.guest_id = None
 
     def dispatch_allowed(self, claim: JobClaim) -> bool:
         assert claim == self.job_claim
@@ -130,15 +137,26 @@ class FakeRepository:
             raise self.complete_error
         assert self.authority
         self.authority = False
-        self.slot_state = "cleanup"
+        self.slot_state = "cleanup" if self.guest_id is not None else "available"
         return "succeeded"
 
-    def fail(self, claim: JobClaim, *, failure_class: str, failure_code: str) -> str:
+    def fail(
+        self,
+        claim: JobClaim,
+        *,
+        failure_class: str,
+        failure_code: str,
+        sandbox_cleanup_verified: bool = False,
+    ) -> str:
         assert claim == self.job_claim and self.authority and failure_code
         self.events.append("fail")
         self.failure_class = failure_class
         self.authority = False
-        self.slot_state = "available" if self.slot_state == "reserved" else "cleanup"
+        self.slot_state = (
+            "available"
+            if sandbox_cleanup_verified or self.slot_state == "reserved"
+            else "cleanup"
+        )
         return "retry_wait"
 
     def confirm_slot_cleanup(
@@ -217,7 +235,7 @@ class FakeExecutor:
     async def __call__(
         self,
         claim: JobClaim,
-        handle: SandboxHandle,
+        handle: SandboxHandle | None,
         sandbox: SandboxProvider,
         artifacts: ArtifactRepository,
     ) -> StageResult:
@@ -230,6 +248,30 @@ class FakeExecutor:
             return StageResult(uuid4(), StageOutcome(quality_gate="pass"))
         finally:
             self.finished.set()
+
+
+class SandboxManagingExecutor:
+    def __init__(self, events: list[str], *, create_guest: bool = False) -> None:
+        self.events = events
+        self.error: Exception | None = None
+        self.create_guest = create_guest
+
+    async def __call__(
+        self,
+        claim: JobClaim,
+        handle: SandboxHandle | None,
+        sandbox: SandboxProvider,
+        artifacts: ArtifactRepository,
+    ) -> StageResult:
+        assert handle is None
+        self.events.append("execute_managed")
+        if self.create_guest:
+            plan_handle = await sandbox.create(_spec(claim))
+            if self.error is None:
+                await sandbox.destroy(plan_handle)
+        if self.error is not None:
+            raise self.error
+        return StageResult(uuid4(), StageOutcome(quality_gate="pass"))
 
 
 def _worker() -> tuple[WorkerService, FakeRepository, FakeSandbox, FakeExecutor, list[str]]:
@@ -280,6 +322,112 @@ def test_success_destroys_before_releasing_claim_slot() -> None:
         assert events.index("begin_dispatch") < events.index("heartbeat") < events.index("create")
         assert events.index("complete") < events.index("destroy") < events.index("cleanup")
         assert "fail" not in events and "terminate" not in events
+
+    _run(scenario)
+
+
+def test_executor_managed_sandbox_skips_outer_guest_and_releases_after_success() -> None:
+    async def scenario() -> None:
+        claim = _claim()
+        events: list[str] = []
+        repository = FakeRepository(claim, events)
+        sandbox = FakeSandbox(events)
+        executor = SandboxManagingExecutor(events)
+        worker = WorkerService(
+            worker_id=UUID(claim.worker_id),
+            repository=cast(PostgresJobRepository, repository),
+            artifacts=cast(ArtifactRepository, object()),
+            sandbox=cast(SandboxProvider, sandbox),
+            spec_factory=None,
+            executor=executor,
+            executor_manages_sandbox=True,
+        )
+
+        assert await worker.run_claim(claim) == "succeeded"
+        assert "create" not in events and "bind" not in events and "destroy" not in events
+        assert events.index("execute_managed") < events.index("complete")
+        assert repository.slot_state == "available"
+
+    _run(scenario)
+
+
+def test_executor_managed_plan_guest_is_bound_and_unbound_before_slot_release() -> None:
+    async def scenario() -> None:
+        claim = _claim()
+        events: list[str] = []
+        repository = FakeRepository(claim, events)
+        sandbox = FakeSandbox(events)
+        executor = SandboxManagingExecutor(events, create_guest=True)
+        worker = WorkerService(
+            worker_id=UUID(claim.worker_id),
+            repository=cast(PostgresJobRepository, repository),
+            artifacts=cast(ArtifactRepository, object()),
+            sandbox=cast(SandboxProvider, sandbox),
+            spec_factory=None,
+            executor=executor,
+            executor_manages_sandbox=True,
+        )
+
+        assert await worker.run_claim(claim) == "succeeded"
+        assert events.index("created") < events.index("bind") < events.index("destroy")
+        assert events.index("destroy") < events.index("unbind") < events.index("complete")
+        assert "cleanup" not in events and repository.guest_id is None
+        assert repository.slot_state == "available"
+
+    _run(scenario)
+
+
+def test_executor_managed_guest_failure_is_cleaned_before_retrying_the_stage() -> None:
+    async def scenario() -> None:
+        claim = _claim()
+        events: list[str] = []
+        repository = FakeRepository(claim, events)
+        sandbox = FakeSandbox(events)
+        executor = SandboxManagingExecutor(events, create_guest=True)
+        executor.error = RuntimeError("grading failed after guest creation")
+        worker = WorkerService(
+            worker_id=UUID(claim.worker_id),
+            repository=cast(PostgresJobRepository, repository),
+            artifacts=cast(ArtifactRepository, object()),
+            sandbox=cast(SandboxProvider, sandbox),
+            spec_factory=None,
+            executor=executor,
+            executor_manages_sandbox=True,
+        )
+
+        with pytest.raises(RuntimeError, match="after guest creation"):
+            await worker.run_claim(claim)
+        assert events.index("terminate") < events.index("destroy") < events.index("unbind")
+        assert events.index("unbind") < events.index("fail")
+        assert "cleanup" not in events and repository.guest_id is None
+        assert repository.slot_state == "available"
+
+    _run(scenario)
+
+
+def test_executor_managed_guest_cleanup_failure_retains_claimed_slot() -> None:
+    async def scenario() -> None:
+        claim = _claim()
+        events: list[str] = []
+        repository = FakeRepository(claim, events)
+        sandbox = FakeSandbox(events)
+        sandbox.destroy_error = RuntimeError("Docker did not verify container removal")
+        executor = SandboxManagingExecutor(events, create_guest=True)
+        executor.error = RuntimeError("grading failed after guest creation")
+        worker = WorkerService(
+            worker_id=UUID(claim.worker_id),
+            repository=cast(PostgresJobRepository, repository),
+            artifacts=cast(ArtifactRepository, object()),
+            sandbox=cast(SandboxProvider, sandbox),
+            spec_factory=None,
+            executor=executor,
+            executor_manages_sandbox=True,
+        )
+
+        with pytest.raises(RuntimeError, match="after guest creation"):
+            await worker.run_claim(claim)
+        assert "fail" in events and "cleanup" not in events and repository.guest_id == "guest-1"
+        assert repository.slot_state == "cleanup"
 
     _run(scenario)
 
@@ -460,10 +608,11 @@ def test_cancellation_terminates_guest_before_waiting_for_executor_finalizer() -
 
         async def execute(
             claim: JobClaim,
-            handle: SandboxHandle,
+            handle: SandboxHandle | None,
             sandbox: SandboxProvider,
             artifacts: ArtifactRepository,
         ) -> StageResult:
+            assert handle is not None
             executor.started.set()
             try:
                 await asyncio.Event().wait()

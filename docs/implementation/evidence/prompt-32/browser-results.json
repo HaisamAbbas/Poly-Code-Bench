@@ -1,5 +1,11 @@
 {
   "config": {
+    "argv": [
+      "C:\\Users\\haisam.abbas\\AppData\\Local\\npm-cache\\_npx\\bd623426a8b11fd9\\node_modules\\node\\bin\\node.exe",
+      "D:\\Poly-Code-Bench\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.prompt32.config.ts"
+    ],
     "configFile": "D:\\Poly-Code-Bench\\apps\\web\\playwright.prompt32.config.ts",
     "rootDir": "D:/Poly-Code-Bench/apps/web/tests/e2e",
     "failOnFlakyTests": false,
@@ -81,12 +87,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6806,
+                  "duration": 7029,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-06T10:32:39.145Z",
+                  "startTime": "2026-10-07T04:42:00.343Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -96,7 +102,7 @@
           ],
           "id": "ddd9ed034ca22af27fa2-8953ba736d5a44eac188",
           "file": "prompt32.spec.ts",
-          "line": 69,
+          "line": 89,
           "column": 5
         },
         {
@@ -115,12 +121,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4572,
+                  "duration": 4289,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-06T10:32:46.207Z",
+                  "startTime": "2026-10-07T04:42:09.081Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -130,7 +136,7 @@
           ],
           "id": "ddd9ed034ca22af27fa2-331cbc7466b0048c2499",
           "file": "prompt32.spec.ts",
-          "line": 134,
+          "line": 154,
           "column": 5
         }
       ]
@@ -138,8 +144,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-06T10:32:32.516Z",
-    "duration": 20006.636,
+    "startTime": "2026-10-07T04:41:32.783Z",
+    "duration": 41637.304000000004,
     "expected": 2,
     "skipped": 0,
     "unexpected": 0,

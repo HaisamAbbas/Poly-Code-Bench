@@ -30,40 +30,60 @@ async function completeRequestForm(page: Page) {
 }
 
 async function showApprovedProgressFixture(page: Page, submissionId: string) {
-  await page.route(`**/api/model-submissions/${submissionId}`, (route) => route.fulfill({
-    json: {
-      data: {
-        kind: "model_submission",
-        schema_version: 1,
-        submission_id: submissionId,
-        status: "approved",
-        model_name: "Synthetic Browser Candidate",
-        provider: "Synthetic Test Provider",
-        organization: null,
-        contact_email: "browser@example.org",
-        endpoint_url: "https://models.example.org/v1",
-        source_url: "https://models.example.org/model/card",
-        source_license: "Synthetic test-only permission",
-        permission_attested: true,
-        submitted_at: "2026-10-06T08:00:00Z",
-        row_version: 1,
-        rejection_reason: null,
-        resulting_run_id: "b8e3eacb-47e5-4623-ae6b-8a58fb58f583",
-        run_status: "queued",
-        run_progress: {
+  const progress = [
+    { run_status: "queued", attempt_states: { queued: 2 }, solve_job_states: { queued: 2 } },
+    { run_status: "running", attempt_states: { queued: 1, running: 1 }, solve_job_states: { leased: 1, queued: 1 } },
+    { run_status: "completed", attempt_states: { completed: 2 }, solve_job_states: { succeeded: 2 } },
+  ] as const;
+  let requestIndex = 0;
+  await page.route(`**/api/model-submissions/${submissionId}`, (route) => {
+    const current = progress[Math.min(requestIndex++, progress.length - 1)];
+    return route.fulfill({
+      json: {
+        data: {
+          kind: "model_submission",
           schema_version: 1,
-          attempt_states: { queued: 2 },
-          solve_job_states: { queued: 2 },
+          submission_id: submissionId,
+          status: "approved",
+          model_name: "Synthetic Browser Candidate",
+          provider: "Synthetic Test Provider",
+          organization: null,
+          contact_email: "browser@example.org",
+          endpoint_url: "https://models.example.org/v1",
+          source_url: "https://models.example.org/model/card",
+          source_license: "Synthetic test-only permission",
+          permission_attested: true,
+          submitted_at: "2026-10-06T08:00:00Z",
+          row_version: 1,
+          rejection_reason: null,
+          resulting_run_id: "b8e3eacb-47e5-4623-ae6b-8a58fb58f583",
+          run_status: current.run_status,
+          run_progress: {
+            schema_version: 1,
+            attempt_states: current.attempt_states,
+            solve_job_states: current.solve_job_states,
+          },
         },
+        meta: { release_digest: `sha256:${"a".repeat(64)}` },
       },
-      meta: { release_digest: `sha256:${"a".repeat(64)}` },
-    },
-  }));
+    });
+  });
   await page.getByLabel("Request ID").fill(submissionId);
   await page.getByRole("button", { name: "Check status" }).click();
   const approvedStatus = page.locator(".submission-status.status-approved").last();
+  await expect(approvedStatus).toContainText("run is queued");
   await expect(approvedStatus).toContainText("Solve job states");
   await expect(approvedStatus.getByText("queued: 2", { exact: true }).last()).toBeVisible();
+
+  await page.getByRole("button", { name: "Check status" }).click();
+  await expect(approvedStatus).toContainText("run is running");
+  await expect(approvedStatus.getByText("queued: 1, running: 1", { exact: true }).last()).toBeVisible();
+  await expect(approvedStatus.getByText("leased: 1, queued: 1", { exact: true }).last()).toBeVisible();
+
+  await page.getByRole("button", { name: "Check status" }).click();
+  await expect(approvedStatus).toContainText("run is completed");
+  await expect(approvedStatus.getByText("completed: 2", { exact: true }).last()).toBeVisible();
+  await expect(approvedStatus.getByText("succeeded: 2", { exact: true }).last()).toBeVisible();
 }
 
 test("E2E-41 and E2E-39: OIDC request is pending and only the owner can track it", async ({ page, browser }) => {

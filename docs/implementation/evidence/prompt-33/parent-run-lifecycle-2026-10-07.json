@@ -33,6 +33,13 @@
       "skipped": 11,
       "skip_reason": "loopback object-store endpoint is not configured"
     },
+    "submission_browser": {
+      "command": "npm exec --yes --package=node@24 --package=pnpm@12.5.1 -- pnpm --filter @polycodebench/web test:e2e:prompt32",
+      "passed": 2,
+      "failed": 0,
+      "run_statuses_rendered": ["queued", "running", "completed"],
+      "fixture_kind": "synthetic API responses"
+    },
     "ruff": "pass",
     "strict_mypy_persistence_jobs": "pass",
     "format_and_diff_check": "pass"

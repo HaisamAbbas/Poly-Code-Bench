@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import secrets
+import sqlite3
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,6 +23,8 @@ from polycodebench_publication.releases import ReleaseStore, SigningKey
 from polycodebench_services.artifacts import ArtifactAccessService
 from polycodebench_services.model_endpoints import ModelEndpointService
 from polycodebench_services.runs import RunCreationService
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from polycodebench_api.auth import TokenDirectory
 from polycodebench_api.context import (
@@ -29,11 +33,13 @@ from polycodebench_api.context import (
     RunSummarySource,
     SubmissionRepository,
 )
-from polycodebench_api.errors import install_error_handlers
+from polycodebench_api.errors import ApiError, install_error_handlers
 from polycodebench_api.postgres_submissions import PostgresSubmissionStore
 from polycodebench_api.public_routes import router as public_router
 from polycodebench_api.submission_routes import router as submission_router
 from polycodebench_api.submissions import SubmissionStore
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _store_path() -> Path:
@@ -200,6 +206,21 @@ def create_app(
     @app.get("/healthz", include_in_schema=False)
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/readyz", include_in_schema=False)
+    def readiness() -> dict[str, str]:
+        """Return ready only when the configured database and release catalog can be read."""
+        try:
+            if persistence_database is not None:
+                with persistence_database.engine.connect() as connection:
+                    connection.execute(text("SELECT 1")).scalar_one()
+            release_store.list_public()
+        except (SQLAlchemyError, sqlite3.Error, OSError, RuntimeError) as error:
+            # Dependency exception text can contain connection details. Keep this probe's
+            # response and log bounded and free of DSNs, hostnames, and credentials.
+            LOGGER.warning("API readiness dependency failed (%s)", type(error).__name__)
+            raise ApiError("DEPENDENCY_UNAVAILABLE") from None
+        return {"status": "ready"}
 
     return app
 

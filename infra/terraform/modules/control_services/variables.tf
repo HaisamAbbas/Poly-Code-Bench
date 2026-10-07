@@ -61,7 +61,7 @@ variable "services" {
     memory        = number
     desired_count = number
     port          = optional(number)
-    health_path   = optional(string, "/healthz")
+    health_path   = optional(string, "/readyz")
     command       = optional(list(string))
     environment   = optional(map(string), {})
     secrets       = optional(map(string), {})

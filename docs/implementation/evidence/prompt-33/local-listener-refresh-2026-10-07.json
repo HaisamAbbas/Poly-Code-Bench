@@ -9,7 +9,7 @@
     "api_healthz": "HTTP 200",
     "api_readyz": "HTTP 404; the long-running Uvicorn process had imported code before the readiness route was added"
   },
-  "refresh": "Gracefully stopped the identified repository API process and relaunched the current source tree with the documented local environment.",
+  "refresh": "Stopped the identified repository API process and relaunched the current source tree with the documented local environment.",
   "api": {
     "healthz": "HTTP 200",
     "readyz": "HTTP 200 {status: ready}",

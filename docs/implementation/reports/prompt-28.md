@@ -90,3 +90,12 @@ families. The full SWE-bench suite passed 44 tests; one Rust image test remains 
 `PCB_TEST_DOCKER=1`. Ruff and strict mypy passed. These are authored local-fixture/admission records;
 they do not claim live model skill, live judge review, production-worker execution or quality
 admission.
+
+## Follow-up (2026-10-07)
+
+Prompt 27 subsequently completed. The earlier statement that Q&A had not started and that the
+`repo_qa` evidence pointer was provisional is historical and superseded. Its dedicated Q&A
+implementation, authored/adapted fixture, fixed-vote fixture judging and evidence are recorded in
+`reports/prompt-27.md` and `evidence/prompt-27-e2e-38.json`. E2E-38 is now partial overall: both
+Q&A and prediction grader subcases pass with fixture inputs, but no live model/judge run or
+production worker is claimed.

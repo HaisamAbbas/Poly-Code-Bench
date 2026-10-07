@@ -77,3 +77,16 @@ MFA-gated submission administration are covered by the refreshed test matrix. Th
 restricted PostgreSQL API login remains outside administrator/operator roles; bounded approval
 recovery and audit cases pass without model dispatch. Evidence: `evidence/e2e-25-role-matrix-2026-10-07.json`.
 E2E-26 production artifact/IAM denial and the complete E2E-28 cohort matrix remain open.
+
+### Integrated status correction (2026-10-07)
+
+Prompts 30–32 later completed the public comparison, filter and browser journeys using the
+synthetic internal release fixtures. The comparison browser case verifies that displayed cohort
+scope matches the API, common-task rows use the exact shared task versions, and incompatible
+protocol/budget configurations receive explicit reasons without scores. This closes the local
+fixture/API/UI portion of E2E-28; it does not supply a live pilot cohort. E2E-26 remains partial
+because production IAM and object-store bucket-policy denial are unverified. Prompt 32 also
+completed the PostgreSQL-backed submission/approval integration noted in the Prompt 32/33 reports.
+These later results are recorded in `reports/prompt-31.md`, `reports/prompt-32.md`,
+`reports/prompt-33.md`, `evidence/prompt-31/browser-results.json`, and
+`evidence/e2e-25-role-matrix-2026-10-07.json`.

@@ -290,7 +290,7 @@ def _object_store() -> S3ArtifactStore:
     endpoint = os.environ.get("PCB_OBJECT_STORE_ENDPOINT")
     if not endpoint:
         raise SystemExit("PCB_OBJECT_STORE_ENDPOINT is required")
-    return S3ArtifactStore(
+    return S3ArtifactStore.from_environment(
         endpoint_url=endpoint,
         buckets={
             "hidden": os.environ["PCB_BUCKET_HIDDEN"],

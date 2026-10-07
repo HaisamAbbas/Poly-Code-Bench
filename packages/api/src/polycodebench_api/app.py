@@ -78,7 +78,7 @@ def _public_artifact_access(database: Database | None) -> ArtifactAccessService 
     max_bytes = int(os.environ.get("PCB_ARTIFACT_MAX_BYTES", "10485760"))
     reader = PostgresPublicArtifactReader(
         database.engine,
-        S3ArtifactStore(endpoint_url=endpoint, buckets=buckets),
+        S3ArtifactStore.from_environment(endpoint_url=endpoint, buckets=buckets),
         max_read_bytes=max_bytes,
     )
     return ArtifactAccessService(reader, max_download_bytes=max_bytes)

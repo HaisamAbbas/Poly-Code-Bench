@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from enum import StrEnum
+from typing import Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, model_validator
@@ -44,6 +45,7 @@ class StartupConfig(BaseModel):
     signing_key_ref: str | None = Field(default=None, min_length=1)
     public_api_base_url: HttpUrl | None = None
     object_store_endpoint: HttpUrl | None = None
+    object_store_addressing_style: Literal["path", "virtual"] = "path"
     bucket_hidden: str | None = Field(default=None, min_length=1)
     bucket_internal: str | None = Field(default=None, min_length=1)
     bucket_public: str | None = Field(default=None, min_length=1)
@@ -127,6 +129,7 @@ ENV_KEYS = {
     "signing_key_ref": "PCB_SIGNING_KEY_REF",
     "public_api_base_url": "PCB_PUBLIC_API_BASE_URL",
     "object_store_endpoint": "PCB_OBJECT_STORE_ENDPOINT",
+    "object_store_addressing_style": "PCB_OBJECT_STORE_ADDRESSING_STYLE",
     "bucket_hidden": "PCB_BUCKET_HIDDEN",
     "bucket_internal": "PCB_BUCKET_INTERNAL",
     "bucket_public": "PCB_BUCKET_PUBLIC",

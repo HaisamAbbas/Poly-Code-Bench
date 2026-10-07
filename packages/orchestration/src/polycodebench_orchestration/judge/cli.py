@@ -123,7 +123,7 @@ def _world() -> World:
         raise InvalidState("missing configuration: " + ", ".join(missing))
     assert url is not None and endpoint is not None
     database = Database(url)
-    store = S3ArtifactStore(
+    store = S3ArtifactStore.from_environment(
         endpoint_url=endpoint,
         buckets={
             "hidden": os.environ.get("PCB_BUCKET_HIDDEN", "pcb-judge-hidden"),

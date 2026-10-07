@@ -52,6 +52,22 @@ def test_worker_config_requires_capacity_and_production_uses_https() -> None:
                 "PCB_DATABASE_DSN_REF": "local-reference",
             }
         )
+
+
+def test_object_store_addressing_style_is_validated_and_provider_neutral() -> None:
+    base = {
+        "PCB_ENVIRONMENT": "dev",
+        "PCB_ROLE": "api",
+        "PCB_SERVICE_IDENTITY": "api",
+        "PCB_DATABASE_DSN_REF": "local-reference",
+        "PCB_OIDC_ISSUER": "http://localhost:3000",
+        "PCB_OIDC_AUDIENCE": "local",
+    }
+    result = load_startup_config({**base, "PCB_OBJECT_STORE_ADDRESSING_STYLE": "virtual"})
+
+    assert result.object_store_addressing_style == "virtual"
+    with pytest.raises(ValueError, match="invalid startup configuration"):
+        load_startup_config({**base, "PCB_OBJECT_STORE_ADDRESSING_STYLE": "bucket-in-path"})
     with pytest.raises(ValueError, match="HTTPS"):
         load_startup_config(
             {

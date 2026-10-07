@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import base64
 import hashlib
-from collections.abc import Iterator
+import os
+from collections.abc import Iterator, Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, cast
 
 import boto3  # type: ignore[import-untyped]
 from botocore.config import Config  # type: ignore[import-untyped]
@@ -23,6 +24,17 @@ class ObjectStoreError(RuntimeError):
     """Storage failed without exposing credentials or backend response bodies."""
 
 
+def object_store_addressing_style(
+    environ: Mapping[str, str] | None = None,
+) -> Literal["path", "virtual"]:
+    """Validate the provider-specific S3 endpoint addressing mode."""
+    source = os.environ if environ is None else environ
+    style = source.get("PCB_OBJECT_STORE_ADDRESSING_STYLE", "path")
+    if style not in {"path", "virtual"}:
+        raise ValueError("PCB_OBJECT_STORE_ADDRESSING_STYLE must be path or virtual")
+    return cast(Literal["path", "virtual"], style)
+
+
 class S3ArtifactStore:
     """Private S3 adapter; callers supply visibility and never arbitrary keys."""
 
@@ -32,17 +44,36 @@ class S3ArtifactStore:
         endpoint_url: str,
         buckets: dict[str, str],
         region_name: str = "us-east-1",
+        addressing_style: Literal["path", "virtual"] = "path",
     ) -> None:
         if set(buckets) != {"hidden", "internal", "public"} or len(set(buckets.values())) != 3:
             raise ValueError("three distinct artifact buckets are required")
         if not endpoint_url.startswith(("http://", "https://")):
             raise ValueError("object store endpoint must be an HTTP(S) URL")
+        if addressing_style not in {"path", "virtual"}:
+            raise ValueError("object-store addressing style must be path or virtual")
         self._buckets = dict(buckets)
         self._client: S3Client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
             region_name=region_name,
-            config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
+            config=Config(signature_version="s3v4", s3={"addressing_style": addressing_style}),
+        )
+
+    @classmethod
+    def from_environment(
+        cls,
+        *,
+        endpoint_url: str,
+        buckets: dict[str, str],
+        region_name: str = "us-east-1",
+    ) -> S3ArtifactStore:
+        """Build a client with provider-specific addressing from a non-secret setting."""
+        return cls(
+            endpoint_url=endpoint_url,
+            buckets=buckets,
+            region_name=region_name,
+            addressing_style=object_store_addressing_style(),
         )
 
     def ensure_buckets(self) -> None:

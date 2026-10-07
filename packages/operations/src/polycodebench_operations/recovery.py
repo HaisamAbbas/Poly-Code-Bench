@@ -36,6 +36,7 @@ from typing import Any
 import boto3
 from botocore.config import Config
 from polycodebench_core.telemetry import MetricsRegistry
+from polycodebench_persistence.object_store import object_store_addressing_style
 from polycodebench_publication.keyring import Keyring
 from polycodebench_publication.releases import ReleaseStore, content_digest, digest
 from sqlalchemy import create_engine, text
@@ -90,7 +91,9 @@ def _s3(
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
         region_name="us-east-1",
-        config=Config(s3={"addressing_style": "path"}, signature_version="s3v4"),
+        config=Config(
+            s3={"addressing_style": object_store_addressing_style()}, signature_version="s3v4"
+        ),
     )
 
 

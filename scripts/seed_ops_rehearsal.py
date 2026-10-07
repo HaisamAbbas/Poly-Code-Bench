@@ -148,7 +148,7 @@ class Seeder:
         if not self.admin_database_url:
             raise SystemExit(f"{admin_url_name} is required; load the ignored local .env first")
         self.artifacts: ArtifactRepository | None = None
-        self.store = S3ArtifactStore(
+        self.store = S3ArtifactStore.from_environment(
             endpoint_url=self.source["object_store_endpoint"], buckets=self.source["buckets"]
         )
 

@@ -46,7 +46,7 @@ def _inspect(attempt_id: UUID) -> int:
         return EXIT_VALIDATION
     database = Database(os.environ["PCB_DATABASE_URL"])
     try:
-        store = S3ArtifactStore(
+        store = S3ArtifactStore.from_environment(
             endpoint_url=os.environ["PCB_OBJECT_STORE_ENDPOINT"],
             buckets={
                 "hidden": os.environ["PCB_BUCKET_HIDDEN"],

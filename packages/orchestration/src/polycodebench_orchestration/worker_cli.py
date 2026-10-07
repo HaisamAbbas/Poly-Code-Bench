@@ -188,7 +188,7 @@ def _object_store(*, region_name: str = "us-east-1") -> S3ArtifactStore:
     }
     if not endpoint or any(not value for value in buckets.values()):
         raise ValueError("object-store endpoint and bucket names are required")
-    return S3ArtifactStore(
+    return S3ArtifactStore.from_environment(
         endpoint_url=endpoint,
         buckets={key: str(value) for key, value in buckets.items()},
         region_name=region_name,

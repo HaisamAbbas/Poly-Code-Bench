@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at_utc": "2026-10-07T05:15:47Z",
+  "captured_at_utc": "2026-10-07T05:23:17Z",
   "environment": "loopback-only local development",
   "release_id": "7c7fffc5-308f-4837-af58-1d18ba752b22",
   "fixture_kind": "synthetic_internal",
@@ -47,6 +47,7 @@
     }
   },
   "web": {
+    "node_runtime": "24.21.0",
     "production_build": "passed; TypeScript and seven-page route generation completed",
     "standalone_public_pages_rendered": 9,
     "standalone_api_fallback_without_environment": "passed; all nine release-backed pages rendered from the local API with PCB_PUBLIC_API_URL unset",
@@ -57,10 +58,12 @@
     "development_api_fallback_without_environment": "passed; all nine release-backed pages rendered from the local API with PCB_PUBLIC_API_URL unset",
     "development_oidc_browser_smoke": "passed; all nine public pages rendered the PostgreSQL-backed release; Keycloak login, metadata-only request/status, reviewer authorization, cross-owner isolation, keyboard access and mobile layout",
     "development_rate_limit_fallback": "passed; the local smoke reused an owner-visible synthetic request after the intended 429 limit without leaving the owner status path",
+    "development_oidc_smoke_node_24": "passed",
     "approved_submission_status": "Prompt 32 E2E explicitly distinguishes completed solve work from evaluation, scoring and publication, which are still unavailable",
     "provider_endpoint_contacted": false
   },
   "browser_suites": {
+    "node_runtime": "24.21.0",
     "prompt_30": {
       "passed": 4,
       "failed": 0,

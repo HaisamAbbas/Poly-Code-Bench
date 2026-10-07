@@ -134,5 +134,10 @@
   "limitations": [
     "Image presence and digest match do not prove the image is current with every source edit.",
     "This does not establish task admission, quality approval, end-to-end language coverage, production isolation, or benchmark results."
-  ]
+  ],
+  "counts": {
+    "allowlisted_digests": 24,
+    "present_digests": 24,
+    "languages": 8
+  }
 }

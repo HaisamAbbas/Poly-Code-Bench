@@ -3,7 +3,7 @@ Prompt 34 / Phase 8 — PARTIAL
 1. Implemented functionality and changed files
    - Reconciled `requirements-matrix.md`, `e2e-matrix.md`, `phase-map.md` and `progress.json` against completed Prompts 24–33 and current local evidence. Corrected stale/contradictory statuses and preserved evidence tiers.
    - Added this report, `evidence-index.md`, `reports/defect-and-fix-log.md`, `scored-release-readiness-checklist.md`, and `evidence/prompt-34/language-image-identity-2026-10-07.json`.
-   - Verified all 34 allowlisted image digests across eight language identities match local Docker image IDs. This check confirms image presence only.
+   - Verified all 24 allowlisted image digests across eight language identities match local Docker image IDs. This check confirms image presence only.
    - Confirmed the remaining code gap: approved bounded requests enqueue solve work, but evaluation, judging, scoring and publication workers are not connected to the durable queue. No unapproved automatic processing was added.
 
 2. Tests/commands actually run and their results
@@ -11,7 +11,7 @@ Prompt 34 / Phase 8 — PARTIAL
    - `git diff --check` — PASS for audit edits.
    - `python -m json.tool docs/implementation/progress.json` — PASS.
    - `http://127.0.0.1:8010/readyz` — HTTP 200; `http://127.0.0.1:3001/leaderboard` — HTTP 200 on loopback.
-   - Read-only Docker audit — PASS, 34/34 allowlisted image digests present across C, C++, Go, Java, JavaScript, Python, Rust and TypeScript identities. No image was built/pulled and no container or task was started.
+   - Read-only Docker audit — PASS, 24/24 allowlisted image digests present across C, C++, Go, Java, JavaScript, Python, Rust and TypeScript identities. No image was built/pulled and no container or task was started.
    - Reused still-applicable Prompt 30–33 browser/API/PostgreSQL evidence linked in `evidence-index.md`; web source was not changed during this audit refresh, so the browser suite was not rerun.
    - No provider request, judge call, cloud call, production-VM run, human review, or live pilot was run.
 

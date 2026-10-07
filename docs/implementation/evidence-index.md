@@ -39,6 +39,6 @@ Audit refresh: 2026-10-07. The detailed E2E matrix is the index for scenario-lev
 - `git diff --check` — passed for the audit edits.
 - `python -m json.tool docs/implementation/progress.json` — passed.
 - `http://127.0.0.1:8010/readyz` and `http://127.0.0.1:3001/leaderboard` — both returned HTTP 200 on the loopback-only local stack.
-- A read-only Docker comparison matched all 34 allowlisted digests across eight language identities to local `v1` images. It did not build, pull or run an image.
+- A read-only Docker comparison matched all 24 allowlisted digests across eight language identities to local `v1` images. It did not build, pull or run an image.
 
 No live model/provider call, cloud operation, production VM test, human calibration, public release or ranked benchmark result is represented by this refresh.

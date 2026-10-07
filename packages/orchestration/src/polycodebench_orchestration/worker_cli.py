@@ -73,9 +73,13 @@ def _parser() -> argparse.ArgumentParser:
     register.add_argument("--slots", type=int, default=1)
     register.add_argument("--workload-identity", default="local-solve-worker-1")
 
-    run = commands.add_parser("local-run", help="run one exact solve job or watch the local queue")
+    run = commands.add_parser(
+        "local-run", help="run one exact solve job, one approved run, or watch the queue"
+    )
     run.add_argument("--worker-id", type=UUID)
-    run.add_argument("--job-id", type=UUID, help="claim only this queued solve job")
+    target = run.add_mutually_exclusive_group()
+    target.add_argument("--job-id", type=UUID, help="claim only this queued solve job")
+    target.add_argument("--run-id", type=UUID, help="claim solve jobs only from this approved run")
     run.add_argument("--watch", action="store_true")
     run.add_argument("--image-allowlist", type=Path, default=DEFAULT_IMAGE_ALLOWLIST)
     run.add_argument("--protocol-directory", type=Path, default=DEFAULT_PROTOCOL_DIRECTORY)
@@ -312,6 +316,7 @@ def _run_local(
     worker_id: UUID | None,
     *,
     job_id: UUID | None,
+    run_id: UUID | None,
     watch: bool,
     args: argparse.Namespace,
 ) -> int:
@@ -319,9 +324,10 @@ def _run_local(
     if watch and job_id is not None:
         print("--job-id cannot be combined with --watch", file=sys.stderr)
         return 2
-    if not watch and job_id is None:
+    if not watch and job_id is None and run_id is None:
         print(
-            "local one-shot requires --job-id; use --watch for deliberate queue-wide processing",
+            "local one-shot requires --job-id or --run-id; "
+            "use --watch for deliberate queue processing",
             file=sys.stderr,
         )
         return 2
@@ -348,16 +354,17 @@ def _run_local(
             secret_namespace=os.environ.get("PCB_MODEL_SECRET_NAMESPACE", "models"),
         )
         if not watch:
-            claimed = asyncio.run(worker.run_once(job_id=job_id, stage="solve"))
+            claimed = asyncio.run(worker.run_once(job_id=job_id, run_id=run_id, stage="solve"))
             _emit(
                 {
                     "worker_id": str(selected_worker),
                     "job_id": str(job_id) if job_id is not None else None,
+                    "run_id": str(run_id) if run_id is not None else None,
                     "claimed": claimed,
                 }
             )
             return 0
-        _serve_worker(worker, stage="solve")
+        _serve_worker(worker, stage="solve", run_id=run_id)
         return 0
     finally:
         database.dispose()
@@ -717,7 +724,9 @@ def _run_ec2(worker_id: UUID | None, *, watch: bool, args: argparse.Namespace) -
         database.dispose()
 
 
-def _serve_worker(worker: WorkerService, *, stage: str | None = None) -> None:
+def _serve_worker(
+    worker: WorkerService, *, stage: str | None = None, run_id: UUID | None = None
+) -> None:
     async def serve() -> None:
         stop = asyncio.Event()
         loop = asyncio.get_running_loop()
@@ -726,7 +735,7 @@ def _serve_worker(worker: WorkerService, *, stage: str | None = None) -> None:
                 loop.add_signal_handler(signum, stop.set)
             except NotImplementedError:
                 signal.signal(signum, lambda _signal, _frame: loop.call_soon_threadsafe(stop.set))
-        await worker.run_until_stopped(stop, stage=stage)
+        await worker.run_until_stopped(stop, stage=stage, run_id=run_id)
 
     asyncio.run(serve())
 
@@ -751,7 +760,13 @@ def main(argv: list[str] | None = None) -> int:
                 workload_identity=args.workload_identity,
             )
         if args.command == "local-run":
-            return _run_local(args.worker_id, job_id=args.job_id, watch=args.watch, args=args)
+            return _run_local(
+                args.worker_id,
+                job_id=args.job_id,
+                run_id=args.run_id,
+                watch=args.watch,
+                args=args,
+            )
         if args.command == "ec2-run":
             return _run_ec2(args.worker_id, watch=args.watch, args=args)
         return _register_ec2(args)

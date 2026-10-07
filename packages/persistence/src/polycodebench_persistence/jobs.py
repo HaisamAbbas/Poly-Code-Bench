@@ -409,9 +409,14 @@ class PostgresJobRepository:
         worker_id: UUID,
         *,
         job_id: UUID | None = None,
+        run_id: UUID | None = None,
         stage: str | None = None,
     ) -> JobClaim | None:
         """Lock a capacity slot first, then one compatible ready job; never hold locks over work."""
+        if job_id is not None and run_id is not None:
+            raise InvalidState("a claim cannot target both a job and a run")
+        if run_id is not None and stage != "solve":
+            raise InvalidState("run-scoped claims require the solve stage")
         try:
             with self._engine.begin() as connection:
                 worker = (
@@ -483,6 +488,15 @@ class PostgresJobRepository:
                 ]
                 if job_id is not None:
                     eligibility.append(stage_job.c.id == job_id)
+                if run_id is not None:
+                    eligibility.append(
+                        select(attempt.c.id)
+                        .where(
+                            attempt.c.id == stage_job.c.attempt_id,
+                            attempt.c.run_id == run_id,
+                        )
+                        .exists()
+                    )
                 if stage is not None:
                     eligibility.append(stage_job.c.stage == stage)
                 eligible = (

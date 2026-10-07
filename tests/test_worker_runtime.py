@@ -299,7 +299,51 @@ def test_local_one_shot_requires_exact_job_id(
 
     assert worker_main(["local-run"]) == 2
     assert database_accesses == []
-    assert "local one-shot requires --job-id" in capsys.readouterr().err
+    assert "local one-shot requires --job-id or --run-id" in capsys.readouterr().err
+
+
+def test_local_run_id_can_bound_watch_without_opening_database(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("PCB_ENVIRONMENT", "dev")
+    monkeypatch.delenv("PCB_WORKER_DISPATCH_ENABLED", raising=False)
+
+    database_accesses: list[bool] = []
+
+    def unexpected_database_access() -> None:
+        database_accesses.append(True)
+        raise RuntimeError("dispatch opt-in must be checked before database access")
+
+    monkeypatch.setattr(
+        worker_cli_module,
+        "_worker_database",
+        unexpected_database_access,
+    )
+    run_id = UUID("33333333-3333-4333-8333-333333333333")
+
+    assert worker_main(["local-run", "--watch", "--run-id", str(run_id)]) == 2
+    output = capsys.readouterr().err
+    assert database_accesses == []
+    assert "worker configuration or operation failed" in output
+    assert "local one-shot requires" not in output
+    assert "cannot be combined with --watch" not in output
+
+
+def test_local_worker_rejects_two_target_ids(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as error:
+        worker_cli_module._parser().parse_args(
+            [
+                "local-run",
+                "--job-id",
+                "11111111-1111-4111-8111-111111111111",
+                "--run-id",
+                "22222222-2222-4222-8222-222222222222",
+            ]
+        )
+    assert error.value.code == 2
+    assert "not allowed with argument" in capsys.readouterr().err
 
 
 def test_ec2_worker_command_requires_an_explicit_dispatch_opt_in(

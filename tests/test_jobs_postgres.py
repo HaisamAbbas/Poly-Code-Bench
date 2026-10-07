@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from migration_support import require_migrated_through
-from polycodebench_core.application_errors import LeaseLost, PersistenceConflict
+from polycodebench_core.application_errors import InvalidState, LeaseLost, PersistenceConflict
 from polycodebench_core.canonical import canonical_document_bytes, canonical_document_digest
 from polycodebench_core.jobs import (
     CapacitySlotSpec,
@@ -341,6 +341,77 @@ def test_claim_filter_never_falls_back_to_another_ready_job(
             ).all()
         )
     assert states == {first_job: "queued", second_job: "leased"}
+
+
+def test_run_filter_never_falls_back_to_another_ready_run(
+    database: Database, object_store: S3ArtifactStore
+) -> None:
+    repository = _repo(database)
+    first_attempt = _attempt(database)
+    second_attempt = _attempt(database)
+    provider_key = f"exact-run-filter-{uuid4().hex}"
+    definition = JobDefinition(
+        key="solve",
+        stage="solve",
+        input_digest="sha256:" + "c" * 64,
+        queue_class="solve",
+        resource_class="small",
+        provider_key=provider_key,
+    )
+    first_job = repository.create_dag(
+        scope_type="attempt",
+        scope_id=first_attempt,
+        jobs=(definition,),
+        actor="exact-run-claim-fixture",
+    )["solve"]
+    second_job = repository.create_dag(
+        scope_type="attempt",
+        scope_id=second_attempt,
+        jobs=(definition,),
+        actor="exact-run-claim-fixture",
+    )["solve"]
+    with database.engine.connect() as connection:
+        target_run_id = connection.execute(
+            select(attempt.c.run_id).where(attempt.c.id == second_attempt)
+        ).scalar_one()
+    worker_id = _register_worker(
+        database,
+        object_store,
+        label="exact-run-filter",
+        resource_class="small",
+    )
+
+    claim = repository.claim(worker_id, run_id=target_run_id, stage="solve")
+
+    assert claim is not None
+    assert claim.job_id == second_job
+    with database.engine.connect() as connection:
+        states = dict(
+            connection.execute(
+                select(stage_job.c.id, stage_job.c.state).where(
+                    stage_job.c.id.in_((first_job, second_job))
+                )
+            ).all()
+        )
+    assert states == {first_job: "queued", second_job: "leased"}
+    missing_run_worker = _register_worker(
+        database,
+        object_store,
+        label="missing-run-filter",
+        resource_class="small",
+    )
+    assert repository.claim(missing_run_worker, run_id=uuid4(), stage="solve") is None
+    with database.engine.connect() as connection:
+        assert (
+            connection.execute(
+                select(stage_job.c.state).where(stage_job.c.id == first_job)
+            ).scalar_one()
+            == "queued"
+        )
+    with pytest.raises(InvalidState, match="require the solve stage"):
+        repository.claim(worker_id, run_id=target_run_id, stage="finalize")
+    with pytest.raises(InvalidState, match="both a job and a run"):
+        repository.claim(worker_id, job_id=second_job, run_id=target_run_id, stage="solve")
 
 
 def test_claim_stage_filter_does_not_claim_a_different_stage(

@@ -538,6 +538,7 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
             )
             assert owner_status.status_code == 200, owner_status.text
             assert owner_status.json()["data"]["run_status"] == "queued"
+            approved_run_id = UUID(owner_status.json()["data"]["resulting_run_id"])
             assert owner_status.json()["data"]["run_progress"] == {
                 "schema_version": 1,
                 "attempt_states": {"queued": 1},
@@ -554,8 +555,14 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 resource_class=worker_resource_class,
             )
             scheduler = PostgresJobRepository(scheduler_database.engine)
-            claim = scheduler.claim(worker_id)
+            claim = scheduler.claim(worker_id, run_id=approved_run_id, stage="solve")
             assert claim is not None
+            assert claim.scope_type == "attempt"
+            with scheduler_database.engine.connect() as connection:
+                claimed_run_id = connection.execute(
+                    select(attempt.c.run_id).where(attempt.c.id == claim.scope_id)
+                ).scalar_one()
+            assert claimed_run_id == approved_run_id
             running_status = await request(
                 client,
                 "GET",

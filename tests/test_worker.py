@@ -72,17 +72,18 @@ class FakeRepository:
         self.failure_class: str | None = None
         self.registration_active = True
         self.registration_heartbeats = 0
-        self.last_claim_filter: tuple[UUID | None, str | None] | None = None
+        self.last_claim_filter: tuple[UUID | None, UUID | None, str | None] | None = None
 
     def claim(
         self,
         worker_id: UUID,
         *,
         job_id: UUID | None = None,
+        run_id: UUID | None = None,
         stage: str | None = None,
     ) -> JobClaim | None:
         assert worker_id == UUID(self.job_claim.worker_id)
-        self.last_claim_filter = (job_id, stage)
+        self.last_claim_filter = (job_id, run_id, stage)
         self.events.append("claim")
         claim = self.next_claim
         self.next_claim = None
@@ -313,7 +314,18 @@ def test_run_once_forwards_exact_job_and_stage_filters() -> None:
         repo.next_claim = repo.job_claim
         requested_job = uuid4()
         assert await worker.run_once(job_id=requested_job, stage="solve")
-        assert repo.last_claim_filter == (requested_job, "solve")
+        assert repo.last_claim_filter == (requested_job, None, "solve")
+
+    _run(scenario)
+
+
+def test_run_once_forwards_exact_run_and_stage_filters() -> None:
+    async def scenario() -> None:
+        worker, repo, _sandbox, _executor, _events = _worker()
+        repo.next_claim = repo.job_claim
+        requested_run = uuid4()
+        assert await worker.run_once(run_id=requested_run, stage="solve")
+        assert repo.last_claim_filter == (None, requested_run, "solve")
 
     _run(scenario)
 
@@ -632,6 +644,26 @@ def test_idle_worker_renews_registration_before_every_claim() -> None:
         stop.set()
         await task
         assert events == ["registration_heartbeat", "claim"] * repo.registration_heartbeats
+
+    _run(scenario)
+
+
+def test_run_scoped_watch_forwards_run_id_on_every_claim(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def scenario() -> None:
+        worker, repo, _sandbox, _executor, events = _worker()
+        _fast(worker, monkeypatch)
+        repo.next_claim = repo.job_claim
+        stop = asyncio.Event()
+        run_id = uuid4()
+        task = asyncio.create_task(
+            worker.run_until_stopped(stop, idle_poll_seconds=0.005, stage="solve", run_id=run_id)
+        )
+        await _eventually(lambda: "execute" in events)
+        stop.set()
+        await task
+        assert repo.last_claim_filter == (None, run_id, "solve")
 
     _run(scenario)
 

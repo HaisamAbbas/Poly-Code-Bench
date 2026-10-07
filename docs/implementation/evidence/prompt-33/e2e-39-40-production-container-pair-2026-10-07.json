@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "suite": "Prompt 30/31 production-container pair",
+  "completed_at_utc": "2026-10-07T05:38:09.799Z",
+  "stats": {
+    "total": 7,
+    "expected": 7,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "duration_ms": 17967.989
+  },
+  "tests": [
+    {
+      "title": " > prompt30.spec.ts > E2E-39 segment: release-backed leaderboard values link to their source scorecards",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1216,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt30.spec.ts > E2E-39 segment: URL filters, metric sorting, release selection, and language diagnostics stay in scope",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2666,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt30.spec.ts > E2E-40 subcase: code profiles expose measured dimensions and answer-only profiles omit code charts",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1779,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt30.spec.ts > E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API error states",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1639,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt31.spec.ts > E2E-39 navigation: leaderboard → compatible comparison → disclosed task → score evidence",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 4888,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt31.spec.ts > E2E-39 and E2E-26: incompatible cohorts, private probes and safe public export",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 1799,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "title": " > prompt31.spec.ts > E2E-40 affected cases: bounded task pagination, lazy payloads, keyboard operation and responsive layouts",
+      "outcome": "expected",
+      "attempts": [
+        {
+          "status": "passed",
+          "duration_ms": 2809,
+          "retry": 0
+        }
+      ]
+    }
+  ]
+}

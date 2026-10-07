@@ -165,6 +165,8 @@ test("E2E-40 affected cases: bounded task pagination, lazy payloads, keyboard op
 
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto(`/compare?release=${encodeURIComponent(releaseId)}&models=synthetic-code-a&models=synthetic-code-c`);
+  await expect(page.getByText("Synthetic internal test data", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Exact common task versions" })).toBeVisible();
   const narrow = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
   expect(narrow.document).toBeLessThanOrEqual(narrow.viewport + 1);
   await page.screenshot({ path: resolve(artifactDirectory, "comparison-mobile.png"), fullPage: true });

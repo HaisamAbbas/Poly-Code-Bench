@@ -157,3 +157,12 @@ any model endpoint. Sanitized evidence and screenshots:
 [`api-web-container-pair-2026-10-07.json`](../implementation/evidence/prompt-33/api-web-container-pair-2026-10-07.json),
 [`desktop`](../implementation/evidence/prompt-33/api-web-container-pair-desktop.png),
 [`mobile`](../implementation/evidence/prompt-33/api-web-container-pair-mobile.png).
+
+The existing Prompt 30/31 Playwright suites also passed against this pair (7/7): E2E-39
+navigation/source links, E2E-26 privacy/export behavior, and E2E-40 error/N/A, keyboard, payload,
+and viewport cases. The mobile comparison case now waits for release-backed content before taking
+its screenshot, avoiding a loading-skeleton artifact. Results and dedicated screenshots:
+[`e2e-39-40-production-container-pair-2026-10-07.json`](../implementation/evidence/prompt-33/e2e-39-40-production-container-pair-2026-10-07.json),
+[`comparison desktop`](../implementation/evidence/prompt-33/e2e-production-comparison-desktop.png),
+[`comparison mobile`](../implementation/evidence/prompt-33/e2e-production-comparison-mobile.png),
+[`task evidence`](../implementation/evidence/prompt-33/e2e-production-task-evidence.png).

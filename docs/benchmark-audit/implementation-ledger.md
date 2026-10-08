@@ -1,15 +1,16 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompt83/BWP-01 is complete; Prompt84 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompt85 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
 - Python modular monolith under `packages/*`; Next.js/TypeScript frontend under `apps/web`.
-- Canonical JSON helpers exist at `packages/core/src/polycodebench_core/canonical.py`; no benchmark audit document registry/schemas exist.
+- Canonical JSON helpers exist at `packages/core/src/polycodebench_core/canonical.py`; §7 audit evidence-document schemas/persistence are not implemented. Prompt84 adds separate catalog/planning contracts only.
 - Persistence/migrations live in `packages/persistence/src/polycodebench_persistence`. The tracked `stage_job` has attempt, evaluation and release FKs only, versus six scopes in addendum §8.
 - Fenced queue definitions/repository are `packages/core/src/polycodebench_core/jobs.py` and `packages/persistence/src/polycodebench_persistence/jobs.py`.
 - API routes mount in `packages/api/src/polycodebench_api/app.py`; public release/submission routes have no benchmark audit operations.
 - Tracked benchmark importers, corpus connectors, match review, risk/temporal assessment, sealing, monitoring, health and audit attestations are absent.
+- Prompt84 adds strict registry/capability contracts at `packages/core/src/polycodebench_core/benchmark_audit_registry.py`, safe duplicate-rejecting YAML loading and a no-dispatch resource planner at `packages/services/src/polycodebench_services/benchmark_audit_catalog.py`, plus versioned configuration in `config/benchmark-audit/`. The catalog has 25 §5 families, eight source policies and an explicit capability row for each family. No importer or connector is claimed implemented.
 - The worktree contains uncommitted task generation/screening/overlap/exposure/canary code under `packages/taskgen` and contamination-control docs. These are inspected as work in progress and are excluded from Prompt83 commits.
 - Native benchmark metrics and code scoring remain in the existing evaluation/scoring/plugin paths; audit health is a separate module and must not change them.
 
@@ -45,7 +46,7 @@ The existing checkout contains REQ/WP/E2E identifiers in the source specificatio
 
 | Capability | State | Exact evidence/unblock action |
 |---|---|---|
-| HumanEval/MBPP/SWE-bench inputs | Not pinned for audit | Confirm exact revisions/splits and authorized local bytes; gated access stays blocked. |
+| HumanEval/MBPP/SWE-bench inputs | Repository metadata pinned for HumanEval, MBPP, SWE-bench and SWE-bench Verified; item bytes/splits not imported | Confirm exact immutable dataset bytes/splits and authorized local snapshots; gated access stays blocked. |
 | Corpus coverage | No approved benchmark-audit snapshots found | Owner-approved finite scopes, rights/retention, snapshots and request caps. |
 | Human review | No assigned audit reviewer evidence found | Independent authorized reviewer and recorded review events. |
 | Model diagnostics | No approved target/reference plan found | Purpose, exact model context, endpoint, labels and budget; otherwise blocked. |
@@ -54,3 +55,10 @@ The existing checkout contains REQ/WP/E2E identifiers in the source specificatio
 | Agent/image modalities | No conformant audit adapters found | Authorized exact assets and modality-specific parser/runtime. |
 
 Independent CPU/local work continues around these gates. The exact historical baselines and queue discrepancy are in `decisions.md`.
+
+## Prompt84 / BWP-02
+
+- Complete: 25 §5 benchmark records with explicit version/split/access/rights/modality/status fields; eight finite source policies; 25 component/source/modality/runtime capability rows; strict catalog cross-reference validation; safe duplicate-key YAML loading; and a pure bounded planner.
+- The planner computes the proposed 300-task/8-source/5-stage ceiling (12,000 planned query units and 30,000 candidate slots) while returning `dispatch_allowed=false`, zero model calls, unknown prices and per-benchmark/source blockers.
+- Current source checks pin metadata only: HumanEval, MBPP, SWE-bench repository, SWE-bench Verified dataset revision, EvalPlus v0.3.1 and its two data version labels. No task payloads were downloaded. All source connectors remain unimplemented and corpus scopes unapproved.
+- Next: Prompt85 / BWP-03. The migration must address the tracked three-scope queue, not the five-scope baseline assumed in §8.

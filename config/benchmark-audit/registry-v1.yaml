@@ -1,0 +1,531 @@
+schema_version: 1
+catalog_version: "v1"
+observed_on: "2026-10-08"
+benchmarks:
+  - slug: "humaneval"
+    name: "HumanEval"
+    family: "code"
+    owner: "OpenAI"
+    official_url: "https://github.com/openai/human-eval"
+    version: null
+    version_state: "repository_snapshot_pinned"
+    split_policy: "Official task set; imported split not frozen"
+    split_state: "unresolved"
+    component_schema: ["prompt","entry_point","canonical_solution","tests"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: "https://github.com/openai/human-eval/blob/6d43fb980f9fee3c892a914eda09951f772ad10d/LICENSE"
+    modalities: ["text","code"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: [{"source_url":"https://github.com/openai/human-eval","ref":"HEAD","commit_sha":"6d43fb980f9fee3c892a914eda09951f772ad10d","purpose":"repository metadata only"}]
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "MIT code license does not establish rights to every task component; source bytes not imported."
+  - slug: "mbpp"
+    name: "MBPP"
+    family: "code"
+    owner: "Google Research"
+    official_url: "https://github.com/google-research/google-research/tree/master/mbpp"
+    version: null
+    version_state: "repository_snapshot_pinned"
+    split_policy: "Official README identifies task_ids 11–510 as test; sanitized variant must be frozen separately"
+    split_state: "partially_documented"
+    component_schema: ["task_id","prompt","canonical_solution","tests"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "license_review_required"
+    license_evidence_url: "https://creativecommons.org/licenses/by/4.0/"
+    modalities: ["text","code"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: [{"source_url":"https://github.com/google-research/google-research","ref":"HEAD","commit_sha":"a1e7371c5e006f4e8b314bd23d99220d2fe44c51","purpose":"repository metadata only"}]
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Google Research states its datasets use CC BY 4.0; task and sanitized membership still require a pinned import."
+  - slug: "humaneval-plus"
+    name: "HumanEval+"
+    family: "code"
+    owner: "EvalPlus"
+    official_url: "https://github.com/evalplus/evalplus"
+    version: "v0.1.10"
+    version_state: "dataset_version_pinned"
+    split_policy: "HumanEval+ release version; exact data bytes not imported"
+    split_state: "unresolved"
+    component_schema: ["prompt","contract","canonical_solution","base_tests","plus_tests"]
+    upstream_lineage: ["humaneval"]
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","code"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: [{"source_url":"https://github.com/evalplus/evalplus","ref":"v0.3.1","commit_sha":"e5d0ed0bab96280b60b637ec7f15b5e4841b0cb2","purpose":"code release"},{"source_url":"https://github.com/evalplus/evalplus","ref":"HEAD","commit_sha":"26d6d00bb1fd0fa37f39c99d5290da67891d1c5e","purpose":"dataset version metadata"}]
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "The upstream EvalPlus code reports HumanEval+ data version v0.1.10; parent tasks remain linked."
+  - slug: "mbpp-plus"
+    name: "MBPP+"
+    family: "code"
+    owner: "EvalPlus"
+    official_url: "https://github.com/evalplus/evalplus"
+    version: "v0.2.0"
+    version_state: "dataset_version_pinned"
+    split_policy: "MBPP+ release version; exact data bytes not imported"
+    split_state: "unresolved"
+    component_schema: ["prompt","canonical_solution","base_tests","plus_tests"]
+    upstream_lineage: ["mbpp"]
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","code"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: [{"source_url":"https://github.com/evalplus/evalplus","ref":"v0.3.1","commit_sha":"e5d0ed0bab96280b60b637ec7f15b5e4841b0cb2","purpose":"code release"},{"source_url":"https://github.com/evalplus/evalplus","ref":"HEAD","commit_sha":"26d6d00bb1fd0fa37f39c99d5290da67891d1c5e","purpose":"dataset version metadata"}]
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "The upstream EvalPlus code reports MBPP+ data version v0.2.0; it is a child of the sanitized MBPP family."
+  - slug: "livecodebench"
+    name: "LiveCodeBench"
+    family: "code"
+    owner: "LiveCodeBench"
+    official_url: "https://github.com/LiveCodeBench/LiveCodeBench"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Exact release/date window and contest snapshot not pinned"
+    split_state: "unresolved"
+    component_schema: ["problem","solution","tests","contest_metadata"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","code"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Version, window, upstream contest rights and solution exposure must be frozen before import."
+  - slug: "swe-bench"
+    name: "SWE-bench"
+    family: "code"
+    owner: "SWE-bench"
+    official_url: "https://github.com/SWE-bench/SWE-bench"
+    version: null
+    version_state: "repository_snapshot_pinned"
+    split_policy: "Dataset revision and selected split not imported"
+    split_state: "unresolved"
+    component_schema: ["repository_state","issue","patch","tests","source_metadata"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "license_review_required"
+    license_evidence_url: "https://github.com/SWE-bench/SWE-bench/blob/02e7a74ffd0b707aab73d203fe87bdc7c76afc8e/LICENSE"
+    modalities: ["text","code","repository"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: [{"source_url":"https://github.com/SWE-bench/SWE-bench","ref":"HEAD","commit_sha":"02e7a74ffd0b707aab73d203fe87bdc7c76afc8e","purpose":"repository metadata only"}]
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Project code license does not blanket-clear issue text or every repository; retain row-level upstream licenses."
+  - slug: "swe-bench-lite"
+    name: "SWE-bench Lite"
+    family: "code"
+    owner: "SWE-bench"
+    official_url: "https://github.com/SWE-bench/SWE-bench"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Lite subset membership and underlying repository snapshots not pinned"
+    split_state: "unresolved"
+    component_schema: ["repository_state","issue","patch","tests","subset_membership"]
+    upstream_lineage: ["swe-bench"]
+    access_state: "public_data_review_required"
+    rights_state: "license_review_required"
+    license_evidence_url: "https://github.com/SWE-bench/SWE-bench/blob/02e7a74ffd0b707aab73d203fe87bdc7c76afc8e/LICENSE"
+    modalities: ["text","code","repository"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Subset membership and source repository revisions must be explicit; do not infer from a moving tag."
+  - slug: "swe-bench-verified"
+    name: "SWE-bench Verified"
+    family: "code"
+    owner: "SWE-bench"
+    official_url: "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified"
+    version: "78f471bf655a3137b2e8a75af1501690ec009ec3"
+    version_state: "dataset_version_pinned"
+    split_policy: "Pinned Hugging Face dataset revision; split/config still needs import freeze"
+    split_state: "unresolved"
+    component_schema: ["repository_state","issue","patch","tests","source_metadata"]
+    upstream_lineage: ["swe-bench"]
+    access_state: "public_data_review_required"
+    rights_state: "license_review_required"
+    license_evidence_url: null
+    modalities: ["text","code","repository"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: [{"source_url":"https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified/tree/78f471bf655a3137b2e8a75af1501690ec009ec3","ref":"78f471bf655a3137b2e8a75af1501690ec009ec3","commit_sha":"78f471bf655a3137b2e8a75af1501690ec009ec3","purpose":"dataset revision metadata"}]
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Public dataset revision observed; item content has upstream repository rights and no broader redistribution claim."
+  - slug: "mmlu"
+    name: "MMLU"
+    family: "knowledge"
+    owner: "Hendrycks et al."
+    official_url: "https://github.com/hendrycks/test"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Subject/config/split and upstream exam sources not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","subject","choices","answer","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Common facts and exam sources need component-level provenance review."
+  - slug: "mmlu-pro"
+    name: "MMLU-Pro"
+    family: "knowledge"
+    owner: "TIGER-AI-Lab"
+    official_url: "https://github.com/TIGER-AI-Lab/MMLU-Pro"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Variant revision and source provenance not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","subject","choices","answer","source_provenance"]
+    upstream_lineage: ["mmlu"]
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "No inherited clean or rights status from MMLU; variant/source lineage must be recorded."
+  - slug: "gpqa"
+    name: "GPQA"
+    family: "knowledge"
+    owner: "GPQA authors"
+    official_url: "https://github.com/idavidrein/gpqa"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Gated dataset version and authorized split not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","answer","explanation","access_record"]
+    upstream_lineage: []
+    access_state: "gated"
+    rights_state: "gated_access_required"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "blocked"
+    importer_status: "blocked"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Gated access must not be bypassed; no task bytes are available to this audit catalog."
+  - slug: "gsm8k"
+    name: "GSM8K"
+    family: "math"
+    owner: "OpenAI"
+    official_url: "https://github.com/openai/grade-school-math"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Train/test membership and revision not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","solution","answer","split","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Preserve train/test boundaries and derivation lineage."
+  - slug: "math"
+    name: "MATH"
+    family: "math"
+    owner: "Hendrycks et al."
+    official_url: "https://github.com/hendrycks/math"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Competition/source and split revisions not pinned"
+    split_state: "unresolved"
+    component_schema: ["problem","solution","subject","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Competition source/date and solution copies need separate provenance."
+  - slug: "mgsm"
+    name: "MGSM"
+    family: "math"
+    owner: "Google Research"
+    official_url: "https://github.com/google-research/url-nlp/tree/main/mgsm"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Language/config revision not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","translation","answer","source_family"]
+    upstream_lineage: ["gsm8k"]
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Link translated tasks to source-family ancestry; language versions are not independent questions."
+  - slug: "aime-derived"
+    name: "AIME-derived task sets"
+    family: "math"
+    owner: "Owner-specified competition"
+    official_url: "https://maa.org/maa-invitational-competitions/"
+    version: null
+    version_state: "unresolved"
+    split_policy: "No single canonical dataset; owner must name exact competition year and revision"
+    split_state: "unresolved"
+    component_schema: ["problem","answer","solution","competition_year","source_ref"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Third-party task sets are distinct from official competition source and require exact rights review."
+  - slug: "big-bench-hard"
+    name: "BIG-Bench Hard"
+    family: "reasoning"
+    owner: "Suzgun et al."
+    official_url: "https://github.com/suzgunmirac/BIG-Bench-Hard"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Task type and dataset revision not pinned"
+    split_state: "unresolved"
+    component_schema: ["task_template","instance","answer","task_family"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Template lineage must be separated from independent task instances."
+  - slug: "arc"
+    name: "ARC (AI2 Reasoning Challenge)"
+    family: "reasoning"
+    owner: "AI2"
+    official_url: "https://allenai.org/data/arc"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Easy/Challenge split and exact source revision not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","choices","answer","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Disambiguate ARC from ARC-AGI and preserve source-question lineage."
+  - slug: "hellaswag"
+    name: "HellaSwag"
+    family: "reasoning"
+    owner: "Zellers et al."
+    official_url: "https://github.com/rowanz/hellaswag"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Dataset revision/split not pinned"
+    split_state: "unresolved"
+    component_schema: ["context","continuations","answer","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Source contexts and completion choices need component-aware review."
+  - slug: "truthfulqa"
+    name: "TruthfulQA"
+    family: "reasoning"
+    owner: "Lin et al."
+    official_url: "https://github.com/sylinrl/TruthfulQA"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Revision/split and item provenance not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","answers","category","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Common factual answers alone are not task duplicates."
+  - slug: "ifeval"
+    name: "IFEval"
+    family: "reasoning"
+    owner: "Google Research"
+    official_url: "https://github.com/google-research/google-research/tree/master/instruction_following_eval"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Prompt/checker revision not pinned"
+    split_state: "unresolved"
+    component_schema: ["instruction","prompt","checker","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Prompt constraints and checker version both belong to the audit item."
+  - slug: "terminal-bench"
+    name: "Terminal-Bench"
+    family: "agent"
+    owner: "Terminal-Bench"
+    official_url: "https://www.tbench.ai/"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Task/environment/reference version and authorized split not pinned"
+    split_state: "unresolved"
+    component_schema: ["task","environment","reference","hidden_assets"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","code","agent_environment"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "No task VM or hidden artifacts are fetched or executed by this catalog."
+  - slug: "gaia"
+    name: "GAIA"
+    family: "agent"
+    owner: "GAIA authors"
+    official_url: "https://huggingface.co/datasets/gaia-benchmark/GAIA"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Public/restricted split and attachment revision not pinned"
+    split_state: "unresolved"
+    component_schema: ["question","attachment","answer","tool_trace","source_provenance"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","agent_environment","image"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Attachments and restricted answers require separate authorization and modality-specific coverage."
+  - slug: "bfcl"
+    name: "Berkeley Function-Calling Leaderboard"
+    family: "agent"
+    owner: "Berkeley Function-Calling Leaderboard"
+    official_url: "https://gorilla.cs.berkeley.edu/leaderboard.html"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Release/task schema version not pinned"
+    split_state: "unresolved"
+    component_schema: ["function_schema","dialogue","state","expected_call"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","tool_call"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Function schema and dialogue/state are separate components; no tool runtime conformance is claimed."
+  - slug: "mmmu"
+    name: "MMMU"
+    family: "multimodal"
+    owner: "MMMU authors"
+    official_url: "https://mmmu-benchmark.github.io/"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Version/split/image assets and rights not pinned"
+    split_state: "unresolved"
+    component_schema: ["image","text","question","choices","answer","source_asset"]
+    upstream_lineage: []
+    access_state: "public_data_review_required"
+    rights_state: "needs_item_review"
+    license_evidence_url: null
+    modalities: ["text","image"]
+    audit_status: "metadata_only"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Text-only metadata is not an image audit; OCR/perceptual checks are absent."
+  - slug: "custom-private"
+    name: "Custom/private benchmarks"
+    family: "private"
+    owner: "Owner supplied"
+    official_url: "https://polycodebench.example/benchmark-audit/custom-private"
+    version: null
+    version_state: "unresolved"
+    split_policy: "Owner manifest defines immutable version/split"
+    split_state: "unresolved"
+    component_schema: ["manifest","task_components","rights","visibility"]
+    upstream_lineage: []
+    access_state: "owner_supplied"
+    rights_state: "owner_contract_required"
+    license_evidence_url: null
+    modalities: ["text","code","image","agent_environment"]
+    audit_status: "catalogued"
+    importer_status: "not_implemented"
+    source_pins: []
+    audit_owner: "benchmark-audit"
+    native_evaluation_unchanged: true
+    notes: "Placeholder reference is not a live service. Require an owner-authorized manifest and rights declaration."
+
+\n

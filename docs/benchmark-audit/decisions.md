@@ -40,3 +40,12 @@ No approved source snapshots/rights, independent audit reviewer, controlled mode
 
 ### ADDENDUM-GAP-04 — Historical identifier families are not present in this checkout
 The addendum says to preserve DREQ/DWP/DXE and AREQ/AWP/AE2E identifiers. Repository-wide Markdown search found the original REQ/WP/E2E families in the requirements matrix and source specs, but no DREQ/DWP/DXE or AREQ/AWP/AE2E entries. Preserve the existing IDs verbatim; do not invent missing historical identifiers. If their source release is supplied later, add a hash and map it without rewriting current history.
+
+### ADDENDUM-DECISION-05 — Catalog state is separate from import capability
+Prompt84 records every §5 family, but unsupported/unpinned entries stay `metadata_only`, `catalogued` or `blocked`. The planner blocks current runs because rights/import adapters and source approvals are absent. Three pilot family metadata records do not imply importability.
+
+### ADDENDUM-DECISION-06 — Source prices and corpus sizes are unknown inputs
+The planner computes bounded query/candidate/storage ceilings but reports monetary cost as null and source access as blocked. No price or corpus-volume estimate is inferred from public availability or the candidate ceiling.
+
+### ADDENDUM-DECISION-07 — Local planner storage ceiling is provisional
+The 512 MiB cap prevents a dry-run plan from claiming unbounded local storage, but it is not based on a measured corpus workload. It cannot authorize a scan; a real plan needs an approved, workload-specific cap and measured bytes.

@@ -2,51 +2,51 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt83, all capability requirements remain pending implementation. BREQ-31 and BREQ-32 have partial traceability evidence from this ledger; they are not satisfied until all prompts, tickets and gates have implementation evidence.
+At Prompt84, BWP-01 and BWP-02 are complete. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
-| ID | Primary prompts | Acceptance gates | Evidence owner |
+| ID | Primary prompts | Acceptance gates | Status | Evidence owner |
 |---|---|---|---|
-| BREQ-01 | 84–86 | BX-02,06–08 | see prompt 84 report |
-| BREQ-02 | 84,86,104 | BX-02,59 | see prompt 84 report |
-| BREQ-03 | 87 | BX-09–11 | see prompt 87 report |
-| BREQ-04 | 84,88 | BX-12–14 | see prompt 84 report |
-| BREQ-05 | 88–89 | BX-13,15–17 | see prompt 88 report |
-| BREQ-06 | 90 | BX-18–21 | see prompt 90 report |
-| BREQ-07 | 91 | BX-22–23 | see prompt 91 report |
-| BREQ-08 | 91,94 | BX-24,31–33 | see prompt 91 report |
-| BREQ-09 | 92 | BX-25–26 | see prompt 92 report |
-| BREQ-10 | 92–93 | BX-27–28 | see prompt 92 report |
-| BREQ-11 | 93,102 | BX-28–29,54 | see prompt 93 report |
-| BREQ-12 | 93,102 | BX-30,54 | see prompt 93 report |
-| BREQ-13 | 94,101 | BX-31–33,53 | see prompt 94 report |
-| BREQ-14 | 85,94 | BX-05,32–33 | see prompt 85 report |
-| BREQ-15 | 95 | BX-34 | see prompt 95 report |
-| BREQ-16 | 95,102 | BX-35,54 | see prompt 95 report |
-| BREQ-17 | 95,102 | BX-36,54 | see prompt 95 report |
-| BREQ-18 | 86,95,97 | BX-08,37,42 | see prompt 86 report |
-| BREQ-19 | 96,102 | BX-38–40,55 | see prompt 96 report |
-| BREQ-20 | 90,96,100 | BX-21,39–40,49 | see prompt 90 report |
-| BREQ-21 | 97,99 | BX-41–43,46 | see prompt 97 report |
-| BREQ-22 | 98–99 | BX-44–47 | see prompt 98 report |
-| BREQ-23 | 100 | BX-48–50 | see prompt 100 report |
-| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | see prompt 86 report |
-| BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | see prompt 85 report |
-| BREQ-26 | 94,101 | BX-31–33,52–53 | see prompt 94 report |
-| BREQ-27 | 101–102 | BX-51–55 | see prompt 101 report |
-| BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | see prompt 85 report |
-| BREQ-29 | 84,88–89,101 | BX-12–17,51 | see prompt 84 report |
-| BREQ-30 | 103,106 | BX-56–58,60 | see prompt 103 report |
-| BREQ-31 | 83,104–106 | BX-01,59–60 | see prompt 83 report |
-| BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | see prompt 83 report |
+| BREQ-01 | 84–86 | BX-02,06–08 | pending | see prompt 84 report |
+| BREQ-02 | 84,86,104 | BX-02,59 | partial | config/benchmark-audit/registry-v1.yaml; broader support in Prompt104 |
+| BREQ-03 | 87 | BX-09–11 | pending | see prompt 87 report |
+| BREQ-04 | 84,88 | BX-12–14 | pending | see prompt 84 report |
+| BREQ-05 | 88–89 | BX-13,15–17 | pending | see prompt 88 report |
+| BREQ-06 | 90 | BX-18–21 | pending | see prompt 90 report |
+| BREQ-07 | 91 | BX-22–23 | pending | see prompt 91 report |
+| BREQ-08 | 91,94 | BX-24,31–33 | pending | see prompt 91 report |
+| BREQ-09 | 92 | BX-25–26 | pending | see prompt 92 report |
+| BREQ-10 | 92–93 | BX-27–28 | pending | see prompt 92 report |
+| BREQ-11 | 93,102 | BX-28–29,54 | pending | see prompt 93 report |
+| BREQ-12 | 93,102 | BX-30,54 | pending | see prompt 93 report |
+| BREQ-13 | 94,101 | BX-31–33,53 | pending | see prompt 94 report |
+| BREQ-14 | 85,94 | BX-05,32–33 | pending | see prompt 85 report |
+| BREQ-15 | 95 | BX-34 | pending | see prompt 95 report |
+| BREQ-16 | 95,102 | BX-35,54 | pending | see prompt 95 report |
+| BREQ-17 | 95,102 | BX-36,54 | pending | see prompt 95 report |
+| BREQ-18 | 86,95,97 | BX-08,37,42 | pending | see prompt 86 report |
+| BREQ-19 | 96,102 | BX-38–40,55 | pending | see prompt 96 report |
+| BREQ-20 | 90,96,100 | BX-21,39–40,49 | pending | see prompt 90 report |
+| BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
+| BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
+| BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
+| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | pending | see prompt 86 report |
+| BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | pending | see prompt 85 report |
+| BREQ-26 | 94,101 | BX-31–33,52–53 | pending | see prompt 94 report |
+| BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
+| BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | pending | see prompt 85 report |
+| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | packages/services/.../benchmark_audit_catalog.py; corpus indexing pending |
+| BREQ-30 | 103,106 | BX-56–58,60 | pending | see prompt 103 report |
+| BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
+| BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
 
 ## Work packages (BWP)
 
 | ID | Prompt | Status | Evidence |
 |---|---|---|---|
 | BWP-01 | 83 | complete | reports/prompt-83.md |
-| BWP-02 | 84 | pending | prompt report |
+| BWP-02 | 84 | complete | reports/prompt-84.md |
 | BWP-03 | 85 | pending | prompt report |
 | BWP-04 | 86 | pending | prompt report |
 | BWP-05 | 87 | pending | prompt report |
@@ -80,10 +80,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-01-B | 83 | complete | prompt-83.md |
 | BAT-01-C | 83 | complete | prompt-83.md |
 | BAT-01-D | 83 | complete | prompt-83.md |
-| BAT-02-A | 84 | pending | prompt report |
-| BAT-02-B | 84 | pending | prompt report |
-| BAT-02-C | 84 | pending | prompt report |
-| BAT-02-D | 84 | pending | prompt report |
+| BAT-02-A | 84 | complete | reports/prompt-84.md |
+| BAT-02-B | 84 | complete | reports/prompt-84.md |
+| BAT-02-C | 84 | complete | reports/prompt-84.md |
+| BAT-02-D | 84 | complete | reports/prompt-84.md |
 | BAT-03-A | 85 | pending | prompt report |
 | BAT-03-B | 85 | pending | prompt report |
 | BAT-03-C | 85 | pending | prompt report |
@@ -178,7 +178,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | ID | Owner prompt(s) | Status | Evidence |
 |---|---|---|---|
 | BX-01 | 83 | complete | prompt-83.md |
-| BX-02 | 84 | pending | criterion in addendum §26; prompt report |
+| BX-02 | 84 | complete | config/benchmark-audit/ and reports/prompt-84.md |
 | BX-03 | 85 | pending | criterion in addendum §26; prompt report |
 | BX-04 | 85 | pending | criterion in addendum §26; prompt report |
 | BX-05 | 85 | pending | criterion in addendum §26; prompt report |

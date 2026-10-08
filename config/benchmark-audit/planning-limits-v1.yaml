@@ -1,0 +1,11 @@
+schema_version: 1
+policy_version: "pilot-v1"
+max_tasks_per_plan: 300
+max_source_groups_per_plan: 8
+max_candidates_per_source_per_task: 20
+max_candidates_per_task: 100
+max_stages_per_task: 5
+max_query_units_per_plan: 12000
+max_storage_bytes_per_plan: 536870912
+
+\n

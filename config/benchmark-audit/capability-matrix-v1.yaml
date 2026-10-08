@@ -1,0 +1,281 @@
+schema_version: 1
+matrix_version: "v1"
+observed_on: "2026-10-08"
+benchmarks:
+  - benchmark_slug: "humaneval"
+    importer_state: "not_implemented"
+    component_scope: ["prompt","entry_point","canonical_solution","tests"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "mbpp"
+    importer_state: "not_implemented"
+    component_scope: ["task_id","prompt","canonical_solution","tests"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "humaneval-plus"
+    importer_state: "not_implemented"
+    component_scope: ["prompt","contract","canonical_solution","base_tests","plus_tests"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "mbpp-plus"
+    importer_state: "not_implemented"
+    component_scope: ["prompt","canonical_solution","base_tests","plus_tests"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "livecodebench"
+    importer_state: "not_implemented"
+    component_scope: ["problem","solution","tests","contest_metadata"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "swe-bench"
+    importer_state: "not_implemented"
+    component_scope: ["repository_state","issue","patch","tests","source_metadata"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code","repository"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "swe-bench-lite"
+    importer_state: "not_implemented"
+    component_scope: ["repository_state","issue","patch","tests","subset_membership"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code","repository"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "swe-bench-verified"
+    importer_state: "not_implemented"
+    component_scope: ["repository_state","issue","patch","tests","source_metadata"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code","repository"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "mmlu"
+    importer_state: "not_implemented"
+    component_scope: ["question","subject","choices","answer","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "mmlu-pro"
+    importer_state: "not_implemented"
+    component_scope: ["question","subject","choices","answer","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "gpqa"
+    importer_state: "blocked"
+    component_scope: ["question","answer","explanation","access_record"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Access is gated; no grant or dataset payload is available.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "gsm8k"
+    importer_state: "not_implemented"
+    component_scope: ["question","solution","answer","split","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "math"
+    importer_state: "not_implemented"
+    component_scope: ["problem","solution","subject","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "mgsm"
+    importer_state: "not_implemented"
+    component_scope: ["question","translation","answer","source_family"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "aime-derived"
+    importer_state: "not_implemented"
+    component_scope: ["problem","answer","solution","competition_year","source_ref"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "big-bench-hard"
+    importer_state: "not_implemented"
+    component_scope: ["task_template","instance","answer","task_family"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "arc"
+    importer_state: "not_implemented"
+    component_scope: ["question","choices","answer","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "hellaswag"
+    importer_state: "not_implemented"
+    component_scope: ["context","continuations","answer","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "truthfulqa"
+    importer_state: "not_implemented"
+    component_scope: ["question","answers","category","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "ifeval"
+    importer_state: "not_implemented"
+    component_scope: ["instruction","prompt","checker","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text"]
+    supported_modalities: []
+    runtime_state: "not_implemented"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+  - benchmark_slug: "terminal-bench"
+    importer_state: "not_implemented"
+    component_scope: ["task","environment","reference","hidden_assets"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code","agent_environment"]
+    supported_modalities: []
+    runtime_state: "blocked"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Task environment and hidden artifacts are not acquired or executed."]
+  - benchmark_slug: "gaia"
+    importer_state: "not_implemented"
+    component_scope: ["question","attachment","answer","tool_trace","source_provenance"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","agent_environment","image"]
+    supported_modalities: []
+    runtime_state: "blocked"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Image/OCR/perceptual audit is unsupported; metadata cannot satisfy image coverage.","Task environment and hidden artifacts are not acquired or executed."]
+  - benchmark_slug: "bfcl"
+    importer_state: "not_implemented"
+    component_scope: ["function_schema","dialogue","state","expected_call"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","tool_call"]
+    supported_modalities: []
+    runtime_state: "blocked"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog."]
+  - benchmark_slug: "mmmu"
+    importer_state: "not_implemented"
+    component_scope: ["image","text","question","choices","answer","source_asset"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","image"]
+    supported_modalities: []
+    runtime_state: "blocked"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Image/OCR/perceptual audit is unsupported; metadata cannot satisfy image coverage."]
+  - benchmark_slug: "custom-private"
+    importer_state: "not_implemented"
+    component_scope: ["manifest","task_components","rights","visibility"]
+    supported_components: []
+    source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
+    required_modalities: ["text","code","image","agent_environment"]
+    supported_modalities: []
+    runtime_state: "blocked"
+    conformance_state: "not_run"
+    original_evaluation_owner: "existing-native-evaluation-path"
+    limitations: ["No benchmark item bytes have been imported into this catalog.","Image/OCR/perceptual audit is unsupported; metadata cannot satisfy image coverage.","Task environment and hidden artifacts are not acquired or executed.","Owner-supplied rights manifest and private task access are missing."]
+
+\n

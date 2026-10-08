@@ -1,0 +1,118 @@
+schema_version: 1
+policy_version: "v1"
+observed_on: "2026-10-08"
+groups:
+  - slug: "common-crawl"
+    name: "Common Crawl"
+    official_url: "https://commoncrawl.org"
+    access_state: "public_metadata_only"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Only named index snapshots and bounded WARC records; no global web/full-text claim."
+    allowed_hosts: ["index.commoncrawl.org","commoncrawl.org","data.commoncrawl.org"]
+    retention: "Retain snapshot/index IDs, URL, digest/date evidence and minimal private excerpts; honor removal/retention policy."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Index metadata and explicitly selected WARC records only; response bytes/time bounded; content treated as untrusted."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "github"
+    name: "GitHub"
+    official_url: "https://github.com"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Only owner-approved repositories, commit IDs and allowed API/archive endpoints; no broad unrestricted crawl."
+    allowed_hosts: ["github.com","api.github.com","raw.githubusercontent.com"]
+    retention: "Keep exact repository/commit and digest; minimize snippets; respect repo/item license, deletion and API limits."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Parse text/code as untrusted data; never execute downloaded repository content."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "hugging-face"
+    name: "Hugging Face datasets"
+    official_url: "https://huggingface.co"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Exact dataset/revision/config/split allowlist; gated repositories require owner-granted access."
+    allowed_hosts: ["huggingface.co"]
+    retention: "Record dataset revision, config, split, card and license evidence; keep raw/private data under visibility policy."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Use metadata and explicitly approved static snapshots only; arbitrary dataset loaders/scripts disabled."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "arxiv"
+    name: "arXiv"
+    official_url: "https://arxiv.org"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Metadata plus item-specific permitted PDF/source acquisition; publication date does not date embedded tasks."
+    allowed_hosts: ["arxiv.org","export.arxiv.org"]
+    retention: "Retain metadata, version, acquired digest and extracted spans only as policy permits; preserve OCR uncertainty."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Trusted text extraction only; no arbitrary TeX/build/script execution."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "stack-exchange"
+    name: "Stack Exchange"
+    official_url: "https://api.stackexchange.com"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Approved API or exact data-dump revision/post IDs; bounded pagination and per-site scope."
+    allowed_hosts: ["api.stackexchange.com","stackoverflow.com","stackexchange.com"]
+    retention: "Retain post/revision IDs, source date and required attribution; respect CC BY-SA, deletion and corrections."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Strip active content; revisions and quoted answers remain distinct evidence."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "wikipedia"
+    name: "Wikipedia"
+    official_url: "https://dumps.wikimedia.org"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Exact dump/language/revision or bounded revision API; no current-site global absence claim."
+    allowed_hosts: ["dumps.wikimedia.org","api.wikimedia.org","en.wikipedia.org"]
+    retention: "Record dump/revision and attribution/license; keep source spans private unless public projection is authorized."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Markup and templates are untrusted; retain revision provenance and translation family."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "benchmark-repositories"
+    name: "Benchmark repositories"
+    official_url: "https://github.com"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Exact official repository/dataset commit and explicitly allowed split; hidden/gated tests never bypassed."
+    allowed_hosts: ["github.com","huggingface.co"]
+    retention: "Per-benchmark license/rights evidence; do not redistribute private/hidden answer components."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "Import only static data under pinned revision; untrusted loaders/harnesses/scripts are not run."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+  - slug: "other-public-datasets"
+    name: "Other public datasets"
+    official_url: "https://huggingface.co"
+    access_state: "public_data_review_required"
+    authorization_state: "not_approved"
+    connector_state: "not_implemented"
+    conformance_state: "not_run"
+    scope: "Owner-approved catalog entry with exact dataset revision, config, split and rights evidence."
+    allowed_hosts: ["huggingface.co","github.com"]
+    retention: "Per-item provenance/license/retention; public accessibility is not a rights grant."
+    private_query_policy: "explicit_disclosure_required"
+    extraction_policy: "No general web crawler or arbitrary remote dataset code."
+    max_requests_per_plan: 2000
+    max_response_bytes: 5242880
+
+\n

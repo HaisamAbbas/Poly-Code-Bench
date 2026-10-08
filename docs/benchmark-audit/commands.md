@@ -258,3 +258,13 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --locked ruff format --check packages/core/src/polycodebench_core/benchmark_pilot.py packages/services/src/polycodebench_services/benchmark_pilot.py tests/test_benchmark_pilot.py` | Passed | All three changed Python files are formatted. |
 | `uv run --locked mypy packages/core/src/polycodebench_core/benchmark_pilot.py packages/services/src/polycodebench_services/benchmark_pilot.py tests/test_benchmark_pilot.py` | Passed | Core/service contracts and tests type-check. |
 | Live benchmark imports, authorized corpus snapshots/rights, actual 300-item scan, independent 100-pair labels, trained/untrained manifests, reviewer roster and production evidence resolver | Blocked | None was configured or contacted; preflight has no query dispatch path. |
+
+## Prompt102 replacement, sealed-task and monitoring campaign readiness
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run --locked python -c "import platform,sys; platform.machine=lambda:'AMD64'; import pytest; sys.exit(pytest.main(['-q','tests/test_benchmark_pilot_campaigns.py','tests/test_benchmark_firewall.py','tests/test_sealed_evaluations.py','tests/test_benchmark_monitoring.py']))"` | Passed: 46 tests | Synthetic resolver and campaign refs only; covers 12 candidates/three slices, budgets, six seals, mode disclosure, changed-source caps, usage reconciliation and blockers. No live operation. |
+| `uv run --locked ruff check packages/core/src/polycodebench_core/benchmark_pilot_campaigns.py packages/services/src/polycodebench_services/benchmark_pilot_campaigns.py tests/test_benchmark_pilot_campaigns.py` | Passed | Prompt102 source and tests lint clean. |
+| `uv run --locked ruff format --check packages/core/src/polycodebench_core/benchmark_pilot_campaigns.py packages/services/src/polycodebench_services/benchmark_pilot_campaigns.py tests/test_benchmark_pilot_campaigns.py` | Passed | All three Prompt102 Python files are formatted. |
+| `uv run --locked mypy packages/core/src/polycodebench_core/benchmark_pilot_campaigns.py packages/services/src/polycodebench_services/benchmark_pilot_campaigns.py tests/test_benchmark_pilot_campaigns.py` | Passed | Core/service campaign contracts and tests type-check. |
+| Actual replacement author/checker/oracle campaign, six production sealed disclosures, approved key/TSA, changed-source live monitor rescan and PostgreSQL alert/query usage history | Blocked | No approved data, people, provider, connector, database or resolver was configured or contacted. |

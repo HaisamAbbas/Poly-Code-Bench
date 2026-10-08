@@ -223,3 +223,11 @@ Calibration plans freeze source snapshots, family assignments, detector/rubric v
 ### ADDENDUM-DECISION-50 - Behavioral training evidence is separate from source overlap
 
 Source matches, endpoint accuracy and detector calibration do not establish model-training inclusion. Without authorized controlled trained/untrained manifests and reference-model evidence, behavioral inference remains explicitly blocked.
+
+### ADDENDUM-DECISION-51 - Prompt102 campaign accounting is reference-only
+
+Replacement, sealed-task and monitor campaign summaries accept immutable document/artifact references and require a trusted resolver to verify the persisted records, identities, rights, actual author/checker usage, event chains, source scope and alert history. The summary performs no task creation, encryption, key access, source query, model call, disclosure or notification.
+
+### ADDENDUM-DECISION-52 - Development evidence and claimed usage stay distinct
+
+Human versus approved-model authorship, source/model modes, key-provider mode and timestamp-provider mode are recorded separately. Query/cost usage is reported separately from resolver-verified usage. Development fixtures, self-reported counts and absent alert rows cannot be promoted to live evidence.

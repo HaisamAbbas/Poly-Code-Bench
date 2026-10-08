@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-Through Prompt101, BWP-01 and BWP-02 are complete; BWP-03 through BWP-19 are partial foundations pending live database/source/resource/reviewer/calibration and lifecycle evidence. BWP-20 through BWP-24 remain pending. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are partial foundations pending live database/source/resource/reviewer/calibration and lifecycle evidence. BWP-21 through BWP-24 remain pending. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -18,15 +18,15 @@ Through Prompt101, BWP-01 and BWP-02 are complete; BWP-03 through BWP-19 are par
 | BREQ-08 | 91,94 | BX-24,31–33 | partial | reports/prompt-91.md and reports/prompt-94.md; all eight signals are typed, while behavior is kept diagnostic and age/popularity contextual; controlled behavior evidence and live exposure/corpus evidence remain absent |
 | BREQ-09 | 92 | BX-25–26 | partial | reports/prompt-92.md; chronology intervals, immutable model contexts and interval evaluation are tested; no accepted live source/cutoff evidence exists |
 | BREQ-10 | 92–93 | BX-27–28 | partial | reports/prompt-92.md; salted commitments and local Ed25519 receipt binding are tested; no approved external timestamp authority is configured |
-| BREQ-11 | 93,102 | BX-28–29,54 | partial | reports/prompt-93.md; envelope/access contracts and local tests exist, but no approved production KMS or live authorization adapter is configured |
-| BREQ-12 | 93,102 | BX-30,54 | partial | reports/prompt-93.md; local synthetic canary checks are tested, but no reviewed source/date evidence or production query adapter exists |
+| BREQ-11 | 93,102 | BX-28–29,54 | partial | reports/prompt-93.md and reports/prompt-102.md; private envelope/access contracts and reference-only seal campaign accounting exist, but approved production keys, live authorization and six real disclosures are unavailable |
+| BREQ-12 | 93,102 | BX-30,54 | partial | reports/prompt-93.md and reports/prompt-102.md; local canary and mode-disclosure contracts exist, but no reviewed source/date evidence, production query adapter or live diagnostic configuration exists |
 | BREQ-13 | 94,101 | BX-31–33,53 | partial | reports/prompt-94.md; opt-in preregistration and descriptive observations exist, while a pinned method, approved model capabilities and controlled calibration remain unavailable |
 | BREQ-14 | 85,94 | BX-05,32–33 | partial | `run.purpose`, audit metadata, gateway linkage and frozen diagnostic protocols are implemented; live dispatch authorization and model exposure integrations remain gated; see reports/prompt-85.md and reports/prompt-94.md |
 | BREQ-15 | 95 | BX-34 | partial | reports/prompt-95.md; finite-scope, validity, rights, temporal, risk and reviewed-overlap decisions are fail-closed; live authorized evidence is unavailable |
-| BREQ-16 | 95,102 | BX-35,54 | partial | reports/prompt-95.md; preregistered total/per-source draft quotas and distinct author/checker/reviewer contracts exist; round/cost/time caps are frozen but no authorized generation runner accounts them; production worker, human identity and live oracle evidence remain unavailable |
-| BREQ-17 | 95,102 | BX-36,54 | partial | reports/prompt-95.md; ancestry, source-family and prospective template gates are persisted; no approved task-generation or exposure-review pipeline is available |
+| BREQ-16 | 95,102 | BX-35,54 | partial | reports/prompt-95.md and reports/prompt-102.md; preregistered quotas and campaign round/cost/time reconciliation exist, but no authorized generation runner, human authors, production worker or live oracle evidence is available |
+| BREQ-17 | 95,102 | BX-36,54 | partial | reports/prompt-95.md and reports/prompt-102.md; ancestry gates and candidate lineage summaries are persisted/checked, but no approved task-generation or live exposure-review pipeline is available |
 | BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md and reports/prompt-95.md; official membership remains immutable; derived manifests compute family/split/competency/difficulty distributions and separate score labels; live import and projection review remain unavailable |
-| BREQ-19 | 96,102 | BX-38-40,55 | partial | reports/prompt-96.md; timezone/DST-safe slots, bounded catch-up/retry, incremental/full refresh planning, per-source reservations and reference-only in-app alerts are implemented; owner-role verification, live scheduler/connectors and PostgreSQL execution are unavailable |
+| BREQ-19 | 96,102 | BX-38-40,55 | partial | reports/prompt-96.md and reports/prompt-102.md; bounded slot, usage and alert-history reconciliation contracts exist; owner-role verification, changed-source live rescan, scheduler/connectors and PostgreSQL evidence are unavailable |
 | BREQ-20 | 90,96,100 | BX-21,39-40,49 | partial | reports/prompt-90.md and reports/prompt-96.md; immutable match successors, accepted-evidence successor-assessment alert checks, correction/dispute records and no-delete retention are implemented; live reviewer/source history and production alert delivery remain unavailable |
 | BREQ-21 | 97,99 | BX-41-43,46 | partial | reports/prompt-97.md; denominator-first Decimal health metrics, explicit unknown/unscanned counts, frozen cohort keys and trend breaks are implemented; live source, database and reviewed projection evidence remain unavailable |
 | BREQ-22 | 98–99 | BX-44–47 | partial | reports/prompt-98.md and reports/prompt-99.md; tenant-scoped API reads, plan/run create, CLI/SDK contracts and public aggregate report journeys are tested; private transition adapters, shared curator ACL, model-context/evidence views and live reviewed projection remain |
@@ -34,7 +34,7 @@ Through Prompt101, BWP-01 and BWP-02 are complete; BWP-03 through BWP-19 are par
 | BREQ-24 | 86–90,93,98–100,103 | BX-07,11,14,20,28–30,44,47–50,58 | partial | reports/prompt-86.md through reports/prompt-90.md, reports/prompt-98.md through reports/prompt-100.md; untrusted source/judge boundaries, tenant/owner-scoped reads, allowlisted no-store projections, signed-claim privacy and invalid-signature claim suppression are tested; private artifact-byte authorization, audit-specific exposure writer, shared reviewer ACL, live trust/revocation checks and production authorization evidence remain absent |
 | BREQ-25 | 85,89,96,98,103 | BX-04–05,16–17,38,44,56–57 | partial | six exclusive queue FKs, CAS enqueue, tenant/idempotent plan/run API creation and fencing reuse are implemented; Prompt89 has no fenced query-result/checkpoint writer; live migration/claim/recovery verification is pending; see reports/prompt-85.md, reports/prompt-89.md and reports/prompt-98.md |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | partial | reports/prompt-94.md and reports/prompt-101.md; owned-training manifests and separate compute caps are represented, but no authorized trained/untrained manifests or behavioral ground truth exist |
-| BREQ-27 | 101–102 | BX-51–55 | partial | reports/prompt-101.md; exact-scope preflight and family-cluster calibration contracts exist, while the actual 300-item scans, independent labels and Prompt102 campaign evidence are unavailable |
+| BREQ-27 | 101–102 | BX-51–55 | partial | reports/prompt-101.md and reports/prompt-102.md; exact-scope calibration and reference-only replacement/seal/monitor accounting contracts exist, while source scans, independent labels, 12 reviewed replacements, six production seals and live rescan are unavailable |
 | BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
 | BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog, connector, bounded retrieval, coverage, local replay and exact-source pilot preflight contracts exist; approved snapshots/indexes, actual scan evidence and durable retrieval replay remain pending; see reports/prompt-88.md, reports/prompt-89.md and reports/prompt-101.md |
 | BREQ-30 | 103,106 | BX-56–58,60 | pending | see prompt 103 report |
@@ -64,7 +64,7 @@ Through Prompt101, BWP-01 and BWP-02 are complete; BWP-03 through BWP-19 are par
 | BWP-17 | 99 | partial | reports/prompt-99.md; public aggregate report and safe curator-blocked pages pass synthetic browser checks; private transitions, comparative/evidence journeys and live reviewed projection remain unavailable |
 | BWP-18 | 100 | partial | reports/prompt-100.md; Ed25519 verification, canonical digest binding, stale/offline qualification, append-only lifecycle repository methods, public verification route and limitations UI are implemented; approved trust/key/reviewer authority, trusted timestamp proof, transition API, live PostgreSQL and reviewed publication remain unavailable |
 | BWP-19 | 101 | partial | reports/prompt-101.md; frozen 300-item preflight, trusted population/plan/source/label resolver boundaries, family-cluster calibration and bounded resampling work exist; no approved source bytes/rights, independent labels, live scan or behavioral ground truth are available |
-| BWP-20 | 102 | pending | prompt report |
+| BWP-20 | 102 | partial | reports/prompt-102.md; fixed-scope replacement/sealed/monitor evidence contracts and separate reported/verified usage counts exist; no authorized live campaign, production key/timestamp authority or source rescan is available |
 | BWP-21 | 103 | pending | prompt report |
 | BWP-22 | 104 | pending | prompt report |
 | BWP-23 | 105 | pending | prompt report |
@@ -152,10 +152,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-19-B | 101 | blocked | reports/prompt-101.md; no authorized corpus snapshots/bytes or live connectors exist to produce 300 audit records, bounded retrieval, coverage or cost reports |
 | BAT-19-C | 101 | partial | reports/prompt-101.md; held-out family bootstrap, metric, control and reviewer-evidence contracts exist; 100 actual independent labels across 30 families are absent |
 | BAT-19-D | 101 | blocked | reports/prompt-101.md; no authorized trained/untrained manifests or reference model are available; source-overlap evidence is kept separate |
-| BAT-20-A | 102 | pending | prompt report |
-| BAT-20-B | 102 | pending | prompt report |
-| BAT-20-C | 102 | pending | prompt report |
-| BAT-20-D | 102 | pending | prompt report |
+| BAT-20-A | 102 | partial | reports/prompt-102.md; four-per-benchmark slice, independent roles, lineage, and round/cost/time caps reconcile; no real candidate authors, checkers, or oracle evidence are available |
+| BAT-20-B | 102 | partial | reports/prompt-102.md; six-task private manifest, screen/disclosure, lineage, key and timestamp mode contracts exist; no six owner-authored tasks or production key/provider evidence exists |
+| BAT-20-C | 102 | blocked | reports/prompt-102.md; no approved monitor tick, changed source snapshot, live rescan or persisted owner alert history was available |
+| BAT-20-D | 102 | partial | reports/prompt-102.md; mode-specific evidence and separate reported/verified query/cost accounting are implemented; no live source/model/human/crypto ledger exists |
 | BAT-21-A | 103 | pending | prompt report |
 | BAT-21-B | 103 | pending | prompt report |
 | BAT-21-C | 103 | pending | prompt report |
@@ -230,8 +230,8 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-51 | 101 | partial | reports/prompt-101.md; exact sample and bounded source preflight checks exist, but no approved source bytes/rights or actual 300-item scan evidence |
 | BX-52 | 101 | partial | reports/prompt-101.md; family-cluster precision/recall/FPR intervals and evidence-backed plan/reviewer gates are implemented; actual independent held-out labels and source diversity are unavailable |
 | BX-53 | 101 | blocked | reports/prompt-101.md; no controlled trained/untrained manifests or approved behavioral ground truth; source overlap and existing endpoint accuracy are not substitutes |
-| BX-54 | 102 | pending | criterion in addendum §26; prompt report |
-| BX-55 | 102 | pending | criterion in addendum §26; prompt report |
+| BX-54 | 102 | partial | reports/prompt-102.md; exact 12/6 limits, independent roles, lineage, private access and execution-mode boundaries are validated; no actual reviewed replacements or six production sealed disclosures exist |
+| BX-55 | 102 | partial | reports/prompt-102.md; changed-source, bounded usage and reference-only alert-history contracts exist; approved live rescan and authenticated persisted alert/usage evidence are unavailable |
 | BX-56 | 103 | pending | criterion in addendum §26; prompt report |
 | BX-57 | 103 | pending | criterion in addendum §26; prompt report |
 | BX-58 | 103 | pending | criterion in addendum §26; prompt report |
@@ -248,7 +248,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BA3 | 92–94 | partial | `phase-BA3.md` |
 | BA4 | 95-97 | partial | `reports/phase-BA4.md` |
 | BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompts98–100 foundations implemented; shared curator authorization, approved signer/reviewer authority, trusted timestamps, live PostgreSQL/revocation and reviewed source evidence remain unavailable |
-| BA6 | 101–103 | partial | `reports/phase-BA6.md`; Prompt101 preflight/calibration contracts exist, but live pilot inputs and Prompt102–103 evidence remain unavailable |
+| BA6 | 101–103 | partial | `reports/phase-BA6.md`; Prompts101–102 preflight/campaign accounting foundations exist, but live pilot inputs and Prompt103 operations evidence remain unavailable |
 | BA7 | 104–106 | pending | `reports/phase-BA7.md` |
 
 Update each status only when its evidence exists. A phase is partial if mandatory live, source, human or modality evidence remains unavailable.

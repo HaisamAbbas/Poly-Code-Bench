@@ -277,3 +277,18 @@ def test_scorecard_write_replay_and_explanation_conflict(database: Database) -> 
     )
     with pytest.raises(PersistenceConflict, match="replay conflicts"):
         repository.store(modified, actor="scoring-postgres-test")
+
+
+def test_bounded_pending_scoring_is_excluded_after_a_locked_store(database: Database) -> None:
+    values = _frozen_evaluation(database.engine)
+    evaluation_id = UUID(str(values["evaluation_id"]))
+    repository = PostgresScoringRepository(database.engine)
+
+    assert repository.pending_evaluation_ids(limit=10) == (evaluation_id,)
+    with pytest.raises(ValueError, match="batch limit"):
+        repository.pending_evaluation_ids(limit=0)
+    with repository.evaluation_lock(evaluation_id):
+        assert repository.has_scorecard(evaluation_id) is False
+        repository.store(_record(values), actor="scoring-postgres-test")
+        assert repository.has_scorecard(evaluation_id) is True
+    assert evaluation_id not in repository.pending_evaluation_ids(limit=10)

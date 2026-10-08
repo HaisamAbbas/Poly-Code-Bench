@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
@@ -16,7 +18,7 @@ from polycodebench_core.application_errors import (
 from polycodebench_core.canonical import canonical_document_digest
 from polycodebench_core.models import Scorecard, ScoreDimension, TaskVersion
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
@@ -97,6 +99,72 @@ class PostgresScoringRepository:
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
+
+    def pending_evaluation_ids(self, *, limit: int = 100) -> tuple[UUID, ...]:
+        """Return a bounded, oldest-first batch of completed evaluations without scorecards."""
+        if not 1 <= limit <= 1_000:
+            raise ValueError("pending scoring batch limit must be in [1,1000]")
+        evidence = artifact.alias("pending_evaluation_evidence")
+        policy_artifact = artifact.alias("pending_evaluation_policy_artifact")
+        already_scored = select(scorecard.c.id).where(
+            scorecard.c.evaluation_id == evaluation.c.id
+        ).exists()
+        statement = (
+            select(evaluation.c.id)
+            .select_from(
+                evaluation.join(evidence, evidence.c.id == evaluation.c.evidence_manifest_id)
+                .join(config_document, config_document.c.id == evaluation.c.policy_config_id)
+                .join(
+                    policy_artifact,
+                    policy_artifact.c.id == config_document.c.canonical_artifact_id,
+                )
+            )
+            .where(
+                evaluation.c.state.in_(("ready", "failed")),
+                evidence.c.status == "verified",
+                evidence.c.visibility == "internal",
+                evidence.c.encryption_domain == "evaluation-evidence",
+                config_document.c.kind == "frozen_scoring_policy",
+                policy_artifact.c.status == "verified",
+                policy_artifact.c.visibility == "internal",
+                policy_artifact.c.encryption_domain == "worker-config",
+                policy_artifact.c.content_digest == config_document.c.digest,
+                ~already_scored,
+            )
+            .order_by(evaluation.c.created_at, evaluation.c.id)
+            .limit(limit)
+        )
+        with self._engine.connect() as connection:
+            rows = connection.execute(statement).scalars().all()
+        return tuple(UUID(str(value)) for value in rows)
+
+    def has_scorecard(self, evaluation_id: UUID) -> bool:
+        with self._engine.connect() as connection:
+            existing_id = connection.execute(
+                select(scorecard.c.id)
+                .where(scorecard.c.evaluation_id == evaluation_id)
+                .limit(1)
+            ).scalar_one_or_none()
+        return existing_id is not None
+
+    @contextmanager
+    def evaluation_lock(self, evaluation_id: UUID) -> Iterator[None]:
+        """Serialize scoring attempts for one evaluation across scorer processes."""
+        lock_key = f"pcb.scoring:{evaluation_id}"
+        with self._engine.connect() as connection:
+            connection.execute(
+                text("SELECT pg_advisory_lock(hashtextextended(:lock_key, 0))"),
+                {"lock_key": lock_key},
+            ).scalar_one()
+            connection.commit()
+            try:
+                yield
+            finally:
+                connection.execute(
+                    text("SELECT pg_advisory_unlock(hashtextextended(:lock_key, 0))"),
+                    {"lock_key": lock_key},
+                ).scalar_one()
+                connection.commit()
 
     def store(self, record: ScorecardRecord, *, actor: str) -> ScorecardWriteResult:
         if not actor or not actor.isascii() or len(actor) > 255:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import io
 import zipfile
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
@@ -41,6 +42,13 @@ class EvaluationScoringRejected(ValueError):
     """A completed evaluation is not safe to score from its frozen records."""
 
 
+@dataclass(frozen=True, slots=True)
+class ScoringBatchResult:
+    selected: int
+    created: int
+    already_scored: int
+
+
 class DatabaseEvaluationScorer:
     """Create and persist one internal scorecard without executing a candidate or provider."""
 
@@ -64,6 +72,30 @@ class DatabaseEvaluationScorer:
         self._actor = actor
 
     def score(self, evaluation_id: UUID) -> tuple[ScoringOutcome, ScorecardWriteResult]:
+        with self._scorecards.evaluation_lock(evaluation_id):
+            return self._score_locked(evaluation_id)
+
+    def score_pending(self, *, limit: int = 100) -> ScoringBatchResult:
+        evaluation_ids = self._scorecards.pending_evaluation_ids(limit=limit)
+        created = 0
+        already_scored = 0
+        for evaluation_id in evaluation_ids:
+            with self._scorecards.evaluation_lock(evaluation_id):
+                if self._scorecards.has_scorecard(evaluation_id):
+                    already_scored += 1
+                    continue
+                _, written = self._score_locked(evaluation_id)
+                if written.created:
+                    created += 1
+                else:
+                    already_scored += 1
+        return ScoringBatchResult(
+            selected=len(evaluation_ids),
+            created=created,
+            already_scored=already_scored,
+        )
+
+    def _score_locked(self, evaluation_id: UUID) -> tuple[ScoringOutcome, ScorecardWriteResult]:
         assignment = self._assignments.load(evaluation_id)
         if assignment.policy is None or assignment.policy_digest is None:
             raise EvaluationScoringRejected("evaluation has no validated frozen scoring policy")
@@ -273,6 +305,7 @@ __all__ = [
     "DatabaseEvaluationScorer",
     "EvaluationScoringRejected",
     "MAX_EVIDENCE_ARCHIVE_BYTES",
+    "ScoringBatchResult",
     "SCORING_OUTCOME_DOMAIN",
     "_profile_source_digest",
     "scorecard_record",

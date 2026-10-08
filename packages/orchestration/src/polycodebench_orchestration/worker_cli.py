@@ -14,6 +14,7 @@ import json
 import os
 import signal
 import sys
+import threading
 from pathlib import Path
 from typing import cast
 from uuid import UUID, uuid4
@@ -177,6 +178,14 @@ def _parser() -> argparse.ArgumentParser:
     local_score.add_argument("--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST)
     local_score.add_argument("--ownership-policy", type=Path, default=DEFAULT_OWNERSHIP_POLICY)
     local_score.add_argument("--profile-source", type=Path, default=DEFAULT_LANGUAGE_PROFILE_SOURCE)
+
+    score_pending = commands.add_parser(
+        "score-pending",
+        help="score a bounded batch of completed internal evaluations as the scorer role",
+    )
+    score_pending.add_argument("--limit", type=int, default=25)
+    score_pending.add_argument("--watch", action="store_true")
+    score_pending.add_argument("--poll-seconds", type=int, default=15)
 
     ec2_run = commands.add_parser(
         "ec2-run", help="run a pre-registered worker using the verified disposable-VM provider"
@@ -598,19 +607,10 @@ def _score_local_evaluation(args: argparse.Namespace) -> int:
     database = _scorer_database()
     try:
         object_store = _object_store()
-        artifacts = ArtifactRepository(
-            database.engine, object_store, max_upload_bytes=512 * 1024**2
-        )
-        assignments = DatabaseEvaluationAssignmentLoader(
-            database.engine,
-            artifacts,
-            load_allowlist(args.plugin_allowlist),
-            allow_completed=True,
-        )
-        scorer = DatabaseEvaluationScorer(
-            assignments=assignments,
-            artifacts=artifacts,
-            scorecards=PostgresScoringRepository(database.engine),
+        scorer = _build_database_evaluation_scorer(
+            engine=database.engine,
+            object_store=object_store,
+            plugin_allowlist_path=args.plugin_allowlist,
             ownership_path=args.ownership_policy,
             profile_source_path=args.profile_source,
             actor=actor,
@@ -631,6 +631,106 @@ def _score_local_evaluation(args: argparse.Namespace) -> int:
         return 0
     finally:
         database.dispose()
+
+
+def _build_database_evaluation_scorer(
+    *,
+    engine: Engine,
+    object_store: S3ArtifactStore,
+    plugin_allowlist_path: Path,
+    ownership_path: Path,
+    profile_source_path: Path,
+    actor: str,
+) -> DatabaseEvaluationScorer:
+    artifacts = ArtifactRepository(engine, object_store, max_upload_bytes=512 * 1024**2)
+    assignments = DatabaseEvaluationAssignmentLoader(
+        engine,
+        artifacts,
+        load_allowlist(plugin_allowlist_path),
+        allow_completed=True,
+    )
+    return DatabaseEvaluationScorer(
+        assignments=assignments,
+        artifacts=artifacts,
+        scorecards=PostgresScoringRepository(engine),
+        ownership_path=ownership_path,
+        profile_source_path=profile_source_path,
+        actor=actor,
+    )
+
+
+def _score_pending(args: argparse.Namespace) -> int:
+    if os.environ.get("PCB_SCORING_DISPATCH_ENABLED") != "true":
+        raise ValueError("set PCB_SCORING_DISPATCH_ENABLED=true for explicit scoring dispatch")
+    if not 1 <= args.limit <= 100:
+        raise ValueError("scoring batch limit must be in [1,100]")
+    if not 1 <= args.poll_seconds <= 300:
+        raise ValueError("scoring poll interval must be in [1,300] seconds")
+    actor = os.environ.get("PCB_SERVICE_IDENTITY")
+    if not actor:
+        raise ValueError("PCB_SERVICE_IDENTITY is required for scoring audit attribution")
+    manifest, _deployment = _read_aws_manifest("scorer")
+    if not manifest.identity.region:
+        raise ValueError("AWS scorer manifest has no region")
+    database = _scorer_database()
+    try:
+        object_store = _object_store(region_name=manifest.identity.region)
+        configured = {
+            "endpoint": os.environ.get("PCB_OBJECT_STORE_ENDPOINT"),
+            "hidden": os.environ.get("PCB_BUCKET_HIDDEN"),
+            "internal": os.environ.get("PCB_BUCKET_INTERNAL"),
+            "public": os.environ.get("PCB_BUCKET_PUBLIC"),
+        }
+        if configured != {
+            "endpoint": manifest.object_store.endpoint,
+            "hidden": manifest.object_store.bucket_hidden,
+            "internal": manifest.object_store.bucket_internal,
+            "public": manifest.object_store.bucket_public,
+        }:
+            raise ValueError("object-store settings differ from the deployed manifest")
+        scorer = _build_database_evaluation_scorer(
+            engine=database.engine,
+            object_store=object_store,
+            plugin_allowlist_path=DEFAULT_PLUGIN_ALLOWLIST,
+            ownership_path=DEFAULT_OWNERSHIP_POLICY,
+            profile_source_path=DEFAULT_LANGUAGE_PROFILE_SOURCE,
+            actor=actor,
+        )
+        if args.watch:
+            _serve_scoring(scorer, limit=args.limit, poll_seconds=args.poll_seconds)
+        else:
+            result = scorer.score_pending(limit=args.limit)
+            _emit(
+                {
+                    "selected": result.selected,
+                    "created": result.created,
+                    "already_scored": result.already_scored,
+                }
+            )
+        return 0
+    finally:
+        database.dispose()
+
+
+def _serve_scoring(
+    scorer: DatabaseEvaluationScorer, *, limit: int, poll_seconds: int
+) -> None:
+    stop = threading.Event()
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(signum, lambda _signal, _frame: stop.set())
+        except ValueError:
+            pass
+    while not stop.is_set():
+        result = scorer.score_pending(limit=limit)
+        _emit(
+            {
+                "selected": result.selected,
+                "created": result.created,
+                "already_scored": result.already_scored,
+            }
+        )
+        stop.wait(poll_seconds)
 
 
 def _register_worker_internal_config(
@@ -1371,7 +1471,7 @@ def main(argv: list[str] | None = None) -> int:
         or os.environ.get("PCB_ROLE")
         or (
             "scorer"
-            if args.command == "local-score-evaluation"
+            if args.command in {"local-score-evaluation", "score-pending"}
             else "grading-worker"
             if args.command.startswith(("local-grading-", "ec2-grading-"))
             else "solve-worker"
@@ -1403,6 +1503,8 @@ def main(argv: list[str] | None = None) -> int:
             return _run_local_grading(args)
         if args.command == "local-score-evaluation":
             return _score_local_evaluation(args)
+        if args.command == "score-pending":
+            return _score_pending(args)
         if args.command == "ec2-run":
             return _run_ec2(args.worker_id, watch=args.watch, args=args)
         if args.command == "ec2-grading-run":

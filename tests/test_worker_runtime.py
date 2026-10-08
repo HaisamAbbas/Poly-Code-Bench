@@ -817,6 +817,21 @@ def test_ec2_evaluation_registration_refuses_to_run_with_dispatch_enabled(
     assert "worker configuration or operation failed" in capsys.readouterr().err
 
 
+def test_scorer_polling_requires_explicit_dispatch_before_aws_access(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("PCB_ENVIRONMENT", "staging")
+    monkeypatch.delenv("PCB_SCORING_DISPATCH_ENABLED", raising=False)
+    monkeypatch.setattr(
+        worker_cli_module.boto3,
+        "client",
+        lambda *args, **kwargs: pytest.fail("AWS clients must not be constructed before opt-in"),
+    )
+
+    assert worker_main(["score-pending", "--watch"]) == 2
+    assert "worker configuration or operation failed" in capsys.readouterr().err
+
+
 def test_aws_worker_manifest_checks_live_sts_identity(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

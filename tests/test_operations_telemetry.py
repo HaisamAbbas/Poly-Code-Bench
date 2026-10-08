@@ -17,9 +17,10 @@ from polycodebench_core.telemetry import (
     safe_label,
 )
 
+# These credential-shaped values are deterministic test dummies, never real credentials.
 SECRETS = {
     "provider key": "sk-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWX",
-    "aws key": "AKIAABCDEFGHIJKLMNOP",
+    "aws key": "AKIA0000000000000000",
     "bearer": "Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123",
     "dsn": "postgresql+psycopg://svc:hunter2-very-secret@db.internal/pcb",
     "password": "password=s3cr3t-value",
@@ -36,7 +37,7 @@ def test_redact_removes_credential_shapes(label: str) -> None:
         "hunter2",
         "s3cr3t",
         "ABCDEFGHIJKLMNOPQRSTUVWX",
-        "AKIAABCDEFGHIJKLMNOP",
+        "AKIA0000000000000000",
         "abcdefghijklmnopqrstuvwxyz0123",
         "sk-proj-abcdefghijklmnopqrstuv",
     ):

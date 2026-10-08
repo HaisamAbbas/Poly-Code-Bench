@@ -41,6 +41,15 @@
     "tests_passed": 2,
     "bounded_pending_selection_and_scorecard_lock": "passed"
   },
+  "worker_grading_scoring_tests": {
+    "result": "passed",
+    "tests_passed": 24,
+    "modules": [
+      "tests/test_worker_runtime.py",
+      "tests/test_grading_executor.py",
+      "tests/test_scoring_postgres.py"
+    ]
+  },
   "browser_smoke": {
     "result": "passed",
     "postgres_release_backed_public_pages": 9,

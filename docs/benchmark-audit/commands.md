@@ -292,3 +292,16 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --locked python scripts/benchmark_scope_conformance.py` piped to a JSON count | Passed: 25 families, 0 live-verified, 4 synthetic-source-fixture families | Local deterministic evidence only; report performs no network/source/model work. |
 | Read-only `git ls-remote <official repository or dataset URL> HEAD` checks | Passed for available refs; GAIA returned authentication-required; HellaSwag returned a DMCA takedown response; old ARC GitHub path was unavailable | Exact refs and limitations are recorded in `source-observations-2026-10-09.md`. No Git objects or dataset payloads were fetched. |
 | Official GAIA/Terminal-Bench/MMMU/TruthfulQA/IFEval/MMLU-Pro/GSM8K/BBH/ARC/GitHub notice pages | Read-only documentation reviewed | Official pages establish metadata, format or access conditions only; they do not grant item rights, source approval, runtime conformance or model-score permission. |
+
+## Prompt105 integrated lifecycle and reviewed-projection boundary
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run --locked pytest -q tests/test_benchmark_audit_lifecycle.py` | Passed: 1 integration test | Synthetic GSM8K parser output flows through fingerprint, fixture-only bounded selection, byte verification, proposed review, insufficient-risk scoring, unknown temporal assessment and partial health aggregation. No source, human, DB, signer or model call. |
+| `uv run --locked ruff check tests/test_benchmark_audit_lifecycle.py`; `uv run --locked ruff format --check tests/test_benchmark_audit_lifecycle.py`; `uv run --locked mypy tests/test_benchmark_audit_lifecycle.py` | Passed | Integration test lint, format and typing checks. |
+| Focused audit/API/scoring regression command recorded in `reports/prompt-105.md` | Passed: 259 tests | Local service and API contracts, import/fingerprint/retrieval, verification/review, risk/temporal/health, firewall/seal/monitor/attestation, public projections and historical score behavior. No live PostgreSQL fixture. |
+| `uv run --locked pytest -q tests/test_scoring_properties.py` | Passed: 28 tests | Historical score property checks; with the focused Prompt105 regression, 287 distinct test cases passed. |
+| `corepack pnpm --filter @polycodebench/web test:e2e:prompt99` | Passed: 4 browser journeys | Synthetic public report lookup/mobile/loading/privacy and blocked curator journeys; no private transition call or production review. |
+| `uv run --locked alembic -c packages/persistence/alembic.ini heads`; offline `upgrade c3a4e14f8b29:head --sql` render | Passed: `b7c3e9a4d281` is sole head; SQL rendered | No database connection or schema migration. Current-schema PostgreSQL transition/integration remains blocked. |
+| `uv run --locked python scripts/benchmark_scope_conformance.py` | Passed: 25 families, 0 live-verified, 4 synthetic-source-fixture families | Metadata-only readiness dossier; not a reviewed public health projection and not publishable evidence. No external source/model/cost dispatch. |
+| API/CLI/UI transition and public projection approval | Blocked | Transition writers and shared reviewer ACL are absent; no current-schema isolated DB, approved signer, human review or exact projection approval is configured. Public routes remain read-only. |

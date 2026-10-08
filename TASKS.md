@@ -26,7 +26,7 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 102 — live replacements, sealed workflow and monitoring evidence (partial reference-only campaign accounting; no authorized authors, production key/timestamp authority, live source rescan or resolver exists).
 - [x] Prompt 103 — operations, malicious-input defenses and recovery/load (partial; current-schema restore/load prerequisites are missing).
 - [x] Prompt 104 — broader benchmark adapters and scope conformance (partial; only GSM8K adds a synthetic-fixture parser, all other source/runtime rights and multimodal evidence remain pending or blocked).
-- [ ] Prompt 105 — integrated end-to-end demonstration and reviewed projections.
+- [x] Prompt 105 — integrated end-to-end demonstration and reviewed projections (partial; the synthetic contract pipeline and existing API/CLI/browser regressions pass, while trusted source/reviewer/persistence/publication transitions remain unavailable).
 - [ ] Prompt 106 — final traceability audit, fixes and operator handoff.
 
 ## Persistent blockers
@@ -36,5 +36,6 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - No current-schema benchmark-audit database, reviewer session, approved model context or audit-specific exposure writer is configured. The designated local test database lacks its Alembic schema; do not migrate it as part of this prompt.
 - The available ignored local recovery backup is synthetic but predates the benchmark-audit schema; the isolated restore correctly fails with `benchmark_audit_schema_missing`. No approved persisted retrieval-index configuration/rebuild adapter or representative corpus/monitor load environment is available.
 - No benchmark payloads or native harnesses are approved for Prompt104. GAIA requires gated access approval; HellaSwag upstream is blocked under a recorded GitHub DMCA notice; image/OCR, agent-environment and tool-call audit adapters remain unsupported. Do not substitute mirrors.
+- No authenticated transition writer is available for review, firewall, seal, replacement, monitor or attestation workflows. The current-schema isolated PostgreSQL test environment and approved reviewer/signer authorities are absent, so Prompt105's cross-surface transitions and reviewed public projection cannot be demonstrated.
 - The implementation specification's §1 source bridge claims five historical source MDs but lists only three; the other two are absent from the workspace. Supply/enumerate them to close final historical-source traceability.
 - Keep unrelated dirty work out of prompt commits; stage only the exact prompt-owned files or hunks.

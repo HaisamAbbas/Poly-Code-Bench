@@ -255,3 +255,7 @@ Changed task, prompt, answer-choice, or checker policies define separate version
 ### ADDENDUM-GAP-06 - The source bridge lists three historical MDs, not five
 
 The implementation specification says five current source MDs were read but its §1 table names only three; the workspace contains those same three historical documents and no two additional source MDs. Prompt104 records the discrepancy and does not reconstruct or substitute missing sources. The specification owner must supply or enumerate the remaining documents before final historical-source traceability can close.
+
+### ADDENDUM-DECISION-58 - Fixture lifecycle evidence stops before trusted transitions
+
+Prompt105's local end-to-end contract test may validate deterministic transformations using explicitly synthetic inputs. Fixture source refs, rights fields, candidate hits, hashes, and test actors never count as source authorization, independent review, accepted match evidence, calibration, persisted immutable history, or publication approval. The flow must stop at proposed review / insufficient risk whenever the trusted evidence is absent; no convenience writer or fabricated human approval is added to make the demonstration appear complete.

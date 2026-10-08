@@ -67,7 +67,7 @@ Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are par
 | BWP-20 | 102 | partial | reports/prompt-102.md; fixed-scope replacement/sealed/monitor evidence contracts and separate reported/verified usage counts exist; no authorized live campaign, production key/timestamp authority or source rescan is available |
 | BWP-21 | 103 | pending | prompt report |
 | BWP-22 | 104 | partial | reports/prompt-104.md; all §5 families reconcile metadata, scope, modality, access, runtime and blockers; only GSM8K adds a new synthetic-fixture parser; live rights/source conformance remain blocked |
-| BWP-23 | 105 | pending | prompt report |
+| BWP-23 | 105 | partial | reports/prompt-105.md; synthetic import-to-health lifecycle and privacy/API/CLI/browser regressions pass; live source, human review, persistent transition writers and reviewed public projection remain blocked |
 | BWP-24 | 106 | pending | prompt report |
 
 ## Engineering tickets (BAT)
@@ -164,10 +164,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-22-B | 104 | partial | reports/prompt-104.md; BBH, ARC, TruthfulQA and IFEval metadata/lineage/template/checker blockers are explicit; only catalog contracts ran, IFEval checker and live source components remain unpinned |
 | BAT-22-C | 104 | blocked | reports/prompt-104.md; GAIA is officially gated; Terminal-Bench, BFCL, image/OCR, environment and custom-private runtime/access remain unsupported or unverified |
 | BAT-22-D | 104 | partial | reports/prompt-104.md; all 25 §5 rows map version, access, components, sources, tests, runtime and live blockers; native scoring paths are unchanged; live source conformance is unavailable |
-| BAT-23-A | 105 | pending | prompt report |
-| BAT-23-B | 105 | pending | prompt report |
-| BAT-23-C | 105 | pending | prompt report |
-| BAT-23-D | 105 | pending | prompt report |
+| BAT-23-A | 105 | partial | reports/prompt-105.md; local synthetic import, fingerprint, bounded fixture retrieval, byte verification, pending review, insufficient-risk, unknown-temporal and partial-health stages pass; no persisted or live lifecycle evidence |
+| BAT-23-B | 105 | blocked | reports/prompt-105.md; no authorized API/CLI/UI transition writers or current-schema PostgreSQL service; service contracts pass individually, but cross-surface admission/review/seal/monitor history cannot run |
+| BAT-23-C | 105 | partial | reports/prompt-105.md; 287 focused API/service/scoring tests and four synthetic Playwright journeys pass; live DB, reviewer ACL, migration execution, publication and production browser evidence remain unavailable |
+| BAT-23-D | 105 | partial | reports/prompt-105.md; internal 25-family scope preview and exact local check commands are available; no reviewed or authorized public health projection, live-cost quote or scope approval exists |
 | BAT-24-A | 106 | pending | prompt report |
 | BAT-24-B | 106 | pending | prompt report |
 | BAT-24-C | 106 | pending | prompt report |
@@ -235,7 +235,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-56 | 103 | partial | reports/prompt-103.md; verified bundle parsing, document digests/references, sealed transitions and lifecycle checks are implemented; the available snapshot lacks the benchmark-audit schema, key-provider restore is unverified and no retrieval-index config/rebuild adapter exists |
 | BX-57 | 103 | partial | reports/prompt-103.md; worker fence/cancel and bounded retry regressions pass; persisted provider response replay, current-schema reservation reconciliation and live source/object-store failure injection remain blocked on a migrated approved local test environment |
 | BX-58 | 103 | partial | reports/prompt-103.md; malicious archive, connector, sandbox, telemetry-redaction and bounded restore-bundle checks pass; no representative search/monitor latency, storage or cost load was measured |
-| BX-59 | 104, 105 | partial | reports/prompt-104.md; complete 25-row catalog reconciliation and strict no-overclaim checks pass locally; source/import rights, runtime, multimodal and live fixture evidence remain pending or blocked |
+| BX-59 | 104, 105 | partial | reports/prompt-104.md and reports/prompt-105.md; 25-row scope reconciliation plus synthetic import-to-health and API/CLI/browser privacy regressions pass; source rights, runtime, human review, persistent transitions, modality evidence and publication remain pending or blocked |
 | BX-60 | 106 | pending | criterion in addendum §26; prompt report |
 
 ## Phase ownership
@@ -249,6 +249,6 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BA4 | 95-97 | partial | `reports/phase-BA4.md` |
 | BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompts98–100 foundations implemented; shared curator authorization, approved signer/reviewer authority, trusted timestamps, live PostgreSQL/revocation and reviewed source evidence remain unavailable |
 | BA6 | 101–103 | partial | `reports/phase-BA6.md`; Prompts101–103 local foundations and failure checks exist, but live pilot inputs, compatible audit backup, key/index recovery, provider replay DB and representative search/monitor load remain unavailable |
-| BA7 | 104–106 | partial | `reports/phase-BA7.md`; Prompt104 scope foundation is implemented; integrated lifecycle, reviewed projections and final traceability remain |
+| BA7 | 104–106 | partial | `reports/phase-BA7.md`; Prompt104 scope evidence and Prompt105 synthetic lifecycle/API/CLI/browser checks are recorded; live cross-surface transitions, reviewed publication and final traceability remain |
 
 Update each status only when its evidence exists. A phase is partial if mandatory live, source, human or modality evidence remains unavailable.

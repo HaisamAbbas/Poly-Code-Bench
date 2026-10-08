@@ -15,8 +15,13 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 from uuid import UUID
 
+from polycodebench_core.audit_attestations import (
+    AttestationTrustStore,
+    SignedPublicAuditAttestation,
+)
 from polycodebench_core.benchmark_audit_documents import AuditPlanDocument, parse_audit_document
-from polycodebench_core.canonical import canonical_json_bytes
+from polycodebench_core.canonical import canonical_json_bytes, parse_json_strict
+from polycodebench_services.audit_attestations import verify_public_attestation
 
 _MAX_LOCAL_BYTES = 10 * 1024 * 1024
 _MAX_SAFE_INTEGER = 9_007_199_254_740_991
@@ -105,6 +110,7 @@ def _parser() -> argparse.ArgumentParser:
 
     verify = commands.add_parser("verify-attestation", help="verify an attestation file")
     verify.add_argument("file", type=Path)
+    verify.add_argument("--trust-store", type=Path, required=True, help="public keys only")
 
     for child in commands.choices.values():
         nested = next(
@@ -184,11 +190,21 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
         return result
     if args.command == "verify-attestation":
         content = _read_local_file(args.file, "attestation")
-        json.loads(content)
+        parse_json_strict(content)  # Reject duplicate JSON members before typed JSON validation.
+        signed = SignedPublicAuditAttestation.model_validate_json(content, strict=True)
+        trust_content = _read_local_file(args.trust_store, "attestation trust store")
+        parse_json_strict(trust_content)
+        trust_store = AttestationTrustStore.model_validate_json(trust_content, strict=True)
+        verification = verify_public_attestation(signed, trust_store)
         return {
-            "input_bytes": len(content),
-            "signature_verified": False,
-            "validation_scope": "json_syntax_only",
+            "attestation_id": str(signed.claims.attestation_id),
+            "signature_valid": verification.signature_valid,
+            "trusted_key": verification.trusted_key,
+            "current_endorsement": verification.current_endorsement,
+            "revocation_freshness": verification.revocation_freshness,
+            "result": verification.result,
+            "claim_limitations": signed.claims.claim_limitations,
+            "validation_scope": "canonical_signature_and_public_claims",
         }
     if args.command == "health":
         return {
@@ -249,6 +265,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         local_input = _validate_local_input(args)
+        if args.command == "verify-attestation":
+            print(json.dumps(local_input, sort_keys=True))
+            return 0 if local_input["signature_valid"] else 4
         route = _command_route(args)
         if args.dry_run:
             method, path = route if route is not None else (None, None)

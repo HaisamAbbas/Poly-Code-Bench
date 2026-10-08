@@ -370,6 +370,14 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
 .audit-unavailable p { color: #596862; font-size: .86rem; line-height: 1.55; }
 .audit-unavailable .button-link { margin-top: 4px; }
 .audit-unavailable small { color: var(--muted); display: block; margin: -3px 0 12px; }
+.attestation-verification { background: #fff; border: 1px solid var(--line); margin-bottom: 18px; padding: 18px 20px; }
+.attestation-verification h2 { font-size: 1.15rem; margin: 10px 0 6px; }
+.attestation-verification p { color: #56645e; font-size: .82rem; line-height: 1.5; margin: 5px 0; }
+.attestation-verification code { overflow-wrap: anywhere; }
+.attestation-state { background: #fff6e5; border: 1px solid #e1cc99; color: #664d20; display: inline-block; font-size: .68rem; font-weight: 750; letter-spacing: .035em; padding: 5px 8px; text-transform: uppercase; }
+.attestation-state-current { background: #edf4ef; border-color: #c4d7ca; color: #315545; }
+.attestation-digest { margin-top: 12px !important; }
+.attestation-digest code { overflow-wrap: anywhere; word-break: break-all; }
 .section-card a:focus-visible, .site-header a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #bf9128; outline-offset: 2px; }
 
 @media (max-width: 920px) {
@@ -426,6 +434,7 @@ h3 { font-size: 1.04rem; margin-bottom: 0; }
   .audit-risk-list { grid-template-columns: 1fr; }
   .audit-lookup-form button { justify-self: stretch; }
   .audit-unavailable { padding: 15px; }
+  .attestation-verification { padding: 14px; }
   .lazy-evidence-heading button { width: 100%; }
   .pagination { justify-content: flex-start; }
 }

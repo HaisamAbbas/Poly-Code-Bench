@@ -371,6 +371,81 @@
         "title": "ArtifactRef",
         "type": "object"
       },
+      "AttestationVerification": {
+        "additionalProperties": false,
+        "properties": {
+          "current_endorsement": {
+            "title": "Current Endorsement",
+            "type": "boolean"
+          },
+          "key_status": {
+            "enum": [
+              "active",
+              "revoked",
+              "unknown"
+            ],
+            "title": "Key Status",
+            "type": "string"
+          },
+          "lifecycle_status": {
+            "enum": [
+              "published",
+              "revoked",
+              "superseded",
+              "expired",
+              "unpublished",
+              "unknown"
+            ],
+            "title": "Lifecycle Status",
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "current_scoped_attestation",
+              "development_key_not_endorsed",
+              "signature_valid_revocation_stale",
+              "signature_valid_revocation_unchecked",
+              "expired",
+              "revoked",
+              "superseded",
+              "not_published",
+              "untrusted_signer",
+              "invalid_signature",
+              "scope_digest_mismatch"
+            ],
+            "title": "Result",
+            "type": "string"
+          },
+          "revocation_freshness": {
+            "enum": [
+              "current",
+              "stale",
+              "offline"
+            ],
+            "title": "Revocation Freshness",
+            "type": "string"
+          },
+          "signature_valid": {
+            "title": "Signature Valid",
+            "type": "boolean"
+          },
+          "trusted_key": {
+            "title": "Trusted Key",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "signature_valid",
+          "trusted_key",
+          "key_status",
+          "lifecycle_status",
+          "revocation_freshness",
+          "current_endorsement",
+          "result"
+        ],
+        "title": "AttestationVerification",
+        "type": "object"
+      },
       "AuditApiErrorDetail": {
         "additionalProperties": false,
         "properties": {
@@ -10076,6 +10151,280 @@
         "title": "ProviderKind",
         "type": "string"
       },
+      "PublicAuditAttestationClaims": {
+        "additionalProperties": false,
+        "description": "Allowlisted signed claims; no task-level evidence or private document refs.",
+        "properties": {
+          "attestation_digest": {
+            "maxLength": 71,
+            "minLength": 71,
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Attestation Digest",
+            "type": "string"
+          },
+          "attestation_id": {
+            "format": "uuid",
+            "title": "Attestation Id",
+            "type": "string"
+          },
+          "claim_limitations": {
+            "default": [
+              "scoped_finite_evidence_only",
+              "no_unseen_data_guarantee",
+              "signature_is_not_certification",
+              "model_eligibility_not_inferred",
+              "timestamp_not_independently_proven"
+            ],
+            "items": {
+              "enum": [
+                "scoped_finite_evidence_only",
+                "no_unseen_data_guarantee",
+                "signature_is_not_certification",
+                "model_eligibility_not_inferred",
+                "timestamp_not_independently_proven"
+              ],
+              "type": "string"
+            },
+            "title": "Claim Limitations",
+            "type": "array"
+          },
+          "expires_at": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?Z$",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "health": {
+            "$ref": "#/components/schemas/PublicAuditHealthSummary"
+          },
+          "issued_at": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?Z$",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "model_context_bound": {
+            "title": "Model Context Bound",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "attestation_id",
+          "attestation_digest",
+          "health",
+          "model_context_bound",
+          "issued_at",
+          "expires_at"
+        ],
+        "title": "PublicAuditAttestationClaims",
+        "type": "object"
+      },
+      "PublicAuditAttestationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicAuditAttestationView"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditApiMeta"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "data",
+          "meta"
+        ],
+        "title": "PublicAuditAttestationResult",
+        "type": "object"
+      },
+      "PublicAuditAttestationView": {
+        "additionalProperties": false,
+        "properties": {
+          "attestation": {
+            "$ref": "#/components/schemas/SignedPublicAuditAttestation"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "successor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Successor Id"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/AttestationVerification"
+          }
+        },
+        "required": [
+          "schema_version",
+          "attestation",
+          "verification",
+          "successor_id"
+        ],
+        "title": "PublicAuditAttestationView",
+        "type": "object"
+      },
+      "PublicAuditHealthSummary": {
+        "additionalProperties": false,
+        "description": "Strict public aggregate fields allowed inside a signed attestation claim.",
+        "properties": {
+          "assessed_tasks": {
+            "minimum": 0.0,
+            "title": "Assessed Tasks",
+            "type": "integer"
+          },
+          "benchmark_label": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Benchmark Label",
+            "type": "string"
+          },
+          "benchmark_version": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Version"
+          },
+          "blocked_tasks": {
+            "minimum": 0.0,
+            "title": "Blocked Tasks",
+            "type": "integer"
+          },
+          "complete_tasks": {
+            "minimum": 0.0,
+            "title": "Complete Tasks",
+            "type": "integer"
+          },
+          "high_risk_tasks": {
+            "minimum": 0.0,
+            "title": "High Risk Tasks",
+            "type": "integer"
+          },
+          "insufficient_risk_tasks": {
+            "minimum": 0.0,
+            "title": "Insufficient Risk Tasks",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "public_benchmark_health",
+            "title": "Kind",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 16,
+            "minItems": 1,
+            "title": "Limitations",
+            "type": "array"
+          },
+          "low_risk_tasks": {
+            "minimum": 0.0,
+            "title": "Low Risk Tasks",
+            "type": "integer"
+          },
+          "medium_risk_tasks": {
+            "minimum": 0.0,
+            "title": "Medium Risk Tasks",
+            "type": "integer"
+          },
+          "partial_tasks": {
+            "minimum": 0.0,
+            "title": "Partial Tasks",
+            "type": "integer"
+          },
+          "report_id": {
+            "format": "uuid",
+            "title": "Report Id",
+            "type": "string"
+          },
+          "review_state": {
+            "const": "published",
+            "title": "Review State",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "selected_tasks": {
+            "minimum": 0.0,
+            "title": "Selected Tasks",
+            "type": "integer"
+          },
+          "source_window_end": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?Z$",
+            "title": "Source Window End",
+            "type": "string"
+          },
+          "source_window_start": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?Z$",
+            "title": "Source Window Start",
+            "type": "string"
+          },
+          "unknown_tasks": {
+            "minimum": 0.0,
+            "title": "Unknown Tasks",
+            "type": "integer"
+          },
+          "unscanned_tasks": {
+            "minimum": 0.0,
+            "title": "Unscanned Tasks",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "schema_version",
+          "report_id",
+          "review_state",
+          "benchmark_label",
+          "source_window_start",
+          "source_window_end",
+          "selected_tasks",
+          "complete_tasks",
+          "partial_tasks",
+          "unknown_tasks",
+          "unscanned_tasks",
+          "blocked_tasks",
+          "assessed_tasks",
+          "low_risk_tasks",
+          "medium_risk_tasks",
+          "high_risk_tasks",
+          "insufficient_risk_tasks",
+          "limitations"
+        ],
+        "title": "PublicAuditHealthSummary",
+        "type": "object"
+      },
       "PublicHealthView": {
         "additionalProperties": false,
         "description": "Allowlisted, reviewed summary; raw audit documents are never public responses.",
@@ -13445,6 +13794,46 @@
         "title": "SealedManifestPayloadV2",
         "type": "object"
       },
+      "SignedPublicAuditAttestation": {
+        "additionalProperties": false,
+        "description": "Public verification package; contains only signed claims and signature bytes.",
+        "properties": {
+          "claims": {
+            "$ref": "#/components/schemas/PublicAuditAttestationClaims"
+          },
+          "key_id": {
+            "format": "uuid",
+            "title": "Key Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "signature_algorithm": {
+            "const": "Ed25519",
+            "title": "Signature Algorithm",
+            "type": "string"
+          },
+          "signature_b64": {
+            "maxLength": 88,
+            "minLength": 88,
+            "pattern": "^[A-Za-z0-9+/]{86}==$",
+            "title": "Signature B64",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "signature_algorithm",
+          "key_id",
+          "claims",
+          "signature_b64"
+        ],
+        "title": "SignedPublicAuditAttestation",
+        "type": "object"
+      },
       "SourceGroupPolicy": {
         "additionalProperties": false,
         "properties": {
@@ -16340,6 +16729,49 @@
           }
         },
         "summary": "Get Model"
+      }
+    },
+    "/v1/public/audit-attestations/{attestation_id}": {
+      "get": {
+        "operationId": "get_public_attestation_v1_public_audit_attestations__attestation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attestation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attestation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAuditAttestationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Attestation",
+        "tags": [
+          "benchmark-attestations-public"
+        ]
       }
     },
     "/v1/public/audit-reports/{report_id}": {

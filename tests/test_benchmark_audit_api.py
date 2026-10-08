@@ -528,9 +528,11 @@ def test_openapi_exposes_typed_audit_contracts_without_a_scan_route(tmp_path: Pa
     assert "/v1/benchmark-audit/runs" in paths
     assert "/v1/public/benchmark-health/{report_id}" in paths
     assert "/v1/public/audit-reports/{report_id}" in paths
+    assert "/v1/public/audit-attestations/{attestation_id}" in paths
     assert all("scan" not in path.lower() for path in paths)
     assert set(paths["/v1/public/benchmark-health/{report_id}"]) == {"get"}
     assert set(paths["/v1/public/audit-reports/{report_id}"]) == {"get"}
+    assert set(paths["/v1/public/audit-attestations/{attestation_id}"]) == {"get"}
     components = openapi["components"]["schemas"]
     assert "AuditRunView" in components
     assert any("Decimal" in schema.get("title", "") for schema in components.values())

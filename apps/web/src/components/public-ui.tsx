@@ -25,6 +25,7 @@ export function AppHeader() {
         <Link href="/compare">Compare</Link>
         <Link href="/tasks">Tasks</Link>
         <Link href="/audit-reports">Audit reports</Link>
+        <Link href="/audit-attestations">Verify attestation</Link>
         <Link href="/benchmark-audit">Curator access</Link>
         <Link href="/model-submissions">Submit model</Link>
       </nav>

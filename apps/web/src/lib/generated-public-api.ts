@@ -356,6 +356,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/v1/public/audit-attestations/{attestation_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Public Attestation */
+        readonly get: operations["get_public_attestation_v1_public_audit_attestations__attestation_id__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/v1/public/audit-reports/{report_id}": {
         readonly parameters: {
             readonly query?: never;
@@ -626,6 +643,35 @@ export interface components {
             readonly sha256: string;
             /** Size Bytes */
             readonly size_bytes: number;
+        };
+        /** AttestationVerification */
+        readonly AttestationVerification: {
+            /** Current Endorsement */
+            readonly current_endorsement: boolean;
+            /**
+             * Key Status
+             * @enum {string}
+             */
+            readonly key_status: "active" | "revoked" | "unknown";
+            /**
+             * Lifecycle Status
+             * @enum {string}
+             */
+            readonly lifecycle_status: "published" | "revoked" | "superseded" | "expired" | "unpublished" | "unknown";
+            /**
+             * Result
+             * @enum {string}
+             */
+            readonly result: "current_scoped_attestation" | "development_key_not_endorsed" | "signature_valid_revocation_stale" | "signature_valid_revocation_unchecked" | "expired" | "revoked" | "superseded" | "not_published" | "untrusted_signer" | "invalid_signature" | "scope_digest_mismatch";
+            /**
+             * Revocation Freshness
+             * @enum {string}
+             */
+            readonly revocation_freshness: "current" | "stale" | "offline";
+            /** Signature Valid */
+            readonly signature_valid: boolean;
+            /** Trusted Key */
+            readonly trusted_key: boolean;
         };
         /** AuditApiErrorDetail */
         readonly AuditApiErrorDetail: {
@@ -3958,6 +4004,124 @@ export interface components {
          */
         readonly ProviderKind: "openai_compatible" | "anthropic" | "google" | "local";
         /**
+         * PublicAuditAttestationClaims
+         * @description Allowlisted signed claims; no task-level evidence or private document refs.
+         */
+        readonly PublicAuditAttestationClaims: {
+            /** Attestation Digest */
+            readonly attestation_digest: string;
+            /**
+             * Attestation Id
+             * Format: uuid
+             */
+            readonly attestation_id: string;
+            /**
+             * Claim Limitations
+             * @default [
+             *       "scoped_finite_evidence_only",
+             *       "no_unseen_data_guarantee",
+             *       "signature_is_not_certification",
+             *       "model_eligibility_not_inferred",
+             *       "timestamp_not_independently_proven"
+             *     ]
+             */
+            readonly claim_limitations?: readonly ("scoped_finite_evidence_only" | "no_unseen_data_guarantee" | "signature_is_not_certification" | "model_eligibility_not_inferred" | "timestamp_not_independently_proven")[];
+            /** Expires At */
+            readonly expires_at: string;
+            readonly health: components["schemas"]["PublicAuditHealthSummary"];
+            /** Issued At */
+            readonly issued_at: string;
+            /** Model Context Bound */
+            readonly model_context_bound: boolean;
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** PublicAuditAttestationResult */
+        readonly PublicAuditAttestationResult: {
+            readonly data: components["schemas"]["PublicAuditAttestationView"];
+            readonly meta: components["schemas"]["AuditApiMeta"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** PublicAuditAttestationView */
+        readonly PublicAuditAttestationView: {
+            readonly attestation: components["schemas"]["SignedPublicAuditAttestation"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Successor Id */
+            readonly successor_id: string | null;
+            readonly verification: components["schemas"]["AttestationVerification"];
+        };
+        /**
+         * PublicAuditHealthSummary
+         * @description Strict public aggregate fields allowed inside a signed attestation claim.
+         */
+        readonly PublicAuditHealthSummary: {
+            /** Assessed Tasks */
+            readonly assessed_tasks: number;
+            /** Benchmark Label */
+            readonly benchmark_label: string;
+            /** Benchmark Version */
+            readonly benchmark_version?: string | null;
+            /** Blocked Tasks */
+            readonly blocked_tasks: number;
+            /** Complete Tasks */
+            readonly complete_tasks: number;
+            /** High Risk Tasks */
+            readonly high_risk_tasks: number;
+            /** Insufficient Risk Tasks */
+            readonly insufficient_risk_tasks: number;
+            /**
+             * Kind
+             * @constant
+             */
+            readonly kind: "public_benchmark_health";
+            /** Limitations */
+            readonly limitations: readonly string[];
+            /** Low Risk Tasks */
+            readonly low_risk_tasks: number;
+            /** Medium Risk Tasks */
+            readonly medium_risk_tasks: number;
+            /** Partial Tasks */
+            readonly partial_tasks: number;
+            /**
+             * Report Id
+             * Format: uuid
+             */
+            readonly report_id: string;
+            /**
+             * Review State
+             * @constant
+             */
+            readonly review_state: "published";
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Selected Tasks */
+            readonly selected_tasks: number;
+            /** Source Window End */
+            readonly source_window_end: string;
+            /** Source Window Start */
+            readonly source_window_start: string;
+            /** Unknown Tasks */
+            readonly unknown_tasks: number;
+            /** Unscanned Tasks */
+            readonly unscanned_tasks: number;
+        };
+        /**
          * PublicHealthView
          * @description Allowlisted, reviewed summary; raw audit documents are never public responses.
          */
@@ -5127,6 +5291,30 @@ export interface components {
              */
             readonly tenant_id: string;
             readonly wrapped_key_ref: components["schemas"]["ImmutableArtifactRef"];
+        };
+        /**
+         * SignedPublicAuditAttestation
+         * @description Public verification package; contains only signed claims and signature bytes.
+         */
+        readonly SignedPublicAuditAttestation: {
+            readonly claims: components["schemas"]["PublicAuditAttestationClaims"];
+            /**
+             * Key Id
+             * Format: uuid
+             */
+            readonly key_id: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+            /**
+             * Signature Algorithm
+             * @constant
+             */
+            readonly signature_algorithm: "Ed25519";
+            /** Signature B64 */
+            readonly signature_b64: string;
         };
         /** SourceGroupPolicy */
         readonly SourceGroupPolicy: {
@@ -6596,6 +6784,37 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["ApiEnvelope_ModelProfile_"];
+                };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readonly get_public_attestation_v1_public_audit_attestations__attestation_id__get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly attestation_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["PublicAuditAttestationResult"];
                 };
             };
             /** @description Validation Error */

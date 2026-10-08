@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83-84 are complete; Prompts85-98 are partial foundations. Prompt98 adds private tenant-scoped API/CLI/SDK foundations, but transition adapters, shared ACL, private artifact-byte authorization and live service evidence remain. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83-84 are complete; Prompts85-100 are partial foundations. Prompt100 adds signed public attestations, an append-only lifecycle repository path and public verification, but approved key/reviewer authority, trusted timestamp proof, shared transition authorization and live database/source evidence remain. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -205,3 +205,13 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Partial: no public catalog/index, live reviewed projection, comparable trend/context/exposure/correction/derived/attestation journey, shared curator ACL, authorized transition writer or revocation contract is available. No task/evidence content is exposed and no database, source, model, reviewer or signer operation occurred.
 - `ADDENDUM-DECISION-44` records public allowlist-only consumption and the no-request curator boundary. No new specification discrepancy; the §1 source-list mismatch remains.
 - Exact next prompt: Prompt100 / BWP-18, signed audit attestations and public verification. Keep signing and publication gated on reviewed signer/key custody and approval adapters.
+
+## Prompt100 / BWP-18
+
+- Added public allowlisted attestation claims over the canonical digest of the complete private attestation document, with Ed25519 domain separation, algorithm/key binding, canonical Base64 encoding, strict public-only trust records and optional private-document digest verification. Signing rejects mismatched health-report/review identities. Issue/expiry timestamps are signed values only; no trusted timestamp proof is available.
+- Verification separates mathematical signature validity from trust, expiry, lifecycle, revocation freshness and current endorsement. Both trust-store and lifecycle snapshots must be fresh for a current endorsement. Unknown/stale/offline state, development keys, revoked keys, expiry and supersession never produce a current endorsement.
+- Added a role-separated lifecycle reducer and immutable event digest chain. Postgres append/read methods reuse `audit_event`, lock the attestation document, enforce tenant/sequence/digest checks and exact replay, bind publish/expire to the stored expiry, and require same-tenant corrected successor ID/digest. These methods were type-checked and their append validator unit-tested, not executed against PostgreSQL.
+- Added local CLI verification from public files only, an allowlist-only no-store API reader, generated OpenAPI/TypeScript contracts and a public certificate-style page. Invalid signatures hide all signed claims; fresh supersession state links to its successor. A process-local ephemeral development key powers only isolated API/browser fixtures.
+- Partial: approved signer/key custody, independent reviewers, trusted timestamp proof, trust-store publication, key rotation/reissue, a shared curator ACL, authenticated lifecycle transition API, real reviewed public projections, and PostgreSQL/revocation integration are unavailable. No production key, database, model, source or reviewer was contacted.
+- `ADDENDUM-DECISION-45` records signature scope and timestamp limits; `ADDENDUM-DECISION-46` requires fresh trust and lifecycle snapshots; `ADDENDUM-DECISION-47` binds corrections to persisted successor digests. The §1 source-list discrepancy remains; no new discrepancy was found.
+- Exact next prompt: Prompt101 / BWP-19, actual benchmark pilot and detector calibration. Continue only with authorized immutable source snapshots, rights, independent labels, and bounded execution.

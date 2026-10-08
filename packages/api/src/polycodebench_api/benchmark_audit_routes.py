@@ -17,6 +17,11 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Header, Query, Request
+from polycodebench_core.audit_attestations import (
+    AttestationVerification,
+    PublicAuditAttestationProjection,
+    SignedPublicAuditAttestation,
+)
 from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
     AuditPlanDocument,
@@ -30,6 +35,7 @@ from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_publication.aggregation import PublicationModel
 from polycodebench_publication.projections import ERROR_STATUS, Cursor, ErrorCode
+from polycodebench_services.audit_attestations import verify_public_attestation
 from polycodebench_services.benchmark_audit_catalog import (
     BenchmarkAuditCatalogError,
     load_audit_catalog,
@@ -48,6 +54,9 @@ private_router = APIRouter(prefix="/v1/benchmark-audit", tags=["benchmark-audit-
 public_router = APIRouter(prefix="/v1/public/benchmark-health", tags=["benchmark-health-public"])
 public_reports_router = APIRouter(
     prefix="/v1/public/audit-reports", tags=["benchmark-health-public"]
+)
+public_attestations_router = APIRouter(
+    prefix="/v1/public/audit-attestations", tags=["benchmark-attestations-public"]
 )
 
 AuditCollection = Literal[
@@ -231,6 +240,17 @@ class PublicHealthView(PublicationModel):
 
 class AuditDocumentResult(PublicationModel):
     data: AuditDocument | AuditRunView | AuditCatalogBundle | PublicHealthView
+    meta: AuditApiMeta
+
+
+class PublicAuditAttestationView(PublicationModel):
+    attestation: SignedPublicAuditAttestation
+    verification: AttestationVerification
+    successor_id: UUID | None = None
+
+
+class PublicAuditAttestationResult(PublicationModel):
+    data: PublicAuditAttestationView
     meta: AuditApiMeta
 
 
@@ -728,4 +748,55 @@ def get_public_health_report(request: Request, report_id: UUID) -> Response:
     return respond(request, body.model_dump(mode="json"), cache=NO_STORE)
 
 
-__all__ = ["private_router", "public_reports_router", "public_router"]
+@public_attestations_router.get("/{attestation_id}", response_model=PublicAuditAttestationResult)
+def get_public_attestation(request: Request, attestation_id: UUID) -> Response:
+    services = services_of(request)
+    projection_store = services.public_audit_attestations
+    trust_store = services.attestation_trust_store
+    if projection_store is None or trust_store is None:
+        raise ApiError("NOT_FOUND")
+    candidate = projection_store.get(attestation_id)
+    if candidate is None:
+        raise ApiError("NOT_FOUND")
+    try:
+        projection = PublicAuditAttestationProjection.model_validate_json(
+            canonical_json_bytes(candidate), strict=True
+        )
+    except (TypeError, ValueError, ValidationError):
+        raise ApiError("NOT_FOUND") from None
+    signed = projection.attestation
+    if signed.claims.attestation_id != attestation_id:
+        raise ApiError("NOT_FOUND")
+    verification = verify_public_attestation(
+        signed,
+        trust_store,
+        revocation=projection.lifecycle,
+    )
+    successor_id = (
+        projection.lifecycle.successor_id
+        if (
+            projection.lifecycle is not None
+            and projection.lifecycle.status == "superseded"
+            and verification.result == "superseded"
+        )
+        else None
+    )
+    view = PublicAuditAttestationView(
+        attestation=signed,
+        verification=verification,
+        successor_id=successor_id,
+    )
+    data = view.model_dump(mode="json")
+    result = PublicAuditAttestationResult(
+        data=view,
+        meta=AuditApiMeta(release_digest=_meta_digest(data), returned=1, total=1, limit=1),
+    )
+    return respond(request, result.model_dump(mode="json"), cache=NO_STORE)
+
+
+__all__ = [
+    "private_router",
+    "public_attestations_router",
+    "public_reports_router",
+    "public_router",
+]

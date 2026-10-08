@@ -68,6 +68,8 @@ export type ModelSubmissionRequest = ApiSchema<"ModelSubmissionInput">;
 export type ModelSubmissionStatus = ApiSchema<"ModelSubmission">;
 export type PublicAuditDocumentResult = ApiSchema<"AuditDocumentResult">;
 export type PublicBenchmarkHealth = ApiSchema<"PublicHealthView">;
+export type PublicAuditAttestationResult = ApiSchema<"PublicAuditAttestationResult">;
+export type PublicAuditAttestationView = ApiSchema<"PublicAuditAttestationView">;
 export async function loadReleaseContext(requestedRelease?: string): Promise<Resource<ReleaseContext>> {
   const index = await publicApi<ApiEnvelope<readonly ReleaseSummary[]>>("/releases?limit=200");
   if (index.state !== "ready") return index;

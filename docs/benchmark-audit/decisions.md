@@ -199,3 +199,15 @@ The API and CLI expose only operations backed by existing services: registry/doc
 ### ADDENDUM-DECISION-44 - Public audit views use only reviewed aggregate projections
 
 The public dashboard reads only the strict allowlisted health projection through a no-store API route; it does not enumerate reports or load raw audit documents, task content, answers, fingerprints, vectors or sealed artifacts. It presents counts as descriptive evidence, preserves unknown and blocked membership, and makes no clean or model-specific eligibility claim. The curator route makes no private request until a reviewed shared tenant/object ACL and authorized transition services are connected. Revocation and expiry claims remain part of Prompt100's attestation lifecycle and are not inferred from the current health projection.
+
+### ADDENDUM-DECISION-45 - Attestations authenticate signed bytes, not source truth
+
+The Ed25519 signature binds canonical claims, including the digest of the complete private attestation document and a separately allowlisted public health projection. Signature validity establishes integrity and signer-key use only; it does not independently establish source evidence, report correctness, reviewer authority, or trusted time. Issue and expiry values are signed claims, not timestamp proof.
+
+### ADDENDUM-DECISION-46 - Current endorsement needs fresh trust and lifecycle state
+
+A signature can be mathematically valid while current endorsement is unavailable. Both the trusted-key snapshot and the attestation lifecycle/revocation snapshot must be present and fresh; development keys, missing or stale snapshots, expiry, revocation, and supersession cannot yield a current endorsement.
+
+### ADDENDUM-DECISION-47 - Corrections are immutable successor links
+
+A corrected attestation is stored as a successor with an explicit predecessor link. The append-only lifecycle event binds the persisted successor ID and semantic digest. Aggregate health report publication remains distinct from task-text publication.

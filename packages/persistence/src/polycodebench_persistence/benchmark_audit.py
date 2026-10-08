@@ -18,6 +18,11 @@ from polycodebench_core.application_errors import (
     PersistenceConflict,
     PersistenceUnavailable,
 )
+from polycodebench_core.audit_attestations import (
+    AttestationLifecycleEvent,
+    LifecycleStatus,
+    attestation_lifecycle_event_digest,
+)
 from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
     AuditDocumentRef,
@@ -122,6 +127,137 @@ def _frozen_limit(limits: Any, canonical: str, configured: str) -> int | None:
     return cast(int, values[0])
 
 
+_ATTESTATION_LIFECYCLE_TRANSITIONS: dict[str, dict[str, LifecycleStatus]] = {
+    "draft": {"review_required": "review_required"},
+    "review_required": {"approved": "approved"},
+    "approved": {"signed": "signed"},
+    "signed": {"published": "published", "revoked": "revoked"},
+    "published": {"expired": "expired", "revoked": "revoked", "superseded": "superseded"},
+    "expired": {"superseded": "superseded"},
+    "revoked": {"superseded": "superseded"},
+    "superseded": {},
+}
+
+
+def _validate_attestation_lifecycle_append(
+    history: list[AttestationLifecycleEvent],
+    event: AttestationLifecycleEvent,
+    *,
+    owner_id: str,
+) -> bool:
+    """Validate a whole stored chain and its candidate append; return false for exact replay."""
+    actors: dict[str, str] = {}
+    previous: AttestationLifecycleEvent | None = None
+    for index, stored in enumerate(history):
+        expected_digest = (
+            attestation_lifecycle_event_digest(previous) if previous is not None else None
+        )
+        if (
+            stored.sequence != index
+            or stored.attestation_id != event.attestation_id
+            or stored.previous_event_digest != expected_digest
+        ):
+            raise PersistenceConflict("stored attestation lifecycle chain is invalid")
+        _validate_attestation_event_authority(stored, actors, owner_id=owner_id)
+        if previous is None:
+            if stored.from_status is not None or stored.to_status != "draft":
+                raise PersistenceConflict("stored attestation lifecycle does not start at draft")
+        elif (
+            stored.from_status != previous.to_status
+            or stored.to_status
+            not in _ATTESTATION_LIFECYCLE_TRANSITIONS.get(previous.to_status, {}).values()
+            or _event_time(stored) < _event_time(previous)
+        ):
+            raise PersistenceConflict("stored attestation lifecycle transition is invalid")
+        previous = stored
+
+    if event.attestation_id != (previous.attestation_id if previous else event.attestation_id):
+        raise InvalidState("attestation lifecycle event has another identity")
+    if event.sequence < len(history):
+        if history[event.sequence] == event:
+            return False
+        raise PersistenceConflict("attestation lifecycle sequence already has different bytes")
+    if event.sequence != len(history):
+        raise OptimisticVersionConflict()
+
+    _validate_attestation_event_authority(event, actors, owner_id=owner_id)
+    if previous is None:
+        if (
+            event.from_status is not None
+            or event.to_status != "draft"
+            or event.previous_event_digest is not None
+        ):
+            raise InvalidState("attestation lifecycle history must begin with a draft")
+    elif (
+        event.from_status != previous.to_status
+        or event.to_status
+        not in _ATTESTATION_LIFECYCLE_TRANSITIONS.get(previous.to_status, {}).values()
+        or event.previous_event_digest != attestation_lifecycle_event_digest(previous)
+        or _event_time(event) < _event_time(previous)
+    ):
+        raise OptimisticVersionConflict()
+    return True
+
+
+def _validate_attestation_event_authority(
+    event: AttestationLifecycleEvent,
+    actors: dict[str, str],
+    *,
+    owner_id: str,
+) -> None:
+    valid_roles: dict[LifecycleStatus, set[str]] = {
+        "draft": {"owner"},
+        "review_required": {"owner"},
+        "approved": {"reviewer"},
+        "signed": {"signer"},
+        "published": {"publisher"},
+        "expired": {"monitor"},
+        "revoked": {"reviewer", "publisher"},
+        "superseded": {"reviewer"},
+    }
+    if event.actor_role not in valid_roles[event.to_status]:
+        raise InvalidState("attestation lifecycle actor role is invalid for this transition")
+    if event.to_status in {"draft", "review_required"} and event.actor_id != owner_id:
+        raise InvalidState("attestation owner action was performed by another actor")
+    if event.to_status in {"approved", "revoked", "superseded"} and event.actor_id == owner_id:
+        raise InvalidState("attestation owner cannot act as an independent reviewer")
+    if event.to_status == "signed" and event.actor_id in {
+        owner_id,
+        actors.get("reviewer"),
+    }:
+        raise InvalidState("attestation signer must be distinct from owner and reviewer")
+    if event.to_status == "published" and event.actor_id in {
+        owner_id,
+        actors.get("reviewer"),
+        actors.get("signer"),
+    }:
+        raise InvalidState("attestation publisher must be distinct from owner, reviewer and signer")
+    if event.actor_role in {"owner", "reviewer", "signer", "publisher"}:
+        actors[event.actor_role] = event.actor_id
+
+
+def _event_time(event: AttestationLifecycleEvent) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(event.recorded_at[:-1] + "+00:00")
+    except ValueError:
+        raise InvalidState("attestation lifecycle timestamp is invalid") from None
+    if parsed.utcoffset() != timedelta(0):
+        raise InvalidState("attestation lifecycle timestamp must be UTC")
+    return parsed
+
+
+def _attestation_expiry(payload: Any) -> datetime:
+    if not isinstance(payload, dict) or not isinstance(payload.get("expires_at"), str):
+        raise InvalidState("attestation document has no valid expiry timestamp")
+    try:
+        parsed = datetime.fromisoformat(payload["expires_at"][:-1] + "+00:00")
+    except ValueError:
+        raise InvalidState("attestation document expiry timestamp is invalid") from None
+    if parsed.utcoffset() != timedelta(0):
+        raise InvalidState("attestation document expiry timestamp must be UTC")
+    return parsed
+
+
 class AuditQueryEnqueueSpec(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
@@ -178,6 +314,193 @@ class PostgresBenchmarkAuditRepository:
             raise
         except DBAPIError as error:
             raise map_database_error(error) from None
+
+    def append_attestation_lifecycle_event(
+        self,
+        event: AttestationLifecycleEvent,
+        *,
+        tenant_id: UUID,
+    ) -> bool:
+        """Append one lifecycle event under a locked private attestation document.
+
+        The existing audit-event table has database-enforced immutable rows. The attestation row
+        lock serializes writers; sequence and previous digest checks reject stale transitions.
+        Replaying the exact same event is idempotent and returns ``False``.
+        """
+        resource_type = "benchmark_audit_attestation_lifecycle"
+        resource_prefix = f"{event.attestation_id}:"
+        try:
+            with self._engine.begin() as connection:
+                anchor = (
+                    connection.execute(
+                        select(audit_document.c.created_by, audit_document.c.payload)
+                        .where(
+                            audit_document.c.id == event.attestation_id,
+                            audit_document.c.kind == "audit_attestation",
+                            audit_document.c.tenant_id == tenant_id,
+                        )
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if anchor is None:
+                    raise InvalidReference("attestation lifecycle anchor is unavailable")
+
+                rows = (
+                    connection.execute(
+                        select(audit_event)
+                        .where(
+                            audit_event.c.resource_type == resource_type,
+                            audit_event.c.resource_id.like(f"{resource_prefix}%"),
+                        )
+                        .order_by(audit_event.c.resource_id)
+                    )
+                    .mappings()
+                    .all()
+                )
+                history: list[AttestationLifecycleEvent] = []
+                for index, row in enumerate(rows):
+                    resource_id = f"{resource_prefix}{index:020d}"
+                    details = row["details"]
+                    raw_event = (
+                        details.get("event")
+                        if isinstance(details, dict) and details.get("schema_version") == 1
+                        else None
+                    )
+                    try:
+                        stored = AttestationLifecycleEvent.model_validate(raw_event, strict=True)
+                    except (TypeError, ValueError):
+                        raise PersistenceConflict(
+                            "stored attestation lifecycle event is invalid"
+                        ) from None
+                    if (
+                        row["resource_id"] != resource_id
+                        or row["action"] != f"attestation.{stored.to_status}"
+                        or row["actor_subject"] != stored.actor_id
+                        or row["before_digest"] != stored.previous_event_digest
+                        or row["after_digest"] != attestation_lifecycle_event_digest(stored)
+                        or stored.attestation_id != event.attestation_id
+                        or stored.sequence != index
+                    ):
+                        raise PersistenceConflict("stored attestation lifecycle chain is invalid")
+                    history.append(stored)
+
+                if not _validate_attestation_lifecycle_append(
+                    history,
+                    event,
+                    owner_id=str(anchor["created_by"]),
+                ):
+                    return False
+
+                if event.to_status in {"published", "expired"}:
+                    expires_at = _attestation_expiry(anchor["payload"])
+                    if (event.to_status == "published" and _event_time(event) >= expires_at) or (
+                        event.to_status == "expired" and _event_time(event) < expires_at
+                    ):
+                        raise InvalidState(
+                            "attestation publication and expiry must match its signed expiry"
+                        )
+                if event.to_status == "superseded":
+                    successor = connection.execute(
+                        select(audit_document.c.semantic_digest).where(
+                            audit_document.c.id == event.successor_id,
+                            audit_document.c.kind == "audit_attestation",
+                            audit_document.c.tenant_id == tenant_id,
+                            audit_document.c.supersedes_id == event.attestation_id,
+                        )
+                    ).scalar_one_or_none()
+                    if successor is None or event.evidence_digest != successor:
+                        raise InvalidReference(
+                            "attestation correction must bind a persisted successor digest"
+                        )
+
+                previous_digest = (
+                    attestation_lifecycle_event_digest(history[-1]) if history else None
+                )
+                connection.execute(
+                    insert(audit_event).values(
+                        id=uuid4(),
+                        actor_subject=event.actor_id,
+                        action=f"attestation.{event.to_status}",
+                        resource_type=resource_type,
+                        resource_id=f"{resource_prefix}{event.sequence:020d}",
+                        before_digest=previous_digest,
+                        after_digest=attestation_lifecycle_event_digest(event),
+                        request_id=f"attestation:{event.attestation_id}:{event.sequence}",
+                        details={
+                            "schema_version": 1,
+                            "event": event.model_dump(mode="json"),
+                        },
+                    )
+                )
+                return True
+        except (InvalidReference, InvalidState, PersistenceConflict):
+            raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def list_attestation_lifecycle_events(
+        self,
+        attestation_id: UUID,
+        *,
+        tenant_id: UUID,
+    ) -> tuple[AttestationLifecycleEvent, ...]:
+        """Read a tenant-scoped immutable attestation lifecycle event chain."""
+        resource_type = "benchmark_audit_attestation_lifecycle"
+        resource_prefix = f"{attestation_id}:"
+        with self._engine.connect() as connection:
+            anchor = connection.execute(
+                select(audit_document.c.created_by).where(
+                    audit_document.c.id == attestation_id,
+                    audit_document.c.kind == "audit_attestation",
+                    audit_document.c.tenant_id == tenant_id,
+                )
+            ).scalar_one_or_none()
+            if anchor is None:
+                return ()
+            rows = (
+                connection.execute(
+                    select(audit_event)
+                    .where(
+                        audit_event.c.resource_type == resource_type,
+                        audit_event.c.resource_id.like(f"{resource_prefix}%"),
+                    )
+                    .order_by(audit_event.c.resource_id)
+                )
+                .mappings()
+                .all()
+            )
+        events: list[AttestationLifecycleEvent] = []
+        for index, row in enumerate(rows):
+            details = row["details"]
+            raw_event = (
+                details.get("event")
+                if isinstance(details, dict) and details.get("schema_version") == 1
+                else None
+            )
+            try:
+                event = AttestationLifecycleEvent.model_validate(raw_event, strict=True)
+            except (TypeError, ValueError):
+                raise PersistenceConflict("stored attestation lifecycle event is invalid") from None
+            if (
+                row["resource_id"] != f"{resource_prefix}{index:020d}"
+                or row["action"] != f"attestation.{event.to_status}"
+                or row["actor_subject"] != event.actor_id
+                or row["before_digest"] != event.previous_event_digest
+                or row["after_digest"] != attestation_lifecycle_event_digest(event)
+                or event.attestation_id != attestation_id
+                or event.sequence != index
+            ):
+                raise PersistenceConflict("stored attestation lifecycle chain is invalid")
+            events.append(event)
+        if events:
+            _validate_attestation_lifecycle_append(
+                events,
+                events[-1],
+                owner_id=str(anchor),
+            )
+        return tuple(events)
 
     def save_document_idempotent(
         self,

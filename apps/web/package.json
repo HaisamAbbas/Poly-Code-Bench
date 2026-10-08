@@ -11,6 +11,7 @@
     "test:e2e:prompt31": "playwright test --config=playwright.prompt31.config.ts",
     "test:e2e:prompt32": "playwright test --config=playwright.prompt32.config.ts",
     "test:e2e:prompt99": "playwright test --config=playwright.prompt99.config.ts",
+    "test:e2e:prompt100": "playwright test --config=playwright.prompt100.config.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "api:types": "openapi-typescript ../../packages/api/openapi.v1.json --output src/lib/generated-public-api.ts --immutable --default-non-nullable=false",

@@ -8,6 +8,7 @@ from typing import Protocol, cast
 from uuid import UUID
 
 from fastapi import Request
+from polycodebench_core.audit_attestations import AttestationTrustStore
 from polycodebench_core.benchmark_audit_documents import AuditDocument
 from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_publication.releases import SigningKey
@@ -108,6 +109,12 @@ class PublicBenchmarkHealthProjection(Protocol):
     def get(self, report_id: UUID) -> Mapping[str, object] | None: ...
 
 
+class PublicAuditAttestationStore(Protocol):
+    """Reviewed public signature and lifecycle projection; never a raw document reader."""
+
+    def get(self, attestation_id: UUID) -> Mapping[str, object] | None: ...
+
+
 @dataclass(frozen=True)
 class ApiServices:
     """Everything a route needs, assembled once at application construction."""
@@ -128,6 +135,8 @@ class ApiServices:
     benchmark_audit: PostgresBenchmarkAuditRepository | None = None
     audit_access: AuditAccessPolicy | None = None
     public_benchmark_health: PublicBenchmarkHealthProjection | None = None
+    public_audit_attestations: PublicAuditAttestationStore | None = None
+    attestation_trust_store: AttestationTrustStore | None = None
 
 
 def services_of(request: Request) -> ApiServices:
@@ -137,6 +146,7 @@ def services_of(request: Request) -> ApiServices:
 __all__ = [
     "ApiPrincipal",
     "ApiServices",
+    "PublicAuditAttestationStore",
     "RunSummarySource",
     "SubmissionRepository",
     "TokenDirectory",

@@ -49,6 +49,7 @@ AuditKind = Literal[
     "replacement_validation",
     "derived_benchmark_manifest",
     "monitor_policy",
+    "monitor_alert",
     "benchmark_health",
     "audit_attestation",
 ]
@@ -2683,6 +2684,248 @@ class MonitorPolicyPayload(StrictAuditModel):
     stop_rules: tuple[ShortText, ...]
 
 
+class MonitorSourceRateLimit(StrictAuditModel):
+    source_ref: AuditDocumentRef
+    max_query_units_per_local_day: UnsignedInteger = Field(ge=1)
+
+    @model_validator(mode="after")
+    def binds_corpus_snapshot(self) -> MonitorSourceRateLimit:
+        if self.source_ref.kind != "corpus_snapshot":
+            raise ValueError("monitor source rate limits must bind corpus snapshots")
+        return self
+
+
+class MonitorPolicyPayloadV2(StrictAuditModel):
+    """Owner-approved finite monitoring contract; it cannot authorize external dispatch."""
+
+    plan_ref: AuditDocumentRef
+    benchmark_ref: AuditDocumentRef
+    policy_version: int = Field(ge=1, le=2**31 - 1)
+    state: Literal["proposed", "approved", "paused", "retired"]
+    owner_subject: ShortText
+    approver_subject: ShortText
+    approval_evidence_ref: ImmutableArtifactRef
+    task_refs: tuple[EntityRef, ...] = Field(min_length=1, max_length=100_000)
+    source_rate_limits: tuple[MonitorSourceRateLimit, ...] = Field(min_length=1, max_length=256)
+    cadence: Literal["daily", "weekly"]
+    timezone: ShortText
+    local_time: str = Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    weekday: int | None = Field(default=None, ge=0, le=6)
+    full_refresh_every_days: int = Field(ge=1, le=366)
+    stale_after_hours: int = Field(ge=1, le=8760)
+    query_units_per_task_source: int = Field(ge=1, le=1_000_000)
+    max_query_units_per_slot: UnsignedInteger = Field(ge=1)
+    max_storage_bytes_per_slot: UnsignedInteger = Field(ge=1)
+    max_cost_micro_usd_per_slot: UnsignedInteger
+    max_retries: int = Field(ge=0, le=10)
+    max_catch_up_slots: int = Field(ge=0, le=31)
+    in_app_recipients: tuple[ShortText, ...] = Field(min_length=1, max_length=64)
+    external_delivery: Literal["disabled"] = "disabled"
+    max_diagnostic_model_calls: Literal[0] = 0
+    max_diagnostic_cost_micro_usd: Literal[0] = 0
+
+    @model_validator(mode="after")
+    def monitor_scope_and_budget_are_bounded(self) -> MonitorPolicyPayloadV2:
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+        if self.plan_ref.kind != "audit_plan" or self.benchmark_ref.kind != "benchmark_snapshot":
+            raise ValueError("monitor policy requires a frozen audit plan and benchmark snapshot")
+        try:
+            ZoneInfo(self.timezone)
+        except ZoneInfoNotFoundError as error:
+            raise ValueError(
+                "monitor policy timezone must be an installed IANA timezone"
+            ) from error
+        if (self.cadence == "weekly") != (self.weekday is not None):
+            raise ValueError("weekly cadence requires one weekday; daily cadence must omit it")
+        task_ids = [item.entity_id for item in self.task_refs]
+        if len(task_ids) != len(set(task_ids)) or any(
+            item.entity_kind != "task_version" for item in self.task_refs
+        ):
+            raise ValueError("monitor task scope must contain unique task-version references")
+        source_ids = [item.source_ref.document_id for item in self.source_rate_limits]
+        if len(source_ids) != len(set(source_ids)):
+            raise ValueError("monitor source rate limits must be unique")
+        per_source_retry_reserve = (
+            len(self.task_refs) * self.query_units_per_task_source * (self.max_retries + 1)
+        )
+        if any(
+            item.max_query_units_per_local_day < per_source_retry_reserve
+            for item in self.source_rate_limits
+        ):
+            raise ValueError(
+                "monitor source rate limit cannot cover one slot and its bounded retries"
+            )
+        if len(self.in_app_recipients) != len(set(self.in_app_recipients)):
+            raise ValueError("monitor in-app recipients must be unique")
+        if self.approver_subject == self.owner_subject:
+            raise ValueError("monitor policy approval must be independent of its owner")
+        if self.approval_evidence_ref.visibility != "private":
+            raise ValueError("monitor policy approval evidence must remain private")
+        if self.max_query_units_per_slot < (
+            len(self.task_refs)
+            * len(self.source_rate_limits)
+            * self.query_units_per_task_source
+            * (self.max_retries + 1)
+        ):
+            raise ValueError(
+                "monitor slot query cap cannot cover one refresh and its bounded retries"
+            )
+        return self
+
+
+MonitorAlertType = Literal[
+    "new_exposure",
+    "risk_increase",
+    "stale_scan",
+    "source_outage",
+    "evidence_dispute",
+    "evidence_correction",
+    "policy_discontinuity",
+    "seal_compromise",
+]
+MonitorDiscontinuityReason = Literal["policy_scope", "corpus_snapshot", "method_version"]
+
+
+class MonitorAlertPayload(StrictAuditModel):
+    """Redacted, reference-only in-app notification with deterministic deduplication."""
+
+    policy_ref: AuditDocumentRef
+    alert_type: MonitorAlertType
+    dedupe_key: Digest
+    recipient_subjects: tuple[ShortText, ...] = Field(min_length=1, max_length=64)
+    occurred_at: UtcTimestamp
+    task_ref: EntityRef | None = None
+    source_ref: AuditDocumentRef | None = None
+    evidence_ref: AuditDocumentRef | None = None
+    previous_assessment_ref: AuditDocumentRef | None = None
+    assessment_ref: AuditDocumentRef | None = None
+    coverage_ref: AuditDocumentRef | None = None
+    previous_policy_ref: AuditDocumentRef | None = None
+    sealed_manifest_ref: AuditDocumentRef | None = None
+    discontinuity_reasons: tuple[MonitorDiscontinuityReason, ...] = Field(default=(), max_length=3)
+
+    @model_validator(mode="after")
+    def alert_has_only_its_typed_evidence(self) -> MonitorAlertPayload:
+        if self.policy_ref.kind != "monitor_policy":
+            raise ValueError("monitor alerts must bind a monitor policy")
+        if len(self.recipient_subjects) != len(set(self.recipient_subjects)):
+            raise ValueError("monitor alert recipients must be unique")
+        if self.alert_type in {"new_exposure", "risk_increase"} and self.task_ref is None:
+            raise ValueError("risk alerts must identify their task")
+        expected_kinds = {
+            "new_exposure": ("evidence_ref", "previous_assessment_ref", "assessment_ref"),
+            "risk_increase": ("previous_assessment_ref", "assessment_ref"),
+            "stale_scan": ("coverage_ref",),
+            "source_outage": ("coverage_ref", "source_ref"),
+            "evidence_dispute": ("evidence_ref",),
+            "evidence_correction": ("evidence_ref",),
+            "policy_discontinuity": ("previous_policy_ref",),
+            "seal_compromise": ("sealed_manifest_ref",),
+        }[self.alert_type]
+        for field_name in expected_kinds:
+            if getattr(self, field_name) is None:
+                raise ValueError(f"{self.alert_type} alert requires {field_name}")
+        if self.alert_type == "policy_discontinuity":
+            if not self.discontinuity_reasons or len(set(self.discontinuity_reasons)) != len(
+                self.discontinuity_reasons
+            ):
+                raise ValueError("policy discontinuity alerts require unique reason codes")
+            if self.discontinuity_reasons != tuple(sorted(self.discontinuity_reasons)):
+                raise ValueError("policy discontinuity reason codes must be sorted")
+        elif self.discontinuity_reasons:
+            raise ValueError("discontinuity reason codes are valid only for policy alerts")
+        allowed = {"policy_ref", "alert_type", "dedupe_key", "recipient_subjects", "occurred_at"}
+        allowed.update(expected_kinds)
+        if self.task_ref is not None:
+            allowed.add("task_ref")
+        if any(
+            getattr(self, field_name) is not None and field_name not in allowed
+            for field_name in (
+                "source_ref",
+                "evidence_ref",
+                "previous_assessment_ref",
+                "assessment_ref",
+                "coverage_ref",
+                "previous_policy_ref",
+                "sealed_manifest_ref",
+            )
+        ):
+            raise ValueError("monitor alert contains evidence unrelated to its alert type")
+        if self.task_ref is not None and self.task_ref.entity_kind != "task_version":
+            raise ValueError("monitor alert task reference must identify a task version")
+        for name in expected_kinds:
+            ref = getattr(self, name)
+            if name.endswith("assessment_ref") and ref.kind != "risk_assessment":
+                raise ValueError("risk-change alerts must bind risk assessments")
+            if name == "evidence_ref" and ref.kind != "match_evidence":
+                raise ValueError("exposure alerts must bind match evidence")
+            if name == "coverage_ref" and ref.kind != "coverage_manifest":
+                raise ValueError("coverage alerts must bind coverage manifests")
+            if name == "source_ref" and ref.kind != "corpus_snapshot":
+                raise ValueError("source outage alerts must bind corpus snapshots")
+            if name == "previous_policy_ref" and ref.kind != "monitor_policy":
+                raise ValueError("policy discontinuity alerts must bind monitor policies")
+            if name == "sealed_manifest_ref" and ref.kind != "sealed_manifest":
+                raise ValueError("seal alerts must bind sealed manifests")
+        expected_key = compute_monitor_alert_dedupe_key(
+            policy_ref=self.policy_ref,
+            alert_type=self.alert_type,
+            task_ref=self.task_ref,
+            source_ref=self.source_ref,
+            evidence_ref=self.evidence_ref,
+            previous_assessment_ref=self.previous_assessment_ref,
+            assessment_ref=self.assessment_ref,
+            coverage_ref=self.coverage_ref,
+            previous_policy_ref=self.previous_policy_ref,
+            sealed_manifest_ref=self.sealed_manifest_ref,
+            discontinuity_reasons=self.discontinuity_reasons,
+        )
+        if self.dedupe_key != expected_key:
+            raise ValueError("monitor alert dedupe key does not match its typed evidence")
+        return self
+
+
+def compute_monitor_alert_dedupe_key(
+    *,
+    policy_ref: AuditDocumentRef,
+    alert_type: MonitorAlertType,
+    task_ref: EntityRef | None = None,
+    source_ref: AuditDocumentRef | None = None,
+    evidence_ref: AuditDocumentRef | None = None,
+    previous_assessment_ref: AuditDocumentRef | None = None,
+    assessment_ref: AuditDocumentRef | None = None,
+    coverage_ref: AuditDocumentRef | None = None,
+    previous_policy_ref: AuditDocumentRef | None = None,
+    sealed_manifest_ref: AuditDocumentRef | None = None,
+    discontinuity_reasons: tuple[MonitorDiscontinuityReason, ...] = (),
+) -> str:
+    key_material = {
+        "policy_ref": policy_ref.model_dump(mode="json"),
+        "alert_type": alert_type,
+        "task_ref": task_ref.model_dump(mode="json") if task_ref is not None else None,
+        "source_ref": source_ref.model_dump(mode="json") if source_ref is not None else None,
+        "evidence_ref": evidence_ref.model_dump(mode="json") if evidence_ref is not None else None,
+        "previous_assessment_ref": (
+            previous_assessment_ref.model_dump(mode="json")
+            if previous_assessment_ref is not None
+            else None
+        ),
+        "assessment_ref": (
+            assessment_ref.model_dump(mode="json") if assessment_ref is not None else None
+        ),
+        "coverage_ref": coverage_ref.model_dump(mode="json") if coverage_ref is not None else None,
+        "previous_policy_ref": (
+            previous_policy_ref.model_dump(mode="json") if previous_policy_ref is not None else None
+        ),
+        "sealed_manifest_ref": (
+            sealed_manifest_ref.model_dump(mode="json") if sealed_manifest_ref is not None else None
+        ),
+        "discontinuity_reasons": list(discontinuity_reasons),
+    }
+    return sha256_bytes(canonical_json_bytes(key_material))
+
+
 class BenchmarkHealthPayload(StrictAuditModel):
     membership_ref: AuditDocumentRef
     assessment_refs: tuple[AuditDocumentRef, ...]
@@ -3000,6 +3243,19 @@ class MonitorPolicyDocument(_PayloadDocument):
     payload_model = MonitorPolicyPayload
 
 
+class MonitorPolicyDocumentV2(_PayloadDocument):
+    kind: Literal["monitor_policy"] = "monitor_policy"
+    payload: MonitorPolicyPayloadV2
+    payload_model = MonitorPolicyPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
+class MonitorAlertDocument(_PayloadDocument):
+    kind: Literal["monitor_alert"] = "monitor_alert"
+    payload: MonitorAlertPayload
+    payload_model = MonitorAlertPayload
+
+
 class BenchmarkHealthDocument(_PayloadDocument):
     kind: Literal["benchmark_health"] = "benchmark_health"
     payload: BenchmarkHealthPayload
@@ -3050,6 +3306,8 @@ AuditDocument = (
     | ReplacementValidationDocument
     | DerivedBenchmarkManifestDocument
     | MonitorPolicyDocument
+    | MonitorPolicyDocumentV2
+    | MonitorAlertDocument
     | BenchmarkHealthDocument
     | AuditAttestationDocument
 )
@@ -3085,6 +3343,7 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
         ReplacementValidationDocument,
         DerivedBenchmarkManifestDocument,
         MonitorPolicyDocument,
+        MonitorAlertDocument,
         BenchmarkHealthDocument,
         AuditAttestationDocument,
     )
@@ -3100,6 +3359,7 @@ _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("firewall_decision", 2): FirewallDecisionDocumentV2,
     ("firewall_policy", 2): FirewallPolicyDocumentV2,
     ("replacement_plan", 2): ReplacementPlanDocumentV2,
+    ("monitor_policy", 2): MonitorPolicyDocumentV2,
 }
 
 

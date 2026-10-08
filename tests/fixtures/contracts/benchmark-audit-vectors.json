@@ -1505,6 +1505,43 @@
       },
       "expected_canonical_utf8": "{\"kind\":\"derived_benchmark_manifest\",\"payload\":{\"change_summary_ref\":{\"artifact_id\":\"000000a4-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"comparability\":\"separate_labels_no_automatic_comparison\",\"created_at\":\"2026-10-08T12:00:00Z\",\"derived_membership_digest\":\"sha256:82361c6d8bd10434803241f448f7e35858f2ae66378b29a00da856baa7a8c128\",\"derived_metric_label\":\"derived-score\",\"derived_version\":\"derived-v1\",\"distribution\":[{\"derived_items\":1,\"dimension\":\"source_family\",\"label\":\"family-a\",\"official_items\":1},{\"derived_items\":1,\"dimension\":\"split\",\"label\":\"test\",\"official_items\":1},{\"derived_items\":1,\"dimension\":\"competency\",\"label\":\"algorithms\",\"official_items\":1},{\"derived_items\":1,\"dimension\":\"difficulty\",\"label\":\"medium\",\"official_items\":1}],\"entries\":[{\"derived_competency\":\"algorithms\",\"derived_difficulty\":\"medium\",\"derived_item_ref\":{\"digest\":null,\"entity_id\":\"000000a3-2222-4222-8222-222222222222\",\"entity_kind\":\"derived_benchmark_item\"},\"derived_source_family_id\":\"family-a\",\"disposition\":\"retained\",\"oracle_mapping_ref\":null,\"original_competency\":\"algorithms\",\"original_difficulty\":\"medium\",\"original_item_ref\":{\"digest\":null,\"entity_id\":\"000000a3-2222-4222-8222-222222222222\",\"entity_kind\":\"benchmark_item\"},\"original_task_ref\":null,\"reason\":null,\"replacement_task_ref\":null,\"source_family_id\":\"family-a\",\"split\":\"test\",\"validation_ref\":null}],\"official_membership_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"official_metric_label\":\"official-score\",\"official_snapshot_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"000000a2-1111-4111-8111-111111111111\",\"kind\":\"benchmark_snapshot\"},\"sampling_policy_ref\":{\"artifact_id\":\"000000a5-3333-4333-8333-333333333333\",\"digest\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"media_type\":\"application/json\",\"visibility\":\"private\"}},\"schema_version\":1}",
       "expected_digest": "sha256:fe4be3a1c279b7974a2d8bdf249c564aa2b3d2f84fd89ea1a9dfaf46dd935513"
+    },
+    {
+      "name": "monitor_alert-v1",
+      "kind": "monitor_alert",
+      "schema_version": 1,
+      "payload": {
+        "policy_ref": {
+          "document_id": "10000000-0000-4000-8000-000000000001",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "alert_type": "source_outage",
+        "dedupe_key": "sha256:95e08d0441f2044e4dd427e679c25efd587f932b41d4a86e6ad873f501a0bbb9",
+        "recipient_subjects": [
+          "user:owner"
+        ],
+        "occurred_at": "2026-10-08T12:00:00Z",
+        "task_ref": null,
+        "source_ref": {
+          "document_id": "10000000-0000-4000-8000-000000000002",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "corpus_snapshot"
+        },
+        "evidence_ref": null,
+        "previous_assessment_ref": null,
+        "assessment_ref": null,
+        "coverage_ref": {
+          "document_id": "10000000-0000-4000-8000-000000000003",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "coverage_manifest"
+        },
+        "previous_policy_ref": null,
+        "sealed_manifest_ref": null,
+        "discontinuity_reasons": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"monitor_alert\",\"payload\":{\"alert_type\":\"source_outage\",\"assessment_ref\":null,\"coverage_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"10000000-0000-4000-8000-000000000003\",\"kind\":\"coverage_manifest\"},\"dedupe_key\":\"sha256:95e08d0441f2044e4dd427e679c25efd587f932b41d4a86e6ad873f501a0bbb9\",\"discontinuity_reasons\":[],\"evidence_ref\":null,\"occurred_at\":\"2026-10-08T12:00:00Z\",\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"10000000-0000-4000-8000-000000000001\",\"kind\":\"monitor_policy\"},\"previous_assessment_ref\":null,\"previous_policy_ref\":null,\"recipient_subjects\":[\"user:owner\"],\"sealed_manifest_ref\":null,\"source_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"10000000-0000-4000-8000-000000000002\",\"kind\":\"corpus_snapshot\"},\"task_ref\":null},\"schema_version\":1}",
+      "expected_digest": "sha256:1592d678a89fbf474440770404208e971838143ef2f8c293141520d689546a1d"
     }
   ]
 }

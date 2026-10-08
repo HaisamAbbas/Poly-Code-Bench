@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83-84 are complete; Prompts85-95 are partial foundations; Prompt96 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83-84 are complete; Prompts85-96 are partial foundations; Prompt97 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -165,3 +165,15 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added document-kind and append-only successor checks plus unique policy/scope/decision/validation/derived-version indexes in migration `d4f7b2a196c3`; downgrade refuses to remove persisted Prompt95 evidence. Added shared canonical vectors and focused decision/contract regressions.
 - Partial, not complete: this checkout has no production-worker admission evidence, authorized source/rights verifier, trusted reviewer identity/role service, approved benchmark/corpus bytes, task-generation/lineage service, PostgreSQL integration database or production derived-set distribution/reporting path. Production persistence checks are static/offline only; fixtures are synthetic and no source, model or database operation occurred.
 - Exact next prompt: Prompt96 / BWP-14, continuous monitoring, risk changes and owner alerts.
+
+
+## Prompt96 / BWP-14
+
+- Added strict monitor-policy schema v2 for exact private audit-plan/task/source scope, independent owner/approver subjects, private approval artifact, IANA timezone and cadence, stale/full-refresh intervals, query/storage/cost caps, source/day rate limits, bounded retries/catch-up and frozen in-app recipients. External delivery is structurally disabled and target-model diagnostic work/cost is zero. Legacy v1 policies remain parseable but cannot reserve work.
+- Added daily/weekly slot planning with DST-safe local time resolution, deterministic slot keys, bounded historical catch-up and retry ceilings. Incremental refresh plans select only changed approved corpus snapshots; full refresh plans select the entire approved source set. Query reservations include every allowed retry.
+- Added PostgreSQL monitor-slot persistence with a policy-row lock, `(policy, slot)` idempotency and atomic per-source/local-day query reservations. Storage/cost/query caps are checked at reservation time. Dispatched failures can persist controlled retry state and append audit events only when the linked audit run was already explicitly authorized. A retry crossing its source-local quota day closes terminally instead of spending against another day's reservation.
+- Added reference-only alert schema, deterministic evidence-based dedupe, frozen task/source/plan scope checks, accepted v2 evidence and successor-risk checks, comparable-score checks, distinct outage/staleness/dispute/correction/discontinuity/seal event types and transactionally created in-app inbox rows. Source documents remain immutable and have no delete path.
+- Added monitor policy/alert indexes, slot/source/inbox tables and guarded migration `e5c7b2a94d10`; added DST, catch-up, refresh, retry, strict-contract and dedupe coverage plus a shared canonical alert vector.
+- Partial, not complete: trusted owner/approver roles, authenticated enable/pause API, production scheduler, approved source adapters, live reviewer/source history, authenticated inbox UI, PostgreSQL concurrency/recovery and production evidence are not available. No scan or external notification was enabled; offline DDL rendering and synthetic fixtures do not close those gates.
+- No new Prompt96 specification discrepancy. The Prompt93 source-input discrepancy remains: §1.1 describes five source Markdown files but lists/hashes three.
+- Exact next prompt: Prompt97 / BWP-15, benchmark health aggregation and comparable trends.

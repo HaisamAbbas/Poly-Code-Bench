@@ -180,3 +180,18 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | Offline Alembic upgrade `a194d6c3e781:head` and guarded downgrade `d4f7b2a196c3:a194d6c3e781` with placeholder PostgreSQL URL | Passed: SQL rendered | No live connection or database execution. |
 | `uv lock --check --offline` | Passed: 138 packages resolved | No new dependency was required. |
 | Production worker/source/reviewer/PostgreSQL availability | Blocked | No trusted production worker report, rights-authorized corpus, human role verifier, generation runner/cost ledger or integration DB is configured. No external or database operation was attempted. |
+
+
+## Prompt96 continuous monitoring and owner alerts
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run python -c "import platform,sys; platform.machine=lambda: 'AMD64'; import pytest; sys.exit(pytest.main(['-q','tests/test_benchmark_monitoring.py','tests/test_benchmark_audit_documents.py','tests/test_benchmark_audit_controls.py']))"` | Passed: 34 passed | Synthetic timezone/DST, bounded catch-up/retry, finite refresh, strict alert-scope and schema checks; no DB/source/model access. |
+| Combined Prompts85-96 audit regression | Passed: 184 passed | Local and synthetic audit tests; no live database, source or model calls. |
+| Ruff check and format check on Prompt96 core, service, persistence, migration and tests | Passed | Changed Python files are clean and formatted. |
+| `uv run mypy --strict` on Prompt96 core/service/persistence/models/tests | Passed: no issues in 6 files | Strict type check covers the policy/scheduler contracts and durable repository paths. |
+| `corepack pnpm --filter @polycodebench/contracts test:contracts` | Passed | Shared Python/TypeScript audit-alert canonical vector and existing 256 property cases agree. |
+| `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `e5c7b2a94d10` is the only head | Prompt96 migration history is linear. |
+| Offline Alembic upgrade `d4f7b2a196c3:head` and guarded downgrade `e5c7b2a94d10:d4f7b2a196c3` with a placeholder PostgreSQL URL | Passed: SQL rendered both ways | Downgrade refuses to remove monitor policy v2, alert, slot, source-reservation or inbox evidence. No database was contacted. |
+| `git diff --check` | Passed | No whitespace errors. |
+| Trusted owner roles, live scheduler/connectors, authenticated inbox and PostgreSQL integration | Blocked | No live monitoring, source/model request or database write occurred. |

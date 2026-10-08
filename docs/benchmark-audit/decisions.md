@@ -171,3 +171,15 @@ Transformed variants retain their source-family cluster. Independent prospective
 ### ADDENDUM-DECISION-37 - Derived scores never silently replace official scores
 
 Official source snapshots and membership remain immutable. A derived manifest accounts for every official item and records retained/replaced/excluded disposition, validation/oracle mapping, competency/difficulty mapping, a private sampling policy, computed family/split/competency/difficulty distributions and derived membership digest. Official and derived labels differ and automatic comparison is disabled. Production distribution and publication review remain pending.
+
+### ADDENDUM-DECISION-38 - Monitor schedules use finite timezone-bound slots
+
+Monitor v2 binds a non-public frozen audit plan, exact tasks and corpus snapshots, IANA timezone, local cadence, bounded full-refresh interval, stale threshold, caps, source rates, retry/catch-up limits and in-app recipients. Slot identity is local-date/cadence scoped and unique per immutable policy. Ambiguous local times select the first occurrence; nonexistent times advance to the first valid minute within a three-hour bound. The newest due slot is retained; older catch-up never exceeds the frozen count. A policy document records approval evidence but does not establish owner/approver roles without a trusted identity service.
+
+### ADDENDUM-DECISION-39 - Monitor alerts require accepted successors and carry no source text
+
+New-exposure alerts require accepted v2 match evidence with verified source dates and lineage, plus a same-task successor risk assessment that includes that evidence. Score-increase alerts compare measured scores only when plan, model context, risk policy and calibration state match. Deduplication hashes the immutable references and event type. Alerts contain typed references and fixed enums; inbox fan-out is atomic. Dispute/correction successors and historical exposure remain immutable and cannot be erased by deleting an external web copy.
+
+### ADDENDUM-DECISION-40 - Monitoring retries and notifications remain explicitly bounded
+
+The worst-case query reserve includes every allowed retry and counts against per-source local-day quotas. Failed dispatched slots persist a controlled error code, attempt count, retry time and audit event; the final attempt is terminal. If the next retry would cross the source reservation's local-day boundary, the slot becomes terminal instead of spending against another day's quota. A current due slot is retained while older catch-up follows the frozen cap. Staleness, source outage, evidence dispute/correction, policy/corpus/method discontinuity and seal compromise have separate alert types. External email/Slack routes and target-model diagnostic calls remain disabled. No production scheduler, connector, role verifier or PostgreSQL integration was available for this prompt.

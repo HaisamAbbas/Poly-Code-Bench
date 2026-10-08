@@ -15,6 +15,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -103,7 +104,7 @@ audit_document = Table(
         "'behavioral_task_validity','behavioral_observation','behavioral_assessment',"
         "'firewall_policy','firewall_scope','firewall_decision','replacement_source_metadata',"
         "'replacement_plan','replacement_validation','derived_benchmark_manifest',"
-        "'monitor_policy','benchmark_health',"
+        "'monitor_policy','monitor_alert','benchmark_health',"
         "'audit_attestation')",
         name="kind",
     ),
@@ -123,6 +124,10 @@ audit_document = Table(
         "OR (kind IN ('firewall_decision','replacement_plan') AND schema_version = 1) "
         "OR (kind = 'firewall_decision' AND schema_version = 2) OR supersedes_id IS NULL",
         name="p95_successors",
+    ),
+    CheckConstraint(
+        "kind <> 'monitor_policy' OR schema_version = 2 OR supersedes_id IS NULL",
+        name="monitor_policy_successors",
     ),
     Index("ix_audit_document_kind_created", "kind", "created_at"),
     Index("ix_audit_document_supersedes", "supersedes_id"),
@@ -193,6 +198,26 @@ audit_document = Table(
         text("(payload->>'derived_version')"),
         unique=True,
         postgresql_where=text("kind = 'derived_benchmark_manifest' AND supersedes_id IS NULL"),
+    ),
+    Index(
+        "uq_monitor_policy_benchmark_version",
+        text("(payload->'benchmark_ref'->>'document_id')"),
+        text("(payload->>'policy_version')"),
+        unique=True,
+        postgresql_where=text("kind = 'monitor_policy' AND schema_version = 2"),
+    ),
+    Index(
+        "uq_monitor_policy_single_successor",
+        "supersedes_id",
+        unique=True,
+        postgresql_where=text("kind = 'monitor_policy' AND supersedes_id IS NOT NULL"),
+    ),
+    Index(
+        "uq_monitor_alert_policy_dedupe",
+        text("(payload->'policy_ref'->>'document_id')"),
+        text("(payload->>'dedupe_key')"),
+        unique=True,
+        postgresql_where=text("kind = 'monitor_alert'"),
     ),
 )
 
@@ -1065,6 +1090,100 @@ audit_query = Table(
     ),
     CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
     Index("ix_audit_query_run_state", "audit_run_id", "state"),
+)
+
+monitor_slot = Table(
+    "monitor_slot",
+    metadata,
+    pk(),
+    fk("policy_document_id", "audit_document.id"),
+    fk("audit_run_id", "audit_run.id", nullable=True),
+    Column("slot_key", String(32), nullable=False),
+    Column("scheduled_at", DateTime(timezone=True), nullable=False),
+    Column("local_day", Date, nullable=False),
+    Column("refresh_kind", String(16), nullable=False),
+    Column("source_document_ids", JSONB, nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("dispatch_authorized", Boolean, nullable=False, server_default=text("false")),
+    Column("query_units", BigInteger, nullable=False, server_default=text("0")),
+    Column("retry_reserve_units", BigInteger, nullable=False, server_default=text("0")),
+    Column("reserved_storage_bytes", BigInteger, nullable=False, server_default=text("0")),
+    Column("reserved_cost_micro_usd", BigInteger, nullable=False, server_default=text("0")),
+    Column("missed_slots_before", Integer, nullable=False, server_default=text("0")),
+    Column("attempts", Integer, nullable=False, server_default=text("0")),
+    Column("max_attempts", Integer, nullable=False),
+    Column("next_retry_at", DateTime(timezone=True), nullable=True),
+    Column("last_error_code", String(40), nullable=True),
+    Column("completed_at", DateTime(timezone=True), nullable=True),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("policy_document_id", "slot_key", name="uq_monitor_slot_policy_slot"),
+    CheckConstraint("length(slot_key) BETWEEN 1 AND 32", name="slot_key"),
+    CheckConstraint("refresh_kind IN ('incremental','full')", name="refresh_kind"),
+    CheckConstraint(
+        "state IN ('missed','planned','retry_wait','queued','running','complete','partial',"
+        "'failed','blocked','cancelled')",
+        name="state",
+    ),
+    CheckConstraint(
+        "state NOT IN ('queued','running','complete') OR "
+        "(dispatch_authorized AND audit_run_id IS NOT NULL)",
+        name="authorized_dispatch",
+    ),
+    CheckConstraint("jsonb_typeof(source_document_ids) = 'array'", name="sources_array"),
+    CheckConstraint(
+        "query_units >= 0 AND retry_reserve_units >= query_units "
+        "AND reserved_storage_bytes >= 0 AND reserved_cost_micro_usd >= 0 "
+        "AND missed_slots_before >= 0",
+        name="reservations",
+    ),
+    CheckConstraint("attempts >= 0 AND attempts <= max_attempts", name="attempts"),
+    CheckConstraint("max_attempts BETWEEN 1 AND 11", name="max_attempts"),
+    CheckConstraint("(state = 'retry_wait') = (next_retry_at IS NOT NULL)", name="retry_schedule"),
+    CheckConstraint(
+        "last_error_code IS NULL OR last_error_code IN "
+        "('source_unavailable','rate_limited','connector_error','coverage_incomplete',"
+        "'budget_exhausted','authorization_required')",
+        name="error_code",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_monitor_slot_due", "state", "next_retry_at", "scheduled_at"),
+    Index("ix_monitor_slot_policy_day", "policy_document_id", "local_day"),
+)
+
+monitor_slot_source = Table(
+    "monitor_slot_source",
+    metadata,
+    pk(),
+    fk("slot_id", "monitor_slot.id"),
+    fk("policy_document_id", "audit_document.id"),
+    fk("source_document_id", "audit_document.id"),
+    Column("local_day", Date, nullable=False),
+    Column("reserved_query_units", BigInteger, nullable=False),
+    created_at(),
+    UniqueConstraint("slot_id", "source_document_id", name="uq_monitor_slot_source"),
+    CheckConstraint("reserved_query_units >= 1", name="reserved_units_positive"),
+    Index(
+        "ix_monitor_source_daily_reservations",
+        "policy_document_id",
+        "source_document_id",
+        "local_day",
+    ),
+)
+
+monitor_alert_inbox = Table(
+    "monitor_alert_inbox",
+    metadata,
+    pk(),
+    fk("alert_document_id", "audit_document.id"),
+    Column("recipient_subject", String(512), nullable=False),
+    Column("read_at", DateTime(timezone=True), nullable=True),
+    created_at(),
+    UniqueConstraint(
+        "alert_document_id", "recipient_subject", name="uq_monitor_alert_inbox_recipient"
+    ),
+    CheckConstraint("length(recipient_subject) BETWEEN 1 AND 512", name="recipient_subject"),
+    Index("ix_monitor_alert_inbox_recipient", "recipient_subject", "created_at"),
 )
 
 audit_checkpoint = Table(

@@ -17,7 +17,7 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 93 — sealed evaluations, encryption, access and canaries (partial foundations; production prerequisites recorded in the report). Commit `be7121a`.
 - [x] Prompt 94 — optional behavioral diagnostic protocols and applicability (partial foundations; production prerequisites recorded in the report). Commit `6d8b4d6`.
 - [x] Prompt 95 — firewall admission and independently validated replacements (partial foundations; production prerequisites recorded in the report).
-- [ ] Prompt 96 — continuous monitoring, risk changes and owner alerts.
+- [x] Prompt 96 - continuous monitoring, risk changes and owner alerts (partial foundations; production prerequisites recorded in the report).
 - [ ] Prompt 97 — benchmark health aggregation and comparable trends.
 - [ ] Prompt 98 — private API, CLI, SDK and permission contracts.
 - [ ] Prompt 99 — benchmark health dashboard and evidence journeys.

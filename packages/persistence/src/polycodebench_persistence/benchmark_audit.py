@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, cast
+from typing import Any, Literal, cast
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from polycodebench_core.application_errors import (
     InvalidReference,
@@ -37,6 +38,8 @@ from polycodebench_core.benchmark_audit_documents import (
     MatchEvidenceDocumentV2,
     MatchEvidencePayloadV2,
     ModelContextDocument,
+    MonitorAlertDocument,
+    MonitorPolicyDocumentV2,
     QueryManifestDocument,
     ReplacementPlanDocumentV2,
     ReplacementSourceMetadataDocument,
@@ -61,6 +64,7 @@ from polycodebench_core.canonical import (
 )
 from polycodebench_core.models import AdmissionExecutionReport
 from polycodebench_core.models import TaskVersion as TaskVersionContract
+from polycodebench_core.monitor_schedule import monitor_retry_at, monitor_slot_identity
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.engine import Engine
@@ -84,6 +88,9 @@ from polycodebench_persistence.models import (
     config_document,
     match_candidate,
     model_revision,
+    monitor_alert_inbox,
+    monitor_slot,
+    monitor_slot_source,
     risk_assessment,
     run,
     stage_job,
@@ -132,6 +139,13 @@ class AuditRunWrite:
 @dataclass(frozen=True)
 class AuditQueryEnqueue:
     job_ids: tuple[UUID, ...]
+    created: bool
+    row_version: int
+
+
+@dataclass(frozen=True)
+class MonitorSlotWrite:
+    slot_id: UUID
     created: bool
     row_version: int
 
@@ -219,6 +233,7 @@ class PostgresBenchmarkAuditRepository:
         cls._validate_canary_observation(connection, document)
         cls._validate_sealed_manifest_document(connection, document)
         cls._validate_firewall_document(connection, document)
+        cls._validate_monitor_document(connection, document)
         existing = (
             connection.execute(select(audit_document).where(audit_document.c.id == document.id))
             .mappings()
@@ -259,6 +274,17 @@ class PostgresBenchmarkAuditRepository:
             if predecessor != document.kind:
                 raise InvalidState("audit successor kind must match its predecessor")
         connection.execute(insert(audit_document).values(id=document.id, **expected))
+        if isinstance(document, MonitorAlertDocument):
+            connection.execute(
+                insert(monitor_alert_inbox),
+                [
+                    {
+                        "alert_document_id": document.id,
+                        "recipient_subject": subject,
+                    }
+                    for subject in document.payload.recipient_subjects
+                ],
+            )
         return AuditDocumentWrite(document.id, digest, True)
 
     @classmethod
@@ -931,6 +957,252 @@ class PostgresBenchmarkAuditRepository:
                         "derived source-family mapping differs from the admitted task lineage"
                     )
             return
+
+    @classmethod
+    def _validate_monitor_document(cls, connection: Any, document: AuditDocument) -> None:
+        if document.kind == "monitor_policy" and not isinstance(document, MonitorPolicyDocumentV2):
+            raise InvalidState("legacy monitor policies are historical and cannot reserve work")
+        if isinstance(document, MonitorPolicyDocumentV2):
+            policy_payload = document.payload
+            plan = cls._document_by_ref(connection, policy_payload.plan_ref)
+            if not isinstance(plan, AuditPlanDocument):
+                raise InvalidReference("monitor policy plan reference is unavailable")
+            if document.supersedes_id is None and policy_payload.policy_version != 1:
+                raise InvalidState("root monitor policy must start at version one")
+            if policy_payload.benchmark_ref != plan.payload.benchmark_ref:
+                raise InvalidState("monitor policy benchmark differs from its frozen audit plan")
+            if plan.payload.visibility == "public":
+                raise InvalidState("public audit plans cannot enable monitoring")
+            if not set(policy_payload.task_refs) <= set(plan.payload.task_refs):
+                raise InvalidState("monitor task selection exceeds the frozen audit plan")
+            if not {item.source_ref for item in policy_payload.source_rate_limits} <= set(
+                plan.payload.source_plan
+            ):
+                raise InvalidState("monitor source selection exceeds the frozen audit plan")
+            query_limit = _frozen_limit(
+                plan.payload.limits, "max_query_units", "max_query_units_per_plan"
+            )
+            storage_limit = _frozen_limit(
+                plan.payload.limits, "max_storage_bytes", "max_storage_bytes_per_plan"
+            )
+            if (
+                query_limit is None
+                or policy_payload.max_query_units_per_slot > query_limit
+                or storage_limit is None
+                or policy_payload.max_storage_bytes_per_slot > storage_limit
+            ):
+                raise InvalidState("monitor slot reservations exceed frozen audit-plan limits")
+            if document.supersedes_id is not None:
+                previous_row = (
+                    connection.execute(
+                        select(audit_document).where(audit_document.c.id == document.supersedes_id)
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if previous_row is None:
+                    raise InvalidReference("monitor policy successor predecessor is missing")
+                previous = cls._document_from_row(previous_row)
+                if not isinstance(previous, MonitorPolicyDocumentV2):
+                    raise InvalidReference("monitor policy successor must reference policy v2")
+                if (
+                    previous.payload.benchmark_ref != policy_payload.benchmark_ref
+                    or policy_payload.policy_version != previous.payload.policy_version + 1
+                    or previous.payload.state == "retired"
+                ):
+                    raise InvalidState(
+                        "monitor policy successor must advance one version in a non-retired scope"
+                    )
+            return
+
+        if not isinstance(document, MonitorAlertDocument):
+            return
+        if document.supersedes_id is not None:
+            raise InvalidState("monitor alerts are immutable events and cannot have successors")
+
+        payload = document.payload
+        policy = cls._document_by_ref(connection, payload.policy_ref)
+        if not isinstance(policy, MonitorPolicyDocumentV2):
+            raise InvalidReference("monitor alert requires a stored versioned policy")
+        if policy.payload.state != "approved":
+            raise InvalidState("monitor alerts require an approved policy version")
+        if payload.recipient_subjects != policy.payload.in_app_recipients:
+            raise InvalidState(
+                "monitor alert recipients differ from the frozen in-app recipient list"
+            )
+        plan = cls._document_by_ref(connection, policy.payload.plan_ref)
+        if not isinstance(plan, AuditPlanDocument):
+            raise InvalidReference("monitor alert audit plan is unavailable")
+        allowed_tasks = set(policy.payload.task_refs)
+        allowed_sources = {item.source_ref for item in policy.payload.source_rate_limits}
+
+        def validate_coverage_scope(coverage: CoverageManifestDocument) -> None:
+            eligible_sources = set(coverage.payload.eligible_sources)
+            if not eligible_sources <= allowed_sources:
+                raise InvalidState("monitor coverage evidence exceeds the frozen source scope")
+
+        if payload.alert_type in {"new_exposure", "risk_increase"}:
+            assert payload.previous_assessment_ref is not None
+            assert payload.assessment_ref is not None
+            previous = cls._document_by_ref(connection, payload.previous_assessment_ref)
+            current = cls._document_by_ref(connection, payload.assessment_ref)
+            if not isinstance(previous, RiskAssessmentDocumentV2) or not isinstance(
+                current, RiskAssessmentDocumentV2
+            ):
+                raise InvalidReference("risk alerts require versioned risk assessments")
+            if (
+                current.payload.plan_ref != policy.payload.plan_ref
+                or current.payload.task_ref not in allowed_tasks
+                or current.payload.policy_ref != plan.payload.policy
+                or current.payload.context_ref != plan.payload.model_context
+            ):
+                raise InvalidState("monitor risk alert falls outside the frozen plan/task scope")
+            if (
+                previous.payload.task_ref != current.payload.task_ref
+                or previous.payload.plan_ref != current.payload.plan_ref
+                or previous.payload.context_ref != current.payload.context_ref
+                or previous.payload.policy_ref != current.payload.policy_ref
+                or previous.payload.calibration_state != current.payload.calibration_state
+                or payload.task_ref != current.payload.task_ref
+                or current.supersedes_id != previous.id
+            ):
+                raise InvalidState(
+                    "monitor risk alert must bind one task's linear assessment successor"
+                )
+            if payload.alert_type == "new_exposure":
+                assert payload.evidence_ref is not None
+                evidence = cls._document_by_ref(connection, payload.evidence_ref)
+                if (
+                    not isinstance(evidence, MatchEvidenceDocumentV2)
+                    or evidence.payload.review_state != "accepted"
+                    or evidence.payload.source_date_state != "verified"
+                    or evidence.payload.source_lineage
+                    not in {"independent_copy", "mirror_or_derived"}
+                    or evidence.payload.relation
+                    in {"shared_concept", "no_substantive_match", "unresolved"}
+                    or evidence.payload.task_ref != payload.task_ref
+                    or evidence.payload.target_benchmark_ref != policy.payload.benchmark_ref
+                    or evidence.payload.retrieval_plan_ref != policy.payload.plan_ref
+                    or evidence.payload.source_snapshot_ref not in allowed_sources
+                    or payload.evidence_ref not in current.payload.accepted_evidence
+                ):
+                    raise InvalidState(
+                        "new-exposure alert requires accepted evidence in its successor assessment"
+                    )
+            else:
+                old_score = previous.payload.observed_index.value
+                new_score = current.payload.observed_index.value
+                if (
+                    old_score is None
+                    or new_score is None
+                    or Decimal(new_score) <= Decimal(old_score)
+                ):
+                    raise InvalidState("risk-increase alert requires a measured increasing score")
+            return
+
+        if payload.alert_type == "source_outage":
+            assert payload.coverage_ref is not None
+            assert payload.source_ref is not None
+            coverage = cls._document_by_ref(connection, payload.coverage_ref)
+            if payload.source_ref not in allowed_sources:
+                raise InvalidState("source-outage alert falls outside the frozen source scope")
+            if not isinstance(coverage, CoverageManifestDocument):
+                raise InvalidReference("source-outage alert requires coverage manifest evidence")
+            validate_coverage_scope(coverage)
+            if payload.source_ref not in coverage.payload.eligible_sources or not any(
+                item.get("source_ref") == payload.source_ref.model_dump(mode="json")
+                and item.get("state") in {"unavailable", "outage"}
+                for item in coverage.payload.outages
+            ):
+                raise InvalidState("source-outage alert requires matching outage coverage evidence")
+            return
+
+        if payload.alert_type == "stale_scan":
+            assert payload.coverage_ref is not None
+            coverage = cls._document_by_ref(connection, payload.coverage_ref)
+            if not isinstance(coverage, CoverageManifestDocument):
+                raise InvalidReference("stale-scan alert requires coverage manifest evidence")
+            validate_coverage_scope(coverage)
+            return
+
+        if payload.alert_type in {"evidence_dispute", "evidence_correction"}:
+            assert payload.evidence_ref is not None
+            evidence = cls._document_by_ref(connection, payload.evidence_ref)
+            if not isinstance(evidence, MatchEvidenceDocumentV2):
+                raise InvalidReference("evidence-change alert requires versioned match evidence")
+            if (
+                evidence.payload.task_ref not in allowed_tasks
+                or evidence.payload.source_snapshot_ref not in allowed_sources
+                or evidence.payload.target_benchmark_ref != policy.payload.benchmark_ref
+                or evidence.payload.retrieval_plan_ref != policy.payload.plan_ref
+            ):
+                raise InvalidState("evidence-change alert falls outside the frozen monitor scope")
+            if payload.alert_type == "evidence_dispute":
+                if evidence.payload.review_state not in {"disputed", "superseded"}:
+                    raise InvalidState("dispute alert requires disputed or superseded evidence")
+            else:
+                if evidence.supersedes_id is None or evidence.payload.review_state not in {
+                    "accepted",
+                    "rejected",
+                    "disputed",
+                }:
+                    raise InvalidState("correction alert requires reviewed successor evidence")
+                previous_row = (
+                    connection.execute(
+                        select(audit_document).where(audit_document.c.id == evidence.supersedes_id)
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if previous_row is None:
+                    raise InvalidReference("corrected evidence predecessor is missing")
+                previous_evidence = cls._document_from_row(previous_row)
+                if (
+                    not isinstance(previous_evidence, MatchEvidenceDocumentV2)
+                    or previous_evidence.payload.task_ref != evidence.payload.task_ref
+                ):
+                    raise InvalidState("corrected evidence must retain its task identity")
+            return
+
+        if payload.alert_type == "policy_discontinuity":
+            if payload.previous_policy_ref is None:
+                raise InvalidReference("policy discontinuity alert is missing its predecessor")
+            previous = cls._document_by_ref(connection, payload.previous_policy_ref)
+            if (
+                not isinstance(previous, MonitorPolicyDocumentV2)
+                or policy.supersedes_id != previous.id
+                or policy.payload.benchmark_ref != previous.payload.benchmark_ref
+            ):
+                raise InvalidState("policy discontinuity must bind the current policy successor")
+            previous_plan = cls._document_by_ref(connection, previous.payload.plan_ref)
+            current_plan = cls._document_by_ref(connection, policy.payload.plan_ref)
+            if not isinstance(previous_plan, AuditPlanDocument) or not isinstance(
+                current_plan, AuditPlanDocument
+            ):
+                raise InvalidReference("policy discontinuity plans are unavailable")
+            expected_reasons = {"policy_scope"}
+            previous_sources = {item.source_ref for item in previous.payload.source_rate_limits}
+            current_sources = {item.source_ref for item in policy.payload.source_rate_limits}
+            if previous_sources != current_sources:
+                expected_reasons.add("corpus_snapshot")
+            if (
+                previous_plan.payload.methods != current_plan.payload.methods
+                or previous_plan.payload.policy != current_plan.payload.policy
+            ):
+                expected_reasons.add("method_version")
+            if set(payload.discontinuity_reasons) != expected_reasons:
+                raise InvalidState(
+                    "policy alert discontinuity reasons differ from the stored versions"
+                )
+            return
+
+        if payload.alert_type == "seal_compromise":
+            assert payload.sealed_manifest_ref is not None
+            sealed = cls._document_by_ref(connection, payload.sealed_manifest_ref)
+            if not isinstance(sealed, SealedManifestDocumentV2) or (
+                sealed.payload.disclosure_state != "compromised"
+            ):
+                raise InvalidState("seal-compromise alert requires a compromised manifest")
 
     @classmethod
     def _validate_behavioral_observation(
@@ -1826,6 +2098,351 @@ class PostgresBenchmarkAuditRepository:
                 )
                 return AuditRunWrite(run_id, True, 0)
         except (InvalidReference, InvalidState, PersistenceConflict):
+            raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def reserve_monitor_slot(
+        self,
+        *,
+        policy_ref: AuditDocumentRef,
+        slot_key: str,
+        scheduled_at: datetime,
+        refresh_kind: Literal["incremental", "full"],
+        source_refs: tuple[AuditDocumentRef, ...],
+        query_units: int,
+        retry_reserve_units: int,
+        reserved_storage_bytes: int,
+        reserved_cost_micro_usd: int = 0,
+        missed_slots_before: int = 0,
+        should_dispatch: bool = True,
+    ) -> MonitorSlotWrite:
+        """Persist one idempotent tick and serialize its per-source daily quota reservation."""
+        if (
+            policy_ref.kind != "monitor_policy"
+            or not slot_key.isascii()
+            or not slot_key
+            or len(slot_key) > 32
+            or scheduled_at.tzinfo is None
+            or scheduled_at.utcoffset() is None
+        ):
+            raise InvalidState("monitor slot identity and scheduled time are invalid")
+        if any(
+            type(value) is not int or value < 0
+            for value in (
+                query_units,
+                retry_reserve_units,
+                reserved_storage_bytes,
+                reserved_cost_micro_usd,
+                missed_slots_before,
+            )
+        ):
+            raise InvalidState("monitor slot reservations and missed count must be nonnegative")
+        source_ids = [item.document_id for item in source_refs]
+        if len(source_ids) != len(set(source_ids)) or any(
+            item.kind != "corpus_snapshot" for item in source_refs
+        ):
+            raise InvalidState("monitor slot sources must be unique corpus snapshots")
+        if not should_dispatch and (
+            source_refs
+            or query_units
+            or retry_reserve_units
+            or reserved_storage_bytes
+            or reserved_cost_micro_usd
+        ):
+            raise InvalidState("a missed monitor tick cannot reserve work or budget")
+        try:
+            with self._engine.begin() as connection:
+                policy_row = (
+                    connection.execute(
+                        select(audit_document)
+                        .where(
+                            audit_document.c.id == policy_ref.document_id,
+                            audit_document.c.kind == "monitor_policy",
+                            audit_document.c.schema_version == 2,
+                            audit_document.c.semantic_digest == policy_ref.digest,
+                        )
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if policy_row is None:
+                    raise InvalidReference("monitor slot policy reference is missing or changed")
+                policy_doc = self._document_from_row(policy_row)
+                if not isinstance(policy_doc, MonitorPolicyDocumentV2):
+                    raise InvalidReference("monitor slot requires a versioned monitor policy")
+                policy = policy_doc.payload
+                if policy.state != "approved":
+                    raise InvalidState("only an owner-approved monitor policy can reserve a slot")
+                if reserved_storage_bytes > policy.max_storage_bytes_per_slot:
+                    raise InvalidState("monitor slot exceeds its frozen storage reservation")
+                if reserved_cost_micro_usd > policy.max_cost_micro_usd_per_slot:
+                    raise InvalidState("monitor slot exceeds its frozen cost reservation")
+                allowed_refs = tuple(item.source_ref for item in policy.source_rate_limits)
+                selected_refs = tuple(ref for ref in allowed_refs if ref in set(source_refs))
+                if selected_refs != source_refs:
+                    raise InvalidState("monitor slot source order or scope differs from its policy")
+                zone_day = scheduled_at.astimezone(ZoneInfo(policy.timezone)).date()
+                try:
+                    expected_key, expected_at = monitor_slot_identity(policy, zone_day)
+                except ValueError as error:
+                    raise InvalidState(
+                        "monitor slot date does not match the frozen policy schedule"
+                    ) from error
+                if slot_key != expected_key or scheduled_at.astimezone(UTC) != expected_at:
+                    raise InvalidState(
+                        "monitor slot key or instant differs from the frozen schedule"
+                    )
+                if (
+                    should_dispatch
+                    and refresh_kind == "full"
+                    and set(source_refs) != set(allowed_refs)
+                ):
+                    raise InvalidState("full monitor refresh must cover every approved source")
+                attempts = policy.max_retries + 1
+                expected_units = (
+                    len(policy.task_refs) * len(source_refs) * policy.query_units_per_task_source
+                )
+                if should_dispatch:
+                    if (
+                        query_units != expected_units
+                        or retry_reserve_units != expected_units * attempts
+                        or retry_reserve_units > policy.max_query_units_per_slot
+                    ):
+                        raise InvalidState("monitor slot query reservation violates its frozen cap")
+                elif query_units != 0 or retry_reserve_units != 0:
+                    raise InvalidState("missed monitor tick cannot reserve query units")
+
+                existing = (
+                    connection.execute(
+                        select(monitor_slot)
+                        .where(
+                            monitor_slot.c.policy_document_id == policy_ref.document_id,
+                            monitor_slot.c.slot_key == slot_key,
+                        )
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                expected_values = {
+                    "scheduled_at": scheduled_at.astimezone(UTC),
+                    "local_day": zone_day,
+                    "refresh_kind": refresh_kind,
+                    "source_document_ids": [str(item.document_id) for item in source_refs],
+                    "query_units": query_units,
+                    "retry_reserve_units": retry_reserve_units,
+                    "reserved_storage_bytes": reserved_storage_bytes,
+                    "reserved_cost_micro_usd": reserved_cost_micro_usd,
+                    "missed_slots_before": missed_slots_before,
+                    "max_attempts": attempts,
+                }
+                if existing is not None:
+                    if any(existing[name] != value for name, value in expected_values.items()):
+                        raise PersistenceConflict(
+                            "monitor slot replay changed its frozen reservation"
+                        )
+                    return MonitorSlotWrite(existing["id"], False, existing["row_version"])
+
+                state = "planned" if should_dispatch else "missed"
+                slot_id = connection.execute(
+                    insert(monitor_slot)
+                    .values(
+                        policy_document_id=policy_ref.document_id,
+                        slot_key=slot_key,
+                        scheduled_at=scheduled_at.astimezone(UTC),
+                        local_day=zone_day,
+                        refresh_kind=expected_values["refresh_kind"],
+                        source_document_ids=expected_values["source_document_ids"],
+                        state=state,
+                        dispatch_authorized=False,
+                        query_units=query_units,
+                        retry_reserve_units=retry_reserve_units,
+                        reserved_storage_bytes=reserved_storage_bytes,
+                        reserved_cost_micro_usd=reserved_cost_micro_usd,
+                        missed_slots_before=missed_slots_before,
+                        attempts=0,
+                        max_attempts=attempts,
+                    )
+                    .returning(monitor_slot.c.id)
+                ).scalar_one()
+                if should_dispatch:
+                    units_per_source = (
+                        len(policy.task_refs) * policy.query_units_per_task_source * attempts
+                    )
+                    source_limits = {
+                        item.source_ref: item.max_query_units_per_local_day
+                        for item in policy.source_rate_limits
+                    }
+                    for source_ref in source_refs:
+                        already_reserved = connection.execute(
+                            select(
+                                func.coalesce(
+                                    func.sum(monitor_slot_source.c.reserved_query_units), 0
+                                )
+                            ).where(
+                                monitor_slot_source.c.policy_document_id == policy_ref.document_id,
+                                monitor_slot_source.c.source_document_id == source_ref.document_id,
+                                monitor_slot_source.c.local_day == zone_day,
+                            )
+                        ).scalar_one()
+                        if already_reserved + units_per_source > source_limits[source_ref]:
+                            raise InvalidState("monitor source daily rate limit would be exceeded")
+                        connection.execute(
+                            insert(monitor_slot_source).values(
+                                slot_id=slot_id,
+                                policy_document_id=policy_ref.document_id,
+                                source_document_id=source_ref.document_id,
+                                local_day=zone_day,
+                                reserved_query_units=units_per_source,
+                            )
+                        )
+                return MonitorSlotWrite(slot_id, True, 0)
+        except (InvalidReference, InvalidState, PersistenceConflict):
+            raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def record_monitor_slot_failure(
+        self,
+        *,
+        slot_id: UUID,
+        expected_row_version: int,
+        error_code: Literal[
+            "source_unavailable",
+            "rate_limited",
+            "connector_error",
+            "coverage_incomplete",
+            "budget_exhausted",
+            "authorization_required",
+        ],
+        failed_at: datetime,
+        actor_subject: str,
+    ) -> MonitorSlotWrite:
+        """Record one dispatched failure and a capped retry time in the durable slot row."""
+        if (
+            failed_at.tzinfo is None
+            or failed_at.utcoffset() is None
+            or type(expected_row_version) is not int
+            or expected_row_version < 0
+            or not actor_subject
+            or len(actor_subject) > 255
+            or not actor_subject.isascii()
+            or error_code
+            not in {
+                "source_unavailable",
+                "rate_limited",
+                "connector_error",
+                "coverage_incomplete",
+                "budget_exhausted",
+                "authorization_required",
+            }
+        ):
+            raise InvalidState("monitor failure event identity is invalid")
+        try:
+            with self._engine.begin() as connection:
+                slot = (
+                    connection.execute(
+                        select(monitor_slot).where(monitor_slot.c.id == slot_id).with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if slot is None:
+                    raise InvalidReference("monitor slot does not exist")
+                if slot["row_version"] != expected_row_version:
+                    raise OptimisticVersionConflict("monitor slot row version changed")
+                if (
+                    slot["state"] not in {"queued", "running"}
+                    or not slot["dispatch_authorized"]
+                    or slot["audit_run_id"] is None
+                ):
+                    raise InvalidState("only an authorized dispatched monitor slot can fail")
+                run_row = (
+                    connection.execute(
+                        select(audit_run.c.state, audit_run.c.dispatch_authorized).where(
+                            audit_run.c.id == slot["audit_run_id"]
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if (
+                    run_row is None
+                    or not run_row["dispatch_authorized"]
+                    or run_row["state"] in {"draft", "planned", "complete", "cancelled"}
+                ):
+                    raise InvalidState("monitor failure is not attached to a dispatched audit run")
+
+                failed_attempt = slot["attempts"] + 1
+                policy_row = (
+                    connection.execute(
+                        select(audit_document).where(
+                            audit_document.c.id == slot["policy_document_id"]
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if policy_row is None:
+                    raise InvalidReference("monitor slot policy document is missing")
+                policy_doc = self._document_from_row(policy_row)
+                if not isinstance(policy_doc, MonitorPolicyDocumentV2):
+                    raise InvalidReference("monitor retry requires a versioned policy")
+                retry_at = monitor_retry_at(
+                    completed_attempts=failed_attempt,
+                    max_retries=slot["max_attempts"] - 1,
+                    now=failed_at,
+                    timezone_name=policy_doc.payload.timezone,
+                    local_day=slot["local_day"],
+                )
+                if retry_at is not None:
+                    state = "retry_wait"
+                    action = "benchmark_audit.monitor.retry_scheduled"
+                else:
+                    retry_at = None
+                    state = "failed"
+                    action = "benchmark_audit.monitor.failed"
+                after = {
+                    "state": state,
+                    "attempts": failed_attempt,
+                    "next_retry_at": retry_at.isoformat() if retry_at is not None else None,
+                    "last_error_code": error_code,
+                }
+                after_digest = "sha256:" + hashlib.sha256(canonical_json_bytes(after)).hexdigest()
+                connection.execute(
+                    update(monitor_slot)
+                    .where(
+                        monitor_slot.c.id == slot_id,
+                        monitor_slot.c.row_version == expected_row_version,
+                    )
+                    .values(
+                        state=state,
+                        attempts=failed_attempt,
+                        next_retry_at=retry_at,
+                        last_error_code=error_code,
+                        row_version=expected_row_version + 1,
+                    )
+                )
+                connection.execute(
+                    insert(audit_event).values(
+                        actor_subject=actor_subject,
+                        action=action,
+                        resource_type="monitor_slot",
+                        resource_id=str(slot_id),
+                        after_digest=after_digest,
+                        request_id=f"monitor-{slot_id}-attempt-{failed_attempt}",
+                        details={
+                            "attempt": failed_attempt,
+                            "max_attempts": slot["max_attempts"],
+                            "error_code": error_code,
+                            "next_retry_at": after["next_retry_at"],
+                        },
+                    )
+                )
+                return MonitorSlotWrite(slot_id, False, expected_row_version + 1)
+        except (InvalidReference, InvalidState, OptimisticVersionConflict):
             raise
         except DBAPIError as error:
             raise map_database_error(error) from None

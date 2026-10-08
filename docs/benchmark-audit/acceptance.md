@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt95, BWP-01 and BWP-02 are complete; BWP-03 through BWP-13 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt96, BWP-01 and BWP-02 are complete; BWP-03 through BWP-14 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -26,8 +26,8 @@ At Prompt95, BWP-01 and BWP-02 are complete; BWP-03 through BWP-13 are partial p
 | BREQ-16 | 95,102 | BX-35,54 | partial | reports/prompt-95.md; preregistered total/per-source draft quotas and distinct author/checker/reviewer contracts exist; round/cost/time caps are frozen but no authorized generation runner accounts them; production worker, human identity and live oracle evidence remain unavailable |
 | BREQ-17 | 95,102 | BX-36,54 | partial | reports/prompt-95.md; ancestry, source-family and prospective template gates are persisted; no approved task-generation or exposure-review pipeline is available |
 | BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md and reports/prompt-95.md; official membership remains immutable; derived manifests compute family/split/competency/difficulty distributions and separate score labels; live import and projection review remain unavailable |
-| BREQ-19 | 96,102 | BX-38–40,55 | pending | see prompt 96 report |
-| BREQ-20 | 90,96,100 | BX-21,39–40,49 | partial | reports/prompt-90.md; immutable correction successors and review-event contracts exist; source dispute storage and later monitor/key correction workflows remain pending |
+| BREQ-19 | 96,102 | BX-38-40,55 | partial | reports/prompt-96.md; timezone/DST-safe slots, bounded catch-up/retry, incremental/full refresh planning, per-source reservations and reference-only in-app alerts are implemented; owner-role verification, live scheduler/connectors and PostgreSQL execution are unavailable |
+| BREQ-20 | 90,96,100 | BX-21,39-40,49 | partial | reports/prompt-90.md and reports/prompt-96.md; immutable match successors, accepted-evidence successor-assessment alert checks, correction/dispute records and no-delete retention are implemented; live reviewer/source history and production alert delivery remain unavailable |
 | BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
@@ -58,7 +58,7 @@ At Prompt95, BWP-01 and BWP-02 are complete; BWP-03 through BWP-13 are partial p
 | BWP-11 | 93 | partial | reports/prompt-93.md; sealed access, monotonic history and private canary contracts are tested with local adapters; approved KMS, PostgreSQL integration and source review remain pending |
 | BWP-12 | 94 | partial | reports/prompt-94.md; registry, frozen plans, descriptive reconciliation and calibration/power limits exist; no pinned method adapter, approved model access or owned-training calibration is available |
 | BWP-13 | 95 | partial | reports/prompt-95.md; fail-closed firewall, bounded replacement contracts and derived manifests exist; production admission authority and live source/task evidence are unavailable |
-| BWP-14 | 96 | pending | prompt report |
+| BWP-14 | 96 | partial | reports/prompt-96.md; bounded monitor policies, reservations, retries and verified in-app alert persistence exist; no trusted owner-role verifier, live scheduler/source adapter, or PostgreSQL integration is available |
 | BWP-15 | 97 | pending | prompt report |
 | BWP-16 | 98 | pending | prompt report |
 | BWP-17 | 99 | pending | prompt report |
@@ -128,10 +128,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-13-B | 95 | partial | reports/prompt-95.md; approved source IDs bind to task sources; total/per-source draft caps are serialized under a plan lock; round/cost/time caps are frozen but generation execution is unavailable; distinct participants and private oracle evidence are required |
 | BAT-13-C | 95 | partial | reports/prompt-95.md; transformed ancestry, prospective template review and cross-split family invariants are enforced; exposure pipeline and reviewed family data are absent |
 | BAT-13-D | 95 | partial | reports/prompt-95.md; official membership, dispositions, oracle/validation links, competency/difficulty mappings, private sampling policy, computed distributions, score labels and membership digest are preserved; production projection review is absent |
-| BAT-14-A | 96 | pending | prompt report |
-| BAT-14-B | 96 | pending | prompt report |
-| BAT-14-C | 96 | pending | prompt report |
-| BAT-14-D | 96 | pending | prompt report |
+| BAT-14-A | 96 | partial | reports/prompt-96.md; strict timezone/cadence/cap policy, DST-safe unique slot identity, locked atomic reservation, per-source daily caps and bounded durable retry fields exist; trusted owner-role verification and public API auth are unavailable |
+| BAT-14-B | 96 | partial | reports/prompt-96.md; only changed approved sources enter incremental plans, finite full refreshes use every approved source, and retry reserves fit frozen caps; production corpus-snapshot trigger and connector execution are unavailable |
+| BAT-14-C | 96 | partial | reports/prompt-96.md; alerts require accepted verified evidence plus a same-task successor risk assessment, risk increases require comparable measured scores, dedupe is deterministic, inbox rows insert atomically, and immutable evidence has no delete path; live production evidence is unavailable |
+| BAT-14-D | 96 | partial | reports/prompt-96.md; staleness, outage, dispute, correction, policy/corpus/method discontinuity and compromised-seal alerts are distinct; routes are in-app only and payloads contain typed references without source text; external recipient authorization and a live notification UI are unavailable |
 | BAT-15-A | 97 | pending | prompt report |
 | BAT-15-B | 97 | pending | prompt report |
 | BAT-15-C | 97 | pending | prompt report |
@@ -214,9 +214,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-35 | 95 | partial | reports/prompt-95.md; approved source metadata, per-source and total draft caps, distinct participants and private test/oracle evidence are enforced; round/cost/time caps are frozen but no generation runner accounts them; production worker/reviewer verification missing |
 | BX-36 | 95 | partial | reports/prompt-95.md; transformed tasks retain family ancestry, prospective tasks require accepted template review and split consistency is enforced; no reviewed family/exposure evidence |
 | BX-37 | 95 | partial | reports/prompt-95.md; derived version accounts for official membership, replacements/exclusions/oracles, difficulty, separate labels and no automatic comparison; production distribution review/import projection missing |
-| BX-38 | 96 | pending | criterion in addendum §26; prompt report |
-| BX-39 | 96 | pending | criterion in addendum §26; prompt report |
-| BX-40 | 96 | pending | criterion in addendum §26; prompt report |
+| BX-38 | 96 | partial | reports/prompt-96.md; unique (policy, slot) storage, idempotent replay, bounded catch-up/retry and atomic source-rate reservations are tested at contract/persistence-metadata level; retries crossing their reserved source-local day close terminally; PostgreSQL race/recovery and live scheduler evidence are unavailable |
+| BX-39 | 96 | partial | reports/prompt-96.md; accepted v2 evidence plus successor risk assessment is required for deterministic deduped in-app alerts; inbox insertion is transactional and historical documents are restrictive; no live source evidence or authenticated inbox UI exists |
+| BX-40 | 96 | partial | reports/prompt-96.md; stale, outage, correction/dispute, policy/corpus/method discontinuity and seal compromise use distinct alert types; external delivery is structurally disabled; live role authorization and key/source event integration are unavailable |
 | BX-41 | 97 | pending | criterion in addendum §26; prompt report |
 | BX-42 | 97 | pending | criterion in addendum §26; prompt report |
 | BX-43 | 97 | pending | criterion in addendum §26; prompt report |

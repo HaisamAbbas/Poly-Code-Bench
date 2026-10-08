@@ -1,8 +1,9 @@
-"""Opt-in development and identity-gated AWS solve worker entry point.
+"""Opt-in development and identity-gated AWS worker entry point.
 
-The command has no active mode by default. Local Docker remains dev-only. ``ec2-run`` requires a
-deployed manifest, an STS-verified solve-supervisor role, a pre-registered worker ID and an
-explicit dispatch flag before it can claim work or launch disposable guests.
+The command has no active mode by default. Local Docker remains dev-only. ``ec2-run`` and
+``ec2-grading-run`` require a deployed manifest, the matching STS-verified supervisor role, a
+pre-registered worker ID and an explicit dispatch flag before they can claim work or launch
+disposable guests.
 """
 
 from __future__ import annotations
@@ -20,7 +21,11 @@ from uuid import UUID, uuid4
 import boto3  # type: ignore[import-untyped]
 import yaml
 from polycodebench_core.application_errors import ServiceError
-from polycodebench_core.canonical import canonical_document_bytes, canonical_document_digest
+from polycodebench_core.canonical import (
+    canonical_digest,
+    canonical_document_bytes,
+    canonical_document_digest,
+)
 from polycodebench_core.deployment import (
     CallerPrincipal,
     DeploymentRefused,
@@ -53,7 +58,9 @@ from polycodebench_orchestration.grading.assignment import DatabaseEvaluationAss
 from polycodebench_orchestration.grading.scoring import DatabaseEvaluationScorer
 from polycodebench_orchestration.grading.worker_runtime import (
     GradingWorkerResourceSpec,
+    build_ec2_evaluation_worker,
     build_local_evaluation_worker,
+    load_grading_image_allowlist,
     load_grading_resource_for_worker,
 )
 from polycodebench_orchestration.solve.control_identity import temporary_control_identity
@@ -112,6 +119,24 @@ def _parser() -> argparse.ArgumentParser:
     grading_register.add_argument("--workload-identity", default="local-grading-worker-1")
     grading_register.add_argument("--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST)
     grading_register.add_argument("--scoring-policy", type=Path, default=DEFAULT_SCORING_POLICY)
+    grading_register.add_argument(
+        "--image-identities", type=Path, default=DEFAULT_LANGUAGE_IMAGE_IDENTITIES
+    )
+
+    ec2_grading_register = commands.add_parser(
+        "ec2-grading-register",
+        help="register one reviewed AWS evaluator capacity plan without dispatch",
+    )
+    ec2_grading_register.add_argument(
+        "--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST
+    )
+    ec2_grading_register.add_argument("--scoring-policy", type=Path, default=DEFAULT_SCORING_POLICY)
+    ec2_grading_register.add_argument("--slots", type=int, default=1)
+    ec2_grading_register.add_argument("--resource-class", default="aws-grading-small")
+    ec2_grading_register.add_argument("--workload-identity")
+    ec2_grading_register.add_argument(
+        "--image-identities", type=Path, default=DEFAULT_LANGUAGE_IMAGE_IDENTITIES
+    )
 
     grading_enqueue = commands.add_parser(
         "local-grading-enqueue", help="queue one explicitly selected completed attempt"
@@ -130,6 +155,19 @@ def _parser() -> argparse.ArgumentParser:
         "--image-identities", type=Path, default=DEFAULT_LANGUAGE_IMAGE_IDENTITIES
     )
     grading_run.add_argument("--sandbox-state", type=Path, default=DEFAULT_GRADING_SANDBOX_STATE)
+
+    ec2_grading_run = commands.add_parser(
+        "ec2-grading-run",
+        help="run registered evaluation work in identity-bound disposable AWS guests",
+    )
+    ec2_grading_run.add_argument("--worker-id", type=UUID)
+    ec2_grading_run.add_argument("--job-id", type=UUID)
+    ec2_grading_run.add_argument("--watch", action="store_true")
+    ec2_grading_run.add_argument("--plugin-allowlist", type=Path, default=DEFAULT_PLUGIN_ALLOWLIST)
+    ec2_grading_run.add_argument(
+        "--image-identities", type=Path, default=DEFAULT_LANGUAGE_IMAGE_IDENTITIES
+    )
+    ec2_grading_run.add_argument("--known-hosts", type=Path, required=True)
 
     local_score = commands.add_parser(
         "local-score-evaluation",
@@ -464,6 +502,90 @@ def _run_local_grading(args: argparse.Namespace) -> int:
         database.dispose()
 
 
+def _run_ec2_grading(args: argparse.Namespace) -> int:
+    if os.environ.get("PCB_WORKER_DISPATCH_ENABLED") != "true":
+        raise ValueError(
+            "set PCB_WORKER_DISPATCH_ENABLED=true for explicit AWS evaluation dispatch"
+        )
+    if args.job_id is not None and args.watch:
+        raise ValueError("--job-id cannot be combined with --watch")
+    if args.job_id is None and not args.watch:
+        raise ValueError(
+            "AWS evaluator one-shot requires --job-id; use --watch for queue processing"
+        )
+    if not os.environ.get("PCB_SERVICE_IDENTITY"):
+        raise ValueError("PCB_SERVICE_IDENTITY is required for worker audit attribution")
+    manifest, deployment = _read_aws_manifest("eval-supervisor")
+    selected_worker = args.worker_id or UUID(os.environ.get("PCB_WORKER_ID", ""))
+    if not args.known_hosts.is_file():
+        raise ValueError("the pinned guest known-hosts file is required")
+    if not args.plugin_allowlist.is_file() or not args.image_identities.is_dir():
+        raise ValueError("evaluation plugin and language image configurations are required")
+    if not manifest.identity.region:
+        raise ValueError("AWS evaluator manifest has no region")
+
+    database = _worker_database()
+    try:
+        store = _object_store(region_name=manifest.identity.region)
+        configured = {
+            "endpoint": os.environ.get("PCB_OBJECT_STORE_ENDPOINT"),
+            "hidden": os.environ.get("PCB_BUCKET_HIDDEN"),
+            "internal": os.environ.get("PCB_BUCKET_INTERNAL"),
+            "public": os.environ.get("PCB_BUCKET_PUBLIC"),
+        }
+        if configured != {
+            "endpoint": manifest.object_store.endpoint,
+            "hidden": manifest.object_store.bucket_hidden,
+            "internal": manifest.object_store.bucket_internal,
+            "public": manifest.object_store.bucket_public,
+        }:
+            raise ValueError("object-store settings differ from the deployed manifest")
+
+        ec2_client = boto3.client("ec2", region_name=manifest.identity.region)
+        sts_client = boto3.client("sts", region_name=manifest.identity.region)
+        secretsmanager_client = boto3.client("secretsmanager", region_name=manifest.identity.region)
+        with temporary_control_identity(
+            secrets_manager_client=secretsmanager_client,
+            manifest=manifest,
+            supervisor_role="eval-supervisor",
+        ) as identity_file:
+            control_channel = SshGuestControlChannel(
+                username=manifest.sandbox.control_user,
+                identity_file=identity_file,
+                known_hosts_file=args.known_hosts,
+            )
+            worker = build_ec2_evaluation_worker(
+                worker_id=selected_worker,
+                manifest=manifest,
+                deployment=deployment,
+                scheduler_engine=database.engine,
+                evaluator_engine=database.engine,
+                artifact_engine=database.engine,
+                object_store=store,
+                plugin_allowlist_path=args.plugin_allowlist,
+                image_identity_directory=args.image_identities,
+                ec2_client=ec2_client,
+                sts_client=sts_client,
+                control_channel=control_channel,
+            )
+            if not args.watch:
+                claimed = asyncio.run(
+                    worker.run_once(job_id=args.job_id, stage="evaluate")
+                )
+                _emit(
+                    {
+                        "worker_id": str(selected_worker),
+                        "job_id": str(args.job_id),
+                        "claimed": claimed,
+                    }
+                )
+                return 0
+            _serve_worker(worker, stage="evaluate")
+            return 0
+    finally:
+        database.dispose()
+
+
 def _score_local_evaluation(args: argparse.Namespace) -> int:
     _development_only()
     if os.environ.get("PCB_LOCAL_SCORING_ENABLED") != "true":
@@ -511,7 +633,7 @@ def _score_local_evaluation(args: argparse.Namespace) -> int:
         database.dispose()
 
 
-def _register_local_internal_config(
+def _register_worker_internal_config(
     *,
     admin_engine: Engine,
     artifacts: ArtifactRepository,
@@ -524,7 +646,7 @@ def _register_local_internal_config(
     with admin_engine.begin() as connection:
         connection.execute(
             text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
-            {"lock_key": f"pcb.local-config:{kind}:{digest}"},
+            {"lock_key": f"pcb.worker-config:{kind}:{digest}"},
         )
         config_row = connection.execute(
             select(config_document.c.id, config_document.c.canonical_artifact_id).where(
@@ -609,21 +731,54 @@ def _enqueue_local_grading(args: argparse.Namespace) -> int:
 
 
 def _register_local_grading(args: argparse.Namespace) -> int:
-    _development_only()
-    if os.environ.get("PCB_LOCAL_WORKER_SETUP_ENABLED") != "true":
-        raise ValueError(
-            "set PCB_LOCAL_WORKER_SETUP_ENABLED=true for explicit local grading registration"
+    return _register_grading(args, aws=False)
+
+
+def _register_ec2_grading(args: argparse.Namespace) -> int:
+    return _register_grading(args, aws=True)
+
+
+def _register_grading(args: argparse.Namespace, *, aws: bool) -> int:
+    manifest: EnvironmentManifest | None = None
+    deployment: VerifiedDeployment | None = None
+    if aws:
+        if os.environ.get("PCB_AWS_WORKER_SETUP_ENABLED") != "true":
+            raise ValueError(
+                "set PCB_AWS_WORKER_SETUP_ENABLED=true for explicit AWS evaluator registration"
+            )
+        if os.environ.get("PCB_WORKER_DISPATCH_ENABLED") == "true":
+            raise ValueError("worker registration must run separately from queue dispatch")
+        manifest, deployment = _read_aws_manifest("migrator")
+        max_slots = min(8, manifest.capacity.max_concurrency)
+        workload_identity = args.workload_identity or (
+            f"{manifest.environment}-grading-{args.resource_class}"
         )
-    if not 1 <= args.slots <= 8:
-        raise ValueError("local grading worker slots must be in [1,8]")
-    if not args.workload_identity.isascii() or not 1 <= len(args.workload_identity) <= 255:
-        raise ValueError("local grading workload identity is invalid")
-    service_identity = os.environ.get("PCB_SERVICE_IDENTITY")
+        actor_identity = deployment.principal
+        hardware_class = "aws-ec2-disposable-vm-v1"
+        driver_identity = "Ec2VmSandboxProvider"
+    else:
+        _development_only()
+        if os.environ.get("PCB_LOCAL_WORKER_SETUP_ENABLED") != "true":
+            raise ValueError(
+                "set PCB_LOCAL_WORKER_SETUP_ENABLED=true for explicit local grading registration"
+            )
+        max_slots = 8
+        workload_identity = args.workload_identity
+        actor_identity = os.environ.get("PCB_SERVICE_IDENTITY") or ""
+        hardware_class = "local-docker-development"
+        driver_identity = "LocalDockerSandboxProvider"
+    if not 1 <= args.slots <= max_slots:
+        raise ValueError(f"grading worker slots must be in [1,{max_slots}]")
+    if not isinstance(workload_identity, str) or not workload_identity.isascii() or not 1 <= len(
+        workload_identity
+    ) <= 255:
+        raise ValueError("grading worker workload identity is invalid")
     admin_url = os.environ.get("PCB_MIGRATION_DATABASE_URL")
-    if not service_identity or not admin_url:
+    if not actor_identity or not admin_url:
         raise ValueError("service identity and migration database URL are required")
 
     plugins = load_allowlist(args.plugin_allowlist)
+    images = load_grading_image_allowlist(args.image_identities)
     policy = load_scoring_policy(args.scoring_policy)
     resource = GradingWorkerResourceSpec(
         schema_version=1,
@@ -632,6 +787,7 @@ def _register_local_grading(args: argparse.Namespace) -> int:
         lane="grading",
         max_parallel_evaluations=1,
         plugin_allowlist_digest=canonical_document_digest(plugins),
+        image_allowlist_digest=canonical_digest(images),
     )
     body = canonical_document_bytes(resource)
     digest = canonical_document_digest(resource)
@@ -640,7 +796,25 @@ def _register_local_grading(args: argparse.Namespace) -> int:
     database = _worker_database()
     admin_database = Database(admin_url)
     try:
-        object_store = _object_store()
+        if manifest is not None:
+            if not manifest.identity.region:
+                raise ValueError("AWS evaluator manifest has no region")
+            object_store = _object_store(region_name=manifest.identity.region)
+            configured = {
+                "endpoint": os.environ.get("PCB_OBJECT_STORE_ENDPOINT"),
+                "hidden": os.environ.get("PCB_BUCKET_HIDDEN"),
+                "internal": os.environ.get("PCB_BUCKET_INTERNAL"),
+                "public": os.environ.get("PCB_BUCKET_PUBLIC"),
+            }
+            if configured != {
+                "endpoint": manifest.object_store.endpoint,
+                "hidden": manifest.object_store.bucket_hidden,
+                "internal": manifest.object_store.bucket_internal,
+                "public": manifest.object_store.bucket_public,
+            }:
+                raise ValueError("object-store settings differ from the deployed manifest")
+        else:
+            object_store = _object_store()
         artifacts = ArtifactRepository(
             database.engine, object_store, max_upload_bytes=512 * 1024**2
         )
@@ -656,109 +830,49 @@ def _register_local_grading(args: argparse.Namespace) -> int:
                     index_elements=[artifact_quota.c.visibility, artifact_quota.c.encryption_domain]
                 )
             )
-        config_id = _register_local_internal_config(
+        config_id = _register_worker_internal_config(
             admin_engine=admin_database.engine,
             artifacts=artifacts,
             kind="resource_spec",
             digest=digest,
             body=body,
             document=resource.model_dump(mode="json"),
-            owner="local-grading-resource-registration",
+            owner=f"{workload_identity[:200]}-resource-registration",
         )
-        policy_id = _register_local_internal_config(
+        policy_id = _register_worker_internal_config(
             admin_engine=admin_database.engine,
             artifacts=artifacts,
             kind="frozen_scoring_policy",
             digest=policy_digest,
             body=policy_body,
             document=policy.model_dump(mode="json"),
-            owner="local-grading-policy-registration",
+            owner=f"{workload_identity[:200]}-policy-registration",
         )
 
-        with database.engine.connect() as connection:
-            existing = (
-                connection.execute(
-                    select(
-                        worker_registration.c.id,
-                        worker_registration.c.status,
-                        worker_registration.c.lane,
-                        worker_registration.c.hardware_class,
-                        worker_registration.c.driver_identity,
-                        worker_registration.c.allowed_queue_classes,
-                        worker_registration.c.allowed_resource_classes,
-                        capacity_slot.c.slot_key,
-                        capacity_slot.c.resource_class,
-                        config_document.c.digest,
-                    )
-                    .select_from(
-                        worker_registration.outerjoin(
-                            capacity_slot, capacity_slot.c.worker_id == worker_registration.c.id
-                        ).outerjoin(
-                            config_document,
-                            config_document.c.id == capacity_slot.c.resource_spec_config_id,
-                        )
-                    )
-                    .where(worker_registration.c.workload_identity == args.workload_identity)
-                    .order_by(capacity_slot.c.slot_key)
-                )
-                .mappings()
-                .all()
-            )
-        if existing:
-            first = existing[0]
-            if (
-                first["status"] != "active"
-                or first["lane"] != "grading"
-                or first["hardware_class"] != "local-docker-development"
-                or first["driver_identity"] != "LocalDockerSandboxProvider"
-                or first["allowed_queue_classes"] != ["grading"]
-                or first["allowed_resource_classes"] != [resource.resource_class]
-                or len(existing) != args.slots
-                or any(
-                    row["resource_class"] != resource.resource_class or row["digest"] != digest
-                    for row in existing
-                )
-            ):
-                raise ValueError("active grading worker identity has a different resource plan")
-            _emit(
-                {
-                    "worker_id": str(first["id"]),
-                    "policy_config_id": str(policy_id),
-                    "scoring_effective": policy.effective_for_scoring,
-                    "registered": False,
-                    "status": "active",
-                }
-            )
-            return 0
-
-        registration = WorkerRegistrationSpec(
-            workload_identity=args.workload_identity,
-            lane="grading",
-            hardware_class="local-docker-development",
-            driver_identity="LocalDockerSandboxProvider",
-            allowed_queue_classes=("grading",),
-            allowed_resource_classes=(resource.resource_class,),
-            resource_spec_config_id=config_id,
-            slots=tuple(
-                CapacitySlotSpec(
-                    slot_key=f"grading-slot-{index}",
-                    resource_class=resource.resource_class,
-                    resource_spec_config_id=config_id,
-                )
-                for index in range(args.slots)
+        worker_id, registered = _register_grading_capacity(
+            engine=database.engine,
+            workload_identity=workload_identity,
+            hardware_class=hardware_class,
+            driver_identity=driver_identity,
+            resource_class=resource.resource_class,
+            resource_config_id=config_id,
+            resource_digest=digest,
+            slots=args.slots,
+            actor_identity=actor_identity,
+            environment=manifest.environment if manifest is not None else None,
+            max_concurrency=(
+                manifest.capacity.max_concurrency if manifest is not None else None
             ),
-        )
-        worker_id = PostgresJobRepository(database.engine).register_worker(
-            registration, actor_subject=service_identity
         )
         _emit(
             {
                 "worker_id": str(worker_id),
+                "workload_identity": workload_identity,
                 "resource_class": resource.resource_class,
                 "slots": args.slots,
                 "policy_config_id": str(policy_id),
                 "scoring_effective": policy.effective_for_scoring,
-                "registered": True,
+                "registered": registered,
                 "dispatch_enabled": False,
             }
         )
@@ -768,6 +882,112 @@ def _register_local_grading(args: argparse.Namespace) -> int:
         database.dispose()
 
 
+def _register_grading_capacity(
+    *,
+    engine: Engine,
+    workload_identity: str,
+    hardware_class: str,
+    driver_identity: str,
+    resource_class: str,
+    resource_config_id: UUID,
+    resource_digest: str,
+    slots: int,
+    actor_identity: str,
+    environment: str | None,
+    max_concurrency: int | None,
+) -> tuple[UUID, bool]:
+    with engine.begin() as connection:
+        if environment is not None:
+            connection.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
+                {"lock_key": f"pcb.worker-capacity:{environment}"},
+            )
+        existing = (
+            connection.execute(
+                select(
+                    worker_registration.c.id,
+                    worker_registration.c.status,
+                    worker_registration.c.lane,
+                    worker_registration.c.hardware_class,
+                    worker_registration.c.driver_identity,
+                    worker_registration.c.allowed_queue_classes,
+                    worker_registration.c.allowed_resource_classes,
+                    capacity_slot.c.slot_key,
+                    capacity_slot.c.resource_class,
+                    config_document.c.digest,
+                )
+                .select_from(
+                    worker_registration.outerjoin(
+                        capacity_slot, capacity_slot.c.worker_id == worker_registration.c.id
+                    ).outerjoin(
+                        config_document,
+                        config_document.c.id == capacity_slot.c.resource_spec_config_id,
+                    )
+                )
+                .where(worker_registration.c.workload_identity == workload_identity)
+                .order_by(capacity_slot.c.slot_key)
+            )
+            .mappings()
+            .all()
+        )
+        if existing:
+            first = existing[0]
+            if (
+                first["status"] != "active"
+                or first["lane"] != "grading"
+                or first["hardware_class"] != hardware_class
+                or first["driver_identity"] != driver_identity
+                or first["allowed_queue_classes"] != ["grading"]
+                or first["allowed_resource_classes"] != [resource_class]
+                or len(existing) != slots
+                or any(
+                    row["resource_class"] != resource_class
+                    or row["digest"] != resource_digest
+                    for row in existing
+                )
+            ):
+                raise ValueError("active grading worker identity has a different resource plan")
+            worker_id = UUID(str(first["id"]))
+            return worker_id, False
+
+        registration = WorkerRegistrationSpec(
+            workload_identity=workload_identity,
+            lane="grading",
+            hardware_class=hardware_class,
+            driver_identity=driver_identity,
+            allowed_queue_classes=("grading",),
+            allowed_resource_classes=(resource_class,),
+            resource_spec_config_id=resource_config_id,
+            slots=tuple(
+                CapacitySlotSpec(
+                    slot_key=f"grading-slot-{index}",
+                    resource_class=resource_class,
+                    resource_spec_config_id=resource_config_id,
+                )
+                for index in range(slots)
+            ),
+        )
+        if environment is not None:
+            if max_concurrency is None:
+                raise ValueError("AWS evaluator registration has no manifest capacity cap")
+            registered_slots = connection.execute(
+                select(func.count())
+                .select_from(
+                    worker_registration.join(
+                        capacity_slot,
+                        capacity_slot.c.worker_id == worker_registration.c.id,
+                    )
+                )
+                .where(capacity_slot.c.state != "disabled")
+            ).scalar_one()
+            if registered_slots + slots > max_concurrency:
+                raise ValueError("AWS evaluator registration exceeds the environment capacity cap")
+        worker_id = PostgresJobRepository(engine).register_worker(
+            registration, actor_subject=actor_identity
+        )
+        return worker_id, True
+
+
 def _read_aws_manifest(required_role: str) -> tuple[EnvironmentManifest, VerifiedDeployment]:
     path = Path(os.environ.get("PCB_ENV_MANIFEST", ""))
     if not path.is_file():
@@ -775,9 +995,9 @@ def _read_aws_manifest(required_role: str) -> tuple[EnvironmentManifest, Verifie
     try:
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError):
-        raise ValueError("AWS solve worker manifest cannot be read") from None
+        raise ValueError("AWS worker manifest cannot be read") from None
     if not isinstance(document, dict):
-        raise ValueError("AWS solve worker manifest must be a YAML object")
+        raise ValueError("AWS worker manifest must be a YAML object")
     manifest = EnvironmentManifest.model_validate(document)
     environment = os.environ.get("PCB_ENVIRONMENT")
     role = os.environ.get("PCB_VERIFIED_ROLE")
@@ -1147,11 +1367,13 @@ def main(argv: list[str] | None = None) -> int:
     identity = os.environ.get("PCB_SERVICE_IDENTITY") or "local-unverified"
     configure_logging(
         environment=os.environ.get("PCB_ENVIRONMENT", "dev"),
-        role=(
+        role=os.environ.get("PCB_VERIFIED_ROLE")
+        or os.environ.get("PCB_ROLE")
+        or (
             "scorer"
             if args.command == "local-score-evaluation"
             else "grading-worker"
-            if args.command.startswith("local-grading-")
+            if args.command.startswith(("local-grading-", "ec2-grading-"))
             else "solve-worker"
         ),
         service_identity=identity,
@@ -1173,6 +1395,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         if args.command == "local-grading-register":
             return _register_local_grading(args)
+        if args.command == "ec2-grading-register":
+            return _register_ec2_grading(args)
         if args.command == "local-grading-enqueue":
             return _enqueue_local_grading(args)
         if args.command == "local-grading-run":
@@ -1181,6 +1405,8 @@ def main(argv: list[str] | None = None) -> int:
             return _score_local_evaluation(args)
         if args.command == "ec2-run":
             return _run_ec2(args.worker_id, watch=args.watch, args=args)
+        if args.command == "ec2-grading-run":
+            return _run_ec2_grading(args)
         return _register_ec2(args)
     except ServiceError as error:
         print(f"worker error: {error.code}", file=sys.stderr)

@@ -24,7 +24,7 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 100 — signed audit attestations and public verification (partial foundations; production signer, reviewer, timestamp, trust publication and live PostgreSQL evidence remain blocked).
 - [x] Prompt 101 — actual benchmark pilot and detector calibration (partial preflight and calibration foundations; approved source bytes/rights, live scans, independent labels and behavioral ground truth remain blocked).
 - [x] Prompt 102 — live replacements, sealed workflow and monitoring evidence (partial reference-only campaign accounting; no authorized authors, production key/timestamp authority, live source rescan or resolver exists).
-- [ ] Prompt 103 — operations, malicious-input defenses and recovery/load.
+- [x] Prompt 103 — operations, malicious-input defenses and recovery/load (partial; current-schema restore/load prerequisites are missing).
 - [ ] Prompt 104 — broader benchmark adapters and scope conformance.
 - [ ] Prompt 105 — integrated end-to-end demonstration and reviewed projections.
 - [ ] Prompt 106 — final traceability audit, fixes and operator handoff.
@@ -33,5 +33,6 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 
 - No approved benchmark/corpus snapshots, source bytes, rights scope or trusted source-artifact resolver are available. Never turn candidate or fixture evidence into accepted live findings.
 - No independent match detector or observed-risk calibration set is available. Low/medium risk tiers require a policy with validated calibration and complete finite scope.
-- No audit database connection, reviewer session, approved model context or audit-specific exposure writer is configured. Offline migration rendering and pure contracts do not count as live integration.
+- No current-schema benchmark-audit database, reviewer session, approved model context or audit-specific exposure writer is configured. The designated local test database lacks its Alembic schema; do not migrate it as part of this prompt.
+- The available ignored local recovery backup is synthetic but predates the benchmark-audit schema; the isolated restore correctly fails with `benchmark_audit_schema_missing`. No approved persisted retrieval-index configuration/rebuild adapter or representative corpus/monitor load environment is available.
 - Keep unrelated dirty work out of prompt commits; stage only the exact prompt-owned files or hunks.

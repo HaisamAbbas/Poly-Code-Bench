@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import sqlite3
 import time
@@ -30,12 +31,21 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import boto3  # type: ignore[import-untyped]
 from botocore.config import Config  # type: ignore[import-untyped]
+from polycodebench_core.benchmark_audit_documents import (
+    AuditDocument,
+    SealAccessEventDocument,
+    SealedManifestDocumentV2,
+    audit_document_digest,
+    parse_audit_document,
+    validate_sealed_manifest_transition,
+)
 from polycodebench_core.telemetry import MetricsRegistry
+from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_persistence.object_store import (
     create_s3_compatible_client,
     object_store_addressing_style,
@@ -62,6 +72,9 @@ from polycodebench_operations.rehearsal_data import (
 )
 
 VISIBILITIES = ("hidden", "internal", "public")
+_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$", re.ASCII)
+_MAX_BACKUP_OBJECTS = 1_000_000
+_MAX_BACKUP_MANIFEST_BYTES = 64 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -123,6 +136,14 @@ def _sha256(body: bytes) -> str:
     return "sha256:" + hashlib.sha256(body).hexdigest()
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
 def _table_counts(engine: Engine) -> dict[str, int]:
     with engine.connect() as connection:
         tables = connection.execute(
@@ -140,18 +161,19 @@ def _table_counts(engine: Engine) -> dict[str, int]:
 def backup(source: EnvironmentSource, destination: Path) -> dict[str, Any]:
     started = time.perf_counter()
     destination.mkdir(parents=True, exist_ok=False)
-    dump = localenv.docker(
-        "exec",
-        source.postgres_container,
-        "pg_dump",
-        "-U",
-        "polycodebench",
-        "-d",
-        source.database,
-        "--format=custom",
-        "--no-password",
-    )
-    (destination / "database.dump").write_bytes(dump)
+    with (destination / "database.dump").open("wb") as dump_file:
+        localenv.docker(
+            "exec",
+            source.postgres_container,
+            "pg_dump",
+            "-U",
+            "polycodebench",
+            "-d",
+            source.database,
+            "--format=custom",
+            "--no-password",
+            output_file=dump_file,
+        )
     engine = _engine(source.database_url)
     try:
         counts = _table_counts(engine)
@@ -221,20 +243,376 @@ class StepTimer:
             record["status"] = "passed" if record.get("status") == "running" else record["status"]
         except Exception as error:
             record["status"] = "failed"
-            record["error"] = f"{type(error).__name__}: {error}"[:500]
+            # Exception messages from drivers can contain object keys, source URLs, credentials,
+            # or canary material. Evidence records retain the error class only.
+            record["error"] = type(error).__name__
+            safe_code = getattr(error, "safe_code", None)
+            if isinstance(safe_code, str) and re.fullmatch(
+                r"[a-z][a-z0-9_]{1,63}", safe_code, re.ASCII
+            ):
+                record["error_code"] = safe_code
+            driver_error = getattr(error, "orig", None)
+            diagnostic_code = getattr(driver_error, "sqlstate", None) or getattr(
+                driver_error, "pgcode", None
+            )
+            if isinstance(diagnostic_code, str) and re.fullmatch(
+                r"[0-9A-Z]{5}", diagnostic_code, re.ASCII
+            ):
+                record["diagnostic_code"] = diagnostic_code
             raise
         finally:
             record["seconds"] = round(time.perf_counter() - started, 3)
 
 
-def _verify_backup_files(backup_dir: Path, manifest: dict[str, Any]) -> None:
-    for name, expected in manifest["files"].items():
-        if _sha256((backup_dir / name).read_bytes()) != expected:
-            raise RuntimeError(f"backup file {name} does not match its recorded digest")
-    for item in manifest["objects"]:
-        body = (backup_dir / "objects" / item["visibility"] / item["key"]).read_bytes()
-        if _sha256(body) != item["sha256"]:
-            raise RuntimeError(f"backed-up object {item['key']} digest mismatch")
+class RestoreVerificationError(RuntimeError):
+    """A safe, stable recovery failure code without untrusted driver details."""
+
+    def __init__(self, safe_code: str) -> None:
+        if not re.fullmatch(r"[a-z][a-z0-9_]{1,63}", safe_code, re.ASCII):
+            raise ValueError("invalid recovery verification code")
+        super().__init__(safe_code)
+        self.safe_code = safe_code
+
+
+def _verify_backup_files(backup_dir: Path, manifest: dict[str, Any]) -> dict[str, int]:
+    """Fail closed on malformed manifests, path escapes, symlinks and byte mismatches."""
+    if backup_dir.is_symlink():
+        raise RuntimeError("backup directory cannot be a symbolic link")
+    root = backup_dir.resolve(strict=True)
+    manifest_path = root / "backup-manifest.json"
+    if (
+        manifest_path.is_symlink()
+        or not manifest_path.is_file()
+        or manifest_path.stat().st_size > _MAX_BACKUP_MANIFEST_BYTES
+    ):
+        raise RuntimeError("backup manifest is not a bounded regular file")
+    if type(manifest.get("schema_version")) is not int or manifest["schema_version"] != 1:
+        raise RuntimeError("unsupported backup manifest schema")
+    if not isinstance(manifest.get("created_at"), str):
+        raise RuntimeError("backup timestamp is invalid")
+    source = manifest.get("source")
+    if not isinstance(source, dict):
+        raise RuntimeError("backup source inventory is invalid")
+    buckets = source.get("buckets")
+    if (
+        not isinstance(buckets, dict)
+        or set(buckets) != set(VISIBILITIES)
+        or any(
+            not isinstance(bucket, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,62}", bucket, re.ASCII)
+            for bucket in buckets.values()
+        )
+        or len(set(buckets.values())) != len(VISIBILITIES)
+        or not isinstance(source.get("database"), str)
+        or not source["database"]
+        or not isinstance(source.get("board"), str)
+    ):
+        raise RuntimeError("backup source inventory is invalid")
+    row_counts = manifest.get("table_row_counts")
+    if not isinstance(row_counts, dict) or any(
+        not isinstance(table, str) or type(count) is not int or count < 0
+        for table, count in row_counts.items()
+    ):
+        raise RuntimeError("backup table-count inventory is invalid")
+
+    files = manifest.get("files")
+    required_files = {"database.dump", "releases.db", "keyring.json"}
+    if not isinstance(files, dict) or set(files) != required_files:
+        raise RuntimeError("backup manifest file inventory is invalid")
+
+    seen_paths: set[str] = set()
+
+    def safe_file(relative: PurePosixPath) -> Path:
+        if (
+            relative.is_absolute()
+            or not relative.parts
+            or any(
+                part in {"", ".", ".."} or ":" in part or "\\" in part or "\x00" in part
+                for part in relative.parts
+            )
+        ):
+            raise RuntimeError("backup inventory contains an unsafe path")
+        portable_name = relative.as_posix().casefold()
+        if portable_name in seen_paths:
+            raise RuntimeError("backup inventory contains colliding paths")
+        seen_paths.add(portable_name)
+        path = root.joinpath(*relative.parts)
+        current = root
+        for part in relative.parts:
+            current = current / part
+            if current.is_symlink():
+                raise RuntimeError("backup inventory contains a symbolic link")
+        try:
+            resolved = path.resolve(strict=True)
+        except OSError as error:
+            raise RuntimeError("backup inventory file is missing") from error
+        if not resolved.is_relative_to(root) or not resolved.is_file():
+            raise RuntimeError("backup inventory path is outside the backup directory")
+        return resolved
+
+    bytes_checked = 0
+    for name, expected in files.items():
+        if (
+            not isinstance(name, str)
+            or not isinstance(expected, str)
+            or not _DIGEST.fullmatch(expected)
+        ):
+            raise RuntimeError("backup manifest contains an invalid file digest")
+        path = safe_file(PurePosixPath(name))
+        bytes_checked += path.stat().st_size
+        if _sha256_file(path) != expected:
+            raise RuntimeError("backup file digest mismatch")
+
+    objects = manifest.get("objects")
+    if not isinstance(objects, list) or len(objects) > _MAX_BACKUP_OBJECTS:
+        raise RuntimeError("backup object inventory exceeds its supported bound")
+    seen: set[tuple[str, str]] = set()
+    for item in objects:
+        if not isinstance(item, dict):
+            raise RuntimeError("backup object inventory entry is invalid")
+        visibility = item.get("visibility")
+        key = item.get("key")
+        expected = item.get("sha256")
+        size = item.get("size")
+        if (
+            visibility not in VISIBILITIES
+            or not isinstance(key, str)
+            or not isinstance(expected, str)
+            or not _DIGEST.fullmatch(expected)
+            or type(size) is not int
+            or size < 0
+            or (visibility, key) in seen
+        ):
+            raise RuntimeError("backup object inventory entry is invalid")
+        seen.add((visibility, key))
+        object_path = safe_file(PurePosixPath("objects") / visibility / key)
+        if object_path.stat().st_size != size or _sha256_file(object_path) != expected:
+            raise RuntimeError("backup object size or digest mismatch")
+        bytes_checked += size
+    return {
+        "files_checked": len(files),
+        "objects_checked": len(objects),
+        "bytes_checked": bytes_checked,
+    }
+
+
+def _read_backup_manifest(backup_dir: Path) -> dict[str, Any]:
+    if backup_dir.is_symlink():
+        raise RuntimeError("backup directory cannot be a symbolic link")
+    manifest_path = backup_dir / "backup-manifest.json"
+    if (
+        manifest_path.is_symlink()
+        or not manifest_path.is_file()
+        or manifest_path.stat().st_size > _MAX_BACKUP_MANIFEST_BYTES
+    ):
+        raise RuntimeError("backup manifest is not a bounded regular file")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise RuntimeError("backup manifest is unreadable or invalid") from error
+    if not isinstance(manifest, dict):
+        raise RuntimeError("backup manifest must be an object")
+    return manifest
+
+
+def _reference_values(value: Any) -> Iterator[dict[str, Any]]:
+    if isinstance(value, dict):
+        keys = set(value)
+        if keys == {"document_id", "digest", "kind"} or keys == {
+            "artifact_id",
+            "digest",
+            "visibility",
+            "media_type",
+        }:
+            yield value
+        for child in value.values():
+            yield from _reference_values(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _reference_values(child)
+
+
+def _validate_audit_records(
+    document_rows: list[dict[str, Any]], artifact_rows: list[dict[str, Any]]
+) -> tuple[dict[str, AuditDocument], dict[str, int]]:
+    """Reparse immutable audit bytes and prove every embedded reference survives restore."""
+    documents: dict[str, AuditDocument] = {}
+    stored_digests: dict[str, str] = {}
+    for row in document_rows:
+        document_id = str(row["id"])
+        raw = {
+            "id": document_id,
+            "kind": row["kind"],
+            "schema_version": row["schema_version"],
+            "payload": row["payload"],
+            "metadata": {
+                "created_at": row["document_created_at"],
+                "timestamp_precision": row["timestamp_precision"],
+                "actor": row["created_by"],
+                "trace_id": str(row["trace_id"]) if row["trace_id"] is not None else None,
+                "row_version": row["document_row_version"],
+            },
+            "supersedes_id": str(row["supersedes_id"])
+            if row["supersedes_id"] is not None
+            else None,
+        }
+        try:
+            document = parse_audit_document(json.dumps(raw, separators=(",", ":")))
+        except (TypeError, ValueError) as error:
+            raise RuntimeError("restored benchmark audit document is invalid") from error
+        actual_digest = audit_document_digest(document)
+        if (
+            document.kind != row["kind"]
+            or document.schema_version != row["schema_version"]
+            or actual_digest != row["semantic_digest"]
+            or document_id in documents
+        ):
+            raise RuntimeError("restored benchmark audit document identity or digest mismatch")
+        documents[document_id] = document
+        stored_digests[document_id] = actual_digest
+
+    artifacts = {str(row["id"]): row for row in artifact_rows}
+    document_refs = 0
+    artifact_refs = 0
+    for document in documents.values():
+        for reference in _reference_values(document.payload.model_dump(mode="json")):
+            if "document_id" in reference:
+                document_refs += 1
+                referenced = documents.get(reference["document_id"])
+                if (
+                    referenced is None
+                    or referenced.kind != reference["kind"]
+                    or stored_digests[reference["document_id"]] != reference["digest"]
+                ):
+                    raise RuntimeError("restored audit document reference is unresolved")
+                continue
+
+            artifact_refs += 1
+            artifact = artifacts.get(reference["artifact_id"])
+            expected_visibility = {
+                "private": "hidden",
+                "restricted": "internal",
+                "public": "public",
+            }.get(reference["visibility"])
+            if (
+                artifact is None
+                or artifact["content_digest"] != reference["digest"]
+                or artifact["visibility"] != expected_visibility
+                or artifact["media_type"] != reference["media_type"]
+                or artifact["status"] != "verified"
+            ):
+                raise RuntimeError("restored audit artifact reference is unresolved")
+
+    sealed_transitions = 0
+    legacy_sealed_manifests = 0
+    for document in documents.values():
+        if document.kind != "sealed_manifest":
+            continue
+        if not isinstance(document, SealedManifestDocumentV2):
+            legacy_sealed_manifests += 1
+            continue
+        if document.supersedes_id is None:
+            if document.payload.access_event_refs or document.payload.disclosure_state != "sealed":
+                raise RuntimeError("restored initial sealed manifest has invalid exposure history")
+            continue
+        previous = documents.get(str(document.supersedes_id))
+        if not isinstance(previous, SealedManifestDocumentV2):
+            raise RuntimeError("restored sealed manifest predecessor is unavailable")
+        event_refs = document.payload.access_event_refs
+        if not event_refs:
+            raise RuntimeError("restored sealed manifest has no access event")
+        event = documents.get(str(event_refs[-1].document_id))
+        if not isinstance(event, SealAccessEventDocument):
+            raise RuntimeError("restored sealed manifest access event is unavailable")
+        try:
+            validate_sealed_manifest_transition(previous, document, event)
+        except ValueError as error:
+            raise RuntimeError("restored sealed manifest history is inconsistent") from error
+        sealed_transitions += 1
+
+    return documents, {
+        "documents_checked": len(documents),
+        "document_references_checked": document_refs,
+        "artifact_references_checked": artifact_refs,
+        "sealed_transitions_checked": sealed_transitions,
+        "legacy_sealed_manifests_present": legacy_sealed_manifests,
+    }
+
+
+def _verify_benchmark_audit_state(engine: Engine) -> dict[str, Any]:
+    row_counts = _table_counts(engine)
+    required_tables = {
+        "audit_document",
+        "audit_event",
+        "audit_run",
+        "audit_query",
+        "audit_checkpoint",
+        "call_intent",
+        "call_delivery",
+        "monitor_slot",
+        "monitor_slot_source",
+        "monitor_alert_inbox",
+    }
+    if required_tables - row_counts.keys():
+        raise RestoreVerificationError("benchmark_audit_schema_missing")
+    with engine.connect() as connection:
+        document_rows = [
+            dict(row)
+            for row in connection.execute(
+                text(
+                    "SELECT id, kind, schema_version, semantic_digest, payload, supersedes_id, "
+                    "created_by, tenant_id, document_created_at, timestamp_precision, trace_id, "
+                    "document_row_version FROM audit_document ORDER BY id"
+                )
+            ).mappings()
+        ]
+        artifact_rows = [
+            dict(row)
+            for row in connection.execute(
+                text("SELECT id, visibility, content_digest, media_type, status FROM artifact")
+            ).mappings()
+        ]
+
+    documents, reference_report = _validate_audit_records(document_rows, artifact_rows)
+    repository = PostgresBenchmarkAuditRepository(engine)
+    attestations_checked = 0
+    lifecycle_events_checked = 0
+    tenant_ids = {str(row["id"]): row["tenant_id"] for row in document_rows}
+    for document_id, document in documents.items():
+        tenant_id = tenant_ids[document_id]
+        if document.kind != "audit_attestation" or tenant_id is None:
+            continue
+        events = repository.list_attestation_lifecycle_events(document.id, tenant_id=tenant_id)
+        attestations_checked += 1
+        lifecycle_events_checked += len(events)
+
+    tracked_tables = (
+        "audit_document",
+        "audit_event",
+        "audit_run",
+        "audit_query",
+        "audit_checkpoint",
+        "call_intent",
+        "call_delivery",
+        "budget_account",
+        "budget_reservation",
+        "budget_resource",
+        "usage_record",
+        "monitor_slot",
+        "monitor_slot_source",
+        "monitor_alert_inbox",
+    )
+    return {
+        **reference_report,
+        "attestations_checked": attestations_checked,
+        "attestation_lifecycle_events_checked": lifecycle_events_checked,
+        "persisted_evidence_row_counts": {
+            name: row_counts[name] for name in tracked_tables if name in row_counts
+        },
+        # Retrieval plans currently have no durable index configuration or rebuild adapter.
+        "retrieval_index_configuration": "not_persisted_or_rebuildable",
+        "external_key_material": "references_preserved; provider_restore_unverified",
+    }
 
 
 def foreign_key_orphans(engine: Engine) -> dict[str, int]:
@@ -494,6 +872,8 @@ def verify_restored(
             )
             if sum(orphans.values()) or count_mismatch:
                 raise RuntimeError("referential integrity or row-count parity failed")
+        with timer.step("benchmark audit evidence and history") as record:
+            record.update(_verify_benchmark_audit_state(engine))
         with timer.step("artifact digest integrity") as record:
             digests = verify_artifact_digests(
                 engine,
@@ -537,41 +917,44 @@ def rehearse_restore(
     registry: MetricsRegistry | None = None,
     start_environment: Callable[[], localenv.IsolatedEnvironment] = localenv.start,
 ) -> dict[str, Any]:
-    manifest = json.loads((backup_dir / "backup-manifest.json").read_text(encoding="utf-8"))
-    buckets: dict[str, str] = manifest["source"]["buckets"]
+    manifest: dict[str, Any] = {}
+    buckets: dict[str, str] = {}
     timer = StepTimer()
     report: dict[str, Any] = {
         "schema_version": 1,
         "target": "local-docker",
         "environment_class": "isolated local restore (production-shaped rehearsal, not staging)",
-        "backup_created_at": manifest["created_at"],
         "started_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
     env: localenv.IsolatedEnvironment | None = None
     started = time.perf_counter()
     failure: str | None = None
     try:
-        with timer.step("verify backup file digests"):
-            _verify_backup_files(backup_dir, manifest)
+        with timer.step("verify backup file digests") as record:
+            manifest = _read_backup_manifest(backup_dir)
+            record.update(_verify_backup_files(backup_dir, manifest))
+            buckets = manifest["source"]["buckets"]
+            report["backup_created_at"] = manifest["created_at"]
         with timer.step("provision isolated environment") as record:
             env = start_environment()
             record["rehearsal_id"] = env.rehearsal_id
             record["images"] = localenv.pinned_images()
         with timer.step("restore database"):
             run_sql_file(env.database_url, PERSISTENCE / "sql" / "provision_roles.sql")
-            localenv.docker(
-                "exec",
-                "-i",
-                env.postgres_container,
-                "pg_restore",
-                "-U",
-                "polycodebench",
-                "-d",
-                "polycodebench",
-                "--exit-on-error",
-                "--no-password",
-                input_bytes=(backup_dir / "database.dump").read_bytes(),
-            )
+            with (backup_dir / "database.dump").open("rb") as dump_file:
+                localenv.docker(
+                    "exec",
+                    "-i",
+                    env.postgres_container,
+                    "pg_restore",
+                    "-U",
+                    "polycodebench",
+                    "-d",
+                    "polycodebench",
+                    "--exit-on-error",
+                    "--no-password",
+                    input_file=dump_file,
+                )
         with timer.step("restore objects") as record:
             client = _s3(
                 env.object_store_endpoint,
@@ -581,11 +964,11 @@ def rehearse_restore(
             for bucket in buckets.values():
                 client.create_bucket(Bucket=bucket)
             for item in manifest["objects"]:
-                client.put_object(
-                    Bucket=buckets[item["visibility"]],
-                    Key=item["key"],
-                    Body=(backup_dir / "objects" / item["visibility"] / item["key"]).read_bytes(),
-                )
+                object_path = backup_dir / "objects" / item["visibility"] / item["key"]
+                with object_path.open("rb") as body:
+                    client.put_object(
+                        Bucket=buckets[item["visibility"]], Key=item["key"], Body=body
+                    )
             record["objects"] = len(manifest["objects"])
         with timer.step("restore publication store and keyring"):
             work_dir.mkdir(parents=True, exist_ok=True)
@@ -608,12 +991,16 @@ def rehearse_restore(
         )
         report["recovery_time_seconds"] = round(time.perf_counter() - started, 3)
     except Exception as error:  # noqa: BLE001 - recorded, then re-raised by the caller's exit code
-        failure = f"{type(error).__name__}: {error}"[:500]
+        failure = f"{type(error).__name__}: restore rehearsal failed"
         report["recovery_time_seconds"] = None
     finally:
         if env is not None:
-            with timer.step("teardown and reclamation check") as record:
-                record.update(localenv.teardown(env))
+            try:
+                with timer.step("teardown and reclamation check") as record:
+                    record.update(localenv.teardown(env))
+            except Exception as error:  # noqa: BLE001 - cleanup status is retained without details
+                failure = failure or f"{type(error).__name__}: isolated cleanup failed"
+                report["recovery_time_seconds"] = None
     report["steps"] = timer.steps
     reclaimed = next(
         (step.get("reclaimed") for step in timer.steps if step["step"].startswith("teardown")),

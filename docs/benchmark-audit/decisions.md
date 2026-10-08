@@ -231,3 +231,11 @@ Replacement, sealed-task and monitor campaign summaries accept immutable documen
 ### ADDENDUM-DECISION-52 - Development evidence and claimed usage stay distinct
 
 Human versus approved-model authorship, source/model modes, key-provider mode and timestamp-provider mode are recorded separately. Query/cost usage is reported separately from resolver-verified usage. Development fixtures, self-reported counts and absent alert rows cannot be promoted to live evidence.
+
+### ADDENDUM-DECISION-53 - Recovery rejects incomplete or incompatible audit snapshots
+
+An isolated restore must validate the current benchmark-audit schema before it can count as recovery. It reparses immutable audit documents, rechecks semantic digests and document/artifact references, validates sealed-manifest successors and attestation lifecycle chains, and records call/reservation/monitor counts. A legacy backup with no required audit tables fails closed with `benchmark_audit_schema_missing`; generic scorecard restore success is not a substitute. Driver messages are not copied into restore evidence; only stable error classes and safe diagnostic codes are retained.
+
+### ADDENDUM-DECISION-54 - Audit document recovery does not establish index readiness
+
+The current checkout stores no durable retrieval-index configuration and has no index-rebuild adapter. Restored source documents, corpus references and their digests cannot establish that candidate search is usable. BX-56 and the measured search/monitor capacity portion of BX-58 remain partial/blocked until an approved versioned index manifest and rebuild path exist; no production promotion or clean-search claim follows from database/object recovery alone.

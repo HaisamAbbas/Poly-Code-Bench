@@ -75,6 +75,7 @@ source healthy → backup verified (file digests) → isolated environment up �
 - Every `verified` artifact's bytes hash to its `content_digest`.
 - Ten stratified scorecards replay byte-identically, and their rows match the archive.
 - The rebuilt projection digest equals the signed manifest. The signature verifies against the keyring. The board pointer references an available release.
+- Benchmark-audit restores also verify document digests/references, sealed successor and attestation lifecycle chains, and preserve call/usage/monitor row counts. See [benchmark audit recovery and sealed evidence](benchmark-audit-recovery.md).
 
 ## Escalation
 

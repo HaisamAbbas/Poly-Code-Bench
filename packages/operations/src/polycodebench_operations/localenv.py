@@ -16,6 +16,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import BinaryIO
 from urllib.parse import quote
 
 import yaml
@@ -28,18 +29,39 @@ class DockerError(RuntimeError):
     pass
 
 
-def docker(*arguments: str, input_bytes: bytes | None = None, timeout: int = 600) -> bytes:
-    result = subprocess.run(  # noqa: S603 - fixed docker argv
-        ["docker", *arguments],
-        input=input_bytes,
-        capture_output=True,
-        timeout=timeout,
-        check=False,
-    )
+def docker(
+    *arguments: str,
+    input_bytes: bytes | None = None,
+    input_file: BinaryIO | None = None,
+    output_file: BinaryIO | None = None,
+    timeout: int = 600,
+) -> bytes:
+    if input_bytes is not None and input_file is not None:
+        raise ValueError("provide only one Docker stdin source")
+    command = ["docker", *arguments]
+    stdout = output_file if output_file is not None else subprocess.PIPE
+    if input_file is None:
+        result = subprocess.run(  # noqa: S603 - fixed docker argv
+            command,
+            input=input_bytes,
+            stdout=stdout,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+            check=False,
+        )
+    else:
+        result = subprocess.run(  # noqa: S603 - fixed docker argv
+            command,
+            stdin=input_file,
+            stdout=stdout,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+            check=False,
+        )
     if result.returncode != 0:
         tail = result.stderr.decode("utf-8", "replace").strip().splitlines()[-2:]
         raise DockerError(f"docker {arguments[0]} failed: {' | '.join(tail)}")
-    return result.stdout
+    return result.stdout or b""
 
 
 def pinned_images(compose_path: Path = REPO_ROOT / "compose.yaml") -> dict[str, str]:

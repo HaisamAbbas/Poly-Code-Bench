@@ -328,7 +328,7 @@ def _orphans(args: argparse.Namespace, registry: MetricsRegistry) -> int:
     from polycodebench_operations import orphans
 
     if args.provider == "ec2":
-        import boto3
+        import boto3  # type: ignore[import-untyped]
 
         if not args.environment:
             print("--environment is required for the EC2 sweep", file=sys.stderr)
@@ -427,11 +427,16 @@ def _backup(args: argparse.Namespace) -> int:
 def _restore_verify(args: argparse.Namespace, registry: MetricsRegistry) -> int:
     import time as _time
 
-    from polycodebench_operations.recovery import StepTimer, verify_restored
+    from polycodebench_operations.recovery import (
+        RestoreVerificationError,
+        StepTimer,
+        verify_restored,
+    )
 
     timer = StepTimer()
     started = _time.perf_counter()
     failure = None
+    failure_code = None
     try:
         verify_restored(
             timer,
@@ -450,10 +455,13 @@ def _restore_verify(args: argparse.Namespace, registry: MetricsRegistry) -> int:
             seed=args.seed,
         )
     except Exception as error:  # noqa: BLE001 - reported, exit code 1
-        failure = f"{type(error).__name__}: {error}"[:500]
+        failure = type(error).__name__
+        if isinstance(error, RestoreVerificationError):
+            failure_code = error.safe_code
     report = {
         "passed": failure is None,
         "failure": failure,
+        "failure_code": failure_code,
         "verification_seconds": round(_time.perf_counter() - started, 3),
         "steps": timer.steps,
     }
@@ -465,7 +473,7 @@ def _restore_verify(args: argparse.Namespace, registry: MetricsRegistry) -> int:
     if args.evidence:
         args.evidence.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     _emit(
-        {key: report[key] for key in ("passed", "failure", "verification_seconds")}
+        {key: report[key] for key in ("passed", "failure", "failure_code", "verification_seconds")}
         | {"steps": [{"step": s["step"], "status": s["status"]} for s in timer.steps]}
     )
     return 0 if failure is None else 1

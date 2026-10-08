@@ -2,13 +2,13 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt85, BWP-01 and BWP-02 are complete. BWP-03 is partial pending database-backed migration/queue checks and diagnostic recommendation exclusion. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt86, BWP-01 and BWP-02 are complete; BWP-03 and BWP-04 are partial pending live database/source/resource evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
 | ID | Primary prompts | Acceptance gates | Status | Evidence owner |
 |---|---|---|---|
-| BREQ-01 | 84–86 | BX-02,06–08 | pending | see prompt 84 report |
+| BREQ-01 | 84–86 | BX-02,06–08 | partial | reports/prompt-86.md; exact adapters and membership are implemented, but live imports and PostgreSQL retry checks are pending |
 | BREQ-02 | 84,86,104 | BX-02,59 | partial | config/benchmark-audit/registry-v1.yaml; broader support in Prompt104 |
 | BREQ-03 | 87 | BX-09–11 | pending | see prompt 87 report |
 | BREQ-04 | 84,88 | BX-12–14 | pending | see prompt 84 report |
@@ -25,13 +25,13 @@ At Prompt85, BWP-01 and BWP-02 are complete. BWP-03 is partial pending database-
 | BREQ-15 | 95 | BX-34 | pending | see prompt 95 report |
 | BREQ-16 | 95,102 | BX-35,54 | pending | see prompt 95 report |
 | BREQ-17 | 95,102 | BX-36,54 | pending | see prompt 95 report |
-| BREQ-18 | 86,95,97 | BX-08,37,42 | pending | see prompt 86 report |
+| BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md; source versions stay immutable, derived-version semantics and score comparability remain later work |
 | BREQ-19 | 96,102 | BX-38–40,55 | pending | see prompt 96 report |
 | BREQ-20 | 90,96,100 | BX-21,39–40,49 | pending | see prompt 90 report |
 | BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
-| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | pending | see prompt 86 report |
+| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md; storage visibility and safe local parsing are implemented, but worker isolation, tenant and live remote controls remain pending |
 | BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | partial | six exclusive queue FKs, CAS enqueue and fencing reuse are implemented; live migration/claim/recovery verification is pending; see prompt 85 report |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | pending | see prompt 94 report |
 | BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
@@ -48,7 +48,7 @@ At Prompt85, BWP-01 and BWP-02 are complete. BWP-03 is partial pending database-
 | BWP-01 | 83 | complete | reports/prompt-83.md |
 | BWP-02 | 84 | complete | reports/prompt-84.md |
 | BWP-03 | 85 | partial | reports/prompt-85.md; relational migration/queue and diagnostics surfaces need live integration |
-| BWP-04 | 86 | pending | prompt report |
+| BWP-04 | 86 | partial | reports/prompt-86.md; fixture-only adapters, no approved bytes/rights, DB integration or parser worker isolation |
 | BWP-05 | 87 | pending | prompt report |
 | BWP-06 | 88 | pending | prompt report |
 | BWP-07 | 89 | pending | prompt report |
@@ -88,10 +88,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-03-B | 85 | partial | reports/prompt-85.md; migration renders, but no old-row PostgreSQL upgrade/rollback run |
 | BAT-03-C | 85 | partial | reports/prompt-85.md; atomic enqueue and authorization gates implemented, live queue/fence/drain checks pending |
 | BAT-03-D | 85 | partial | reports/prompt-85.md; attempt-scoped diagnostic metadata/caps implemented, dispatch approval and recommendation surface absent |
-| BAT-04-A | 86 | pending | prompt report |
-| BAT-04-B | 86 | pending | prompt report |
-| BAT-04-C | 86 | pending | prompt report |
-| BAT-04-D | 86 | pending | prompt report |
+| BAT-04-A | 86 | partial | reports/prompt-86.md; frozen plans and semantic retry checks, DB retry not exercised |
+| BAT-04-B | 86 | partial | reports/prompt-86.md; components/dates/lineage adapter-tested; no approved source import |
+| BAT-04-C | 86 | partial | reports/prompt-86.md; bounded rejection paths tested, scoped parser worker isolation absent |
+| BAT-04-D | 86 | partial | reports/prompt-86.md; denominator/self-source controls tested with synthetic snapshots only |
 | BAT-05-A | 87 | pending | prompt report |
 | BAT-05-B | 87 | pending | prompt report |
 | BAT-05-C | 87 | pending | prompt report |
@@ -182,9 +182,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-03 | 85 | complete | reports/prompt-85.md; 18 shared canonical vectors, strict Python validation and TS byte/digest agreement |
 | BX-04 | 85 | partial | reports/prompt-85.md; six scopes and atomic/fenced queue code added, but old-row migration and recovery need PostgreSQL verification |
 | BX-05 | 85 | partial | reports/prompt-85.md; old purposes remain NULL and diagnostic metadata is explicit, but recommendation exclusion and dispatch approval are not available to verify |
-| BX-06 | 86 | pending | criterion in addendum §26; prompt report |
-| BX-07 | 86 | pending | criterion in addendum §26; prompt report |
-| BX-08 | 86 | pending | criterion in addendum §26; prompt report |
+| BX-06 | 86 | partial | reports/prompt-86.md; pinned plans and deterministic sample tested; live source and DB retry verification pending |
+| BX-07 | 86 | partial | reports/prompt-86.md; local safety/blocked cases tested; worker isolation and approved input absent |
+| BX-08 | 86 | partial | reports/prompt-86.md; self-source, exposure and missingness controls fixture-tested; no real source/lineage evidence |
 | BX-09 | 87 | pending | criterion in addendum §26; prompt report |
 | BX-10 | 87 | pending | criterion in addendum §26; prompt report |
 | BX-11 | 87 | pending | criterion in addendum §26; prompt report |

@@ -66,3 +66,11 @@ Repository search found no default language recommendation query/surface. Diagno
 
 ### ADDENDUM-DECISION-12 — Prompt85 downgrade refuses any non-empty audit history
 The downgrade checks audit documents, new-scope queue rows, curation/discovery anchor rows, non-null new run purposes and audit-capable workers before dropping the extension. It is intentionally online-only and refuses destructive rollback when new data exists.
+
+### ADDENDUM-DECISION-13 — Imported benchmark bytes remain private by default
+
+Upstream source visibility is evidence metadata and does not determine storage ACLs. Imported raw sources, records and components are private or restricted; rights evidence must be verified and non-public before an import can persist. Public source URLs remain references, not public artifact permissions.
+
+### ADDENDUM-GAP-05 — SWE-bench Verified local export format
+
+The initial adapter accepts a pre-approved local JSONL export for the pinned SWE-bench Verified revision. It does not read the repository's native Parquet payload or execute dataset scripts. Before using transformed data, bind an approved, versioned conversion manifest and its input/output digests to the import evidence. No conversion or source payload is present in this checkout.

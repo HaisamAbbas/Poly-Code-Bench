@@ -9,8 +9,8 @@ benchmarks:
     official_url: "https://github.com/openai/human-eval"
     version: null
     version_state: "repository_snapshot_pinned"
-    split_policy: "Official task set; imported split not frozen"
-    split_state: "unresolved"
+    split_policy: "Complete official task set (split all); exact payload bytes and rights still require approval"
+    split_state: "pinned"
     component_schema: ["prompt","entry_point","canonical_solution","tests"]
     upstream_lineage: []
     access_state: "public_data_review_required"
@@ -18,11 +18,11 @@ benchmarks:
     license_evidence_url: "https://github.com/openai/human-eval/blob/6d43fb980f9fee3c892a914eda09951f772ad10d/LICENSE"
     modalities: ["text","code"]
     audit_status: "metadata_only"
-    importer_status: "not_implemented"
+    importer_status: "blocked"
     source_pins: [{"source_url":"https://github.com/openai/human-eval","ref":"HEAD","commit_sha":"6d43fb980f9fee3c892a914eda09951f772ad10d","purpose":"repository metadata only"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "MIT code license does not establish rights to every task component; source bytes not imported."
+    notes: "A local data-only adapter is implemented; the MIT code license does not establish rights to every task component, and no source bytes are imported."
   - slug: "mbpp"
     name: "MBPP"
     family: "code"
@@ -32,18 +32,18 @@ benchmarks:
     version_state: "repository_snapshot_pinned"
     split_policy: "Official README identifies task_ids 11–510 as test; sanitized variant must be frozen separately"
     split_state: "partially_documented"
-    component_schema: ["task_id","prompt","canonical_solution","tests"]
+    component_schema: ["task_id","prompt","canonical_solution","tests","test_imports","challenge_tests"]
     upstream_lineage: []
     access_state: "public_data_review_required"
     rights_state: "license_review_required"
     license_evidence_url: "https://creativecommons.org/licenses/by/4.0/"
     modalities: ["text","code"]
     audit_status: "metadata_only"
-    importer_status: "not_implemented"
+    importer_status: "blocked"
     source_pins: [{"source_url":"https://github.com/google-research/google-research","ref":"HEAD","commit_sha":"a1e7371c5e006f4e8b314bd23d99220d2fe44c51","purpose":"repository metadata only"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "Google Research states its datasets use CC BY 4.0; task and sanitized membership still require a pinned import."
+    notes: "A local data-only adapter supports separate original/sanitized identities; the test membership is task_ids 11–510, but item-level rights and source bytes are not approved or imported."
   - slug: "humaneval-plus"
     name: "HumanEval+"
     family: "code"
@@ -115,7 +115,7 @@ benchmarks:
     version: null
     version_state: "repository_snapshot_pinned"
     split_policy: "Dataset revision and selected split not imported"
-    split_state: "unresolved"
+    split_state: "partially_documented"
     component_schema: ["repository_state","issue","patch","tests","source_metadata"]
     upstream_lineage: []
     access_state: "public_data_review_required"
@@ -156,20 +156,20 @@ benchmarks:
     official_url: "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified"
     version: "78f471bf655a3137b2e8a75af1501690ec009ec3"
     version_state: "dataset_version_pinned"
-    split_policy: "Pinned Hugging Face dataset revision; split/config still needs import freeze"
-    split_state: "unresolved"
-    component_schema: ["repository_state","issue","patch","tests","source_metadata"]
+    split_policy: "Verified test subset; exact approved JSONL source member and source bytes still required"
+    split_state: "partially_documented"
+    component_schema: ["repository","base_commit","issue","gold_patch","test_patch","source_metadata"]
     upstream_lineage: ["swe-bench"]
     access_state: "public_data_review_required"
     rights_state: "license_review_required"
     license_evidence_url: null
     modalities: ["text","code","repository"]
     audit_status: "metadata_only"
-    importer_status: "not_implemented"
+    importer_status: "blocked"
     source_pins: [{"source_url":"https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified/tree/78f471bf655a3137b2e8a75af1501690ec009ec3","ref":"78f471bf655a3137b2e8a75af1501690ec009ec3","commit_sha":"78f471bf655a3137b2e8a75af1501690ec009ec3","purpose":"dataset revision metadata"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "Public dataset revision observed; item content has upstream repository rights and no broader redistribution claim."
+    notes: "A local JSONL adapter preserves issue, repository, base commit, patch and test patch separately; item-level upstream rights and source bytes are not approved or imported."
   - slug: "mmlu"
     name: "MMLU"
     family: "knowledge"

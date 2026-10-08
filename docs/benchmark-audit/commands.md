@@ -45,3 +45,16 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --offline --locked --all-packages alembic -c packages/persistence/alembic.ini upgrade head --sql` | Blocked by existing revision `b9e04c7a1f38` calling an online `SELECT` during offline rendering | The pre-existing revision must be adapted or an actual PostgreSQL migration database supplied to render/execute the full chain. |
 | `uv run --offline --locked --all-packages pytest -q tests/test_persistence_postgres.py` | 4 skipped | Each opt-in integration case skipped because `PCB_TEST_DATABASE_URL` is unset. |
 | PostgreSQL environment check | `PCB_TEST_DATABASE_URL` and `PCB_MIGRATION_DATABASE_URL` are not configured | PostgreSQL upgrade, downgrade, old-worker drain, CAS/fence and duplicate-dispatch integration checks were not run. |
+
+## Prompt86 importer, persistence and safety checks
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run pytest -q tests/test_benchmark_importers.py tests/test_benchmark_audit_catalog.py` | Passed: 24 passed | Local synthetic adapter, malformed/missing input, archive defense, sampling, visibility and catalog checks; no live source bytes. |
+| Ruff check on the seven changed Prompt86 Python paths | Passed: All checks passed | Core contract, parser, persistence, migration, models and focused tests. |
+| `uv run ruff format --check` on the seven changed Prompt86 Python paths | Passed: 7 files already formatted | Formatting verified after applying fixes. |
+| `uv run mypy packages/core/src/polycodebench_core/benchmark_imports.py packages/services/src/polycodebench_services/benchmark_importers.py packages/persistence/src/polycodebench_persistence/benchmark_imports.py packages/persistence/src/polycodebench_persistence/models.py packages/persistence/src/polycodebench_persistence/migrations/versions/d52a7e11b30f_benchmark_import_membership.py` | Passed: no issues in 5 source files | Strict types for new core/service/persistence/migration code. |
+| `$env:PCB_MIGRATION_DATABASE_URL='postgresql+psycopg://offline:offline@localhost/polycodebench'; uv run alembic -c packages/persistence/alembic.ini upgrade c3a4e14f8b29:d52a7e11b30f --sql` | Passed: targeted PostgreSQL DDL rendered | Offline SQL render only; PostgreSQL migration execution and rollback were not run. |
+| `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `d52a7e11b30f` is the only head | Migration graph has one head. |
+| `git diff --check` on Prompt86 paths | Passed | No whitespace errors; Git reported expected LF-to-CRLF normalization warnings for YAML/Markdown files. |
+| PostgreSQL integration/source approval check | Blocked: no DB URLs, approved rights artifact or exact local benchmark snapshot | No import was attempted. Registry rows remain blocked. |

@@ -44,11 +44,10 @@ def test_catalog_has_every_spec_family_and_all_eight_source_policies() -> None:
         row.slug for row in bundle.registry.benchmarks
     }
     assert all(row.native_evaluation_unchanged for row in bundle.registry.benchmarks)
-    assert all(
-        row.importer_status == "not_implemented"
-        for row in bundle.registry.benchmarks
-        if row.slug != "gpqa"
-    )
+    pilot_slugs = {"humaneval", "mbpp", "swe-bench-verified"}
+    assert {
+        row.slug for row in bundle.registry.benchmarks if row.importer_status == "blocked"
+    } == pilot_slugs | {"gpqa"}
     benchmark_by_slug = {row.slug: row for row in bundle.registry.benchmarks}
     for capability in bundle.capabilities.benchmarks:
         benchmark = benchmark_by_slug[capability.benchmark_slug]
@@ -56,7 +55,36 @@ def test_catalog_has_every_spec_family_and_all_eight_source_policies() -> None:
         assert set(capability.source_groups) == source_scope
         assert capability.component_scope == benchmark.component_schema
         assert capability.required_modalities == benchmark.modalities
-        assert capability.supported_components == ()
+        if capability.benchmark_slug == "humaneval":
+            assert capability.supported_components == (
+                "prompt",
+                "entry_point",
+                "canonical_solution",
+                "tests",
+            )
+            assert capability.conformance_state == "fixture_only"
+        elif capability.benchmark_slug == "mbpp":
+            assert capability.supported_components == (
+                "prompt",
+                "canonical_solution",
+                "tests",
+                "test_imports",
+                "challenge_tests",
+            )
+            assert capability.conformance_state == "fixture_only"
+        elif capability.benchmark_slug == "swe-bench-verified":
+            assert capability.supported_components == (
+                "repository",
+                "base_commit",
+                "issue",
+                "gold_patch",
+                "test_patch",
+                "source_metadata",
+            )
+            assert capability.conformance_state == "fixture_only"
+        else:
+            assert capability.supported_components == ()
+            assert capability.conformance_state == "not_run"
         assert capability.supported_modalities == ()
     assert all(row.connector_state == "not_implemented" for row in bundle.source_policies.groups)
     assert all(row.conformance_state == "not_run" for row in bundle.source_policies.groups)

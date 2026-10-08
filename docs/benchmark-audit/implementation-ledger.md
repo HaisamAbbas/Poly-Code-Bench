@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompt85 is implemented as a partial foundation; Prompt86 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–86 are partial foundations; Prompt87 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -72,4 +72,12 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added `run.purpose` / `run.audit_run_id`, bounded diagnostic run validation, audit-run budget parenting and explicit diagnostic audit metadata on ordinary attempt-scoped call intents. The audit reference is separate from the call’s authoritative attempt FK. The audit budget comes only from a frozen plan diagnostic cap and defaults to zero.
 - Four Prompt84 catalog YAML files contained a literal `\\n` line at EOF. Prompt85 regression checks exposed and removed these invalid lines.
 - Partial, not complete: no PostgreSQL migration/integration database is configured; the repository has no language recommendation query to verify diagnostic exclusion; no API/role currently grants dispatch authorization, so audit execution remains closed by default; old-worker drain and six-scope runtime/fence recovery are not verified against a live queue. No source/model calls were made.
-- Exact next prompt: Prompt86 / BWP-04.
+- Exact next prompt: Prompt87 / BWP-05; continue with local exact/lexical fingerprints and keep semantic embeddings gated on approved configuration.
+
+## Prompt86 / BWP-04
+
+- Added pinned HumanEval, MBPP original/sanitized and SWE-bench Verified import plans with deterministic 100-ID membership, exact source/parser digests, self-source exposure, independent-duplicate exclusion and explicit source/child lineage.
+- Added local JSONL/JSON parsers with bounded input, record, component and ZIP expansion; they reject unsafe members and never fetch, execute official harnesses, evaluate task code or run source scripts. HumanEval, MBPP and SWE Verified component adapters are fixture-tested only.
+- Added atomic immutable external import persistence with verified artifact bindings and private/restricted storage, membership/lineage schema, guarded migration and import-specific grants. External benchmark tasks do not receive native task-version IDs.
+- Partial, not complete: no approved source bytes or item-rights artifacts exist; registry states remain blocked; no PostgreSQL migration/integration run occurred; the SWE Verified adapter consumes only a locally provided JSONL export (not native Parquet); and parsers are not isolated in resource-constrained workers. No official harness, external data or network fetch was used.
+- Exact next prompt: Prompt87 / BWP-05, starting with local exact/lexical fingerprints; semantic embeddings remain blocked pending approved pinned configuration.

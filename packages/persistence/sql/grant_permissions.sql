@@ -69,7 +69,8 @@ GRANT SELECT ON task_set, task_set_member, task_version, config_document, model_
 GRANT INSERT, SELECT ON run, attempt, idempotency_record TO pcb_operator;
 GRANT UPDATE, DELETE ON idempotency_record TO pcb_operator;
 GRANT SELECT, INSERT ON audit_document, benchmark_registry, benchmark_snapshot,
-    benchmark_item, audit_component, fingerprint, corpus_source, corpus_snapshot,
+    benchmark_item, benchmark_import_manifest, benchmark_item_lineage,
+    audit_component, fingerprint, corpus_source, corpus_snapshot,
     corpus_document, audit_run, audit_query, audit_checkpoint, match_candidate,
     match_review, risk_assessment, temporal_assessment TO pcb_operator, pcb_administrator;
 GRANT UPDATE (state, row_version) ON audit_run TO pcb_operator;

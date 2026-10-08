@@ -3,27 +3,27 @@ matrix_version: "v1"
 observed_on: "2026-10-08"
 benchmarks:
   - benchmark_slug: "humaneval"
-    importer_state: "not_implemented"
+    importer_state: "blocked"
     component_scope: ["prompt","entry_point","canonical_solution","tests"]
-    supported_components: []
+    supported_components: ["prompt","entry_point","canonical_solution","tests"]
     source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
     required_modalities: ["text","code"]
     supported_modalities: []
-    runtime_state: "not_implemented"
-    conformance_state: "not_run"
+    runtime_state: "not_required_for_metadata"
+    conformance_state: "fixture_only"
     original_evaluation_owner: "existing-native-evaluation-path"
-    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+    limitations: ["Local data-only parsing is covered by synthetic fixtures; official harnesses and code are never executed.","Actual source bytes, rights approval and live import remain blocked."]
   - benchmark_slug: "mbpp"
-    importer_state: "not_implemented"
-    component_scope: ["task_id","prompt","canonical_solution","tests"]
-    supported_components: []
+    importer_state: "blocked"
+    component_scope: ["task_id","prompt","canonical_solution","tests","test_imports","challenge_tests"]
+    supported_components: ["prompt","canonical_solution","tests","test_imports","challenge_tests"]
     source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
     required_modalities: ["text","code"]
     supported_modalities: []
-    runtime_state: "not_implemented"
-    conformance_state: "not_run"
+    runtime_state: "not_required_for_metadata"
+    conformance_state: "fixture_only"
     original_evaluation_owner: "existing-native-evaluation-path"
-    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+    limitations: ["Original and sanitized variants remain distinct; test membership is limited to task_ids 11–510.","Only local data-only parsing is fixture-tested; item rights and source access remain blocked."]
   - benchmark_slug: "humaneval-plus"
     importer_state: "not_implemented"
     component_scope: ["prompt","contract","canonical_solution","base_tests","plus_tests"]
@@ -80,16 +80,16 @@ benchmarks:
     original_evaluation_owner: "existing-native-evaluation-path"
     limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
   - benchmark_slug: "swe-bench-verified"
-    importer_state: "not_implemented"
-    component_scope: ["repository_state","issue","patch","tests","source_metadata"]
-    supported_components: []
+    importer_state: "blocked"
+    component_scope: ["repository","base_commit","issue","gold_patch","test_patch","source_metadata"]
+    supported_components: ["repository","base_commit","issue","gold_patch","test_patch","source_metadata"]
     source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
     required_modalities: ["text","code","repository"]
     supported_modalities: []
-    runtime_state: "not_implemented"
-    conformance_state: "not_run"
+    runtime_state: "not_required_for_metadata"
+    conformance_state: "fixture_only"
     original_evaluation_owner: "existing-native-evaluation-path"
-    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+    limitations: ["Local JSONL export parsing is fixture-tested; the dataset repository export is not fetched or executed.","Upstream repository rights and approved source bytes remain blocked."]
   - benchmark_slug: "mmlu"
     importer_state: "not_implemented"
     component_scope: ["question","subject","choices","answer","source_provenance"]

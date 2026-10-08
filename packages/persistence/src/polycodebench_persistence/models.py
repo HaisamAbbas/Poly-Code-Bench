@@ -318,6 +318,7 @@ benchmark_snapshot = Table(
     created_at(),
     UniqueConstraint("registry_id", "version", "split"),
     UniqueConstraint("id", "registry_id"),
+    UniqueConstraint("id", "membership_digest", name="id_membership_digest"),
     CheckConstraint("membership_digest ~ '^sha256:[0-9a-f]{64}$'", name="membership_digest"),
     CheckConstraint(
         "rights_state IN ('unreviewed','needs_item_review','approved','blocked','gated')",
@@ -331,17 +332,143 @@ benchmark_item = Table(
     metadata,
     pk(),
     fk("snapshot_id", "benchmark_snapshot.id"),
-    fk("task_version_id", "task_version.id"),
+    fk("task_version_id", "task_version.id", nullable=True),
     Column("item_key", String(255), nullable=False),
-    Column("source_digest", String(71), nullable=False),
+    Column("source_digest", String(71), nullable=True),
     fk("original_artifact_id", "artifact.id", nullable=True),
     Column("membership_index", Integer, nullable=False),
+    Column("import_state", String(24), nullable=False, server_default=text("'legacy_unverified'")),
+    Column("error_codes", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("source_date_evidence", JSONB, nullable=True),
+    Column("source_urls", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column("self_source_exposure", Boolean, nullable=True),
+    Column("source_public_exposure", Boolean, nullable=True),
+    Column("independent_duplicate_eligible", Boolean, nullable=True),
     created_at(),
     UniqueConstraint("snapshot_id", "item_key"),
     UniqueConstraint("snapshot_id", "task_version_id"),
-    CheckConstraint("source_digest ~ '^sha256:[0-9a-f]{64}$'", name="source_digest"),
+    CheckConstraint(
+        "source_digest IS NULL OR source_digest ~ '^sha256:[0-9a-f]{64}$'", name="source_digest"
+    ),
     CheckConstraint("membership_index >= 0", name="membership_index"),
+    CheckConstraint(
+        "import_state IN ('legacy_unverified','imported','incomplete','missing','blocked')",
+        name="import_state",
+    ),
+    CheckConstraint("jsonb_typeof(error_codes) = 'array'", name="error_codes_array"),
+    CheckConstraint("jsonb_typeof(source_urls) = 'array'", name="source_urls_array"),
+    CheckConstraint(
+        "import_state = 'legacy_unverified' OR "
+        "(import_state = 'imported' AND source_digest IS NOT NULL "
+        "AND task_version_id IS NULL AND original_artifact_id IS NOT NULL "
+        "AND jsonb_array_length(error_codes) = 0) OR "
+        "(import_state = 'incomplete' AND source_digest IS NOT NULL "
+        "AND task_version_id IS NULL AND original_artifact_id IS NOT NULL "
+        "AND jsonb_array_length(error_codes) > 0) OR "
+        "(import_state = 'missing' AND source_digest IS NULL "
+        "AND task_version_id IS NULL AND original_artifact_id IS NULL "
+        "AND jsonb_array_length(error_codes) > 0) OR "
+        "(import_state = 'blocked' AND task_version_id IS NULL "
+        "AND jsonb_array_length(error_codes) > 0)",
+        name="import_state_shape",
+    ),
+    CheckConstraint(
+        "(self_source_exposure IS NULL AND source_public_exposure IS NULL "
+        "AND independent_duplicate_eligible IS NULL) OR "
+        "(self_source_exposure IS NOT NULL AND source_public_exposure IS NOT NULL "
+        "AND independent_duplicate_eligible IS NOT NULL)",
+        name="exposure_fields_together",
+    ),
     Index("ix_benchmark_item_task", "task_version_id"),
+    Index(
+        "ix_benchmark_item_import_membership_index",
+        "snapshot_id",
+        "membership_index",
+        unique=True,
+        postgresql_where=text("import_state <> 'legacy_unverified'"),
+    ),
+)
+
+benchmark_import_manifest = Table(
+    "benchmark_import_manifest",
+    metadata,
+    pk(),
+    Column("snapshot_id", Uuid(as_uuid=True), nullable=False),
+    Column("source_uri", Text, nullable=False),
+    Column("source_member", String(1024), nullable=False),
+    Column("revision", String(64), nullable=False),
+    Column("variant", String(24), nullable=False),
+    Column("importer_version", String(64), nullable=False),
+    Column("parser_config", JSONB, nullable=False),
+    Column("parser_config_digest", String(71), nullable=False),
+    Column("sample_seed", String(20), nullable=False),
+    Column("selected_membership", JSONB, nullable=False),
+    Column("membership_digest", String(71), nullable=False),
+    Column("source_digest", String(71), nullable=False),
+    fk("source_artifact_id", "artifact.id"),
+    Column("source_visibility", String(16), nullable=False),
+    Column("storage_visibility", String(16), nullable=False),
+    Column("rights_state", String(24), nullable=False),
+    Column("rights_evidence_digest", String(71), nullable=False),
+    Column("rights_evidence_artifact_id", Uuid(as_uuid=True), nullable=False),
+    Column("result_state", String(24), nullable=False),
+    Column("source_error_codes", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("snapshot_id"),
+    ForeignKeyConstraint(
+        ["snapshot_id", "membership_digest"],
+        ["benchmark_snapshot.id", "benchmark_snapshot.membership_digest"],
+        name="fk_benchmark_import_manifest_snapshot_membership",
+        ondelete="RESTRICT",
+    ),
+    ForeignKeyConstraint(
+        ["rights_evidence_artifact_id"],
+        ["artifact.id"],
+        name="fk_benchmark_import_rights_artifact",
+        ondelete="RESTRICT",
+    ),
+    CheckConstraint("revision ~ '^[0-9a-f]{40}([0-9a-f]{24})?$'", name="revision_format"),
+    CheckConstraint("parser_config_digest ~ '^sha256:[0-9a-f]{64}$'", name="parser_config_digest"),
+    CheckConstraint("membership_digest ~ '^sha256:[0-9a-f]{64}$'", name="membership_digest"),
+    CheckConstraint("source_digest ~ '^sha256:[0-9a-f]{64}$'", name="source_digest"),
+    CheckConstraint(
+        "rights_evidence_digest ~ '^sha256:[0-9a-f]{64}$'", name="rights_evidence_digest"
+    ),
+    CheckConstraint("variant IN ('official','original','sanitized','verified')", name="variant"),
+    CheckConstraint("importer_version <> ''", name="importer_version_nonempty"),
+    CheckConstraint(
+        "source_visibility IN ('public','restricted','private')", name="source_visibility"
+    ),
+    CheckConstraint("storage_visibility IN ('private','restricted')", name="storage_visibility"),
+    CheckConstraint("rights_state = 'approved'", name="approved_rights_only"),
+    CheckConstraint("result_state IN ('complete','partial','blocked')", name="result_state"),
+    CheckConstraint("jsonb_typeof(parser_config) = 'object'", name="parser_config_object"),
+    CheckConstraint(
+        "jsonb_typeof(selected_membership) = 'array' AND "
+        "jsonb_array_length(selected_membership) = 100",
+        name="selected_membership_100",
+    ),
+    CheckConstraint("jsonb_typeof(source_error_codes) = 'array'", name="source_errors_array"),
+    CheckConstraint("sample_seed ~ '^(0|[1-9][0-9]{0,19})$'", name="sample_seed_format"),
+)
+
+benchmark_item_lineage = Table(
+    "benchmark_item_lineage",
+    metadata,
+    pk(),
+    fk("item_id", "benchmark_item.id"),
+    Column("parent_benchmark_slug", String(96), nullable=False),
+    Column("parent_item_key", String(255), nullable=False),
+    Column("relation", String(24), nullable=False),
+    Column("evidence_digest", String(71), nullable=False),
+    fk("evidence_artifact_id", "artifact.id"),
+    created_at(),
+    UniqueConstraint(
+        "item_id", "parent_benchmark_slug", "parent_item_key", "relation", name="parent"
+    ),
+    CheckConstraint("relation IN ('variant_of','derived_from','translated_from')", name="relation"),
+    CheckConstraint("evidence_digest ~ '^sha256:[0-9a-f]{64}$'", name="evidence_digest"),
+    Index("ix_benchmark_item_lineage_parent", "parent_benchmark_slug", "parent_item_key"),
 )
 
 audit_component = Table(

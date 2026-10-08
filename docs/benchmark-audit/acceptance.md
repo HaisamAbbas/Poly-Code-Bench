@@ -12,7 +12,7 @@ At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial p
 | BREQ-02 | 84,86,104 | BX-02,59 | partial | config/benchmark-audit/registry-v1.yaml; broader support in Prompt104 |
 | BREQ-03 | 87 | BX-09–11 | partial | reports/prompt-87.md; deterministic exact/lexical views implemented, parser/semantic/entity features remain blocked |
 | BREQ-04 | 84,88 | BX-12–14 | partial | reports/prompt-88.md; eight contract-only profiles and bounded plans exist, while source conformance and approved live connectors remain absent |
-| BREQ-05 | 88–89 | BX-13,15–17 | partial | reports/prompt-88.md; coverage/egress contracts exist, but no approved corpus snapshots or derived index are available |
+| BREQ-05 | 88–89 | BX-13,15–17 | partial | reports/prompt-88.md and reports/prompt-89.md; bounded selection and coverage/replay contracts exist, but no approved corpus snapshots, derived indexes or durable query-result store are available |
 | BREQ-06 | 90 | BX-18–21 | pending | see prompt 90 report |
 | BREQ-07 | 91 | BX-22–23 | pending | see prompt 91 report |
 | BREQ-08 | 91,94 | BX-24,31–33 | pending | see prompt 91 report |
@@ -32,11 +32,11 @@ At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial p
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
 | BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-88.md; private remote query remains blocked without a persisted verifier/exposure event; worker isolation and tenant controls remain pending |
-| BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | partial | six exclusive queue FKs, CAS enqueue and fencing reuse are implemented; live migration/claim/recovery verification is pending; see prompt 85 report |
+| BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | partial | six exclusive queue FKs, CAS enqueue and fencing reuse are implemented; Prompt89 has no fenced query-result/checkpoint writer; live migration/claim/recovery verification is pending; see reports/prompt-85.md and reports/prompt-89.md |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | pending | see prompt 94 report |
 | BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
 | BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
-| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog and connector plan/coverage contracts exist; approved snapshots, indexes and retrieval replay remain pending; see reports/prompt-88.md |
+| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog, connector, bounded retrieval, coverage and local replay contracts exist; approved snapshots/indexes and durable retrieval replay remain pending; see reports/prompt-88.md and reports/prompt-89.md |
 | BREQ-30 | 103,106 | BX-56–58,60 | pending | see prompt 103 report |
 | BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
 | BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
@@ -51,7 +51,7 @@ At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial p
 | BWP-04 | 86 | partial | reports/prompt-86.md; fixture-only adapters, no approved bytes/rights, DB integration or parser worker isolation |
 | BWP-05 | 87 | partial | reports/prompt-87.md; exact/lexical fingerprints implemented; approved parser/model config, live persistence and semantic coverage pending |
 | BWP-06 | 88 | partial | reports/prompt-88.md; bounded plan/coverage and optional-index metadata contracts exist; live connectors, immutable snapshot writes and index rebuild remain pending |
-| BWP-07 | 89 | pending | prompt report |
+| BWP-07 | 89 | partial | reports/prompt-89.md; deterministic selection, cap/truncation, coverage, scoped cache identity and stored-hit replay contracts are tested; approved indexes and durable query recovery are absent |
 | BWP-08 | 90 | pending | prompt report |
 | BWP-09 | 91 | pending | prompt report |
 | BWP-10 | 92 | pending | prompt report |
@@ -100,10 +100,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-06-B | 88 | partial | reports/prompt-88.md; existing immutable corpus document/table contracts are identified and reusable, but no snapshot persistence adapter, extraction/index manifest writer or measured rebuild exists |
 | BAT-06-C | 88 | partial | reports/prompt-88.md; source-specific record kinds and metadata/content/date/rights coverage are distinct, but no approved snapshots or source conformance fixtures were available |
 | BAT-06-D | 88 | partial | reports/prompt-88.md; typed Data Portraits/infini-gram query metadata is candidate-only; neither tool is configured or queried |
-| BAT-07-A | 89 | pending | prompt report |
-| BAT-07-B | 89 | pending | prompt report |
-| BAT-07-C | 89 | pending | prompt report |
-| BAT-07-D | 89 | pending | prompt report |
+| BAT-07-A | 89 | partial | reports/prompt-89.md; stage/method/source/index pins, seed and caps freeze; deterministic selection is tested, but no index executor or approved corpus is available |
+| BAT-07-B | 89 | partial | reports/prompt-89.md; complete component/source/stage denominator and strict outcome reconciliation are implemented; no runtime outcome writer or source query was exercised |
+| BAT-07-C | 89 | partial | reports/prompt-89.md; cache identity binds tenant, permission, corpus, method, query, seed and limits; fenced persistence/checkpoint/result storage is absent |
+| BAT-07-D | 89 | partial | reports/prompt-89.md; replay deterministically recomputes selection from supplied stored hits or reports missing/mismatch; snapshot/index artifact lookup is absent |
 | BAT-08-A | 90 | pending | prompt report |
 | BAT-08-B | 90 | pending | prompt report |
 | BAT-08-C | 90 | pending | prompt report |
@@ -191,9 +191,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-12 | 88 | partial | reports/prompt-88.md; all eight source groups have blocked contract profiles; source-specific conformance and authorized live connectors are missing |
 | BX-13 | 88 | partial | reports/prompt-88.md; URL metadata, content, extracted text, dates and rights are separate dimensions; no Common Crawl snapshot was available to measure |
 | BX-14 | 88 | partial | reports/prompt-88.md; private queries fail closed without a verifier and exposure store; no permitted delivery path exists yet |
-| BX-15 | 89 | pending | criterion in addendum §26; prompt report |
-| BX-16 | 89 | pending | criterion in addendum §26; prompt report |
-| BX-17 | 89 | pending | criterion in addendum §26; prompt report |
+| BX-15 | 89 | partial | reports/prompt-89.md; deterministic 20/source and 100/task selection records discarded counts, but index execution and controlled recall validation are unavailable |
+| BX-16 | 89 | partial | reports/prompt-89.md; failed/truncated/unsupported cannot become no-match, cache identity is scoped; durable fenced resume/cache behavior is absent |
+| BX-17 | 89 | partial | reports/prompt-89.md; stored candidate hits replay by digest or report missing/mismatch without refetch; approved snapshot/index artifact verification is absent |
 | BX-18 | 90 | pending | criterion in addendum §26; prompt report |
 | BX-19 | 90 | pending | criterion in addendum §26; prompt report |
 | BX-20 | 90 | pending | criterion in addendum §26; prompt report |

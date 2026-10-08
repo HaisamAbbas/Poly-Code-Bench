@@ -98,3 +98,15 @@ URL metadata, source content, extracted text, source dates and rights evidence a
 ### ADDENDUM-DECISION-19 — Optional index results remain candidate evidence
 
 Data Portraits metadata must identify the sketch, corpus, method and error model. infini-gram metadata must identify the indexed corpus/revision and result positions. The typed contract records query/result digests, but no tool is configured or queried here. Approximate membership and index hits never establish a closed model's training membership.
+
+### ADDENDUM-DECISION-20 — Candidate selection is fixed, bounded and recall-limited
+
+Prompt89 selection deduplicates the same source revision/document/component candidate across stages, keeps its earliest stage and best rank, then orders by stage, rank, source group and a seed-derived identity digest. It retains at most 20 candidates per source group and 100 per task and records discarded counts. These caps limit recall; without a real index and controlled recall set, no recall quality is claimed.
+
+### ADDENDUM-DECISION-21 — Query coverage and replay cannot infer successful searches
+
+Coverage binds every frozen component/source/stage query unit to one explicit outcome. `no_match` requires an attempted finite query, zero observed candidates and a result digest. Failed, truncated, blocked and unsupported outcomes remain incomplete. Replay only uses supplied stored candidate-hit records; absent or changed records report missing/mismatch and never trigger a web fetch. No durable checkpoint/result writer or stored-artifact resolver exists in this checkout.
+
+### ADDENDUM-DECISION-22 — Cache identity includes selection and privacy scope
+
+The Prompt89 cache identity includes tenant and permission-scope digests, task/component/source/corpus/index/method/query identity, stage, seed, caps and selection-rule version. The helper only computes a digest; without a persisted permission verifier, fenced cache store and result writer it cannot authorize access or assert prior query coverage.

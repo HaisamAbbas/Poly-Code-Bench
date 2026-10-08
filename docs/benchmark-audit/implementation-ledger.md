@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–88 are partial foundations; Prompt89 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–89 are partial foundations; Prompt90 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -95,4 +95,13 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added exact HTTPS host/path validation, policy-bound request and response ceilings, global byte and timeout caps, a minimum one-second request interval, retry limits and an ordered per-attempt timing/byte ledger. Current policy lacks verified finite-scope/revision manifests, an authorization verifier, approved credential store, append-only remote-exposure event writer and fetch/query runtime, so every plan stays blocked and execution records zero I/O.
 - Reused Prompt85's immutable `CorpusSnapshotPayload`, `corpus_source`, `corpus_snapshot` and `corpus_document` contracts/tables; Prompt88 did not add a snapshot persistence adapter, derived-index builder, extraction-manifest writer or measured resource plan. No source fixtures or approved source bytes were available for connector conformance.
 - Partial, not complete: all eight policy rows remain `not_approved` / `not_implemented` / `not_run`; no benchmark/GitHub/Hugging Face initial source scope, rights evidence, private query verifier, Data Portraits sketch or infini-gram index is configured. No network fetch/query or DB write occurred.
-- Exact next prompt: Prompt89 / BWP-07. Continue with a bounded local retrieval planner and replay contracts if they can remain independently testable; actual retrieval awaits approved immutable corpus snapshots and derived indexes.
+- Exact next prompt at that point: Prompt89 / BWP-07. Continue with a bounded local retrieval planner and replay contracts if they can remain independently testable; actual retrieval awaits approved immutable corpus snapshots and derived indexes.
+
+## Prompt89 / BWP-07
+
+- Added strict immutable contracts for fixed exact/normalized, lexical/code and semantic stage pins; query-unit denominators; source/index references; selection limits; query outcomes; coverage manifests; cache identity; and replay results. Query-unit identity includes the full component fingerprint reference.
+- Added a local deterministic selector for already-produced candidate hits. It validates frozen task/component/source/revision/stage scope, deduplicates repeated stage hits, applies stable stage/rank/source/seed ordering, caps at 20 per source and 100 per task, and preserves observed, unique, retained and discarded counts/digests.
+- Added coverage reconciliation so every component/source/stage unit appears exactly once. No-match requires an attempted finite query and a result digest; failures, truncation and unsupported/blocked units cannot become complete coverage. Cache identity includes tenant and permission scope, task/component, snapshot/index/method/query, stage, seed, limits and selection-rule version.
+- Replay recomputes selection only from supplied stored candidate hits. Missing or changed input reports missing/mismatch; no web fetch is possible. Cache/replay are pure contracts and helpers, not a persisted cache or artifact store.
+- Partial, not complete: every production plan remains blocked because approved snapshots/rights/indexes, source artifact verification and an index runtime are unavailable. No fenced query reservation/checkpoint/result writer or durable replay artifact lookup was implemented; no live retrieval, source I/O or database operation occurred. Synthetic provided pins are confined to pure selection tests and are not approval evidence.
+- Exact next prompt: Prompt90 / BWP-08. Implement evidence-verification and review contracts only where they can be tested without substituting synthetic candidates for approved source evidence; otherwise record the specific blocked gate and continue independent authorized work.

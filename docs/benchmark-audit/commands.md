@@ -226,3 +226,14 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `$env:PCB_MIGRATION_DATABASE_URL='postgresql://offline:offline@127.0.0.1:5432/polycodebench'; uv run alembic -c packages/persistence/alembic.ini downgrade b7c3e9a4d281:f67a3d91c4b2 --sql` | Passed: guarded offline SQL rendered | Downgrade refuses persisted tenant-bound rows; no database execution. |
 | `git diff --check` | Passed | No whitespace errors. |
 | Live database/source/model/signer/reviewer/browser availability | Blocked | No approved runtime credentials or evidence source was available; none was contacted. |
+
+## Prompt99 public dashboard and evidence journeys
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `corepack pnpm --filter @polycodebench/web typecheck` | Passed: `tsc --noEmit` | TypeScript checks for the public report, lookup form and curator boundary. |
+| `corepack pnpm --filter @polycodebench/web lint` | Passed | ESLint for the web app. |
+| `corepack pnpm --filter @polycodebench/web test:e2e:prompt99` | Passed: 4 scenarios | Synthetic Playwright coverage for keyboard/mobile report lookup, delayed loading state, invalid projection filtering, and blocked curator access with no private request. The API fixture is not live evidence. |
+| `corepack pnpm --filter @polycodebench/web build` | Passed | Production build includes `/audit-reports`, `/audit-reports/[reportId]`, and `/benchmark-audit`. |
+| `uv run --locked ruff check apps/web/tests/e2e/launch-prompt99-api.py` and `uv run --locked ruff format --check apps/web/tests/e2e/launch-prompt99-api.py` | Passed | Python fixture is lint-clean and formatted. |
+| Live reviewed projection, tenant-bound curator workflow, revoked report lifecycle, database/source/reviewer evidence | Blocked | No live service, reviewer ACL, lifecycle writer, source snapshot or revocation state is available. No external operation was attempted. |

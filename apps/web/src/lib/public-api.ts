@@ -5,8 +5,10 @@ type PublicPath = Exclude<
   Extract<keyof paths, `/v1/${string}`>,
   `/v1/admin/${string}` | `/v1/model-submissions${string}`
 >;
-type GetOperation<Path extends keyof paths> = paths[Path] extends { readonly get: infer Operation }
-  ? Operation
+type GetOperation<Path extends keyof paths> = Path extends keyof paths
+  ? paths[Path] extends { readonly get: infer Operation }
+    ? Operation
+    : never
   : never;
 type SuccessEnvelope<Operation> = Operation extends { readonly responses: infer Responses }
   ? Responses extends { readonly 200: infer Response }
@@ -64,6 +66,8 @@ export type ReleaseContext = {
 };
 export type ModelSubmissionRequest = ApiSchema<"ModelSubmissionInput">;
 export type ModelSubmissionStatus = ApiSchema<"ModelSubmission">;
+export type PublicAuditDocumentResult = ApiSchema<"AuditDocumentResult">;
+export type PublicBenchmarkHealth = ApiSchema<"PublicHealthView">;
 export async function loadReleaseContext(requestedRelease?: string): Promise<Resource<ReleaseContext>> {
   const index = await publicApi<ApiEnvelope<readonly ReleaseSummary[]>>("/releases?limit=200");
   if (index.state !== "ready") return index;

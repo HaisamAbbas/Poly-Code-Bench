@@ -195,3 +195,7 @@ New API audit documents require a tenant UUID. Historical rows with no tenant bi
 ### ADDENDUM-DECISION-43 - Unsupported audit operations fail closed
 
 The API and CLI expose only operations backed by existing services: registry/document/run reads and plan/run creation. Review, temporal, sealing, firewall, replacement, monitor, health-generation and attestation-verification operations without an authorized adapter return an explicit blocked/incomplete result. Dry-run validates locally and performs no HTTP, source, model, guest, signing, publication or notification work. No fake result or alternate model gateway is provided.
+
+### ADDENDUM-DECISION-44 - Public audit views use only reviewed aggregate projections
+
+The public dashboard reads only the strict allowlisted health projection through a no-store API route; it does not enumerate reports or load raw audit documents, task content, answers, fingerprints, vectors or sealed artifacts. It presents counts as descriptive evidence, preserves unknown and blocked membership, and makes no clean or model-specific eligibility claim. The curator route makes no private request until a reviewed shared tenant/object ACL and authorized transition services are connected. Revocation and expiry claims remain part of Prompt100's attestation lifecycle and are not inferred from the current health projection.

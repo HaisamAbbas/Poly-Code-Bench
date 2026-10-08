@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt97, BWP-01 and BWP-02 are complete; BWP-03 through BWP-15 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt99, BWP-01 and BWP-02 are complete; BWP-03 through BWP-17 are partial pending live database/source/resource/reviewer/calibration and lifecycle evidence. BWP-18 through BWP-24 remain pending. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -29,9 +29,9 @@ At Prompt97, BWP-01 and BWP-02 are complete; BWP-03 through BWP-15 are partial p
 | BREQ-19 | 96,102 | BX-38-40,55 | partial | reports/prompt-96.md; timezone/DST-safe slots, bounded catch-up/retry, incremental/full refresh planning, per-source reservations and reference-only in-app alerts are implemented; owner-role verification, live scheduler/connectors and PostgreSQL execution are unavailable |
 | BREQ-20 | 90,96,100 | BX-21,39-40,49 | partial | reports/prompt-90.md and reports/prompt-96.md; immutable match successors, accepted-evidence successor-assessment alert checks, correction/dispute records and no-delete retention are implemented; live reviewer/source history and production alert delivery remain unavailable |
 | BREQ-21 | 97,99 | BX-41-43,46 | partial | reports/prompt-97.md; denominator-first Decimal health metrics, explicit unknown/unscanned counts, frozen cohort keys and trend breaks are implemented; live source, database and reviewed projection evidence remain unavailable |
-| BREQ-22 | 98–99 | BX-44–47 | partial | reports/prompt-98.md; tenant-scoped API reads, plan/run create, CLI and schema-derived SDK foundations are tested; transition adapters/private artifact authorization are pending and Prompt99 UI journeys remain |
+| BREQ-22 | 98–99 | BX-44–47 | partial | reports/prompt-98.md and reports/prompt-99.md; tenant-scoped API reads, plan/run create, CLI/SDK contracts and public aggregate report journeys are tested; private transition adapters, shared curator ACL, model-context/evidence views and live reviewed projection remain |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
-| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-90.md and reports/prompt-98.md; untrusted source/judge boundaries and tenant/owner-scoped API reads are tested; private artifact-byte authorization, audit-specific model dispatch/exposure writer, shared reviewer ACL and live authorization verification remain absent |
+| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-90.md and reports/prompt-98.md through reports/prompt-99.md; untrusted source/judge boundaries, tenant/owner-scoped API reads, and public projection privacy/browser checks are tested; private artifact-byte authorization, audit-specific model dispatch/exposure writer, shared reviewer ACL and live authorization verification remain absent |
 | BREQ-25 | 85,89,96,98,103 | BX-04–05,16–17,38,44,56–57 | partial | six exclusive queue FKs, CAS enqueue, tenant/idempotent plan/run API creation and fencing reuse are implemented; Prompt89 has no fenced query-result/checkpoint writer; live migration/claim/recovery verification is pending; see reports/prompt-85.md, reports/prompt-89.md and reports/prompt-98.md |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | partial | reports/prompt-94.md; owned-training manifests and separate compute caps are represented, while authorized training evidence and calibration remain blocked |
 | BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
@@ -61,7 +61,7 @@ At Prompt97, BWP-01 and BWP-02 are complete; BWP-03 through BWP-15 are partial p
 | BWP-14 | 96 | partial | reports/prompt-96.md; bounded monitor policies, reservations, retries and verified in-app alert persistence exist; no trusted owner-role verifier, live scheduler/source adapter, or PostgreSQL integration is available |
 | BWP-15 | 97 | partial | reports/prompt-97.md; descriptive health v2 contracts, Decimal goldens, sampling/missingness and trend-discontinuity rules are implemented; live source/database evidence and integrated projection review remain unavailable |
 | BWP-16 | 98 | partial | reports/prompt-98.md; tenant-scoped API, CLI and generated SDK foundations pass local checks; transition adapters, shared reviewer ACL, private artifact-byte authorization and live service evidence remain |
-| BWP-17 | 99 | pending | prompt report |
+| BWP-17 | 99 | partial | reports/prompt-99.md; public aggregate report and safe curator-blocked pages pass synthetic browser checks; private transitions, comparative/evidence journeys and live reviewed projection remain unavailable |
 | BWP-18 | 100 | pending | prompt report |
 | BWP-19 | 101 | pending | prompt report |
 | BWP-20 | 102 | pending | prompt report |
@@ -139,11 +139,11 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-16-A | 98 | partial | reports/prompt-98.md; reads and plan/run creation enforce tenant/role/object scope, cursor, idempotency and ETag preconditions; legal transitions, private artifact bytes and live PostgreSQL checks remain |
 | BAT-16-B | 98 | partial | reports/prompt-98.md; all command families have help and exit-code behavior; operations without a service adapter fail closed |
 | BAT-16-C | 98 | partial | reports/prompt-98.md; generated API types preserve Decimal strings, null reasons and enums; unimplemented operations have no SDK service to invoke |
-| BAT-16-D | 98 | partial | reports/prompt-98.md; allowlisted public health projection and local-only dry-run are tested; live review/publication and browser checks remain |
-| BAT-17-A | 99 | pending | prompt report |
-| BAT-17-B | 99 | pending | prompt report |
-| BAT-17-C | 99 | pending | prompt report |
-| BAT-17-D | 99 | pending | prompt report |
+| BAT-16-D | 98 | partial | reports/prompt-98.md; allowlisted public health projection and local-only dry-run are tested; live review/publication and production browser/access checks remain |
+| BAT-17-A | 99 | partial | reports/prompt-99.md; curator page fails closed without private requests; no source/cost planner or authorized review/firewall/seal/monitor transition service exists |
+| BAT-17-B | 99 | partial | reports/prompt-99.md; public aggregate shows benchmark/version, source window, scope, unknowns, risk tiers and limitations; temporal/model-context and prior-exposure panels require unavailable reviewed evidence |
+| BAT-17-C | 99 | partial | reports/prompt-99.md; unavailable trends/corrections/derived sets/attestations are explicitly disclosed; comparable views and correction/revocation sources are not integrated |
+| BAT-17-D | 99 | partial | reports/prompt-99.md; synthetic Playwright checks cover keyboard, mobile, loading, not-found/privacy and blocked curator access; revoked-state and production access/log review remain unavailable |
 | BAT-18-A | 100 | pending | prompt report |
 | BAT-18-B | 100 | pending | prompt report |
 | BAT-18-C | 100 | pending | prompt report |
@@ -222,8 +222,8 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-43 | 97 | partial | reports/prompt-97.md; immutable trend points identify membership/policy/context/source/time/method/definition breaks; integrated reviewed projection is unavailable |
 | BX-44 | 98 | partial | reports/prompt-98.md; tenant/owner/RBAC/MFA, signed pagination, create idempotency and ETag preconditions are tested; transition writers, shared ACL, private artifact bytes and live DB checks remain |
 | BX-45 | 98 | partial | reports/prompt-98.md; OpenAPI SDK types preserve Decimal strings/null reasons/enums and CLI exits are tested; unsupported operations remain blocked pending authorized adapters |
-| BX-46 | 99 | pending | criterion in addendum §26; prompt report |
-| BX-47 | 99 | pending | criterion in addendum §26; prompt report |
+| BX-46 | 99 | partial | reports/prompt-99.md; public aggregate view and explicit evidence limits are implemented; live reviewed projection, context-aware evidence journeys and comparable trends remain |
+| BX-47 | 99 | partial | reports/prompt-99.md; keyboard/mobile/loading/partial/not-found/blocked/privacy synthetic browser checks pass; revoked report state, production shared ACL and live browser privacy evidence remain |
 | BX-48 | 100 | pending | criterion in addendum §26; prompt report |
 | BX-49 | 100 | pending | criterion in addendum §26; prompt report |
 | BX-50 | 100 | pending | criterion in addendum §26; prompt report |
@@ -247,7 +247,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BA2 | 89–91 | pending | `reports/phase-BA2.md` |
 | BA3 | 92–94 | partial | `phase-BA3.md` |
 | BA4 | 95-97 | partial | `reports/phase-BA4.md` |
-| BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompt98 foundations implemented, Prompts99–100 pending, and live authorization/artifact evidence unavailable |
+| BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompts98–99 foundations implemented and Prompt100 pending; shared authorization, lifecycle adapters, signer and live reviewed evidence remain unavailable |
 | BA6 | 101–103 | pending | `reports/phase-BA6.md` |
 | BA7 | 104–106 | pending | `reports/phase-BA7.md` |
 

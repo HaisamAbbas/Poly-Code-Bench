@@ -196,3 +196,12 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Partial: no shared reviewer ACL, private audit artifact-byte adapter, API transition writers for review/temporal/seal/firewall/replacement/monitor/health or attestation verification, or live PostgreSQL/service evidence is available. No source/model/guest/signing/publication/notification operation occurred. Public health needs an injected reviewed projection store.
 - `ADDENDUM-DECISION-42` records tenant/owner scope; `ADDENDUM-DECISION-43` records fail-closed unsupported operations. No new specification discrepancy; the §1 source-list mismatch (five referenced, three listed/hashed) remains.
 - Exact next prompt: Prompt99 / BWP-17, benchmark health dashboard and evidence journeys.
+
+## Prompt99 / BWP-17
+
+- Added a public UUID report lookup and aggregate health page on the API's strict allowlisted no-store projection. The view keeps benchmark/version, source window, selected/assessed/scope counts, missingness, observed-risk distribution and limitations visible, and states that counts do not establish absence or model-specific eligibility.
+- Added a keyboard-accessible client lookup with a pending announcement, responsive report layout, loading skeleton and safe error/empty states. Added a curator route that states why access is unavailable and sends no private API request because this web identity has no tenant or curator ACL.
+- Added an isolated synthetic API fixture and four Playwright scenarios covering keyboard/mobile, loading, invalid-projection privacy filtering and blocked curator access. Typecheck, lint, production build and fixture Ruff checks pass. The fixture does not count as live source, reviewer, authorization or database evidence.
+- Partial: no public catalog/index, live reviewed projection, comparable trend/context/exposure/correction/derived/attestation journey, shared curator ACL, authorized transition writer or revocation contract is available. No task/evidence content is exposed and no database, source, model, reviewer or signer operation occurred.
+- `ADDENDUM-DECISION-44` records public allowlist-only consumption and the no-request curator boundary. No new specification discrepancy; the §1 source-list mismatch remains.
+- Exact next prompt: Prompt100 / BWP-18, signed audit attestations and public verification. Keep signing and publication gated on reviewed signer/key custody and approval adapters.

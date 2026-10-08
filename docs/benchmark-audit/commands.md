@@ -305,3 +305,14 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --locked alembic -c packages/persistence/alembic.ini heads`; offline `upgrade c3a4e14f8b29:head --sql` render | Passed: `b7c3e9a4d281` is sole head; SQL rendered | No database connection or schema migration. Current-schema PostgreSQL transition/integration remains blocked. |
 | `uv run --locked python scripts/benchmark_scope_conformance.py` | Passed: 25 families, 0 live-verified, 4 synthetic-source-fixture families | Metadata-only readiness dossier; not a reviewed public health projection and not publishable evidence. No external source/model/cost dispatch. |
 | API/CLI/UI transition and public projection approval | Blocked | Transition writers and shared reviewer ACL are absent; no current-schema isolated DB, approved signer, human review or exact projection approval is configured. Public routes remain read-only. |
+
+## Prompt106 final traceability and operator handoff
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run --locked python scripts/benchmark_audit_traceability.py` | Passed, exit 0; status `partial`; 0 structural errors | Reconciled 32 BREQ, 24 BWP, 96 BAT, 60 BX, 8 phases, all 24 prompt and 8 phase reports, and all 3 listed source SHA-256 pins. JSON preserves the two missing historical sources and remaining incomplete capabilities as blockers. Local read-only operation. |
+| `uv run --locked pytest -q tests/test_benchmark_audit_traceability.py` | Passed: 3 tests | Checks actual repository structure/source hashes and duplicate/missing-ID detection. |
+| `uv run --locked ruff check scripts/benchmark_audit_traceability.py tests/test_benchmark_audit_traceability.py`; format check on the same two paths; `uv run --locked mypy scripts/benchmark_audit_traceability.py` | Passed | Lint, formatting, and strict script typing passed. |
+| `uv run --locked --project packages/api pcb audit verify-attestation --help` | Passed | Confirms the public trust-store/file interface and local `--dry-run` option. No attestation was verified and no key was read. |
+| `git diff --cached --check` | Passed: no whitespace errors in the 22 Prompt106-owned staged paths | Only the exact Prompt106 files were staged; unrelated worktree changes remain unstaged. |
+| Live benchmark/source/rights/reviewer/database/key/capacity/cost work | Blocked or unavailable | No live source, model, paid service, reviewer, signer or production database was used for Prompt106. Configured ceilings are not measured operating costs/capacity. |

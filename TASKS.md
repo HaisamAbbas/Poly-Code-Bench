@@ -27,7 +27,7 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 103 — operations, malicious-input defenses and recovery/load (partial; current-schema restore/load prerequisites are missing).
 - [x] Prompt 104 — broader benchmark adapters and scope conformance (partial; only GSM8K adds a synthetic-fixture parser, all other source/runtime rights and multimodal evidence remain pending or blocked).
 - [x] Prompt 105 — integrated end-to-end demonstration and reviewed projections (partial; the synthetic contract pipeline and existing API/CLI/browser regressions pass, while trusted source/reviewer/persistence/publication transitions remain unavailable).
-- [ ] Prompt 106 — final traceability audit, fixes and operator handoff.
+- [x] Prompt 106 — final traceability audit, fixes and operator handoff (partial foundations; live/source/rights/reviewer/database/crypto/calibration/runtime/modality gates remain open; read-only audit command is recorded).
 
 ## Persistent blockers
 

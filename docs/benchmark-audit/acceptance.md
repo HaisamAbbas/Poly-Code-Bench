@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are partial foundations pending live database/source/resource/reviewer/calibration and lifecycle evidence. BWP-21 through BWP-24 remain pending. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+Through Prompt106, BWP-01 and BWP-02 are complete. BWP-03 through BWP-20 and BWP-22 through BWP-24 have partial implementation foundations; BWP-21 now has the Prompt103 recovery and hardening evidence but remains partial. Live database, source/rights, reviewer, calibration, lifecycle, crypto, runtime, and modality gates remain open where each row says so. Prompt106 closes report and ledger structure, not missing evidence.
 
 ## Requirements (BREQ)
 
@@ -35,11 +35,11 @@ Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are par
 | BREQ-25 | 85,89,96,98,103 | BX-04–05,16–17,38,44,56–57 | partial | six exclusive queue FKs, CAS enqueue, tenant/idempotent plan/run API creation, fences and preserved call/reservation/monitor counts are implemented; Prompt89 has no fenced query-result/checkpoint writer; the available restore is pre-audit and the local test database has no migrations; see reports/prompt-85.md, reports/prompt-89.md, reports/prompt-98.md and reports/prompt-103.md |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | partial | reports/prompt-94.md and reports/prompt-101.md; owned-training manifests and separate compute caps are represented, but no authorized trained/untrained manifests or behavioral ground truth exist |
 | BREQ-27 | 101–102 | BX-51–55 | partial | reports/prompt-101.md and reports/prompt-102.md; exact-scope calibration and reference-only replacement/seal/monitor accounting contracts exist, while source scans, independent labels, 12 reviewed replacements, six production seals and live rescan are unavailable |
-| BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
+| BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | reports/prompt-85.md and reports/prompt-105.md; native scoring paths remain unchanged; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout |
 | BREQ-29 | 84,88–89,101,104 | BX-12–17,51,59 | partial | catalog, connectors, bounded retrieval, coverage, local replay, exact-source pilot preflight and all-family scope coverage exist; approved snapshots/indexes, actual scans and durable replay remain pending; see reports/prompt-88.md through reports/prompt-89.md, reports/prompt-101.md and reports/prompt-104.md |
 | BREQ-30 | 103,106 | BX-56–58,60 | partial | reports/prompt-103.md; fail-closed restore checks, local malicious-input/privacy regressions and recovery/key/outage runbooks exist; current-schema restore, provider recovery and representative search/monitor capacity evidence remain blocked |
-| BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
-| BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
+| BREQ-31 | 83,104–106 | BX-01,59–60 | partial | reports/prompt-83.md, reports/prompt-104.md through reports/prompt-106.md, acceptance.md, and the traceability command; all prior-discussion features map to evidence or explicit blockers, but two source MD identities remain unprovided |
+| BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | reports/prompt-83.md through reports/prompt-106.md, all eight phase reports, all 96 ticket rows, and all 60 gate rows are structurally checked; live/source/human/crypto/modality prerequisites remain open |
 
 ## Work packages (BWP)
 
@@ -65,10 +65,10 @@ Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are par
 | BWP-18 | 100 | partial | reports/prompt-100.md; Ed25519 verification, canonical digest binding, stale/offline qualification, append-only lifecycle repository methods, public verification route and limitations UI are implemented; approved trust/key/reviewer authority, trusted timestamp proof, transition API, live PostgreSQL and reviewed publication remain unavailable |
 | BWP-19 | 101 | partial | reports/prompt-101.md; frozen 300-item preflight, trusted population/plan/source/label resolver boundaries, family-cluster calibration and bounded resampling work exist; no approved source bytes/rights, independent labels, live scan or behavioral ground truth are available |
 | BWP-20 | 102 | partial | reports/prompt-102.md; fixed-scope replacement/sealed/monitor evidence contracts and separate reported/verified usage counts exist; no authorized live campaign, production key/timestamp authority or source rescan is available |
-| BWP-21 | 103 | pending | prompt report |
+| BWP-21 | 103 | partial | reports/prompt-103.md; local restore-bundle hardening and fail-closed audit reconciliation are tested, but the available backup predates audit tables and live key/index/load recovery remains unavailable |
 | BWP-22 | 104 | partial | reports/prompt-104.md; all §5 families reconcile metadata, scope, modality, access, runtime and blockers; only GSM8K adds a new synthetic-fixture parser; live rights/source conformance remain blocked |
 | BWP-23 | 105 | partial | reports/prompt-105.md; synthetic import-to-health lifecycle and privacy/API/CLI/browser regressions pass; live source, human review, persistent transition writers and reviewed public projection remain blocked |
-| BWP-24 | 106 | pending | prompt report |
+| BWP-24 | 106 | partial | reports/prompt-106.md and reports/phase-BA7.md; all ledgers, prompt/phase reports, source pins, and exact evidence links are audited; missing source identities and live/source/rights/reviewer/database/crypto/modality evidence remain explicit |
 
 ## Engineering tickets (BAT)
 
@@ -168,10 +168,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-23-B | 105 | blocked | reports/prompt-105.md; no authorized API/CLI/UI transition writers or current-schema PostgreSQL service; service contracts pass individually, but cross-surface admission/review/seal/monitor history cannot run |
 | BAT-23-C | 105 | partial | reports/prompt-105.md; 287 focused API/service/scoring tests and four synthetic Playwright journeys pass; live DB, reviewer ACL, migration execution, publication and production browser evidence remain unavailable |
 | BAT-23-D | 105 | partial | reports/prompt-105.md; internal 25-family scope preview and exact local check commands are available; no reviewed or authorized public health projection, live-cost quote or scope approval exists |
-| BAT-24-A | 106 | pending | prompt report |
-| BAT-24-B | 106 | pending | prompt report |
-| BAT-24-C | 106 | pending | prompt report |
-| BAT-24-D | 106 | pending | prompt report |
+| BAT-24-A | 106 | partial | reports/prompt-106.md and scripts/benchmark_audit_traceability.py; actual 32/24/96/60/8 ID sets, all 24 prompt reports, all eight phase reports, and three source hashes are checked; two historical source documents are unidentified |
+| BAT-24-B | 106 | partial | reports/prompt-106.md; stale BWP-21/BA2 mappings and nonconforming report headings were corrected and rechecked; synthetic, live, human, source, crypto, runtime, and modality evidence remain distinctly qualified |
+| BAT-24-C | 106 | partial | reports/prompt-106.md and reports/operator-handoff.md; repository procedures, source/rights gates, key/restore/correction runbooks, and configured request/query/storage caps are mapped; production cost, RTO/RPO, and representative capacity have not been measured |
+| BAT-24-D | 106 | partial | reports/prompt-106.md and reports/phase-BA7.md; final traceability report is saved and `uv run --locked python scripts/benchmark_audit_traceability.py` is the verified read-only next command; capability evidence gaps remain |
 
 ## End-to-end gates (BX)
 
@@ -236,7 +236,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-57 | 103 | partial | reports/prompt-103.md; worker fence/cancel and bounded retry regressions pass; persisted provider response replay, current-schema reservation reconciliation and live source/object-store failure injection remain blocked on a migrated approved local test environment |
 | BX-58 | 103 | partial | reports/prompt-103.md; malicious archive, connector, sandbox, telemetry-redaction and bounded restore-bundle checks pass; no representative search/monitor latency, storage or cost load was measured |
 | BX-59 | 104, 105 | partial | reports/prompt-104.md and reports/prompt-105.md; 25-row scope reconciliation plus synthetic import-to-health and API/CLI/browser privacy regressions pass; source rights, runtime, human review, persistent transitions, modality evidence and publication remain pending or blocked |
-| BX-60 | 106 | pending | criterion in addendum §26; prompt report |
+| BX-60 | 106 | partial | reports/prompt-106.md, reports/phase-BA7.md, acceptance.md, and the verified traceability command; structure is closed, while two source MDs and required live/source/human/crypto/modality evidence remain blocked or unavailable |
 
 ## Phase ownership
 
@@ -244,11 +244,11 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 |---|---|---|---|
 | BA0 | 83–85 | partial | `phase-BA0.md` |
 | BA1 | 86–88 | partial | `phase-BA1.md` |
-| BA2 | 89–91 | pending | `reports/phase-BA2.md` |
+| BA2 | 89–91 | partial | `phase-BA2.md` |
 | BA3 | 92–94 | partial | `phase-BA3.md` |
 | BA4 | 95-97 | partial | `reports/phase-BA4.md` |
 | BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompts98–100 foundations implemented; shared curator authorization, approved signer/reviewer authority, trusted timestamps, live PostgreSQL/revocation and reviewed source evidence remain unavailable |
 | BA6 | 101–103 | partial | `reports/phase-BA6.md`; Prompts101–103 local foundations and failure checks exist, but live pilot inputs, compatible audit backup, key/index recovery, provider replay DB and representative search/monitor load remain unavailable |
-| BA7 | 104–106 | partial | `reports/phase-BA7.md`; Prompt104 scope evidence and Prompt105 synthetic lifecycle/API/CLI/browser checks are recorded; live cross-surface transitions, reviewed publication and final traceability remain |
+| BA7 | 104–106 | partial | `reports/phase-BA7.md`; Prompt104 scope evidence, Prompt105 synthetic lifecycle/API/CLI/browser checks, and Prompt106 traceability/handoff are recorded; live cross-surface transitions and reviewed publication remain unavailable |
 
 Update each status only when its evidence exists. A phase is partial if mandatory live, source, human or modality evidence remains unavailable.

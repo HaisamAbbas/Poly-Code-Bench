@@ -1,6 +1,6 @@
 # Prompt 90 — Trusted match verification, review and disputes
 
-## 1. Implemented functionality and changed files
+## Implemented functionality and changed files
 
 - Added `MatchEvidencePayloadV2` / `MatchEvidenceDocumentV2` in [benchmark_audit_documents.py](../../../packages/core/src/polycodebench_core/benchmark_audit_documents.py). V2 binds a match to the target task/components, retrieval plan/result/candidate digests, source snapshot/revision/content artifact, source lineage, source byte offsets and span digests, answer relationship, source-date evidence, rights references, relation rubric, reviewers and counterevidence. The existing v1 document schema and its canonical vectors remain unchanged.
 - Added v1/v2 canonical envelope support in [canonical.py](../../../packages/core/src/polycodebench_core/canonical.py), [canonical.ts](../../../apps/contracts/src/canonical.ts) and [contracts.mjs](../../../apps/contracts/test/contracts.mjs). Both versions use the same canonical JSON ordering rules; the envelope version selects the strict evidence schema.
@@ -9,7 +9,7 @@
 - Added immutable review opinions, conflict/dispute ledger, independent third-party adjudication, and correction records. Corrected evidence is a newer v2 document with `supersedes_id`, and a separate correction record; prior evidence remains intact.
 - Added no-tools, proposal-only judge packet contracts that label source text as untrusted data. No judge was dispatched. Updated [test_match_verification.py](../../../tests/test_match_verification.py), [acceptance.md](../acceptance.md), [decisions.md](../decisions.md), [implementation-ledger.md](../implementation-ledger.md) and [commands.md](../commands.md).
 
-## 2. Tests and commands actually run
+## Tests/commands actually run and results
 
 - `uv run pytest -q tests/test_match_verification.py tests/test_benchmark_audit_documents.py tests/test_retrieval.py` — **36 passed**.
 - `uv run ruff check packages/core/src/polycodebench_core/canonical.py packages/core/src/polycodebench_core/benchmark_audit_documents.py packages/core/src/polycodebench_core/match_verification.py packages/services/src/polycodebench_services/match_verification.py tests/test_match_verification.py` — passed.
@@ -19,7 +19,7 @@
 - Combined Prompt85–90 regression: `uv run pytest -q tests/test_match_verification.py tests/test_retrieval.py tests/test_corpus_connectors.py tests/test_benchmark_audit_catalog.py tests/test_benchmark_importers.py tests/test_task_fingerprints.py tests/test_benchmark_audit_documents.py tests/test_benchmark_audit_controls.py` — **109 passed**.
 - No PostgreSQL, source, network, reviewer, or model calls were made.
 
-## 3. Acceptance gates
+## Acceptance gates satisfied, pending and blocked
 
 - **Partial — BX-18 / BAT-08-A:** source digest/revision, component digest, retrieval candidate binding, byte spans, answer relationship and date context are required and content-checked. The bytes are supplied to a pure verifier; no trusted artifact reader, approved snapshot/rights resolver or real source revision was available.
 - **Partial — BX-19 / BAT-08-B:** a versioned rubric distinguishes all seven relations, sets concept-only contribution to zero and keeps semantic/ambiguous matches in human review. No labeled held-out pairs, human reviewers or calibration were available; auto-accept is disabled.
@@ -27,13 +27,13 @@
 - **Partial — BX-21 / BAT-08-D:** independent opinions are append-only in the contract ledger; conflict requires a third-party adjudicator; a correction creates a linked successor without mutating the predecessor. No persistence repository, audit endpoint or database integration was added.
 - **BWP-08: partial.** Content integrity validation is not source authorization or rights verification. No finding can be marked accepted by the content verifier; all fixture candidates and review events are synthetic.
 
-## 4. Decisions and specification discrepancies
+## Decisions or specification discrepancies recorded
 
 - **ADDENDUM-DECISION-23:** add match-evidence schema v2 without altering v1 canonical evidence. The canonical encoding permits envelope schema versions1/2 with identical key ordering.
 - **ADDENDUM-DECISION-24:** digest/span integrity does not establish source provenance or rights. The verifier hard-codes unverified trust and `accepted_evidence=false`; source authorization, rights, lineage and date authenticity need an approved reader/verifier. No calibrated auto-accept policy exists.
 - **ADDENDUM-DECISION-25:** preserve every review opinion, require an independent third adjudicator for conflicts, and represent corrections as immutable successors plus a correction event. Reducers are present, but the existing foundation tables have no Prompt90 persistence writer.
 - **ADDENDUM-DECISION-26:** source text remains untrusted data in no-tools, proposal-only judge packets. Existing generic judge contracts provide related untrusted-comment protections, but no audit-specific model delivery/exposure writer or approved model context is available.
 
-## 5. Exact next prompt and unblock action
+## Exact next command or numbered prompt
 
 Proceed to **Prompt91 / BWP-09** and implement the pure observed-risk policy and coverage/missingness rules over these evidence contracts. For trusted match acceptance, the exact unblock is an owner-approved immutable corpus snapshot with rights/scope manifest, a trusted artifact/source revision resolver, and an independent review/persistence path. Do not treat this contract work as a live source scan or actual human review.

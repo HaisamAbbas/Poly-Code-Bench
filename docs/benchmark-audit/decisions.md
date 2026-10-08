@@ -259,3 +259,7 @@ The implementation specification says five current source MDs were read but its 
 ### ADDENDUM-DECISION-58 - Fixture lifecycle evidence stops before trusted transitions
 
 Prompt105's local end-to-end contract test may validate deterministic transformations using explicitly synthetic inputs. Fixture source refs, rights fields, candidate hits, hashes, and test actors never count as source authorization, independent review, accepted match evidence, calibration, persisted immutable history, or publication approval. The flow must stop at proposed review / insufficient risk whenever the trusted evidence is absent; no convenience writer or fabricated human approval is added to make the demonstration appear complete.
+
+### ADDENDUM-DECISION-59 — Final traceability is structural; missing evidence stays partial
+
+Prompt106 normalizes all prompt and phase reports to the five required fields and checks the BREQ/BWP/BAT/BX/phase identifier sets, ticket ownership, evidence report links, report presence, and exact-byte source pins with a read-only repository command. A structurally clean ledger can still return `partial`; it does not imply source approval, rights, human review, calibration, live database/monitoring, production key trust, runtime/modality conformance, or publication. Keep missing sources and owner prerequisites explicit rather than completing tickets by fixture substitution.

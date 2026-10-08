@@ -11,7 +11,7 @@ Status: **partial implementation foundations**. No live monitoring was enabled, 
 - Added the durable slot, per-source reservation and in-app inbox tables, policy/alert indexes and a guarded downgrade in migration `e5c7b2a94d10_continuous_monitoring.py`. Added focused schedule, retry, refresh, dedupe, strict-contract and metadata tests plus a shared canonical alert vector.
 - Changed implementation and tracking files: `packages/core/src/polycodebench_core/benchmark_audit_documents.py`, new `packages/core/src/polycodebench_core/monitor_schedule.py`, `packages/services/src/polycodebench_services/benchmark_monitoring.py`, `packages/persistence/src/polycodebench_persistence/benchmark_audit.py`, `packages/persistence/src/polycodebench_persistence/models.py`, the migration above, `tests/test_benchmark_monitoring.py`, `tests/test_benchmark_audit_documents.py`, `tests/fixtures/contracts/benchmark-audit-vectors.json`, `TASKS.md`, `docs/benchmark-audit/acceptance.md`, `docs/benchmark-audit/commands.md`, `docs/benchmark-audit/decisions.md`, `docs/benchmark-audit/implementation-ledger.md`, and `docs/benchmark-audit/reports/phase-BA4.md`.
 
-## Tests and commands run
+## Tests/commands actually run and results
 
 | Command/check | Result | Interpretation |
 |---|---|---|
@@ -26,7 +26,7 @@ Status: **partial implementation foundations**. No live monitoring was enabled, 
 
 The Windows-only SQLAlchemy WMI workaround patched `platform.machine()` in-process for pytest/Alembic. It did not alter the environment or make a database connection.
 
-## Acceptance gates
+## Acceptance gates satisfied, pending and blocked
 
 - **BX-38: partial.** Slot uniqueness, exact replay checks, capped catch-up/retries and serialized source-rate reservations are implemented. PostgreSQL concurrent reservation, restart/recovery and live schedule evidence remain unverified.
 - **BX-39: partial.** Accepted verified evidence plus its successor assessment is required; in-app fan-out is deduped and transactional; correction/dispute history is retained. There is no live source feed or authenticated inbox UI.
@@ -34,11 +34,11 @@ The Windows-only SQLAlchemy WMI workaround patched `platform.machine()` in-proce
 
 Production prerequisites still unavailable: trusted owner/approver role verification, an authenticated policy enable/pause API, a production timer/scheduler, authorized corpus-snapshot and source connectors, live evidence/reviewer history, PostgreSQL integration and an authenticated in-app inbox. Policy subject names and approval artifacts are stored, but this code cannot prove those identities or roles. Slots remain blocked from remote dispatch until the existing explicit audit-run authorization is set by a trusted operator path.
 
-## Decisions and specification discrepancies
+## Decisions or specification discrepancies recorded
 
 - Recorded decisions 38-40 in `decisions.md`: schedule identity and DST resolution, all retries counted in frozen source/query reservations, reference-only alerts, and separately identified policy/corpus/method breaks. External notifications remain disabled until a separately trusted recipient/channel authorization feature exists.
 - No new Prompt96 specification discrepancy was found in sections 17 or 22. The earlier source-document discrepancy recorded in Prompts93-95 remains unchanged: section 1.1 describes five source Markdown files but lists and hashes only three.
 
-## Next prompt
+## Exact next command or numbered prompt
 
 Proceed in order to **Prompt97 / BWP-15 - Benchmark health aggregation and comparable trends**.

@@ -2,35 +2,39 @@
 
 ## Implemented functionality and changed files
 
-- Prompt104 adds a programmatic 25-family scope-conformance report, fail-closed catalog invariants, official metadata pin ledger, and a synthetic-fixture GSM8K local JSONL adapter. See [prompt-104.md](prompt-104.md), `source-observations-2026-10-09.md`, versioned catalog configs, and the implementation ledger.
-- Prompt105 adds a deterministic local integration path through import, fingerprint, bounded fixture selection, byte verification, pending review, insufficient-risk scoring, unknown temporal state, and partial health. Existing API, CLI and browser checks reaffirm the privacy boundary. See [prompt-105.md](prompt-105.md) and `tests/test_benchmark_audit_lifecycle.py`.
-- Scope evidence separates dataset revisions from repository metadata, preserves lineage, identifies unsupported components/modalities, maps tests, and calculates pending/blocked live states. GAIA and HellaSwag are explicitly blocked; existing score adapters remain unchanged.
-- Prompt106 remains open. No persisted cross-service lifecycle, human-reviewed public projection, final traceability handoff, or owner-authorized live source evidence has been produced.
+- Prompt104 added 25-family scope reconciliation, fail-closed catalog invariants, metadata source pins, and a synthetic GSM8K JSONL parser. Prompt105 added a deterministic synthetic import-to-health demonstration and reran local API/CLI/browser privacy boundaries. Prompt106 closes the repository's traceability/report structure and adds the operator handoff and read-only checker. Details: [Prompt104](prompt-104.md), [Prompt105](prompt-105.md), [Prompt106](prompt-106.md), and [operator handoff](operator-handoff.md).
+- BA7 retains the distinction between fixture, source, human, crypto, database, live-runtime, and modality evidence. Native scoring paths are unchanged. The metadata preview is not a reviewed public health projection.
 
 ## Tests/commands actually run and results
 
-- Prompt104 focused importer/catalog suite: **29 passed**. Ruff check/format and MyPy passed for its seven Python paths.
-- Prompt105 combined audit/API/historical scoring regression and score property suite: **287 passed**; lifecycle integration lint, format and MyPy checks passed.
-- Prompt105 synthetic browser run: **4 passed**. Offline migrations render to sole Alembic head `b7c3e9a4d281`; no live database upgrade.
-- `scripts/benchmark_scope_conformance.py`: **25 families, 0 live-verified, 4 synthetic-source-fixture families**. This is an internal metadata preview, not a reviewed public health report.
-- Ref-only official repository/dataset metadata checks are documented in `source-observations-2026-10-09.md`; no task payload or native runtime was fetched or executed.
+- Prompt104 importer/catalog checks: **29 passed**; Ruff, format, and MyPy passed. The scope preview reported 25 families, 0 live-verified, and 4 synthetic-source-fixture families.
+- Prompt105 audit/API/historical-scoring regression: **259 passed**, plus **28** score property tests; four synthetic Playwright journeys passed. Offline migration SQL rendered to the sole Alembic head `b7c3e9a4d281`; no database migration ran.
+- Prompt106 read-only traceability audit passed with **0 structural errors** and correctly reported `partial`; all 3 focused tests passed, Ruff/format/MyPy passed, and the attestation verifier's `--help` confirmed the local dry-run option. See [Prompt106](prompt-106.md).
+- No official benchmark payload, native runtime, reviewer, signer, model, live source, paid service, or production database was contacted for BA7.
 
 ## Acceptance gates satisfied, pending and blocked
 
-- **Partial — BA7, BWP-22, BAT-22-A/B/D, BX-59:** all 25 catalog rows reconcile metadata, access, component/modality scope, source pins, tests, runtime state, and explicit live blockers. GSM8K parsing and the local import-to-health lifecycle are fixture-tested. Native scoring adapters remain untouched.
-- **Blocked — BAT-22-C:** GAIA access is gated, HellaSwag is held pending resolution of the upstream notice, and agent-environment/tool-call/image/OCR/custom-private capabilities are unsupported or lack approved inputs.
-- **Partial — BAT-23-A/C/D:** local fixture pipeline, privacy/API/CLI contracts, four browser journeys, historical scoring tests and internal scope preview pass. No persistent audit history, approved source, human review, reviewer ACL, exact projection approval, or public report is available.
-- **Blocked — BAT-23-B:** no authorized cross-service API/CLI/UI transition writers, shared ACL, or initialized current-schema PostgreSQL test service exists for admission/review/seal/monitor/correction chains.
-- **Pending — Prompt106:** final requirement/ticket/gate traceability, in-scope fixes and operator handoff.
-- Overall BA7 remains partial; no live source conformance, benchmark audit completion, low-risk finding, or public publication is claimed.
+The eight-phase aggregate remains partial. This table summarizes the evidence in all phase reports; none of the prior partial phases is promoted by BA7 fixtures or by this structural audit.
+
+| Phase | Work packages and gates | Status | Main remaining evidence |
+|---|---|---|---|
+| BA0 | BWP-01–03; BX-01–05 | Partial | Live persistence, queue integration, authorization and database evidence. |
+| BA1 | BWP-04–06; BX-06–14 | Partial | Approved benchmark bytes/rights, live connectors, immutable snapshots and index rebuild. |
+| BA2 | BWP-07–09; BX-15–24 | Partial | Approved indexes/sources, trusted review, calibration and database execution. |
+| BA3 | BWP-10–12; BX-25–33 | Partial | Trusted source/model chronology, production key custody, approved method and calibration. |
+| BA4 | BWP-13–15; BX-34–43 | Partial | Authorized workers/reviewers/sources, scheduler, PostgreSQL, independent labels and reviewed projections. |
+| BA5 | BWP-16–18; BX-44–50 | Partial | Shared ACL and transition writers, approved signer/reviewer authority, timestamp and live revocation evidence. |
+| BA6 | BWP-19–21; BX-51–58 | Partial or blocked | Approved pilot snapshots/rights/labels, compatible audit restore, provider/key/index recovery and representative capacity. |
+| BA7 | BWP-22–24; BX-59–60 | Partial; BAT-22-C and BAT-23-B remain blocked | Source/runtime/rights and modality approvals; authenticated cross-surface transitions, human review and approved publication. |
+
+Prompt106 verifies structural counts of **32 BREQ, 24 BWP, 96 BAT, 60 BX and 8 phase rows**, all Prompt83–106 and BA0–BA7 report headings, and all three exact-byte source pins. `BAT-24-A..D` and `BX-60` stay partial because their required external evidence and two historical source identities are unavailable.
 
 ## Decisions or specification discrepancies recorded
 
-- `ADDENDUM-DECISION-55/56/57` cover metadata-pin semantics, gated/takedown source boundaries, and versioned template/checker identities.
-- `ADDENDUM-DECISION-58` keeps synthetic pipeline evidence separate from source authorization, human review, persisted history, and publication approval.
-- `ADDENDUM-GAP-06` records the five-versus-three historical-source-document discrepancy in the implementation specification and the two absent documents.
-- Prompt103 `ADDENDUM-DECISION-53/54` continues to block current-schema recovery readiness and index-readiness claims.
+- `ADDENDUM-DECISION-55/56/57` preserve metadata-versus-payload identity, prohibit mirror fallback for gated/takedown sources, and keep changed templates/checkers versioned. `ADDENDUM-DECISION-58` prevents fixture lifecycle evidence from becoming source approval, human review, persisted history or publication.
+- `ADDENDUM-DECISION-59` standardizes the five report fields and the structural traceability checks.
+- `ADDENDUM-GAP-06` remains open: the source bridge claims five historical MDs but lists three. Their three hashes verify; the specification owner must identify and supply the two omitted sources.
 
 ## Exact next command or numbered prompt
 
-Proceed to **Prompt106 / BWP-24**: complete the traceability audit and operator handoff, fix and recheck in-scope defects, and end with the verified read-only audit command or exact missing-prerequisite action. Do not promote fixture evidence to live or reviewed status.
+Run the verified read-only repository audit: `uv run --locked python scripts/benchmark_audit_traceability.py`. Resolve named prerequisites with the source, rights, platform, security, methodology, runtime and operations owners. There is no Prompt107.

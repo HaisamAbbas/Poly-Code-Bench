@@ -11,7 +11,7 @@ Status: **partial implementation foundations**. Contract, regression and offline
 - Added migration `f67a3d91c4b2_benchmark_health_contracts.py`, one shared canonical v2 vector, focused section 18 tests, and updates to `TASKS.md`, acceptance, decision, ledger, command and BA4 phase evidence.
 - Changed implementation files: `packages/core/src/polycodebench_core/benchmark_audit_documents.py`, new `packages/services/src/polycodebench_services/benchmark_health.py`, `packages/persistence/src/polycodebench_persistence/benchmark_audit.py`, `packages/persistence/src/polycodebench_persistence/models.py`, the migration above, `tests/test_benchmark_health.py`, and `tests/fixtures/contracts/benchmark-audit-vectors.json`.
 
-## Tests and commands run
+## Tests/commands actually run and results
 
 | Command/check | Result | Interpretation |
 |---|---|---|
@@ -25,7 +25,7 @@ Status: **partial implementation foundations**. Contract, regression and offline
 
 The Windows-only SQLAlchemy WMI workaround patched `platform.machine()` in-process for tests and Alembic. It did not modify product code or connect to a database.
 
-## Acceptance gates
+## Acceptance gates satisfied, pending and blocked
 
 - **BX-41: partial.** All local section 18 Decimal/count/coverage/family/null goldens pass, including unscanned and overlap-union reconciliation. Approved live source coverage and database evidence are unavailable.
 - **BX-42: partial.** Census and sample identity are explicit; sampled data are not extrapolated; mean risk shows eligible and missing denominators. No live sampled cohort or reviewed projection is available.
@@ -33,11 +33,11 @@ The Windows-only SQLAlchemy WMI workaround patched `platform.machine()` in-proce
 
 Native benchmark scores, code-quality weights, ranking gates and existing paired-family behavior uncertainty were not changed. BA4 remains partial because Prompts95-97 still lack live worker/source/database/reviewer evidence.
 
-## Decisions and specification discrepancies
+## Decisions or specification discrepancies recorded
 
 - Recorded decision 41: preserve denominators and cohort identity, use Decimal half-even metrics, keep family mappings private, mark scope changes, and never treat health as a cleanliness or code-quality score.
 - No new Prompt97 specification discrepancy was found. The earlier Prompt93 source-input discrepancy remains: section 1.1 describes five source Markdown files but lists and hashes three.
 
-## Next prompt
+## Exact next command or numbered prompt
 
 Proceed in order to **Prompt98 / BWP-16 - Private API, CLI, SDK and permission contracts**.

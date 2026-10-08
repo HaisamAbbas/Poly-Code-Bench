@@ -1,27 +1,27 @@
-# Phase BA4 - Task lifecycle
+# Phase BA4 — Task lifecycle
 
-Phase BA4 covers Prompts 95-97. All three prompts have partial implementation foundations. BA4 remains partial because required live worker/source/database/reviewer and projection evidence is unavailable.
+## Implemented functionality and changed files
 
-## Prompt95 evidence
+Prompt95 added finite-scope firewall decisions, bounded replacement plans, review and lineage requirements, and immutable derived-manifest contracts. Prompt96 added versioned monitor policies, serialized source/query/storage/cost reservations, bounded retry and catch-up, and deduplicated in-app alerts. Prompt97 added denominator-first health metrics, missingness disclosure, family-aware prevalence, detector-quality intervals, and trend discontinuity checks. Detailed implementation and evidence are in [Prompt95](prompt-95.md), [Prompt96](prompt-96.md), and [Prompt97](prompt-97.md).
 
-Finite-scope firewall policy, fail-closed task decisions, bounded replacement plans and derived benchmark manifests are implemented. The report and acceptance ledger record partial status because no production worker admission authority, trusted reviewer roles, approved corpus/source rights, live benchmark import, or PostgreSQL integration environment is configured. Synthetic fixtures and offline migration rendering do not close those gates.
+## Tests/commands actually run and results
 
-See [Prompt95 report](prompt-95.md), [Prompt96 report](prompt-96.md), and [Prompt97 report](prompt-97.md).
+- Prompt95 focused firewall/document/persistence tests: **34 passed**; combined Prompts85–95 regression: **173 passed**. Ruff, strict Mypy, TypeScript contract properties, sole migration-head check and offline migration upgrade/downgrade rendering passed.
+- Prompt96 focused schedule/document/persistence tests: **34 passed**; combined Prompts85–96 regression: **184 passed**. Ruff, strict Mypy, TypeScript contracts, sole migration-head check and offline migration upgrade/downgrade rendering passed.
+- Prompt97 focused health tests: **10 passed**; combined Prompts85–97 regression: **194 passed**. Ruff, strict Mypy, TypeScript contracts, sole migration-head check and offline migration upgrade/downgrade rendering passed.
+- All tests used local or synthetic inputs. Migrations were rendered offline; no database migration, live source query, model call, or monitoring dispatch occurred. See [commands.md](../commands.md) and the three prompt reports for exact invocations.
 
-## Prompt96 evidence
+## Acceptance gates satisfied, pending and blocked
 
-Versioned finite-scope monitor policies, DST-safe slot planning, bounded incremental/full refresh planning, serialized source/query/storage/cost reservations, conditional durable retry recording, verified typed in-app alerts and inbox dedupe are implemented. The migration and synthetic contract tests render and pass offline. BA4 remains partial because trusted owner/approver roles, a production scheduler and source connectors, live evidence/review history, an authenticated inbox, and PostgreSQL concurrency/recovery evidence are unavailable.
+- **Partial — BX-34–37 / BWP-13:** firewall, replacement, ancestry, and derived-manifest contracts are tested; approved source rights, production worker authority, independent human review, live imports, and database execution remain unavailable.
+- **Partial — BX-38–40 / BWP-14:** bounded scheduling, quota reservations, retry rules, and in-app alert dedupe are implemented; production scheduler/source integration, trusted role verification, authenticated inbox, and PostgreSQL concurrency/recovery evidence are absent.
+- **Partial — BX-41–43 / BWP-15:** local Decimal/count goldens and trend-break checks pass; live source/query coverage, independent detector labels, database execution, and reviewed health projection remain unavailable.
+- No BA4 gate is complete from synthetic fixtures or offline migration rendering.
 
-## Prompt97 evidence
+## Decisions or specification discrepancies recorded
 
-Versioned descriptive health v2 contracts, strict denominator/unknown/tier reconciliation, Decimal percentages and means, explicit sampled-cohort/missingness disclosure, unique-family metrics, deduped overlap prevalence, coverage/freshness/provenance and detector-quality strata are implemented. Trend scopes identify policy, membership, context, source/window, sampling, method, family and definition changes. Persistence binds reports to stored plans, snapshots, policies and accepted task evidence; its append-only migration renders offline, and the synthetic section 18 goldens plus combined Prompts85-97 regression pass. Health remains partial because no live corpus/query/temporal source evidence, PostgreSQL run, independent detector labels, or authenticated reviewed projection is available. Native benchmark/code-quality/ranking paths and existing paired-family behavior uncertainty are unchanged.
+Prompts95–97 preserve immutable official membership, keep candidate/no-hit evidence separate from approved rights and review, require bounded and separately authorized replacement work, and keep sampled health descriptive without extrapolation. Monitor dispatch remains disabled without approved source and role authority. Missing production evidence stays partial; see [decisions.md](../decisions.md).
 
-## BA4 aggregate gates
+## Exact next command or numbered prompt
 
-| Gate | Status | Evidence and remaining work |
-|---|---|---|
-| BX-34-37 firewall and replacement lifecycle | Partial | See Prompt95 report; trusted source rights, production workers, human review and live database remain unavailable. |
-| BX-38-40 monitoring and alerts | Partial | See Prompt96 report; scheduler, source integration, role verifier, inbox UI and database concurrency/recovery remain unavailable. |
-| BX-41-43 health metrics and comparability | Partial | See Prompt97 report; local Decimal/count goldens pass, while live source/query, database and reviewed-projection evidence remain unavailable. |
-
-BA4 is partial overall. Synthetic fixtures and offline migration SQL establish contract behavior only; they do not substitute for live source, human, model or database evidence. The exact next task is Prompt98 in phase BA5.
+Proceed to **Prompt98 / BWP-16**, implementing private API, CLI, SDK, and permission contracts while keeping unsupported transitions fail-closed.

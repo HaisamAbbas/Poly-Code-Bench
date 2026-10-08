@@ -82,3 +82,19 @@ The initial exact/lexical fingerprint config normalizes only CRLF/CR newlines an
 ### ADDENDUM-DECISION-15 — Parser, semantic and commitment methods require approved configuration
 
 No local embedding/model/tokenizer configuration, Python/Java parser approval or crypto key custody is present. AST, embedding, entity/reasoning extraction and sealed hiding commitments stay blocked or unsupported. Exact/lexical private artifacts carry their complete local configuration and digest; no substitute model or commitment scheme is introduced.
+
+### ADDENDUM-DECISION-16 — Source connector contracts are not live connectors
+
+Prompt88 defines all eight source capability profiles and validates bounded HTTPS egress plans, but no source has approved authorization, a verified finite-scope/revision manifest, a registered connector or live conformance. The service always blocks dispatch, even if local policy fields are edited to look approved. Existing source-policy rows remain `not_approved`, `not_implemented` and `not_run`; fixtures do not change them.
+
+### ADDENDUM-DECISION-17 — Caller-supplied digests do not verify authorization or exposure
+
+A query-payload digest and authorization-evidence digest bind metadata only. This checkout has no persisted authorization verifier or append-only remote exposure event writer. Private remote queries therefore remain blocked and no delivery path can claim consent or exposure. Opaque credential UUIDs are also blocked until a trusted credential-scope verifier exists.
+
+### ADDENDUM-DECISION-18 — Coverage completeness requires a recorded denominator
+
+URL metadata, source content, extracted text, source dates and rights evidence are separate coverage dimensions. A completed request with no eligible-scope denominator is `unknown`, not complete or zero. Request-level observations bind attempts, response bytes, timing, retries and spacing to the frozen plan caps. Common Crawl URL-index metadata is not WARC/full-text coverage; arXiv publication dates do not date embedded tasks; Stack Exchange revisions and Wikipedia dump/page revisions remain distinct evidence.
+
+### ADDENDUM-DECISION-19 — Optional index results remain candidate evidence
+
+Data Portraits metadata must identify the sketch, corpus, method and error model. infini-gram metadata must identify the indexed corpus/revision and result positions. The typed contract records query/result digests, but no tool is configured or queried here. Approximate membership and index hits never establish a closed model's training membership.

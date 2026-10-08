@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt87, BWP-01 and BWP-02 are complete; BWP-03 through BWP-05 are partial pending live database/source/resource evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial pending live database/source/resource evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -11,8 +11,8 @@ At Prompt87, BWP-01 and BWP-02 are complete; BWP-03 through BWP-05 are partial p
 | BREQ-01 | 84–86 | BX-02,06–08 | partial | reports/prompt-86.md; exact adapters and membership are implemented, but live imports and PostgreSQL retry checks are pending |
 | BREQ-02 | 84,86,104 | BX-02,59 | partial | config/benchmark-audit/registry-v1.yaml; broader support in Prompt104 |
 | BREQ-03 | 87 | BX-09–11 | partial | reports/prompt-87.md; deterministic exact/lexical views implemented, parser/semantic/entity features remain blocked |
-| BREQ-04 | 84,88 | BX-12–14 | pending | see prompt 84 report |
-| BREQ-05 | 88–89 | BX-13,15–17 | pending | see prompt 88 report |
+| BREQ-04 | 84,88 | BX-12–14 | partial | reports/prompt-88.md; eight contract-only profiles and bounded plans exist, while source conformance and approved live connectors remain absent |
+| BREQ-05 | 88–89 | BX-13,15–17 | partial | reports/prompt-88.md; coverage/egress contracts exist, but no approved corpus snapshots or derived index are available |
 | BREQ-06 | 90 | BX-18–21 | pending | see prompt 90 report |
 | BREQ-07 | 91 | BX-22–23 | pending | see prompt 91 report |
 | BREQ-08 | 91,94 | BX-24,31–33 | pending | see prompt 91 report |
@@ -31,12 +31,12 @@ At Prompt87, BWP-01 and BWP-02 are complete; BWP-03 through BWP-05 are partial p
 | BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
-| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md and reports/prompt-87.md; storage visibility and private artifact guards exist, but worker isolation, tenant and live remote controls remain pending |
+| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-88.md; private remote query remains blocked without a persisted verifier/exposure event; worker isolation and tenant controls remain pending |
 | BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | partial | six exclusive queue FKs, CAS enqueue and fencing reuse are implemented; live migration/claim/recovery verification is pending; see prompt 85 report |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | pending | see prompt 94 report |
 | BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
 | BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
-| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | packages/services/.../benchmark_audit_catalog.py; corpus indexing pending |
+| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog and connector plan/coverage contracts exist; approved snapshots, indexes and retrieval replay remain pending; see reports/prompt-88.md |
 | BREQ-30 | 103,106 | BX-56–58,60 | pending | see prompt 103 report |
 | BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
 | BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
@@ -50,7 +50,7 @@ At Prompt87, BWP-01 and BWP-02 are complete; BWP-03 through BWP-05 are partial p
 | BWP-03 | 85 | partial | reports/prompt-85.md; relational migration/queue and diagnostics surfaces need live integration |
 | BWP-04 | 86 | partial | reports/prompt-86.md; fixture-only adapters, no approved bytes/rights, DB integration or parser worker isolation |
 | BWP-05 | 87 | partial | reports/prompt-87.md; exact/lexical fingerprints implemented; approved parser/model config, live persistence and semantic coverage pending |
-| BWP-06 | 88 | pending | prompt report |
+| BWP-06 | 88 | partial | reports/prompt-88.md; bounded plan/coverage and optional-index metadata contracts exist; live connectors, immutable snapshot writes and index rebuild remain pending |
 | BWP-07 | 89 | pending | prompt report |
 | BWP-08 | 90 | pending | prompt report |
 | BWP-09 | 91 | pending | prompt report |
@@ -96,10 +96,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-05-B | 87 | partial | reports/prompt-87.md; local exact/lexical config pinned; Python/Java AST and embedding config unavailable |
 | BAT-05-C | 87 | partial | reports/prompt-87.md; entity/answer/reasoning extractors remain explicitly blocked |
 | BAT-05-D | 87 | partial | reports/prompt-87.md; append-only private artifact storage is implemented but DB/index rebuild is unverified |
-| BAT-06-A | 88 | pending | prompt report |
-| BAT-06-B | 88 | pending | prompt report |
-| BAT-06-C | 88 | pending | prompt report |
-| BAT-06-D | 88 | pending | prompt report |
+| BAT-06-A | 88 | partial | reports/prompt-88.md; strict host, rate, retry, byte and time caps are covered, but approved credential verification, exposure persistence and dispatch are absent |
+| BAT-06-B | 88 | partial | reports/prompt-88.md; existing immutable corpus document/table contracts are identified and reusable, but no snapshot persistence adapter, extraction/index manifest writer or measured rebuild exists |
+| BAT-06-C | 88 | partial | reports/prompt-88.md; source-specific record kinds and metadata/content/date/rights coverage are distinct, but no approved snapshots or source conformance fixtures were available |
+| BAT-06-D | 88 | partial | reports/prompt-88.md; typed Data Portraits/infini-gram query metadata is candidate-only; neither tool is configured or queried |
 | BAT-07-A | 89 | pending | prompt report |
 | BAT-07-B | 89 | pending | prompt report |
 | BAT-07-C | 89 | pending | prompt report |
@@ -188,9 +188,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-09 | 87 | partial | reports/prompt-87.md; method-level distinctions tested, imported benchmark coverage unavailable |
 | BX-10 | 87 | partial | reports/prompt-87.md; exact/lexical config pinned; parser and embedding capabilities remain blocked |
 | BX-11 | 87 | partial | reports/prompt-87.md; no unsupported feature is zero-filled; entity/answer features and live private index checks pending |
-| BX-12 | 88 | pending | criterion in addendum §26; prompt report |
-| BX-13 | 88 | pending | criterion in addendum §26; prompt report |
-| BX-14 | 88 | pending | criterion in addendum §26; prompt report |
+| BX-12 | 88 | partial | reports/prompt-88.md; all eight source groups have blocked contract profiles; source-specific conformance and authorized live connectors are missing |
+| BX-13 | 88 | partial | reports/prompt-88.md; URL metadata, content, extracted text, dates and rights are separate dimensions; no Common Crawl snapshot was available to measure |
+| BX-14 | 88 | partial | reports/prompt-88.md; private queries fail closed without a verifier and exposure store; no permitted delivery path exists yet |
 | BX-15 | 89 | pending | criterion in addendum §26; prompt report |
 | BX-16 | 89 | pending | criterion in addendum §26; prompt report |
 | BX-17 | 89 | pending | criterion in addendum §26; prompt report |
@@ -242,8 +242,8 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 
 | Phase | Prompts | Status | Report |
 |---|---|---|---|
-| BA0 | 83–85 | partial | `reports/phase-BA0.md` (created when Prompt85 closes) |
-| BA1 | 86–88 | pending | `reports/phase-BA1.md` |
+| BA0 | 83–85 | partial | `phase-BA0.md` |
+| BA1 | 86–88 | partial | `phase-BA1.md` |
 | BA2 | 89–91 | pending | `reports/phase-BA2.md` |
 | BA3 | 92–94 | pending | `reports/phase-BA3.md` |
 | BA4 | 95–97 | pending | `reports/phase-BA4.md` |

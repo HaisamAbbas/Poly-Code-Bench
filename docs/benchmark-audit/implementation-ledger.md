@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–87 are partial foundations; Prompt88 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–88 are partial foundations; Prompt89 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -9,8 +9,8 @@ Status: active. Prompts83–84 are complete; Prompts85–87 are partial foundati
 - Persistence/migrations live in `packages/persistence/src/polycodebench_persistence`. The tracked `stage_job` has attempt, evaluation and release FKs only, versus six scopes in addendum §8.
 - Fenced queue definitions/repository are `packages/core/src/polycodebench_core/jobs.py` and `packages/persistence/src/polycodebench_persistence/jobs.py`.
 - API routes mount in `packages/api/src/polycodebench_api/app.py`; public release/submission routes have no benchmark audit operations.
-- Tracked benchmark importers, corpus connectors, match review, risk/temporal assessment, sealing, monitoring, health and audit attestations are absent.
-- Prompt84 adds strict registry/capability contracts at `packages/core/src/polycodebench_core/benchmark_audit_registry.py`, safe duplicate-rejecting YAML loading and a no-dispatch resource planner at `packages/services/src/polycodebench_services/benchmark_audit_catalog.py`, plus versioned configuration in `config/benchmark-audit/`. The catalog has 25 §5 families, eight source policies and an explicit capability row for each family. No importer or connector is claimed implemented.
+- Tracked benchmark importers exist for bounded local inputs; Prompt88 adds contract-only corpus connector plans, with no live fetch/query runtime. Match review, risk/temporal assessment, sealing, monitoring, health and audit attestations remain later work.
+- Prompt84 added strict registry/capability contracts at `packages/core/src/polycodebench_core/benchmark_audit_registry.py`, safe duplicate-rejecting YAML loading and a no-dispatch resource planner at `packages/services/src/polycodebench_services/benchmark_audit_catalog.py`, plus versioned configuration in `config/benchmark-audit/`. The catalog has 25 §5 families, eight source policies and a capability row for each family. At that point no importer or connector was claimed; Prompt86 later added bounded local benchmark imports and Prompt88 added contract-only source plans.
 - The worktree contains uncommitted task generation/screening/overlap/exposure/canary code under `packages/taskgen` and contamination-control docs. These are inspected as work in progress and are excluded from Prompt83 commits.
 - Native benchmark metrics and code scoring remain in the existing evaluation/scoring/plugin paths; audit health is a separate module and must not change them.
 
@@ -87,4 +87,12 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added a versioned local configuration and deterministic exact-byte, conservative normalized-text and literal-preserving token-shingle fingerprints per component. Configuration and feature digests are included in private artifact payloads; payload contracts reject source text or token strings.
 - Added persistence over the existing append-only `fingerprint` rows. A guarded migration requires every row to reference a verified hidden/internal artifact and refuses downgrade while fingerprint history exists.
 - Partial, not complete: there is no approved embedding/model/tokenizer config, Python/Java parser config, semantic/entity extractor or sealed-commitment key custody. No embedding, AST, entity, reasoning, vector or commitment feature is claimed. PostgreSQL integration, private artifact upload and index rebuild are unverified.
-- Exact next prompt: Prompt88 / BWP-06. Implement local connector contracts/planning while keeping live fetch/query blocked until rights, access and budgets are approved.
+- Exact next prompt at that point: Prompt88 / BWP-06. Implement local connector contracts/planning while keeping live fetch/query blocked until rights, access and budgets are approved.
+
+## Prompt88 / BWP-06
+
+- Added strict capability, request, plan, execution-observation, coverage and optional-index query metadata contracts for all eight source groups. The contracts distinguish Common Crawl URL-index metadata from acquired WARC content and extracted text; preserve separate metadata/content/extraction/date/rights dimensions; and keep Data Portraits and infini-gram results candidate-only with no closed-model training-membership claim.
+- Added exact HTTPS host/path validation, policy-bound request and response ceilings, global byte and timeout caps, a minimum one-second request interval, retry limits and an ordered per-attempt timing/byte ledger. Current policy lacks verified finite-scope/revision manifests, an authorization verifier, approved credential store, append-only remote-exposure event writer and fetch/query runtime, so every plan stays blocked and execution records zero I/O.
+- Reused Prompt85's immutable `CorpusSnapshotPayload`, `corpus_source`, `corpus_snapshot` and `corpus_document` contracts/tables; Prompt88 did not add a snapshot persistence adapter, derived-index builder, extraction-manifest writer or measured resource plan. No source fixtures or approved source bytes were available for connector conformance.
+- Partial, not complete: all eight policy rows remain `not_approved` / `not_implemented` / `not_run`; no benchmark/GitHub/Hugging Face initial source scope, rights evidence, private query verifier, Data Portraits sketch or infini-gram index is configured. No network fetch/query or DB write occurred.
+- Exact next prompt: Prompt89 / BWP-07. Continue with a bounded local retrieval planner and replay contracts if they can remain independently testable; actual retrieval awaits approved immutable corpus snapshots and derived indexes.

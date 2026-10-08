@@ -70,3 +70,14 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `$env:PCB_MIGRATION_DATABASE_URL='postgresql+psycopg://offline:offline@localhost/polycodebench'; uv run alembic -c packages/persistence/alembic.ini upgrade d52a7e11b30f:e9b30a7c1f42 --sql` | Passed: targeted PostgreSQL DDL rendered | Offline SQL render only; migration execution, artifact upload and rollback were not run. |
 | `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `e9b30a7c1f42` is the only head | Migration graph has one head. |
 | PostgreSQL/model/crypto configuration check | Blocked: no DB URL, approved parser/model config or key custody | No AST, embeddings, sealed commitments or live index rebuild were attempted. |
+
+## Prompt88 connector plans, egress bounds and coverage checks
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run pytest tests/test_corpus_connectors.py tests/test_benchmark_audit_catalog.py -q` | Passed: 32 passed | Synthetic connector policies and records test URI allowlisting, source caps, authorization/credential fail-closed behavior, per-request timing/byte/retry/rate bounds, candidate-only tool metadata and coverage denominators. No network I/O. |
+| `uv run mypy --strict packages/core/src/polycodebench_core/corpus_connectors.py packages/services/src/polycodebench_services/corpus_connectors.py` | Passed: no issues in 2 source files | Strict type check of new connector contract/service modules. |
+| `uv run ruff check packages/core/src/polycodebench_core/corpus_connectors.py packages/services/src/polycodebench_services/corpus_connectors.py tests/test_corpus_connectors.py` | Passed: All checks passed | Prompt88 implementation and focused tests. |
+| `uv run ruff format --check packages/core/src/polycodebench_core/corpus_connectors.py packages/services/src/polycodebench_services/corpus_connectors.py tests/test_corpus_connectors.py` | Passed: all 3 files formatted | Formatting verified after fixes. |
+| `uv run pytest tests/test_corpus_connectors.py tests/test_benchmark_audit_catalog.py tests/test_benchmark_importers.py tests/test_task_fingerprints.py tests/test_benchmark_audit_documents.py tests/test_benchmark_audit_controls.py -q` | Passed: 85 passed | Combined BA1 regression for connector, catalog, importer, fingerprint, immutable-document and audit-control behavior. |
+| Source/credential/index availability check | Blocked: all eight policies remain `not_approved` / `not_implemented` / `not_run`; credential verifier and optional index tools are absent | No fetch, remote query, source conformance, snapshot write, Data Portraits or infini-gram request was attempted. |

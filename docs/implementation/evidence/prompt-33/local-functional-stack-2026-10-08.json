@@ -50,6 +50,12 @@
       "tests/test_scoring_postgres.py"
     ]
   },
+  "public_release_catalog_postgres_integration": {
+    "result": "passed",
+    "tests_passed": 2,
+    "idempotent_sync_immutability_and_withdrawal": "passed",
+    "public_api_read_and_publisher_role_isolation": "passed"
+  },
   "browser_smoke": {
     "result": "passed",
     "postgres_release_backed_public_pages": 9,

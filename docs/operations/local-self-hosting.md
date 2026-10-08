@@ -65,6 +65,17 @@ $env:PCB_TEST_MIGRATION_DATABASE_URL = $env:PCB_MIGRATION_DATABASE_URL
 uv run --locked --all-packages pytest tests/test_public_api_submissions_postgres.py
 ```
 
+The public-release catalog integration exercises publisher and reader role boundaries. Use the migration identity for the primary test connection and for fixture cleanup, then provide the separately scoped publisher identity for the publisher-role case. All URLs must target the dedicated `pcb_local_web_test` database:
+
+```powershell
+. .\scripts\load-local-env.ps1
+$env:PCB_TEST_DATABASE_URL = $env:PCB_MIGRATION_DATABASE_URL
+$env:PCB_TEST_MIGRATION_DATABASE_URL = $env:PCB_MIGRATION_DATABASE_URL
+$env:PCB_TEST_PUBLISHER_DATABASE_URL = $env:PCB_PUBLISHER_DATABASE_URL
+$env:PCB_TEST_ADMIN_DATABASE_URL = $env:PCB_MIGRATION_DATABASE_URL
+uv run --locked --all-packages pytest tests/test_public_release_catalog_postgres.py
+```
+
 Run the in-memory API policy tests separately in a fresh shell without loading `.env`:
 
 ```powershell

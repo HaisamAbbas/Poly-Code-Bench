@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–90 are partial foundations; Prompt91 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–91 are partial foundations; Prompt92 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -115,3 +115,12 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added immutable human opinion/adjudication ledgers. Author self-review is rejected, conflicting accepted/rejected opinions remain present in disputed state, and adjudication requires an independent third subject. Corrections create a newer evidence document with `supersedes_id` plus an immutable correction record; the prior document remains unchanged.
 - Partial, not complete: source artifact reading is supplied as bytes to a digest/span verifier, but no approved source snapshot/rights resolver, trusted artifact-store adapter, persistent candidate/review/adjudication writer, audit API, database integration, approved match judge/model context or model exposure writer exists. Pure fixture candidates and opinions do not close live source or human-review gates.
 - Exact next prompt: Prompt91 / BWP-09. Implement the pure observed-risk policy and missingness gates over these candidate evidence contracts; do not treat content integrity as verified source provenance or accepted human evidence.
+
+## Prompt91 / BWP-09
+
+- Added immutable schema-v2 risk policy and assessment documents while preserving the v1 vectors. A reversible migration permits document schema versions 1 and 2; downgrade checks for v2 rows before restoring the v1-only constraint.
+- Added the frozen observed-risk-v1 formula `50*M + 25*C + 15*E + 10*L`, exact weights and thresholds, all eight signal descriptors, applicability, missingness policy, calibration status and claim restriction. Publication age retains a raw day interval; popularity retains a timestamped count descriptor; neither contributes points. Model familiarity is a separate behavioral diagnostic. The training-likelihood signal is named corpus/source overlap evidence.
+- Added typed signal observations that require pinned configuration, observation time and evidence, and require verified source/rights plus an independent human reviewer before a positive signal is accepted. Exact/semantic, question-only, distinctive-solution, family and concept/boilerplate strengths map to 1.0, 0.6, 0.8, 0.3 and 0.0; concept/boilerplate and family remain distinct. Correlated observations use the maximum within each weighted group.
+- Added a pure Decimal aggregator. Complete reviewed finite scope can produce observed zero; unknown, failed, blocked, truncated or unresolved review remains missing. Bounds add the full weight of each incomplete component. Low/medium tiers require both complete scope and a policy marked calibrated; a known lower bound at least 60 can display high observed risk with bounds. Fixed claim wording cannot describe the index as probability or a cleanliness guarantee.
+- Partial, not complete: every score fixture is synthetic, no independent calibration sample or approved corpus/source scope exists, accepted evidence references are not resolved by a trusted repository, and the assessment has no persistent writer/API/report integration. The migration only rendered offline; PostgreSQL was not available. It is not verified that live `audit_document` rows satisfy the new check.
+- Exact next prompt: Prompt92 / BWP-10. Implement temporal holdouts/model-context contracts while retaining unknown cutoff and source chronology as explicit missingness; no live model/source claim is available.

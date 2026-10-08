@@ -103,7 +103,7 @@ audit_document = Table(
         "'audit_attestation')",
         name="kind",
     ),
-    CheckConstraint("schema_version = 1", name="schema_version_v1"),
+    CheckConstraint("schema_version IN (1,2)", name="schema_version_supported"),
     CheckConstraint("semantic_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
     CheckConstraint("jsonb_typeof(payload) = 'object'", name="payload_object"),
     CheckConstraint(

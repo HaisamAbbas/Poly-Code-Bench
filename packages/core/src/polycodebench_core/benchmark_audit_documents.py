@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated, Any, ClassVar, Literal, cast
 from uuid import UUID
 
@@ -441,6 +441,466 @@ class RiskAssessmentPayload(StrictAuditModel):
         return self
 
 
+RiskSignalKey = Literal[
+    "publication_age",
+    "web_exposure",
+    "duplication",
+    "corpus_overlap_evidence",
+    "popularity",
+    "synthetic_similarity",
+    "model_familiarity",
+    "leakage_history",
+]
+RiskSignalRole = Literal["M", "C", "E", "L", "context", "diagnostic"]
+RiskComponentKey = Literal["M", "C", "E", "L"]
+RiskEvidenceState = Literal["accepted", "candidate_only", "rejected", "disputed", "none"]
+RiskObservationState = Literal["observed", "unknown", "not_applicable"]
+RiskSignalBasis = Literal[
+    "exact_or_semantic_duplicate",
+    "question_only_overlap",
+    "distinctive_solution_overlap",
+    "shared_family",
+    "concept_or_boilerplate",
+    "verified_corpus_overlap",
+    "verified_public_substantive",
+    "public_metadata_only",
+    "verified_private_scope",
+    "corroborated_task_model_report",
+    "completed_scope_no_match",
+    "context_only",
+    "behavioral_diagnostic_only",
+]
+
+OBSERVED_RISK_SIGNAL_LAYOUT: tuple[
+    tuple[RiskSignalKey, RiskSignalRole, Literal["required", "optional"], str], ...
+] = (
+    (
+        "publication_age",
+        "context",
+        "optional",
+        "Earliest evidenced substantive public artifact age.",
+    ),
+    ("web_exposure", "E", "required", "Accepted substantive copies in declared public sources."),
+    ("duplication", "M", "required", "Reviewed exact, near or semantic substantive overlap."),
+    ("corpus_overlap_evidence", "C", "required", "Verified corpus/source overlap evidence."),
+    ("popularity", "context", "optional", "Timestamped popularity counts; contextual only."),
+    (
+        "synthetic_similarity",
+        "M",
+        "required",
+        "Verified resemblance or lineage to synthetic items.",
+    ),
+    (
+        "model_familiarity",
+        "diagnostic",
+        "optional",
+        "Controlled behavioral familiarity diagnostic.",
+    ),
+    ("leakage_history", "L", "required", "Corroborated task/model-specific leakage report."),
+)
+
+
+class RiskSignalDefinition(StrictAuditModel):
+    signal: RiskSignalKey
+    role: RiskSignalRole
+    applicability: Literal["required", "optional"]
+    definition: ShortText
+
+
+class RiskSignalObservation(StrictAuditModel):
+    """A traceable signal observation; context and behavior never score by themselves."""
+
+    signal: RiskSignalKey
+    state: RiskObservationState
+    evidence_state: RiskEvidenceState
+    basis: RiskSignalBasis | None
+    normalized_value: Decimal6 | None
+    raw_value: ShortText | None
+    raw_interval: tuple[Decimal6, Decimal6] | None
+    raw_unit: Literal["days", "count"] | None
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(max_length=32)
+    author_ref: EntityRef | None
+    review_ref: AuditDocumentRef | None
+    reviewer_ref: EntityRef | None
+    configuration_ref: AuditDocumentRef | None
+    observed_at: UtcTimestamp | None
+    source_lineage_refs: tuple[AuditDocumentRef, ...] = Field(max_length=32)
+    verification_state: Literal["verified", "unverified", "not_applicable"]
+    rights_state: Literal["approved", "unknown", "not_applicable"]
+    unknown_reason: ShortText | None
+
+    @model_validator(mode="after")
+    def observation_has_a_valid_basis(self) -> RiskSignalObservation:
+        if len({(item.kind, item.document_id) for item in self.source_lineage_refs}) != len(
+            self.source_lineage_refs
+        ):
+            raise ValueError("signal lineage references must be unique")
+        if self.state == "unknown":
+            if self.evidence_state == "accepted":
+                raise ValueError("unknown signals cannot claim accepted evidence")
+            if (
+                self.normalized_value is not None
+                or self.raw_value is not None
+                or self.raw_interval is not None
+                or self.raw_unit is not None
+                or self.basis
+            ):
+                raise ValueError("unknown signal observations cannot contain a measured value")
+            if self.unknown_reason is None:
+                raise ValueError("unknown signal observations require a reason")
+            return self
+        if self.state == "not_applicable":
+            if self.evidence_state == "accepted":
+                raise ValueError("not-applicable signals cannot claim accepted evidence")
+            if (
+                self.normalized_value is not None
+                or self.raw_value is not None
+                or self.raw_interval is not None
+                or self.raw_unit is not None
+                or self.basis
+            ):
+                raise ValueError("not-applicable signals cannot contain a measured value")
+            if self.unknown_reason is None:
+                raise ValueError("not-applicable signals require a reason")
+            return self
+        if self.unknown_reason is not None or self.basis is None or self.configuration_ref is None:
+            raise ValueError("observed signals require a basis and pinned configuration")
+        if self.observed_at is None or not self.evidence_refs:
+            raise ValueError("observed signals require evidence and an observation timestamp")
+        if self.evidence_state == "accepted":
+            if (
+                not self.evidence_refs
+                or self.author_ref is None
+                or self.review_ref is None
+                or self.reviewer_ref is None
+                or self.verification_state != "verified"
+                or self.rights_state != "approved"
+            ):
+                raise ValueError(
+                    "accepted signals require verified, rights-approved independent review"
+                )
+            if (
+                self.author_ref.entity_kind != "reviewer"
+                or self.reviewer_ref.entity_kind != "reviewer"
+            ):
+                raise ValueError("accepted signals require human reviewer identities")
+            if self.author_ref.entity_id == self.reviewer_ref.entity_id:
+                raise ValueError("a signal author cannot independently review their own evidence")
+        if self.signal in {"publication_age", "popularity"}:
+            if self.basis != "context_only" or self.normalized_value is not None:
+                raise ValueError("publication age and popularity are context-only signals")
+            if self.raw_interval is None or self.raw_interval[0] > self.raw_interval[1]:
+                raise ValueError("context-only signals require an ordered raw-value interval")
+            expected_unit = "days" if self.signal == "publication_age" else "count"
+            if self.raw_unit != expected_unit:
+                raise ValueError("context-only signal interval has the wrong measurement unit")
+            if self.signal == "popularity" and self.raw_value is None:
+                raise ValueError("popularity observations must identify the timestamped count type")
+        elif self.signal == "model_familiarity":
+            if self.basis != "behavioral_diagnostic_only":
+                raise ValueError("model familiarity must remain a separate behavioral diagnostic")
+            if (
+                self.raw_value is not None
+                or self.raw_interval is not None
+                or self.raw_unit is not None
+            ):
+                raise ValueError("behavioral diagnostics cannot be substituted with context values")
+            if self.normalized_value is not None and Decimal(self.normalized_value) > Decimal(
+                "1.000000"
+            ):
+                raise ValueError("behavioral diagnostic values must be within [0,1]")
+        else:
+            if self.raw_interval is not None or self.raw_unit is not None:
+                raise ValueError("scored and diagnostic signals cannot carry context intervals")
+            if self.basis == "completed_scope_no_match":
+                if (
+                    self.normalized_value != "0.000000"
+                    or self.evidence_state != "none"
+                    or not self.evidence_refs
+                    or self.verification_state != "verified"
+                    or self.rights_state != "approved"
+                ):
+                    raise ValueError(
+                        "no-match observations require verified scope evidence and zero value"
+                    )
+                return self
+            expected = {
+                "duplication": {
+                    "exact_or_semantic_duplicate": "1.000000",
+                    "question_only_overlap": "0.600000",
+                    "distinctive_solution_overlap": "0.800000",
+                    "shared_family": "0.300000",
+                    "concept_or_boilerplate": "0.000000",
+                },
+                "synthetic_similarity": {
+                    "exact_or_semantic_duplicate": "1.000000",
+                    "question_only_overlap": "0.600000",
+                    "distinctive_solution_overlap": "0.800000",
+                    "shared_family": "0.300000",
+                    "concept_or_boilerplate": "0.000000",
+                },
+                "corpus_overlap_evidence": {"verified_corpus_overlap": "1.000000"},
+                "web_exposure": {
+                    "verified_public_substantive": "1.000000",
+                    "public_metadata_only": "0.300000",
+                    "verified_private_scope": "0.000000",
+                },
+                "leakage_history": {"corroborated_task_model_report": "1.000000"},
+            }[self.signal]
+            expected_value = expected.get(self.basis)
+            if expected_value is None or self.normalized_value != expected_value:
+                raise ValueError("signal basis does not match its frozen normalized value")
+            if self.raw_value is not None:
+                raise ValueError(
+                    "scored signals use the frozen normalized value, not free-form values"
+                )
+            if self.evidence_state == "none":
+                raise ValueError("positive or reviewed signals require an explicit evidence state")
+        if (
+            self.evidence_state == "accepted"
+            and self.signal
+            in {
+                "duplication",
+                "corpus_overlap_evidence",
+                "web_exposure",
+                "synthetic_similarity",
+                "leakage_history",
+            }
+            and not self.evidence_refs
+        ):
+            raise ValueError("scored signals require evidence references")
+        return self
+
+
+class RiskComponentCoverage(StrictAuditModel):
+    component: RiskComponentKey
+    planned_units: UnsignedInteger
+    complete_units: UnsignedInteger
+    failed_units: UnsignedInteger
+    blocked_units: UnsignedInteger
+    truncated_units: UnsignedInteger
+    pending_reviews: UnsignedInteger
+    scope_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
+
+    @model_validator(mode="after")
+    def counts_fit_the_frozen_scope(self) -> RiskComponentCoverage:
+        if self.planned_units == 0:
+            raise ValueError("required risk components need a nonempty planned scope")
+        if self.complete_units > self.planned_units:
+            raise ValueError("complete units cannot exceed planned units")
+        if (
+            self.complete_units + self.failed_units + self.blocked_units + self.truncated_units
+            > self.planned_units
+        ):
+            raise ValueError("risk coverage outcome counts exceed the planned scope")
+        if self.pending_reviews > self.complete_units:
+            raise ValueError("pending reviews cannot exceed completed query units")
+        return self
+
+
+class RiskPolicyPayloadV2(StrictAuditModel):
+    policy_version: Literal["observed-risk-v1"]
+    formula: Literal["50*M+25*C+15*E+10*L"]
+    component_weights: dict[RiskComponentKey, Decimal6]
+    tier_thresholds: dict[Literal["low", "medium"], Decimal6]
+    signal_definitions: tuple[RiskSignalDefinition, ...] = Field(min_length=8, max_length=8)
+    required_components: tuple[RiskComponentKey, ...] = Field(min_length=4, max_length=4)
+    missingness_policy: Literal["unknown_components_null_bounds_include_unavailable_weight"]
+    calibration_state: Literal["proposed", "validated"]
+    calibration_evidence_refs: tuple[AuditDocumentRef, ...] = Field(max_length=16)
+    claim_policy: Literal["heuristic_only_no_probability_or_cleanliness_claim"]
+
+    @model_validator(mode="after")
+    def policy_is_the_frozen_v1_heuristic(self) -> RiskPolicyPayloadV2:
+        if self.component_weights != {
+            "M": "50.000000",
+            "C": "25.000000",
+            "E": "15.000000",
+            "L": "10.000000",
+        }:
+            raise ValueError("observed-risk-v1 requires the frozen M/C/E/L weights")
+        if self.tier_thresholds != {"low": "25.000000", "medium": "60.000000"}:
+            raise ValueError("observed-risk-v1 requires the frozen tier thresholds")
+        expected = tuple(
+            RiskSignalDefinition(
+                signal=signal,
+                role=role,
+                applicability=applicability,
+                definition=definition,
+            )
+            for signal, role, applicability, definition in OBSERVED_RISK_SIGNAL_LAYOUT
+        )
+        if self.signal_definitions != expected:
+            raise ValueError("observed-risk-v1 signal descriptors cannot be changed in place")
+        if self.required_components != ("M", "C", "E", "L"):
+            raise ValueError("observed-risk-v1 requires all four score components")
+        if self.calibration_state == "validated" and not self.calibration_evidence_refs:
+            raise ValueError("validated risk policies require calibration evidence references")
+        if self.calibration_state == "proposed" and self.calibration_evidence_refs:
+            raise ValueError("proposed risk policies cannot claim calibration evidence")
+        return self
+
+
+class RiskComponentAssessment(StrictAuditModel):
+    component: RiskComponentKey
+    availability: Literal["measured", "unknown"]
+    coverage_state: Literal["complete", "partial", "unavailable"]
+    value: Decimal6 | None
+    points: Decimal6
+    missing_weight: Decimal6
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(max_length=64)
+    coverage_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
+    reason_codes: tuple[ShortText, ...] = Field(min_length=1, max_length=16)
+
+    @model_validator(mode="after")
+    def component_bounds_are_valid(self) -> RiskComponentAssessment:
+        value = None if self.value is None else Decimal(self.value)
+        points = Decimal(self.points)
+        missing_weight = Decimal(self.missing_weight)
+        weight = {
+            "M": Decimal("50.000000"),
+            "C": Decimal("25.000000"),
+            "E": Decimal("15.000000"),
+            "L": Decimal("10.000000"),
+        }[self.component]
+        if self.availability == "unknown":
+            if value is not None or points != 0 or missing_weight != weight:
+                raise ValueError("unknown risk components require a reason and unresolved weight")
+        elif value is None or not Decimal(0) <= value <= Decimal(1):
+            raise ValueError("measured risk components require a value within [0,1]")
+        elif (value * weight).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP) != points:
+            raise ValueError("risk component points must equal the frozen weight times its value")
+        if not Decimal(0) <= points <= weight or not Decimal(0) <= missing_weight <= weight:
+            raise ValueError("risk component points and missing weight must lie within [0,100]")
+        if self.coverage_state == "complete" and missing_weight != 0:
+            raise ValueError("complete component coverage cannot retain unresolved weight")
+        if self.coverage_state != "complete" and missing_weight != weight:
+            raise ValueError("incomplete component coverage adds its full policy weight to bounds")
+        return self
+
+
+class RiskIndexMeasurement(StrictAuditModel):
+    value: Decimal6 | None
+    null_reason: Literal["scope_incomplete", "policy_uncalibrated", "not_run"] | None
+
+    @model_validator(mode="after")
+    def null_index_has_one_explicit_reason(self) -> RiskIndexMeasurement:
+        if (self.value is None) != (self.null_reason is not None):
+            raise ValueError("ineligible observed indices require an explicit null reason")
+        if self.value is not None and Decimal(self.value) > Decimal("100.000000"):
+            raise ValueError("observed risk index must be within [0,100]")
+        return self
+
+
+class RiskAssessmentPayloadV2(StrictAuditModel):
+    plan_ref: AuditDocumentRef
+    task_ref: EntityRef
+    context_ref: AuditDocumentRef | None
+    policy_ref: AuditDocumentRef
+    scope_state: Literal["complete", "partial", "blocked", "not_run"]
+    calibration_state: Literal["proposed", "validated"]
+    signal_observations: tuple[RiskSignalObservation, ...] = Field(min_length=8, max_length=8)
+    component_coverage: tuple[RiskComponentCoverage, ...] = Field(min_length=4, max_length=4)
+    components: tuple[RiskComponentAssessment, ...] = Field(min_length=4, max_length=4)
+    accepted_evidence: tuple[AuditDocumentRef, ...] = Field(max_length=256)
+    calculated_lower_bound: Decimal6
+    calculated_upper_bound: Decimal6
+    observed_index: RiskIndexMeasurement
+    coverage: DecimalMeasurement
+    state: RiskState
+    explanation_codes: tuple[ShortText, ...] = Field(min_length=1, max_length=32)
+
+    @model_validator(mode="after")
+    def assessment_is_complete_and_bounded(self) -> RiskAssessmentPayloadV2:
+        signal_keys = tuple(item.signal for item in self.signal_observations)
+        expected_signals = tuple(item[0] for item in OBSERVED_RISK_SIGNAL_LAYOUT)
+        if len(set(signal_keys)) != len(signal_keys) or set(signal_keys) != set(expected_signals):
+            raise ValueError(
+                "risk assessment must retain all eight signal descriptors exactly once"
+            )
+        for collection, label in (
+            (self.component_coverage, "coverage"),
+            (self.components, "component assessment"),
+        ):
+            keys = tuple(item.component for item in collection)
+            if len(set(keys)) != 4 or set(keys) != {"M", "C", "E", "L"}:
+                raise ValueError(
+                    f"risk assessment must retain all four {label} groups exactly once"
+                )
+        lower = Decimal(self.calculated_lower_bound)
+        upper = Decimal(self.calculated_upper_bound)
+        if not Decimal(0) <= lower <= upper <= Decimal(100):
+            raise ValueError("risk assessment bounds must be ordered within [0,100]")
+        component_lower = sum((Decimal(item.points) for item in self.components), Decimal(0))
+        component_missing = sum(
+            (Decimal(item.missing_weight) for item in self.components), Decimal(0)
+        )
+        if component_lower != lower or min(Decimal(100), lower + component_missing) != upper:
+            raise ValueError("risk bounds must reconcile exactly to the component ledger")
+        observed = self.observed_index.value
+        if observed is not None:
+            if self.scope_state != "complete" or self.calibration_state != "validated":
+                raise ValueError(
+                    "a tier-eligible observed index requires complete scope and calibration"
+                )
+            if not lower <= Decimal(observed) <= upper:
+                raise ValueError("observed index must lie within its calculated bounds")
+            if lower != upper or Decimal(observed) != lower:
+                raise ValueError("eligible observed index requires a fully measured exact score")
+            expected_state: RiskState = (
+                "low_observed"
+                if Decimal(observed) < Decimal("25.000000")
+                else "medium_observed"
+                if Decimal(observed) < Decimal("60.000000")
+                else "high_observed"
+            )
+            if self.state != expected_state:
+                raise ValueError("risk tier must match the frozen threshold boundaries")
+        if self.state in {"low_observed", "medium_observed"} and observed is None:
+            raise ValueError("low and medium tiers require a calibrated complete observed index")
+        if self.state == "high_observed" and observed is None and lower < Decimal("60.000000"):
+            raise ValueError("partial high tier requires a lower bound at or above 60")
+        if self.state == "insufficient_evidence" and observed is not None:
+            raise ValueError("insufficient evidence cannot expose a calibrated index")
+        if self.state == "not_applicable":
+            raise ValueError("observed-risk-v1 requires all four score components")
+        if observed is None:
+            if lower >= Decimal("60.000000") and self.state != "high_observed":
+                raise ValueError("high observed lower bounds cannot be downgraded to insufficient")
+            if lower < Decimal("60.000000") and self.state == "high_observed":
+                raise ValueError("partial high tier requires a lower bound at or above 60")
+        expected_null_reason = (
+            "not_run"
+            if self.scope_state == "not_run"
+            else "scope_incomplete"
+            if self.scope_state != "complete"
+            else "policy_uncalibrated"
+        )
+        if observed is None and self.observed_index.null_reason != expected_null_reason:
+            raise ValueError("ineligible observed index has the wrong null reason")
+        expected_coverage = Decimal(
+            sum(1 for item in self.components if item.coverage_state == "complete") * 25
+        )
+        if self.coverage.value is None or Decimal(self.coverage.value) != expected_coverage:
+            raise ValueError("risk coverage must report the completed component-scope percentage")
+        expected_accepted_refs = {
+            (ref.kind, ref.document_id)
+            for observation in self.signal_observations
+            if observation.evidence_state == "accepted"
+            for ref in observation.evidence_refs
+        }
+        actual_accepted_refs = {(ref.kind, ref.document_id) for ref in self.accepted_evidence}
+        if actual_accepted_refs != expected_accepted_refs:
+            raise ValueError("assessment accepted evidence must match its accepted signal ledger")
+        if self.scope_state == "complete" and any(
+            item.coverage_state != "complete" for item in self.components
+        ):
+            raise ValueError(
+                "complete risk scope requires complete, reviewed coverage in every group"
+            )
+        return self
+
+
 class TemporalAssessmentPayload(StrictAuditModel):
     artifact_ref: ImmutableArtifactRef
     source_chronology: tuple[TimestampEvidence, ...]
@@ -658,10 +1118,24 @@ class RiskPolicyDocument(_PayloadDocument):
     payload_model = RiskPolicyPayload
 
 
+class RiskPolicyDocumentV2(_PayloadDocument):
+    kind: Literal["risk_policy"] = "risk_policy"
+    payload: RiskPolicyPayloadV2
+    payload_model = RiskPolicyPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
 class RiskAssessmentDocument(_PayloadDocument):
     kind: Literal["risk_assessment"] = "risk_assessment"
     payload: RiskAssessmentPayload
     payload_model = RiskAssessmentPayload
+
+
+class RiskAssessmentDocumentV2(_PayloadDocument):
+    kind: Literal["risk_assessment"] = "risk_assessment"
+    payload: RiskAssessmentPayloadV2
+    payload_model = RiskAssessmentPayloadV2
+    expected_schema_version: ClassVar[int] = 2
 
 
 class TemporalAssessmentDocument(_PayloadDocument):
@@ -728,7 +1202,9 @@ AuditDocument = (
     | MatchEvidenceDocument
     | MatchEvidenceDocumentV2
     | RiskPolicyDocument
+    | RiskPolicyDocumentV2
     | RiskAssessmentDocument
+    | RiskAssessmentDocumentV2
     | TemporalAssessmentDocument
     | SealedManifestDocument
     | CanaryPolicyDocument
@@ -765,6 +1241,8 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
 }
 _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("match_evidence", 2): MatchEvidenceDocumentV2,
+    ("risk_policy", 2): RiskPolicyDocumentV2,
+    ("risk_assessment", 2): RiskAssessmentDocumentV2,
 }
 
 

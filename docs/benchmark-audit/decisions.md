@@ -126,3 +126,19 @@ Review opinions are distinct immutable records. Conflicting accept/reject opinio
 ### ADDENDUM-DECISION-26 — Source instructions remain data and model output remains a proposal
 
 Match judge packets label source spans `untrusted_source_data`, reject tools and fix verdict authority to `proposal_only`. Existing generic judge packets also isolate untrusted comments from evidence scope. No audit-specific model-context, fresh-session dispatch or exposure-event writer is available, so no judge call is made and no AI output can create an accepted finding here.
+
+### ADDENDUM-DECISION-27 — Observed-risk-v1 uses frozen groups and no probability language
+
+The four required components remain M/C/E/L with weights 50/25/15/10 and fixed thresholds at 25 and 60. Signal observations are combined by maximum within each correlated group. Publication age and popularity are context only; model familiarity remains a separate behavioral diagnostic. The calculated index is an observed heuristic, never a probability or cleanliness guarantee.
+
+### ADDENDUM-DECISION-28 — Missing components keep their full policy weight in the upper bound
+
+Complete, reviewed finite scope can record an observed zero. An unavailable, failed, blocked, truncated, unmeasured or review-pending component remains unknown; the upper bound adds that component's full weight and caps at 100. Low/medium labels require complete scope and a calibrated policy. A known lower bound of at least 60 may be stated as high observed risk with bounds and a coverage qualifier.
+
+### ADDENDUM-DECISION-29 — Risk v2 accepts only explicitly reviewed signal records
+
+Positive scored observations require evidence/configuration/time references, verified source state, approved rights and an independent reviewer identity. The pure engine does not resolve those references against a trusted database; it consumes already accepted records and current repository capabilities cannot produce a live accepted source finding. Synthetic fixtures validate arithmetic only.
+
+### ADDENDUM-DECISION-30 — Audit document v2 storage uses a guarded forward migration
+
+The existing audit document schema-version constraint was v1-only, which prevented Prompt90's v2 evidence from being stored. A forward migration supports versions 1 and 2 without rewriting history. Downgrade checks for v2 rows and refuses to restore the v1-only constraint while any remain. Upgrade/downgrade SQL was rendered offline; live PostgreSQL execution remains pending.

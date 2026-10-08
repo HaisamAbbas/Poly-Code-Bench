@@ -34,6 +34,8 @@ AuditKind = Literal[
     "temporal_assessment",
     "sealed_manifest",
     "canary_policy",
+    "seal_access_event",
+    "canary_observation",
     "behavioral_audit_plan",
     "firewall_decision",
     "replacement_plan",
@@ -99,6 +101,7 @@ _StrictModel = ConfigDict(extra="forbid", strict=True, frozen=True)
 NonEmpty = Annotated[str, Field(min_length=1, max_length=4096)]
 ShortText = Annotated[str, Field(min_length=1, max_length=512)]
 SafeInteger = Annotated[int, Field(ge=-(2**53 - 1), le=2**53 - 1)]
+_SAFE_ACCESS_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,511}$", re.ASCII)
 UnsignedInteger = Annotated[int, Field(ge=0, le=2**53 - 1)]
 
 
@@ -1272,6 +1275,39 @@ class SealedManifestPayload(StrictAuditModel):
     disclosure_state: SealState
 
 
+class SealedManifestPayloadV2(StrictAuditModel):
+    """Envelope metadata; key material and plaintext digests never belong here."""
+
+    tenant_id: UUID
+    encrypted_artifact_refs: tuple[ImmutableArtifactRef, ...] = Field(min_length=1, max_length=1)
+    wrapped_key_ref: ImmutableArtifactRef
+    hiding_commitment: HidingCommitmentPayload
+    encryption_algorithm: Literal["AES-256-GCM"]
+    key_wrapping_algorithm: ShortText
+    key_provider: ShortText
+    key_version: ShortText
+    recovery_ref: ShortText | None
+    nonce_length_bytes: Literal[12]
+    access_policy: AuditDocumentRef
+    retention_policy: AuditDocumentRef
+    access_event_refs: tuple[AuditDocumentRef, ...]
+    disclosure_state: SealState
+
+    @model_validator(mode="after")
+    def envelope_artifacts_are_private_and_history_is_typed(self) -> SealedManifestPayloadV2:
+        if len(self.encrypted_artifact_refs) != 1:
+            raise ValueError("each sealed manifest must bind exactly one per-artifact data key")
+        if any(ref.visibility == "public" for ref in self.encrypted_artifact_refs):
+            raise ValueError("sealed ciphertext artifacts must not be public")
+        if self.wrapped_key_ref.visibility != "private":
+            raise ValueError("wrapped data keys must be stored as private artifacts")
+        if any(ref.kind != "seal_access_event" for ref in self.access_event_refs):
+            raise ValueError("sealed access history must reference seal_access_event documents")
+        if not self.access_event_refs and self.disclosure_state != "sealed":
+            raise ValueError("a disclosed sealed manifest must retain its access event history")
+        return self
+
+
 class CanaryPolicyPayload(StrictAuditModel):
     marker_generation: AuditDocumentRef
     detection: AuditDocumentRef
@@ -1279,6 +1315,201 @@ class CanaryPolicyPayload(StrictAuditModel):
     exposure_rules: tuple[ShortText, ...]
     collision_checks: tuple[AuditDocumentRef, ...]
     interpretation_limits: tuple[ShortText, ...]
+
+
+class CanaryCollisionCheck(StrictAuditModel):
+    scope_ref: AuditDocumentRef
+    checked_items: UnsignedInteger
+    method_version: Literal["exact-bytes-v1"]
+    result: Literal["no_collision"]
+
+    @model_validator(mode="after")
+    def collision_check_has_a_real_local_scope(self) -> CanaryCollisionCheck:
+        if self.scope_ref.kind != "corpus_snapshot":
+            raise ValueError("canary collision checks require a pinned local corpus snapshot")
+        if self.checked_items == 0:
+            raise ValueError("canary collision checks cannot claim success over an empty corpus")
+        return self
+
+
+class CanaryPolicyPayloadV2(StrictAuditModel):
+    marker_refs: tuple[ImmutableArtifactRef, ...] = Field(min_length=1)
+    marker_entropy_bits: Literal[256]
+    detection_method: Literal["exact_bytes"]
+    collision_checks: tuple[CanaryCollisionCheck, ...] = Field(min_length=1)
+    detection: AuditDocumentRef
+    access: AuditDocumentRef
+    exposure_rules: tuple[ShortText, ...]
+    local_first: Literal[True]
+    interpretation_limits: tuple[
+        Literal["absence_is_not_clean", "observed_disclosure_is_not_training_proof"], ...
+    ]
+
+    @model_validator(mode="after")
+    def markers_are_private_and_limits_are_explicit(self) -> CanaryPolicyPayloadV2:
+        if any(
+            ref.visibility != "private"
+            or ref.media_type != "application/vnd.polycodebench.sealed-artifact"
+            for ref in self.marker_refs
+        ):
+            raise ValueError("canary markers must be envelope-encrypted private artifacts")
+        if set(self.interpretation_limits) != {
+            "absence_is_not_clean",
+            "observed_disclosure_is_not_training_proof",
+        }:
+            raise ValueError("canary policy must preserve both interpretation limits")
+        if len(self.collision_checks) != len(self.marker_refs):
+            raise ValueError("every private canary marker requires a collision-check result")
+        return self
+
+
+class SealAccessEventPayload(StrictAuditModel):
+    manifest_ref: AuditDocumentRef
+    tenant_id: UUID
+    actor: EntityRef
+    operation: Literal[
+        "local_screening",
+        "candidate_delivery",
+        "remote_query",
+        "remote_delivery",
+        "public_publication",
+        "key_rotation",
+    ]
+    purpose: ShortText
+    recipient: ShortText | None
+    payload_digest: Digest | None
+    authorization_ref: AuditDocumentRef | None
+    event_time: TimestampEvidence
+    outcome: Literal["authorized", "denied", "completed", "failed"]
+    exposure: Literal["none", "authorized_disclosure", "public_exposed", "compromised"]
+
+    @model_validator(mode="after")
+    def disclosure_is_authorized_and_exactly_bound(self) -> SealAccessEventPayload:
+        if self.manifest_ref.kind != "sealed_manifest":
+            raise ValueError("sealed access event must reference a sealed_manifest")
+        if not _SAFE_ACCESS_LABEL.fullmatch(self.purpose):
+            raise ValueError("access purpose must be a bounded identifier, not free-form text")
+        if self.recipient is not None and not _SAFE_ACCESS_LABEL.fullmatch(self.recipient):
+            raise ValueError("access recipient must be a bounded identifier")
+        if self.exposure != "none":
+            if (
+                self.outcome == "denied"
+                or self.authorization_ref is None
+                or self.recipient is None
+                or self.payload_digest is None
+            ):
+                raise ValueError(
+                    "exposure events require authorization, recipient and payload digest"
+                )
+        if self.outcome != "denied" and self.authorization_ref is None:
+            raise ValueError("permitted access events require an authorization reference")
+        if (
+            self.operation == "local_screening"
+            and self.outcome != "denied"
+            and self.payload_digest is None
+        ):
+            raise ValueError("authorized local screening must record its exact payload digest")
+        if self.operation in {"remote_query", "remote_delivery", "public_publication"}:
+            if self.outcome != "denied" and self.exposure == "none":
+                raise ValueError("authorized remote operations must record exposure")
+            if self.outcome not in {"denied", "authorized"}:
+                raise ValueError(
+                    "remote disclosure events must record authorization before dispatch"
+                )
+        if self.operation == "public_publication" and self.outcome != "denied":
+            if self.exposure != "public_exposed":
+                raise ValueError("public publication must monotonically mark public exposure")
+        if self.operation in {"candidate_delivery", "remote_query", "remote_delivery"}:
+            if self.outcome != "denied" and self.exposure != "authorized_disclosure":
+                raise ValueError("private recipient delivery must record authorized disclosure")
+            if self.outcome not in {"denied", "authorized"}:
+                raise ValueError(
+                    "private delivery events must record authorization before dispatch"
+                )
+        if self.operation == "local_screening" and self.recipient is None:
+            raise ValueError("local screening must identify its scoped worker recipient")
+        if self.operation == "local_screening" and self.outcome != "denied":
+            if self.outcome != "authorized" or self.exposure != "authorized_disclosure":
+                raise ValueError("authorized local screening must advance exposure history")
+        if self.operation == "key_rotation" and self.exposure != "none":
+            raise ValueError("key rotation does not itself disclose plaintext")
+        if self.operation == "key_rotation" and self.outcome not in {"denied", "authorized"}:
+            raise ValueError("key rotation must record authorization before changing its wrapper")
+        return self
+
+
+class CanaryObservationPayload(StrictAuditModel):
+    marker_ref: ImmutableArtifactRef
+    coverage_ref: AuditDocumentRef
+    observation: Literal[
+        "observed_verified",
+        "observed_previously_published",
+        "not_observed_in_scope",
+        "unverified_observation",
+    ]
+    exact_match: bool
+    source_ref: AuditDocumentRef | None
+    source_date_evidence: tuple[TimestampEvidence, ...]
+    prior_publication: Literal["not_previously_published", "previously_published", "unknown"]
+    source_review_ref: AuditDocumentRef | None
+    external_query: bool
+    access_event_ref: AuditDocumentRef | None
+    interpretation_limits: tuple[
+        Literal["absence_is_not_clean", "observed_disclosure_is_not_training_proof"], ...
+    ]
+
+    @model_validator(mode="after")
+    def observation_never_claims_training_or_cleanliness(self) -> CanaryObservationPayload:
+        if (
+            self.marker_ref.visibility != "private"
+            or self.marker_ref.media_type != "application/vnd.polycodebench.sealed-artifact"
+        ):
+            raise ValueError("canary marker reference must be a sealed private artifact")
+        if self.coverage_ref.kind != "coverage_manifest":
+            raise ValueError("canary observation must bind a declared coverage scope")
+        if set(self.interpretation_limits) != {
+            "absence_is_not_clean",
+            "observed_disclosure_is_not_training_proof",
+        }:
+            raise ValueError("canary observation must preserve interpretation limits")
+        verified = self.observation in {"observed_verified", "observed_previously_published"}
+        if verified and (
+            not self.exact_match
+            or self.source_ref is None
+            or not self.source_date_evidence
+            or self.prior_publication == "unknown"
+            or self.source_review_ref is None
+        ):
+            raise ValueError(
+                "verified canary observations require exact match, source and date review"
+            )
+        if (
+            self.observation == "observed_verified"
+            and self.prior_publication != "not_previously_published"
+        ):
+            raise ValueError("verified disclosure requires review of prior deliberate publication")
+        if (
+            self.observation == "observed_previously_published"
+            and self.prior_publication != "previously_published"
+        ):
+            raise ValueError("previously published canaries must be labeled separately")
+        if self.observation == "not_observed_in_scope" and (
+            self.exact_match or self.source_ref is not None or self.source_date_evidence
+        ):
+            raise ValueError("no-hit observations cannot carry matching source evidence")
+        if self.observation == "unverified_observation" and not self.exact_match:
+            raise ValueError("unverified observations require an observed candidate match")
+        if self.exact_match and (
+            self.source_ref is None or self.source_ref.kind != "match_evidence"
+        ):
+            raise ValueError("exact canary matches must bind reviewed match evidence")
+        if self.access_event_ref is not None and self.access_event_ref.kind != "seal_access_event":
+            raise ValueError("external canary query must reference a sealed access event")
+        if self.external_query != (self.access_event_ref is not None):
+            raise ValueError("external canary queries require their disclosure event reference")
+        if self.source_review_ref is not None and self.source_review_ref.kind != "match_evidence":
+            raise ValueError("canary source/date review must reference match evidence")
+        return self
 
 
 class BehavioralAuditPlanPayload(StrictAuditModel):
@@ -1515,10 +1746,36 @@ class SealedManifestDocument(_PayloadDocument):
     payload_model = SealedManifestPayload
 
 
+class SealedManifestDocumentV2(_PayloadDocument):
+    kind: Literal["sealed_manifest"] = "sealed_manifest"
+    payload: SealedManifestPayloadV2
+    payload_model = SealedManifestPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
 class CanaryPolicyDocument(_PayloadDocument):
     kind: Literal["canary_policy"] = "canary_policy"
     payload: CanaryPolicyPayload
     payload_model = CanaryPolicyPayload
+
+
+class CanaryPolicyDocumentV2(_PayloadDocument):
+    kind: Literal["canary_policy"] = "canary_policy"
+    payload: CanaryPolicyPayloadV2
+    payload_model = CanaryPolicyPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
+class SealAccessEventDocument(_PayloadDocument):
+    kind: Literal["seal_access_event"] = "seal_access_event"
+    payload: SealAccessEventPayload
+    payload_model = SealAccessEventPayload
+
+
+class CanaryObservationDocument(_PayloadDocument):
+    kind: Literal["canary_observation"] = "canary_observation"
+    payload: CanaryObservationPayload
+    payload_model = CanaryObservationPayload
 
 
 class BehavioralAuditPlanDocument(_PayloadDocument):
@@ -1574,7 +1831,11 @@ AuditDocument = (
     | TemporalAssessmentDocument
     | TemporalAssessmentDocumentV2
     | SealedManifestDocument
+    | SealedManifestDocumentV2
     | CanaryPolicyDocument
+    | CanaryPolicyDocumentV2
+    | SealAccessEventDocument
+    | CanaryObservationDocument
     | BehavioralAuditPlanDocument
     | FirewallDecisionDocument
     | ReplacementPlanDocument
@@ -1599,6 +1860,8 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
         TemporalAssessmentDocument,
         SealedManifestDocument,
         CanaryPolicyDocument,
+        SealAccessEventDocument,
+        CanaryObservationDocument,
         BehavioralAuditPlanDocument,
         FirewallDecisionDocument,
         ReplacementPlanDocument,
@@ -1612,6 +1875,8 @@ _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("risk_policy", 2): RiskPolicyDocumentV2,
     ("risk_assessment", 2): RiskAssessmentDocumentV2,
     ("temporal_assessment", 2): TemporalAssessmentDocumentV2,
+    ("sealed_manifest", 2): SealedManifestDocumentV2,
+    ("canary_policy", 2): CanaryPolicyDocumentV2,
 }
 
 
@@ -1657,6 +1922,92 @@ def audit_document_bytes(document: AuditDocument) -> bytes:
 
 def audit_document_digest(document: AuditDocument) -> str:
     return "sha256:" + hashlib.sha256(audit_document_bytes(document)).hexdigest()
+
+
+def validate_sealed_manifest_transition(
+    previous: SealedManifestDocumentV2,
+    successor: SealedManifestDocumentV2,
+    appended_event: SealAccessEventDocument,
+) -> None:
+    """Enforce one-event linear history, immutable task identity and monotonic exposure."""
+    old = previous.payload
+    new = successor.payload
+    if successor.supersedes_id != previous.id:
+        raise ValueError("sealed manifest successor must point to the previous version")
+    if previous.id == successor.id or previous.schema_version != 2 or successor.schema_version != 2:
+        raise ValueError("sealed manifest transition requires distinct v2 documents")
+    immutable_identity = (
+        old.tenant_id,
+        old.encrypted_artifact_refs,
+        old.hiding_commitment,
+        old.encryption_algorithm,
+        old.nonce_length_bytes,
+        old.access_policy,
+        old.retention_policy,
+    )
+    next_identity = (
+        new.tenant_id,
+        new.encrypted_artifact_refs,
+        new.hiding_commitment,
+        new.encryption_algorithm,
+        new.nonce_length_bytes,
+        new.access_policy,
+        new.retention_policy,
+    )
+    if immutable_identity != next_identity:
+        raise ValueError("sealed manifest successor changed task identity or policy")
+    if new.access_event_refs[: len(old.access_event_refs)] != old.access_event_refs:
+        raise ValueError("sealed manifest successor erased or reordered access history")
+    new_event_refs = new.access_event_refs[len(old.access_event_refs) :]
+    expected_event_ref = AuditDocumentRef(
+        document_id=appended_event.id,
+        digest=audit_document_digest(appended_event),
+        kind="seal_access_event",
+    )
+    if new_event_refs != (expected_event_ref,):
+        raise ValueError("sealed manifest successor must append exactly its access event")
+    if (
+        appended_event.payload.manifest_ref.document_id != previous.id
+        or appended_event.payload.manifest_ref.digest != audit_document_digest(previous)
+        or appended_event.payload.tenant_id != old.tenant_id
+    ):
+        raise ValueError("access event is not bound to the previous tenant manifest")
+    ranks: dict[str, int] = {
+        "sealed": 0,
+        "authorized_disclosure": 1,
+        "public_exposed": 2,
+        "compromised": 3,
+        "retired": 4,
+    }
+    event_state: SealState = (
+        "sealed" if appended_event.payload.exposure == "none" else appended_event.payload.exposure
+    )
+    expected_state = (
+        old.disclosure_state if ranks[old.disclosure_state] >= ranks[event_state] else event_state
+    )
+    if new.disclosure_state != expected_state:
+        raise ValueError("manifest disclosure state does not reflect its access event")
+    if old.disclosure_state == "retired":
+        raise ValueError("retired sealed manifests cannot be superseded")
+    wrapping_changed = (
+        old.wrapped_key_ref != new.wrapped_key_ref
+        or old.key_provider != new.key_provider
+        or old.key_version != new.key_version
+        or old.key_wrapping_algorithm != new.key_wrapping_algorithm
+        or old.recovery_ref != new.recovery_ref
+    )
+    authorized_rotation = (
+        appended_event.payload.operation == "key_rotation"
+        and appended_event.payload.outcome != "denied"
+    )
+    if wrapping_changed and (
+        old.wrapped_key_ref == new.wrapped_key_ref
+        or (old.key_provider, old.key_version, old.key_wrapping_algorithm)
+        == (new.key_provider, new.key_version, new.key_wrapping_algorithm)
+    ):
+        raise ValueError("key rotation must replace wrapped-key bytes and version metadata")
+    if wrapping_changed != authorized_rotation:
+        raise ValueError("only an authorized key-rotation event may replace wrapped keys")
 
 
 _RUN_TRANSITIONS: dict[str, frozenset[str]] = {

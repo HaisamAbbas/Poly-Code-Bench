@@ -13,8 +13,8 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 89 — bounded retrieval, coverage and replay. Commit `f6f752c`.
 - [x] Prompt 90 — match verification, review and disputes. Commit `187d4e2`.
 - [x] Prompt 91 — explainable risk index, eight signals and missingness gates. Commit `a9b599e`.
-- [x] Prompt 92 — temporal holdouts, model contexts and timestamp commitments.
-- [ ] Prompt 93 — sealed evaluations, encryption, access and canaries.
+- [x] Prompt 92 — temporal holdouts, model contexts and timestamp commitments. Commit `483691e`.
+- [x] Prompt 93 — sealed evaluations, encryption, access and canaries (partial foundations; production prerequisites recorded in the report).
 - [ ] Prompt 94 — optional behavioral diagnostic protocols and applicability.
 - [ ] Prompt 95 — firewall admission and independently validated replacements.
 - [ ] Prompt 96 — continuous monitoring, risk changes and owner alerts.

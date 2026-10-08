@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–92 are partial foundations; Prompt93 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–93 are partial foundations; Prompt94 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -133,4 +133,14 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added canonical salted SHA-256 hiding commitments using a 32-byte cryptographic nonce, private nonce artifact binding, local Ed25519 signed receipts with a fixed non-independent label, token-artifact digest checks and an explicit provider/version/protocol allowlist for replaceable trusted timestamp adapters. A verified receipt binds the commitment and provider token bytes to a recorded time only; there is no provider implementation configured in this environment.
 - Added audit-document kind migration with guarded downgrade, service dependency metadata, model-context canonical vector, temporal evaluator/crypto tests and acceptance traceability. The migration rendered offline in both directions; no database connection was made.
 - Partial, not complete: all chronology/model/cryptographic tests use local fixtures; there is no approved upstream source, provider model identity/cutoff evidence, external TSA adapter/trust root, audit persistence writer or public projection. No claim about real model training, source originality or actual exposure is supported.
-- Exact next prompt: Prompt93 / BWP-11. Implement sealed evaluations, encryption, access and canaries in order, using the private commitment primitives but preserving the existing no-live-evidence boundary.
+- Exact next prompt: Prompt94 / BWP-12. Implement optional behavioral diagnostic protocols and applicability; keep all model calls gated on frozen plans, approved access and ordinary gateway accounting.
+
+## Prompt93 / BWP-11
+
+- Added per-artifact AES-256-GCM encryption with fresh 32-byte DEKs and 12-byte nonces, tenant/artifact/media-type AAD, and AES-KWP envelope wrapping behind a `DataKeyProvider` boundary. The bundled adapter is explicitly local-development-only, requires a caller-provided key and explicit opt-in, and cannot be used as an approved production KMS.
+- Added v2 sealed manifests binding one encrypted artifact, private wrapped-key and P92 hiding-commitment refs, provider/version/recovery metadata and append-only access-event refs. Tampering, changed storage digests/media types, tenant mismatch and cross-artifact substitution fail closed. Key rotation rewraps the DEK while preserving ciphertext and task identity.
+- Added injected authorization and persistence boundaries for scoped decrypt/local screening, candidate delivery, public disclosure and remote query dispatch. Exact authorization ref, recipient and payload digest are recorded; event and successor manifest are committed atomically before plaintext is handed to a local worker or remote callback. Persistence enforces one linear manifest successor and monotonic disclosure state.
+- Added 256-bit synthetic canary generation, exact local collision checks, encrypted private marker storage, strict policy/observation documents and source/date/review validation. External query observations bind the marker, exact query digest and authorized query event. No-hit observations explicitly do not imply clean status; hits do not prove training inclusion.
+- Partial, not complete: no approved KMS/key-custody adapter, production authorization verifier, artifact-store writer, PostgreSQL database, approved source snapshot or independent human date/review evidence is configured. Migration DDL only rendered offline; no external source/model request or production database write occurred. Canary tests use synthetic bytes only.
+- Specification discrepancy: §1.1 says five source Markdown files were read, but lists and hashes three and leaves the remaining source rows blank. The three published hashes match exact current bytes; no absent sources were invented. Prompt93 also depends on an approved key system, which is absent from this checkout and recorded as a production blocker.
+- Exact next prompt: Prompt94 / BWP-12. Implement optional behavioral diagnostic protocols and applicability without issuing model calls until approved plans, access, budgets and gateway accounting are present.

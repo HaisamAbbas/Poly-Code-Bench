@@ -532,10 +532,184 @@
         "hiding_commitment": null,
         "status": "mutable_model_context",
         "explanation_code": "revision_not_pinned",
-        "claim_qualifier_codes": ["insufficient_evidence"]
+        "claim_qualifier_codes": [
+          "insufficient_evidence"
+        ]
       },
       "expected_canonical_utf8": "{\"kind\":\"temporal_assessment\",\"payload\":{\"artifact_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"chronology\":[],\"claim_qualifier_codes\":[\"insufficient_evidence\"],\"explanation_code\":\"revision_not_pinned\",\"exposure_paths\":[],\"hiding_commitment\":null,\"model_context_ref\":null,\"model_context_snapshot\":null,\"status\":\"mutable_model_context\"},\"schema_version\":2}",
       "expected_digest": "sha256:82dcbda024b47390cb0bea5f084b510ef0c37ff1c7618dff3ad7e7303b8b0f99"
+    },
+    {
+      "name": "sealed_manifest-v2",
+      "kind": "sealed_manifest",
+      "schema_version": 2,
+      "payload": {
+        "tenant_id": "11111111-1111-4111-8111-111111111111",
+        "encrypted_artifact_refs": [
+          {
+            "artifact_id": "44444444-4444-4444-8444-444444444444",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "visibility": "private",
+            "media_type": "application/octet-stream"
+          }
+        ],
+        "wrapped_key_ref": {
+          "artifact_id": "44444444-4444-4444-8444-444444444444",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "visibility": "private",
+          "media_type": "application/vnd.polycodebench.wrapped-key"
+        },
+        "hiding_commitment": {
+          "scheme": "sha256-salted-v1",
+          "commitment": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "nonce_ref": {
+            "artifact_id": "44444444-4444-4444-8444-444444444444",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "visibility": "private",
+            "media_type": "application/octet-stream"
+          },
+          "local_receipt": null,
+          "trusted_proof": null
+        },
+        "encryption_algorithm": "AES-256-GCM",
+        "key_wrapping_algorithm": "AES-KWP",
+        "key_provider": "local-development-aes-kwp",
+        "key_version": "local-v1",
+        "recovery_ref": "local-development:local-v1",
+        "nonce_length_bytes": 12,
+        "access_policy": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "retention_policy": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "access_event_refs": [],
+        "disclosure_state": "sealed"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"sealed_manifest\",\"payload\":{\"access_event_refs\":[],\"access_policy\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"disclosure_state\":\"sealed\",\"encrypted_artifact_refs\":[{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/octet-stream\",\"visibility\":\"private\"}],\"encryption_algorithm\":\"AES-256-GCM\",\"hiding_commitment\":{\"commitment\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"local_receipt\":null,\"nonce_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/octet-stream\",\"visibility\":\"private\"},\"scheme\":\"sha256-salted-v1\",\"trusted_proof\":null},\"key_provider\":\"local-development-aes-kwp\",\"key_version\":\"local-v1\",\"key_wrapping_algorithm\":\"AES-KWP\",\"nonce_length_bytes\":12,\"recovery_ref\":\"local-development:local-v1\",\"retention_policy\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"tenant_id\":\"11111111-1111-4111-8111-111111111111\",\"wrapped_key_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/vnd.polycodebench.wrapped-key\",\"visibility\":\"private\"}},\"schema_version\":2}",
+      "expected_digest": "sha256:540bcd09a9cf78c532cf98bda665fcf4375b9aaf35d7a0208d23df9830c90517"
+    },
+    {
+      "name": "canary_policy-v2",
+      "kind": "canary_policy",
+      "schema_version": 2,
+      "payload": {
+        "marker_refs": [
+          {
+            "artifact_id": "44444444-4444-4444-8444-444444444444",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "visibility": "private",
+            "media_type": "application/vnd.polycodebench.sealed-artifact"
+          }
+        ],
+        "marker_entropy_bits": 256,
+        "detection_method": "exact_bytes",
+        "collision_checks": [
+          {
+            "scope_ref": {
+              "document_id": "33333333-3333-4333-8333-333333333333",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "corpus_snapshot"
+            },
+            "checked_items": 2,
+            "method_version": "exact-bytes-v1",
+            "result": "no_collision"
+          }
+        ],
+        "detection": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "access": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "exposure_rules": [
+          "authorize_every_external_query"
+        ],
+        "local_first": true,
+        "interpretation_limits": [
+          "absence_is_not_clean",
+          "observed_disclosure_is_not_training_proof"
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"canary_policy\",\"payload\":{\"access\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"collision_checks\":[{\"checked_items\":2,\"method_version\":\"exact-bytes-v1\",\"result\":\"no_collision\",\"scope_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"corpus_snapshot\"}}],\"detection\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"detection_method\":\"exact_bytes\",\"exposure_rules\":[\"authorize_every_external_query\"],\"interpretation_limits\":[\"absence_is_not_clean\",\"observed_disclosure_is_not_training_proof\"],\"local_first\":true,\"marker_entropy_bits\":256,\"marker_refs\":[{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/vnd.polycodebench.sealed-artifact\",\"visibility\":\"private\"}]},\"schema_version\":2}",
+      "expected_digest": "sha256:8483284a633a8814d1e1411698bb7929466d3772ae15031560bf25f807d4e8b4"
+    },
+    {
+      "name": "seal_access_event-v1",
+      "kind": "seal_access_event",
+      "schema_version": 1,
+      "payload": {
+        "manifest_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "sealed_manifest"
+        },
+        "tenant_id": "11111111-1111-4111-8111-111111111111",
+        "actor": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "principal",
+          "digest": null
+        },
+        "operation": "local_screening",
+        "purpose": "local-fingerprint-screening",
+        "recipient": "worker:screening-01",
+        "payload_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authorization_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "event_time": {
+          "value": "2026-10-08T12:00:00.000000Z",
+          "precision": "microsecond",
+          "uncertainty": null,
+          "source_ref": null
+        },
+        "outcome": "authorized",
+        "exposure": "authorized_disclosure"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"seal_access_event\",\"payload\":{\"actor\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"principal\"},\"authorization_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"event_time\":{\"precision\":\"microsecond\",\"source_ref\":null,\"uncertainty\":null,\"value\":\"2026-10-08T12:00:00.000000Z\"},\"exposure\":\"authorized_disclosure\",\"manifest_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"sealed_manifest\"},\"operation\":\"local_screening\",\"outcome\":\"authorized\",\"payload_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"purpose\":\"local-fingerprint-screening\",\"recipient\":\"worker:screening-01\",\"tenant_id\":\"11111111-1111-4111-8111-111111111111\"},\"schema_version\":1}",
+      "expected_digest": "sha256:837b60c416ae09ae226205ed749e59015a942f43755bef389afeae2b8e83f981"
+    },
+    {
+      "name": "canary_observation-v1",
+      "kind": "canary_observation",
+      "schema_version": 1,
+      "payload": {
+        "marker_ref": {
+          "artifact_id": "44444444-4444-4444-8444-444444444444",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "visibility": "private",
+          "media_type": "application/vnd.polycodebench.sealed-artifact"
+        },
+        "coverage_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "coverage_manifest"
+        },
+        "observation": "not_observed_in_scope",
+        "exact_match": false,
+        "source_ref": null,
+        "source_date_evidence": [],
+        "prior_publication": "unknown",
+        "source_review_ref": null,
+        "external_query": false,
+        "access_event_ref": null,
+        "interpretation_limits": [
+          "absence_is_not_clean",
+          "observed_disclosure_is_not_training_proof"
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"canary_observation\",\"payload\":{\"access_event_ref\":null,\"coverage_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"coverage_manifest\"},\"exact_match\":false,\"external_query\":false,\"interpretation_limits\":[\"absence_is_not_clean\",\"observed_disclosure_is_not_training_proof\"],\"marker_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/vnd.polycodebench.sealed-artifact\",\"visibility\":\"private\"},\"observation\":\"not_observed_in_scope\",\"prior_publication\":\"unknown\",\"source_date_evidence\":[],\"source_ref\":null,\"source_review_ref\":null},\"schema_version\":1}",
+      "expected_digest": "sha256:e8433aec3edf705997f66599b8431080771a6891470a076bc9d931678cff3b55"
     }
   ]
 }

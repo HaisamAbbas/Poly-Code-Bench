@@ -17,9 +17,17 @@ from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
     AuditDocumentRef,
     AuditRunState,
+    CanaryObservationDocument,
     ImmutableArtifactRef,
+    MatchEvidenceDocument,
+    MatchEvidenceDocumentV2,
+    MatchEvidencePayloadV2,
+    SealAccessEventDocument,
+    SealedManifestDocumentV2,
     audit_document_digest,
+    parse_audit_document,
     validate_audit_transition,
+    validate_sealed_manifest_transition,
 )
 from polycodebench_core.canonical import canonical_json_bytes
 from pydantic import BaseModel, ConfigDict, Field
@@ -91,67 +99,254 @@ class PostgresBenchmarkAuditRepository:
 
     def save_document(self, document: AuditDocument) -> AuditDocumentWrite:
         """Insert immutable semantic bytes, enforcing references and successor kind."""
-        payload = document.payload.model_dump(mode="json")
-        canonical_json_bytes(payload)
-        digest = audit_document_digest(document)
+        if isinstance(document, SealAccessEventDocument):
+            raise InvalidState("sealed access events must be appended with a manifest successor")
         try:
             with self._engine.begin() as connection:
-                self._validate_references(connection, document.payload)
-                existing = (
-                    connection.execute(
-                        select(audit_document).where(audit_document.c.id == document.id)
-                    )
-                    .mappings()
-                    .one_or_none()
-                )
-                expected = {
-                    "kind": document.kind,
-                    "schema_version": document.schema_version,
-                    "semantic_digest": digest,
-                    "payload": payload,
-                    "supersedes_id": document.supersedes_id,
-                    "created_by": document.metadata.actor,
-                    "document_created_at": document.metadata.created_at,
-                    "timestamp_precision": document.metadata.timestamp_precision,
-                    "trace_id": document.metadata.trace_id,
-                    "document_row_version": document.metadata.row_version,
-                }
-                if existing is not None:
-                    if any(existing[key] != value for key, value in expected.items()):
-                        raise PersistenceConflict(
-                            "audit document ID is already bound to other bytes"
-                        )
-                    return AuditDocumentWrite(document.id, digest, False)
-
-                same_content = connection.execute(
-                    select(audit_document.c.id).where(
-                        audit_document.c.kind == document.kind,
-                        audit_document.c.semantic_digest == digest,
-                    )
-                ).scalar_one_or_none()
-                if same_content is not None:
-                    raise PersistenceConflict(
-                        "semantic audit document bytes already have another ID"
-                    )
-                if document.supersedes_id is not None:
-                    predecessor = (
-                        connection.execute(
-                            select(audit_document.c.kind).where(
-                                audit_document.c.id == document.supersedes_id
-                            )
-                        )
-                        .scalar_one_or_none()
-                    )
-                    if predecessor is None:
-                        raise InvalidReference("audit successor points to a missing document")
-                    if predecessor != document.kind:
-                        raise InvalidState("audit successor kind must match its predecessor")
-                connection.execute(insert(audit_document).values(id=document.id, **expected))
-                return AuditDocumentWrite(document.id, digest, True)
+                return self._save_document_in_connection(connection, document)
         except (InvalidReference, InvalidState, PersistenceConflict):
             raise
         except DBAPIError as error:
             raise map_database_error(error) from None
+
+    def append_access_event(
+        self,
+        event: SealAccessEventDocument,
+        successor: SealedManifestDocumentV2,
+    ) -> None:
+        """Atomically append sealed access evidence and the non-regressing manifest head."""
+        expected_event_ref = AuditDocumentRef(
+            document_id=event.id,
+            digest=audit_document_digest(event),
+            kind="seal_access_event",
+        )
+        if (
+            successor.supersedes_id != event.payload.manifest_ref.document_id
+            or expected_event_ref not in successor.payload.access_event_refs
+        ):
+            raise InvalidState("sealed access event and manifest successor are not bound")
+        try:
+            with self._engine.begin() as connection:
+                previous = (
+                    connection.execute(
+                        select(audit_document.c.kind, audit_document.c.semantic_digest)
+                        .where(audit_document.c.id == event.payload.manifest_ref.document_id)
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if (
+                    previous is None
+                    or previous["kind"] != "sealed_manifest"
+                    or previous["semantic_digest"] != event.payload.manifest_ref.digest
+                ):
+                    raise InvalidReference("sealed access event does not bind the current manifest")
+                existing_successor = connection.execute(
+                    select(audit_document.c.id).where(
+                        audit_document.c.kind == "sealed_manifest",
+                        audit_document.c.supersedes_id == event.payload.manifest_ref.document_id,
+                    )
+                ).scalar_one_or_none()
+                if existing_successor is not None and existing_successor != successor.id:
+                    raise PersistenceConflict("sealed manifest head already has a successor")
+                self._save_document_in_connection(connection, event, allow_access_event=True)
+                self._save_document_in_connection(connection, successor)
+        except (InvalidReference, InvalidState, PersistenceConflict):
+            raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    @classmethod
+    def _save_document_in_connection(
+        cls,
+        connection: Any,
+        document: AuditDocument,
+        *,
+        allow_access_event: bool = False,
+    ) -> AuditDocumentWrite:
+        if isinstance(document, SealAccessEventDocument) and not allow_access_event:
+            raise InvalidState("sealed access event requires an atomic manifest successor")
+        payload = document.payload.model_dump(mode="json")
+        canonical_json_bytes(payload)
+        digest = audit_document_digest(document)
+        cls._validate_references(connection, document.payload)
+        cls._validate_canary_observation(connection, document)
+        cls._validate_sealed_manifest_document(connection, document)
+        existing = (
+            connection.execute(select(audit_document).where(audit_document.c.id == document.id))
+            .mappings()
+            .one_or_none()
+        )
+        expected = {
+            "kind": document.kind,
+            "schema_version": document.schema_version,
+            "semantic_digest": digest,
+            "payload": payload,
+            "supersedes_id": document.supersedes_id,
+            "created_by": document.metadata.actor,
+            "document_created_at": document.metadata.created_at,
+            "timestamp_precision": document.metadata.timestamp_precision,
+            "trace_id": document.metadata.trace_id,
+            "document_row_version": document.metadata.row_version,
+        }
+        if existing is not None:
+            if any(existing[key] != value for key, value in expected.items()):
+                raise PersistenceConflict("audit document ID is already bound to other bytes")
+            return AuditDocumentWrite(document.id, digest, False)
+
+        same_content = connection.execute(
+            select(audit_document.c.id).where(
+                audit_document.c.kind == document.kind,
+                audit_document.c.semantic_digest == digest,
+            )
+        ).scalar_one_or_none()
+        if same_content is not None:
+            raise PersistenceConflict("semantic audit document bytes already have another ID")
+        if document.supersedes_id is not None:
+            predecessor = connection.execute(
+                select(audit_document.c.kind).where(audit_document.c.id == document.supersedes_id)
+            ).scalar_one_or_none()
+            if predecessor is None:
+                raise InvalidReference("audit successor points to a missing document")
+            if predecessor != document.kind:
+                raise InvalidState("audit successor kind must match its predecessor")
+        connection.execute(insert(audit_document).values(id=document.id, **expected))
+        return AuditDocumentWrite(document.id, digest, True)
+
+    @classmethod
+    def _validate_sealed_manifest_document(cls, connection: Any, document: AuditDocument) -> None:
+        if not isinstance(document, SealedManifestDocumentV2):
+            return
+        payload = document.payload
+        if document.supersedes_id is None:
+            if payload.access_event_refs or payload.disclosure_state != "sealed":
+                raise InvalidState(
+                    "new sealed manifests must start sealed with empty access history"
+                )
+            return
+        previous_row = (
+            connection.execute(
+                select(audit_document)
+                .where(audit_document.c.id == document.supersedes_id)
+                .with_for_update()
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if previous_row is None:
+            raise InvalidReference("sealed manifest predecessor is missing")
+        previous = cls._document_from_row(previous_row)
+        if not isinstance(previous, SealedManifestDocumentV2):
+            raise InvalidState("sealed v2 manifest cannot succeed an unversioned manifest")
+        if (
+            payload.access_event_refs[: len(previous.payload.access_event_refs)]
+            != previous.payload.access_event_refs
+        ):
+            raise InvalidState("sealed manifest successor erased or reordered access history")
+        new_event_refs = payload.access_event_refs[len(previous.payload.access_event_refs) :]
+        if len(new_event_refs) != 1:
+            raise InvalidState("sealed manifest successor must append exactly one access event")
+        event_row = (
+            connection.execute(
+                select(audit_document).where(audit_document.c.id == new_event_refs[0].document_id)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if event_row is None:
+            raise InvalidReference("sealed manifest access event is missing")
+        event = cls._document_from_row(event_row)
+        if not isinstance(event, SealAccessEventDocument):
+            raise InvalidReference("sealed manifest event reference is not an access event")
+        try:
+            validate_sealed_manifest_transition(previous, document, event)
+        except ValueError as error:
+            raise InvalidState(str(error)) from None
+
+    @staticmethod
+    def _document_from_row(row: Any) -> AuditDocument:
+        trace_id = row["trace_id"]
+        value = {
+            "id": str(row["id"]),
+            "kind": row["kind"],
+            "schema_version": row["schema_version"],
+            "payload": row["payload"],
+            "supersedes_id": str(row["supersedes_id"])
+            if row["supersedes_id"] is not None
+            else None,
+            "metadata": {
+                "created_at": row["document_created_at"],
+                "timestamp_precision": row["timestamp_precision"],
+                "actor": row["created_by"],
+                "trace_id": str(trace_id) if trace_id is not None else None,
+                "row_version": row["document_row_version"],
+            },
+        }
+        return parse_audit_document(canonical_json_bytes(value))
+
+    @classmethod
+    def _validate_canary_observation(cls, connection: Any, document: AuditDocument) -> None:
+        if not isinstance(document, CanaryObservationDocument):
+            return
+        payload = document.payload
+        if payload.observation in {"observed_verified", "observed_previously_published"}:
+            for evidence_ref in (payload.source_ref, payload.source_review_ref):
+                if evidence_ref is None:
+                    raise InvalidReference("verified canary source review evidence is required")
+                evidence = cls._document_by_ref(connection, evidence_ref)
+                if not isinstance(evidence, (MatchEvidenceDocument, MatchEvidenceDocumentV2)):
+                    raise InvalidReference("canary source review must reference match evidence")
+                if evidence.payload.review_state != "accepted":
+                    raise InvalidState("canary source and date evidence must be accepted")
+                if any(
+                    date_evidence not in evidence.payload.source_date_evidence
+                    for date_evidence in payload.source_date_evidence
+                ):
+                    raise InvalidState(
+                        "canary observation dates must match accepted review evidence"
+                    )
+                if (
+                    evidence_ref == payload.source_ref
+                    and isinstance(evidence.payload, MatchEvidencePayloadV2)
+                    and evidence.payload.source_date_state != "verified"
+                ):
+                    raise InvalidState("canary source dates are not verified")
+        if payload.external_query:
+            if payload.access_event_ref is None:
+                raise InvalidReference("external canary observation is missing its access event")
+            event = cls._document_by_ref(connection, payload.access_event_ref)
+            if not isinstance(event, SealAccessEventDocument):
+                raise InvalidReference("external canary observation requires a seal access event")
+            event_payload = event.payload
+            if (
+                event_payload.operation != "remote_query"
+                or event_payload.outcome != "authorized"
+                or event_payload.exposure != "authorized_disclosure"
+            ):
+                raise InvalidState("canary query event does not record authorized disclosure")
+            manifest = cls._document_by_ref(connection, event_payload.manifest_ref)
+            if not isinstance(manifest, SealedManifestDocumentV2):
+                raise InvalidReference("canary query event must reference its sealed marker")
+            if payload.marker_ref not in manifest.payload.encrypted_artifact_refs:
+                raise InvalidReference("canary marker does not match the disclosed sealed manifest")
+
+    @classmethod
+    def _document_by_ref(cls, connection: Any, reference: AuditDocumentRef) -> AuditDocument:
+        row = (
+            connection.execute(
+                select(audit_document).where(audit_document.c.id == reference.document_id)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if (
+            row is None
+            or row["kind"] != reference.kind
+            or row["semantic_digest"] != reference.digest
+        ):
+            raise InvalidReference("audit evidence reference is missing or changed")
+        return cls._document_from_row(row)
 
     def create_audit_run(
         self,

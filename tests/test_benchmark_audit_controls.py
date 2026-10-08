@@ -125,6 +125,15 @@ def test_schema_keeps_direct_audit_scope_exclusive_and_diagnostic_attempt_metada
         and getattr(constraint, "name", "").endswith("kind")
     )
     assert "model_context" in str(audit_document_kind.sqltext)
+    assert "seal_access_event" in str(audit_document_kind.sqltext)
+    assert "canary_observation" in str(audit_document_kind.sqltext)
+    sealed_head_index = next(
+        index
+        for index in audit_document.indexes
+        if index.name == "uq_sealed_manifest_single_successor"
+    )
+    assert sealed_head_index.unique is True
+    assert "sealed_manifest" in str(sealed_head_index.dialect_options["postgresql"]["where"])
 
     registry_status = next(
         constraint

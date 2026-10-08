@@ -18,8 +18,8 @@ At Prompt92, BWP-01 and BWP-02 are complete; BWP-03 through BWP-10 are partial p
 | BREQ-08 | 91,94 | BX-24,31–33 | partial | reports/prompt-91.md; all eight signals are typed, while behavior is kept diagnostic and age/popularity contextual; controlled behavior evidence and live exposure/corpus evidence remain absent |
 | BREQ-09 | 92 | BX-25–26 | partial | reports/prompt-92.md; chronology intervals, immutable model contexts and interval evaluation are tested; no accepted live source/cutoff evidence exists |
 | BREQ-10 | 92–93 | BX-27–28 | partial | reports/prompt-92.md; salted commitments and local Ed25519 receipt binding are tested; no approved external timestamp authority is configured |
-| BREQ-11 | 93,102 | BX-28–29,54 | pending | see prompt 93 report |
-| BREQ-12 | 93,102 | BX-30,54 | pending | see prompt 93 report |
+| BREQ-11 | 93,102 | BX-28–29,54 | partial | reports/prompt-93.md; envelope/access contracts and local tests exist, but no approved production KMS or live authorization adapter is configured |
+| BREQ-12 | 93,102 | BX-30,54 | partial | reports/prompt-93.md; local synthetic canary checks are tested, but no reviewed source/date evidence or production query adapter exists |
 | BREQ-13 | 94,101 | BX-31–33,53 | pending | see prompt 94 report |
 | BREQ-14 | 85,94 | BX-05,32–33 | partial | `run.purpose`, audit metadata and caps are implemented; dispatch authorization and frozen diagnostic protocols remain gated; see prompt 85 report |
 | BREQ-15 | 95 | BX-34 | pending | see prompt 95 report |
@@ -55,7 +55,7 @@ At Prompt92, BWP-01 and BWP-02 are complete; BWP-03 through BWP-10 are partial p
 | BWP-08 | 90 | partial | reports/prompt-90.md; versioned evidence/content verification, relation rubric, independent review/adjudication and successor correction contracts are tested; trusted source/rights resolution and persistent review history are absent |
 | BWP-09 | 91 | partial | reports/prompt-91.md; versioned score/assessment contracts, eight signal descriptors, exact decimal aggregation and missingness bounds are tested; calibration, accepted live evidence, database execution and public projection remain pending |
 | BWP-10 | 92 | partial | reports/prompt-92.md; model-context snapshots, chronology precedence, interval outcomes and commitment verification are implemented; live source/model/TSA evidence remains unavailable |
-| BWP-11 | 93 | pending | prompt report |
+| BWP-11 | 93 | partial | reports/prompt-93.md; sealed access, monotonic history and private canary contracts are tested with local adapters; approved KMS, PostgreSQL integration and source review remain pending |
 | BWP-12 | 94 | pending | prompt report |
 | BWP-13 | 95 | pending | prompt report |
 | BWP-14 | 96 | pending | prompt report |
@@ -116,10 +116,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-10-B | 92 | partial | reports/prompt-92.md; strict context records pin confidence, cutoff source, updates, retrieval and prior deliveries; no provider context was supplied |
 | BAT-10-C | 92 | partial | reports/prompt-92.md; pure evaluator and assessment validator cover pre/after/overlap/unknown/mutable states; only synthetic date fixtures ran |
 | BAT-10-D | 92 | partial | reports/prompt-92.md; high-entropy commitments and local Ed25519 receipts verify byte binding; no approved external timestamp adapter/trust roots are configured |
-| BAT-11-A | 93 | pending | prompt report |
-| BAT-11-B | 93 | pending | prompt report |
-| BAT-11-C | 93 | pending | prompt report |
-| BAT-11-D | 93 | pending | prompt report |
+| BAT-11-A | 93 | partial | reports/prompt-93.md; per-artifact AES-GCM, wrapped-key rotation, tenant binding and tamper tests pass; approved production KMS and restore integration are unavailable |
+| BAT-11-B | 93 | partial | reports/prompt-93.md; exact authorization/payload/recipient events append atomically before delivery; live role/policy verifier and PostgreSQL integration are unavailable |
+| BAT-11-C | 93 | partial | reports/prompt-93.md; P92 hiding commitments and encrypted private marker storage are reused; no production artifact-store/public-projection integration exists |
+| BAT-11-D | 93 | partial | reports/prompt-93.md; 256-bit local collision scan and conservative observation contracts are tested; approved source, date review and query adapters are unavailable |
 | BAT-12-A | 94 | pending | prompt report |
 | BAT-12-B | 94 | pending | prompt report |
 | BAT-12-C | 94 | pending | prompt report |
@@ -204,9 +204,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-25 | 92 | partial | reports/prompt-92.md; earlier verified source dates outrank later release dates in interval evaluation; no live source evidence |
 | BX-26 | 92 | partial | reports/prompt-92.md; unknown cutoff, mutable alias, interval overlap, post-cutoff model updates and incomplete source bounds cannot yield an unqualified post-cutoff result |
 | BX-27 | 92 | partial | reports/prompt-92.md; signature and token artifact digest bind receipts to commitment bytes, and local receipts stay non-independent; external trusted TSA validation unavailable |
-| BX-28 | 93 | pending | criterion in addendum §26; prompt report |
-| BX-29 | 93 | pending | criterion in addendum §26; prompt report |
-| BX-30 | 93 | pending | criterion in addendum §26; prompt report |
+| BX-28 | 93 | partial | reports/prompt-93.md; local encryption, tamper, tenant and key-rotation checks pass; approved production KMS and live restore evidence are missing |
+| BX-29 | 93 | partial | reports/prompt-93.md; authorized local decrypts and remote deliveries record exact recipient/payload digests before handoff, with monotonic successor checks; production authorizer/database adapter remain unavailable |
+| BX-30 | 93 | partial | reports/prompt-93.md; encrypted canary collision/detection and external-query linkage checks pass; no actual reviewed source/date evidence or production query adapter is configured |
 | BX-31 | 94 | pending | criterion in addendum §26; prompt report |
 | BX-32 | 94 | pending | criterion in addendum §26; prompt report |
 | BX-33 | 94 | pending | criterion in addendum §26; prompt report |

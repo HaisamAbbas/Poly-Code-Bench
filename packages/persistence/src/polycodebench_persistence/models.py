@@ -98,7 +98,8 @@ audit_document = Table(
     CheckConstraint(
         "kind IN ('benchmark_snapshot','task_fingerprint','corpus_snapshot','audit_plan',"
         "'query_manifest','coverage_manifest','match_evidence','model_context','risk_policy','risk_assessment',"
-        "'temporal_assessment','sealed_manifest','canary_policy','behavioral_audit_plan',"
+        "'temporal_assessment','sealed_manifest','canary_policy','seal_access_event',"
+        "'canary_observation','behavioral_audit_plan',"
         "'firewall_decision','replacement_plan','monitor_policy','benchmark_health',"
         "'audit_attestation')",
         name="kind",
@@ -114,6 +115,12 @@ audit_document = Table(
     CheckConstraint("supersedes_id IS NULL OR supersedes_id <> id", name="not_self_successor"),
     Index("ix_audit_document_kind_created", "kind", "created_at"),
     Index("ix_audit_document_supersedes", "supersedes_id"),
+    Index(
+        "uq_sealed_manifest_single_successor",
+        "supersedes_id",
+        unique=True,
+        postgresql_where=text("kind = 'sealed_manifest' AND supersedes_id IS NOT NULL"),
+    ),
 )
 
 

@@ -2,13 +2,16 @@
 
 **Status: blocked on authorization.** Nothing has been provisioned, and no AWS call has been made. This plan is the exact remaining work for E2E-42 and E2E-43 in actual staging. The IaC is written and validated (`terraform validate` passes for both roots, with the AWS provider pinned at 6.36.0). The application-side tooling has been rehearsed locally (rehearsal-report-2026-10.md).
 
+Offline preflight refreshed on 2026-10-08 with Terraform 1.14.9: recursive `fmt -check` and `validate` passed for both AWS roots using the locked AWS provider 6.36.0; production was initialized with `-backend=false -lockfile=readonly`. `pcb-ops env validate` reports dev/integration deployable, staging/production still templates with 38 unresolved inputs each, and no separation violations. This is configuration validation only: no AWS API call, plan, apply, or cloud resource was used.
+
 The owner has since selected Alibaba Cloud as a possible trial target, but has not checked account
 entitlements, quotas, region, or shutdown date. This file remains AWS-specific. See
-[`alibaba-trial-readiness.md`](alibaba-trial-readiness.md) for current official trial terms and the
-console values needed before designing a separate provider target. Oracle Cloud Free Tier was also
-reviewed as an alternative; see [`oracle-free-tier-readiness.md`](oracle-free-tier-readiness.md). No cloud
-target is ready to provision yet, so continue with the verified local stack until account, region,
-resource quotas, and an owner-approved trial envelope are known.
+[`alibaba-trial-readiness.md`](alibaba-trial-readiness.md) for current official trial terms and
+[`alibaba-trial-staging-readiness.md`](alibaba-trial-staging-readiness.md) for the separate target
+design and console inputs. Oracle Cloud Free Tier was also reviewed as an alternative; see
+[`oracle-free-tier-readiness.md`](oracle-free-tier-readiness.md). No cloud target is ready to
+provision yet, so continue with the verified local stack until account, region, resource quotas,
+and an owner-approved trial envelope are known.
 
 ## 1. Inputs the owner must supply (T 25.3)
 

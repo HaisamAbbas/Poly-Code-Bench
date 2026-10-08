@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "suite": "Prompt 31 public analysis workflows",
-  "completed_at_utc": "2026-10-07T12:58:15.023Z",
+  "completed_at_utc": "2026-10-08T05:50:36.845Z",
   "stats": {
     "total": 3,
     "expected": 3,
     "unexpected": 0,
     "skipped": 0,
     "flaky": 0,
-    "duration_ms": 85649.113
+    "duration_ms": 51011.083999999995
   },
   "tests": [
     {
@@ -17,7 +17,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 23272,
+          "duration_ms": 15031,
           "retry": 0
         }
       ]
@@ -28,7 +28,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 3308,
+          "duration_ms": 2286,
           "retry": 0
         }
       ]
@@ -39,7 +39,7 @@
       "attempts": [
         {
           "status": "passed",
-          "duration_ms": 7614,
+          "duration_ms": 5146,
           "retry": 0
         }
       ]

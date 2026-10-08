@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, cast
 from uuid import UUID, uuid4
 
@@ -17,11 +18,17 @@ from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
     AuditDocumentRef,
     AuditRunState,
+    BehavioralAssessmentDocument,
+    BehavioralAuditPlanDocumentV2,
+    BehavioralMethodRegistryDocument,
+    BehavioralObservationDocument,
+    BehavioralTaskValidityDocument,
     CanaryObservationDocument,
     ImmutableArtifactRef,
     MatchEvidenceDocument,
     MatchEvidenceDocumentV2,
     MatchEvidencePayloadV2,
+    ModelContextDocument,
     SealAccessEventDocument,
     SealedManifestDocumentV2,
     audit_document_digest,
@@ -31,21 +38,29 @@ from polycodebench_core.benchmark_audit_documents import (
 )
 from polycodebench_core.canonical import canonical_json_bytes
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import insert, select, update
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
 from polycodebench_persistence.errors import map_database_error
 from polycodebench_persistence.models import (
     artifact,
+    attempt,
     audit_document,
     audit_event,
     audit_query,
     audit_run,
     budget_account,
+    call_delivery,
+    call_intent,
     campaign,
+    config_document,
+    model_revision,
+    run,
     stage_job,
     stage_job_event,
+    task_version,
+    usage_record,
 )
 
 
@@ -203,6 +218,7 @@ class PostgresBenchmarkAuditRepository:
         ).scalar_one_or_none()
         if same_content is not None:
             raise PersistenceConflict("semantic audit document bytes already have another ID")
+        cls._validate_behavioral_document(connection, document)
         if document.supersedes_id is not None:
             predecessor = connection.execute(
                 select(audit_document.c.kind).where(audit_document.c.id == document.supersedes_id)
@@ -213,6 +229,733 @@ class PostgresBenchmarkAuditRepository:
                 raise InvalidState("audit successor kind must match its predecessor")
         connection.execute(insert(audit_document).values(id=document.id, **expected))
         return AuditDocumentWrite(document.id, digest, True)
+
+    @classmethod
+    def _validate_behavioral_document(cls, connection: Any, document: AuditDocument) -> None:
+        if isinstance(document, BehavioralTaskValidityDocument):
+            task_rows = (
+                connection.execute(
+                    select(task_version.c.id, task_version.c.family).where(
+                        task_version.c.id.in_(
+                            (
+                                document.payload.original_task_ref.entity_id,
+                                document.payload.control_task_ref.entity_id,
+                            )
+                        )
+                    )
+                )
+                .mappings()
+                .all()
+            )
+            if len(task_rows) != 2 or task_rows[0]["family"] != task_rows[1]["family"]:
+                raise InvalidReference(
+                    "behavioral validity requires two stored task versions in one family"
+                )
+            return
+
+        if isinstance(document, BehavioralAuditPlanDocumentV2):
+            payload = document.payload
+            registry = cls._document_by_ref(connection, payload.method_registry_ref)
+            if not isinstance(registry, BehavioralMethodRegistryDocument):
+                raise InvalidReference("behavioral plan method registry is missing")
+            method = next(
+                (item for item in registry.payload.methods if item.method_id == payload.method_id),
+                None,
+            )
+            if method is None:
+                raise InvalidReference("behavioral plan method is not present in its registry")
+            if payload.statistical_test not in method.statistical_tests:
+                raise InvalidState(
+                    "behavioral plan statistical test is not registered for its method"
+                )
+            run_row = (
+                connection.execute(
+                    select(
+                        audit_run.c.state,
+                        audit_run.c.dispatch_authorized,
+                    ).where(audit_run.c.id == payload.audit_run_ref.entity_id)
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if run_row is None:
+                raise InvalidReference("behavioral plan requires its separately budgeted audit run")
+            if run_row["state"] not in {"draft", "planned"} or run_row["dispatch_authorized"]:
+                raise InvalidState("behavioral preregistration must precede audit-run dispatch")
+            prior_intent = connection.execute(
+                select(call_intent.c.id)
+                .where(call_intent.c.diagnostic_audit_run_id == payload.audit_run_ref.entity_id)
+                .limit(1)
+            ).scalar_one_or_none()
+            if prior_intent is not None:
+                raise InvalidState("behavioral plan cannot be frozen after diagnostic calls exist")
+            for pair in payload.sample_pairs:
+                task_rows = (
+                    connection.execute(
+                        select(task_version.c.id, task_version.c.family).where(
+                            task_version.c.id.in_(
+                                (
+                                    pair.original_task_ref.entity_id,
+                                    pair.control_task_ref.entity_id,
+                                )
+                            )
+                        )
+                    )
+                    .mappings()
+                    .all()
+                )
+                if len(task_rows) != 2 or task_rows[0]["family"] != task_rows[1]["family"]:
+                    raise InvalidReference(
+                        "behavioral sample pair must identify two stored tasks in one family"
+                    )
+                validity = cls._document_by_ref(connection, pair.validity_ref)
+                if not isinstance(validity, BehavioralTaskValidityDocument):
+                    raise InvalidReference("behavioral pair validity evidence is missing")
+                if (
+                    validity.payload.validity_state != "accepted"
+                    or validity.payload.original_task_ref != pair.original_task_ref
+                    or validity.payload.control_task_ref != pair.control_task_ref
+                    or validity.payload.family_ref != pair.family_ref
+                ):
+                    raise InvalidState(
+                        "behavioral pair lacks accepted matching semantic/difficulty review"
+                    )
+            return
+
+        if isinstance(document, BehavioralObservationDocument):
+            cls._validate_behavioral_observation(connection, document)
+            return
+
+        if isinstance(document, BehavioralAssessmentDocument):
+            cls._validate_behavioral_assessment(connection, document)
+
+    @classmethod
+    def _validate_behavioral_observation(
+        cls,
+        connection: Any,
+        document: BehavioralObservationDocument,
+    ) -> None:
+        payload = document.payload
+        plan = cls._document_by_ref(connection, payload.plan_ref)
+        if not isinstance(plan, BehavioralAuditPlanDocumentV2):
+            raise InvalidReference("behavioral observations require a frozen v2 plan")
+        plan_row = (
+            connection.execute(
+                select(audit_document.c.created_at).where(audit_document.c.id == plan.id)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if plan_row is None:
+            raise InvalidReference("behavioral preregistration row is missing")
+        pair = next(
+            (item for item in plan.payload.sample_pairs if item.pair_id == payload.pair_id),
+            None,
+        )
+        slot = next(
+            (
+                item
+                for item in plan.payload.model_slots
+                if item.model_context_ref == payload.model_context_ref
+            ),
+            None,
+        )
+        if pair is None or slot is None:
+            raise InvalidReference("behavioral observation task/model was not preregistered")
+        expected_task = (
+            pair.original_task_ref if payload.sample_role == "original" else pair.control_task_ref
+        )
+        if payload.task_ref != expected_task:
+            raise InvalidState("behavioral observation differs from its frozen task assignment")
+        if document.supersedes_id is not None:
+            predecessor_row = (
+                connection.execute(
+                    select(audit_document)
+                    .where(audit_document.c.id == document.supersedes_id)
+                    .with_for_update()
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if predecessor_row is None:
+                raise InvalidReference("behavioral observation predecessor is missing")
+            predecessor = cls._document_from_row(predecessor_row)
+            if not isinstance(predecessor, BehavioralObservationDocument):
+                raise InvalidReference(
+                    "behavioral observation successor must follow an observation"
+                )
+            old = predecessor.payload
+            if (
+                old.dispatch_state != "ambiguous"
+                or old.plan_ref != payload.plan_ref
+                or old.pair_id != payload.pair_id
+                or old.task_ref != payload.task_ref
+                or old.sample_role != payload.sample_role
+                or old.model_context_ref != payload.model_context_ref
+                or old.call_intent_ref is None
+                or payload.call_intent_ref != old.call_intent_ref
+                or payload.request_digest != old.request_digest
+                or payload.access_event_refs[: len(old.access_event_refs)] != old.access_event_refs
+            ):
+                raise InvalidState(
+                    "behavioral successors may only resolve ambiguity without changing frozen scope"
+                )
+
+        if payload.dispatch_state == "not_dispatched":
+            if payload.call_intent_ref is not None:
+                raise InvalidState(
+                    "undispatched diagnostic observations cannot have delivery evidence"
+                )
+            if payload.access_event_refs:
+                denied_event = cls._document_by_ref(connection, payload.access_event_refs[0])
+                if not isinstance(denied_event, SealAccessEventDocument):
+                    raise InvalidReference("denied diagnostic access must be a sealed access event")
+                event = denied_event.payload
+                if (
+                    event.operation != "remote_delivery"
+                    or event.outcome != "denied"
+                    or event.exposure != "none"
+                    or event.recipient != slot.recipient
+                    or event.payload_digest != payload.request_digest
+                ):
+                    raise InvalidState(
+                        "blocked diagnostic event does not record an exact denied request"
+                    )
+            elif payload.request_digest is not None:
+                raise InvalidState("diagnostic request digest requires its denied access event")
+            return
+
+        registry = cls._document_by_ref(connection, plan.payload.method_registry_ref)
+        if not isinstance(registry, BehavioralMethodRegistryDocument):
+            raise InvalidReference("diagnostic plan method registry is missing")
+        method = next(
+            (item for item in registry.payload.methods if item.method_id == plan.payload.method_id),
+            None,
+        )
+        if (
+            method is None
+            or method.implementation_state != "available"
+            or method.implementation_ref is None
+            or plan.payload.statistical_test not in method.statistical_tests
+        ):
+            raise InvalidState("unsupported behavioral methods cannot dispatch diagnostic requests")
+        model_context = cls._document_by_ref(connection, payload.model_context_ref)
+        if not isinstance(model_context, ModelContextDocument):
+            raise InvalidReference("behavioral model context is missing")
+        if (
+            not slot.stable_revision_verified
+            or model_context.payload.pin_confidence != "verified_revision"
+            or model_context.payload.model_revision is None
+        ):
+            raise InvalidState(
+                "behavioral model calls require an independently pinned model revision"
+            )
+
+        assert payload.call_intent_ref is not None
+        assert payload.request_digest is not None
+        if not payload.access_event_refs:
+            raise InvalidReference("diagnostic dispatch requires sealed access events")
+        intent_row = (
+            connection.execute(
+                select(
+                    call_intent.c.diagnostic_audit_run_id,
+                    call_intent.c.request_digest,
+                    call_intent.c.state,
+                    call_intent.c.created_at,
+                    call_intent.c.model_config_id,
+                    call_intent.c.request_artifact_id,
+                    attempt.c.task_version_id,
+                    run.c.purpose,
+                    run.c.audit_run_id,
+                    run.c.config_document_id,
+                    model_revision.c.provider,
+                    model_revision.c.immutable_revision,
+                    audit_run.c.dispatch_authorized,
+                )
+                .select_from(
+                    call_intent.join(
+                        audit_run, audit_run.c.id == call_intent.c.diagnostic_audit_run_id
+                    )
+                    .join(attempt, attempt.c.id == call_intent.c.attempt_id)
+                    .join(run, run.c.id == attempt.c.run_id)
+                    .join(model_revision, model_revision.c.id == run.c.model_revision_id)
+                )
+                .where(call_intent.c.id == payload.call_intent_ref.entity_id)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if (
+            intent_row is None
+            or intent_row["diagnostic_audit_run_id"] != plan.payload.audit_run_ref.entity_id
+            or intent_row["request_digest"] != payload.request_digest
+            or intent_row["dispatch_authorized"] is not True
+            or intent_row["created_at"] < plan_row["created_at"]
+            or intent_row["task_version_id"] != payload.task_ref.entity_id
+            or intent_row["purpose"] != "audit_diagnostic"
+            or intent_row["audit_run_id"] != plan.payload.audit_run_ref.entity_id
+            or intent_row["model_config_id"] != intent_row["config_document_id"]
+            or intent_row["provider"] != model_context.payload.provider
+            or intent_row["immutable_revision"] != model_context.payload.model_revision
+        ):
+            raise InvalidReference(
+                "diagnostic gateway intent is unauthorized or mismatched to its frozen task/model"
+            )
+        decoding_config = (
+            connection.execute(
+                select(
+                    config_document.c.canonical_artifact_id,
+                    artifact.c.content_digest,
+                    artifact.c.status,
+                    artifact.c.visibility,
+                )
+                .select_from(
+                    config_document.join(
+                        artifact, artifact.c.id == config_document.c.canonical_artifact_id
+                    )
+                )
+                .where(config_document.c.id == intent_row["model_config_id"])
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if (
+            decoding_config is None
+            or decoding_config["canonical_artifact_id"]
+            != plan.payload.decoding_artifact_ref.artifact_id
+            or decoding_config["content_digest"] != plan.payload.decoding_artifact_ref.digest
+            or decoding_config["status"] != "verified"
+            or decoding_config["visibility"] != "hidden"
+        ):
+            raise InvalidReference(
+                "diagnostic gateway decoding config differs from preregistration"
+            )
+        request_artifact = (
+            connection.execute(
+                select(
+                    artifact.c.content_digest,
+                    artifact.c.status,
+                    artifact.c.visibility,
+                ).where(artifact.c.id == intent_row["request_artifact_id"])
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if (
+            request_artifact is None
+            or request_artifact["content_digest"] != payload.request_digest
+            or request_artifact["status"] != "verified"
+            or request_artifact["visibility"] != "hidden"
+        ):
+            raise InvalidReference("diagnostic request bytes must be verified and privately stored")
+
+        for access_ref in payload.access_event_refs:
+            access_event = cls._document_by_ref(connection, access_ref)
+            if not isinstance(access_event, SealAccessEventDocument):
+                raise InvalidReference("diagnostic dispatch requires sealed exposure events")
+            event = access_event.payload
+            if (
+                event.operation != "remote_delivery"
+                or event.outcome != "authorized"
+                or event.exposure != "authorized_disclosure"
+                or event.recipient != slot.recipient
+                or event.payload_digest != payload.request_digest
+            ):
+                raise InvalidState(
+                    "sealed exposure event does not match the authorized diagnostic request"
+                )
+
+        latest_usage = (
+            select(
+                usage_record.c.delivery_id,
+                func.max(usage_record.c.settlement_revision).label("revision"),
+            )
+            .group_by(usage_record.c.delivery_id)
+            .subquery()
+        )
+        delivery_rows = (
+            connection.execute(
+                select(
+                    call_delivery.c.status,
+                    call_delivery.c.raw_response_artifact_id,
+                    call_delivery.c.normalized_response_artifact_id,
+                    usage_record.c.input_tokens,
+                    usage_record.c.output_tokens,
+                    usage_record.c.actual_cost_micro_usd,
+                    usage_record.c.estimated_cost_micro_usd,
+                )
+                .select_from(
+                    call_delivery.outerjoin(
+                        latest_usage, latest_usage.c.delivery_id == call_delivery.c.id
+                    ).outerjoin(
+                        usage_record,
+                        (usage_record.c.delivery_id == latest_usage.c.delivery_id)
+                        & (usage_record.c.settlement_revision == latest_usage.c.revision),
+                    )
+                )
+                .where(call_delivery.c.intent_id == payload.call_intent_ref.entity_id)
+                .order_by(call_delivery.c.delivery_index)
+            )
+            .mappings()
+            .all()
+        )
+        if not delivery_rows:
+            raise InvalidState("diagnostic gateway intent has no durable delivery record")
+        if len(payload.access_event_refs) != len(delivery_rows):
+            raise InvalidState("every diagnostic gateway delivery requires its own access event")
+        delivery_states = {row["status"] for row in delivery_rows}
+        has_uncertain_delivery = bool(delivery_states & {"ambiguous", "dispatching"})
+        if payload.dispatch_state == "ambiguous" and not has_uncertain_delivery:
+            raise InvalidState("ambiguous diagnostic observations require an uncertain delivery")
+        if payload.dispatch_state == "authorized_dispatched" and (
+            has_uncertain_delivery or not delivery_states & {"responded", "failed"}
+        ):
+            raise InvalidState(
+                "final diagnostic dispatch status does not reconcile to delivery records"
+            )
+        if payload.outcome == "completed":
+            if len([row for row in delivery_rows if row["status"] == "responded"]) != 1:
+                raise InvalidState("completed diagnostic observation requires one settled response")
+        responded = [row for row in delivery_rows if row["status"] == "responded"]
+        if payload.response_artifact_ref is not None:
+            response_ids = {
+                artifact_id
+                for row in delivery_rows
+                if row["status"] == "responded"
+                for artifact_id in (
+                    row["raw_response_artifact_id"],
+                    row["normalized_response_artifact_id"],
+                )
+                if artifact_id is not None
+            }
+            if payload.response_artifact_ref.artifact_id not in response_ids:
+                raise InvalidReference(
+                    "behavioral response does not match gateway response storage"
+                )
+        elif responded:
+            raise InvalidReference(
+                "received diagnostic responses cannot be omitted from the ledger"
+            )
+
+        costs = [
+            row["actual_cost_micro_usd"]
+            if row["actual_cost_micro_usd"] is not None
+            else row["estimated_cost_micro_usd"]
+            for row in delivery_rows
+        ]
+        cost_known = all(cost is not None for cost in costs)
+        expected_cost = sum(cost for cost in costs if cost is not None) if cost_known else None
+        expected_cost_state = (
+            "unavailable"
+            if not cost_known
+            else "actual"
+            if all(row["actual_cost_micro_usd"] is not None for row in delivery_rows)
+            else "estimated"
+        )
+        if payload.cost_state != expected_cost_state or payload.cost_micro_usd != expected_cost:
+            raise InvalidState("behavioral cost does not reconcile to gateway usage accounting")
+        input_values = [row["input_tokens"] for row in delivery_rows]
+        output_values = [row["output_tokens"] for row in delivery_rows]
+        expected_input = (
+            sum(input_values) if all(value is not None for value in input_values) else None
+        )
+        expected_output = (
+            sum(output_values) if all(value is not None for value in output_values) else None
+        )
+        if payload.input_tokens != expected_input or payload.output_tokens != expected_output:
+            raise InvalidState(
+                "behavioral token counts do not reconcile to gateway usage accounting"
+            )
+        expected_usage_state = (
+            "reported"
+            if expected_input is not None and expected_output is not None
+            else "partial"
+            if expected_input is not None or expected_output is not None
+            else "unavailable"
+        )
+        if payload.usage_state != expected_usage_state:
+            raise InvalidState("behavioral usage missingness does not match gateway accounting")
+
+    @classmethod
+    def _validate_behavioral_assessment(
+        cls,
+        connection: Any,
+        document: BehavioralAssessmentDocument,
+    ) -> None:
+        payload = document.payload
+        plan = cls._document_by_ref(connection, payload.plan_ref)
+        registry = cls._document_by_ref(connection, payload.method_registry_ref)
+        if not isinstance(plan, BehavioralAuditPlanDocumentV2) or not isinstance(
+            registry, BehavioralMethodRegistryDocument
+        ):
+            raise InvalidReference(
+                "behavioral assessment requires its stored plan and method registry"
+            )
+        if payload.method_id != plan.payload.method_id:
+            raise InvalidState("behavioral assessment method differs from the frozen plan")
+        observations: list[BehavioralObservationDocument] = []
+        for reference in payload.observation_refs:
+            observation = cls._document_by_ref(connection, reference)
+            if not isinstance(observation, BehavioralObservationDocument):
+                raise InvalidReference("behavioral assessment contains a non-observation reference")
+            successor_id = connection.execute(
+                select(audit_document.c.id).where(
+                    audit_document.c.kind == "behavioral_observation",
+                    audit_document.c.supersedes_id == observation.id,
+                )
+            ).scalar_one_or_none()
+            if successor_id is not None:
+                raise InvalidState(
+                    "behavioral assessment must reference the current observation head"
+                )
+            observations.append(observation)
+        method = next(
+            (item for item in registry.payload.methods if item.method_id == payload.method_id),
+            None,
+        )
+        if method is None:
+            raise InvalidReference("behavioral assessment method is not registered")
+        unsupported = (
+            method.implementation_state != "available" or method.implementation_ref is None
+        )
+        capability_blocked = any(
+            item.payload.missing_reason in {"method_unsupported", "capability_missing"}
+            for item in observations
+        )
+        if (unsupported or capability_blocked) and any(
+            item.payload.dispatch_state != "not_dispatched" for item in observations
+        ):
+            raise InvalidState(
+                "unsupported behavioral configurations cannot dispatch diagnostic requests"
+            )
+        pairs = {pair.pair_id: pair for pair in plan.payload.sample_pairs}
+        slots = {slot.model_context_ref: slot for slot in plan.payload.model_slots}
+        expected_units = {
+            (pair.pair_id, task.entity_id, sample_role, slot.model_context_ref)
+            for pair in plan.payload.sample_pairs
+            for task, sample_role in (
+                (pair.original_task_ref, "original"),
+                (pair.control_task_ref, "control"),
+            )
+            for slot in plan.payload.model_slots
+        }
+        seen_units: set[tuple[Any, Any, str, AuditDocumentRef]] = set()
+        outcome_counts = {"completed": 0, "failed": 0, "blocked": 0, "not_run": 0}
+        panels: dict[AuditDocumentRef, dict[str, list[Any]]] = {
+            context: {"original": [], "control": []} for context in slots
+        }
+        for observation in observations:
+            item = observation.payload
+            pair = pairs.get(item.pair_id)
+            if pair is None or item.model_context_ref not in slots:
+                raise InvalidState("behavioral assessment contains an unplanned sample/model")
+            task = (
+                pair.original_task_ref if item.sample_role == "original" else pair.control_task_ref
+            )
+            key = (item.pair_id, item.task_ref.entity_id, item.sample_role, item.model_context_ref)
+            if item.task_ref != task or key not in expected_units or key in seen_units:
+                raise InvalidState("behavioral assessment duplicates or changes a planned unit")
+            if item.plan_ref != payload.plan_ref:
+                raise InvalidState("behavioral assessment mixes observations from another plan")
+            seen_units.add(key)
+            outcome_counts[item.outcome] += 1
+            if item.outcome == "completed":
+                assert item.score is not None
+                panels[item.model_context_ref][item.sample_role].append(Decimal(item.score))
+        if seen_units != expected_units or len(payload.observation_refs) != len(observations):
+            raise InvalidState(
+                "behavioral assessment must retain every planned observation exactly once"
+            )
+        if len(set(payload.observation_refs)) != len(payload.observation_refs):
+            raise InvalidState("behavioral assessment observation references must be unique")
+        if payload.expected_units != len(expected_units):
+            raise InvalidState("behavioral assessment denominator differs from its plan")
+        expected_outcomes = (
+            outcome_counts["completed"],
+            outcome_counts["failed"],
+            outcome_counts["blocked"],
+            outcome_counts["not_run"],
+        )
+        if expected_outcomes != (
+            payload.completed_units,
+            payload.failed_units,
+            payload.blocked_units,
+            payload.not_run_units,
+        ):
+            raise InvalidState("behavioral assessment outcome counts do not reconcile")
+        dispatched_model_calls = sum(
+            len(item.payload.access_event_refs)
+            for item in observations
+            if item.payload.dispatch_state != "not_dispatched"
+        )
+        if payload.dispatched_model_calls != dispatched_model_calls:
+            raise InvalidState("behavioral delivery count does not reconcile to access events")
+        if len(payload.model_panels) != len(slots):
+            raise InvalidState("behavioral assessment must contain one panel per model context")
+        panels_by_context = {panel.model_context_ref: panel for panel in payload.model_panels}
+        for context, slot in slots.items():
+            panel = panels_by_context.get(context)
+            if panel is None or panel.role != slot.role:
+                raise InvalidState(
+                    "behavioral performance panel differs from its frozen model slot"
+                )
+            original = [
+                item
+                for item in observations
+                if item.payload.model_context_ref == context
+                and item.payload.sample_role == "original"
+            ]
+            control = [
+                item
+                for item in observations
+                if item.payload.model_context_ref == context
+                and item.payload.sample_role == "control"
+            ]
+            if (
+                panel.planned_original != len(original)
+                or panel.completed_original != len(panels[context]["original"])
+                or panel.mean_original_score != cls._behavioral_mean(panels[context]["original"])
+                or panel.planned_control != len(control)
+                or panel.completed_control != len(panels[context]["control"])
+                or panel.mean_control_score != cls._behavioral_mean(panels[context]["control"])
+            ):
+                raise InvalidState("behavioral performance panel does not match its observations")
+
+        any_dispatched = any(
+            item.payload.dispatch_state != "not_dispatched" for item in observations
+        )
+        cost_unknown = any(item.payload.cost_state == "unavailable" for item in observations)
+        input_unknown = any(
+            item.payload.dispatch_state != "not_dispatched" and item.payload.input_tokens is None
+            for item in observations
+        )
+        output_unknown = any(
+            item.payload.dispatch_state != "not_dispatched" and item.payload.output_tokens is None
+            for item in observations
+        )
+        expected_cost = (
+            None if cost_unknown else sum(item.payload.cost_micro_usd or 0 for item in observations)
+        )
+        expected_input = (
+            None if input_unknown else sum(item.payload.input_tokens or 0 for item in observations)
+        )
+        expected_output = (
+            None
+            if output_unknown
+            else sum(item.payload.output_tokens or 0 for item in observations)
+        )
+        expected_cost_state = (
+            "unavailable"
+            if cost_unknown
+            else "estimated"
+            if any(item.payload.cost_state == "estimated" for item in observations)
+            else "actual"
+            if any_dispatched
+            else "not_applicable"
+        )
+        if (
+            payload.total_cost_state != expected_cost_state
+            or payload.total_cost_micro_usd != expected_cost
+            or payload.total_input_tokens != expected_input
+            or payload.total_output_tokens != expected_output
+        ):
+            raise InvalidState("behavioral assessment cost and usage totals do not reconcile")
+        over_cap = (
+            len(plan.payload.sample_pairs) * 2 > plan.payload.budget.max_samples
+            or dispatched_model_calls > plan.payload.budget.max_model_calls
+            or (
+                expected_cost is not None and expected_cost > plan.payload.budget.max_cost_micro_usd
+            )
+            or (
+                expected_input is not None and expected_input > plan.payload.budget.max_input_tokens
+            )
+            or (
+                expected_output is not None
+                and expected_output > plan.payload.budget.max_output_tokens
+            )
+        )
+        budget_unknown = (cost_unknown or input_unknown or output_unknown) and not over_cap
+        expected_budget_state = (
+            "over_cap" if over_cap else "unknown" if budget_unknown else "within_cap"
+        )
+        if payload.budget_state != expected_budget_state:
+            raise InvalidState("behavioral assessment budget state does not reconcile")
+        if outcome_counts["completed"] == len(expected_units):
+            expected_assessment_state = "complete"
+        elif (
+            outcome_counts["completed"] == 0
+            and outcome_counts["failed"] == 0
+            and outcome_counts["not_run"] == 0
+        ):
+            expected_assessment_state = "blocked"
+        else:
+            expected_assessment_state = "partial"
+        if over_cap and expected_assessment_state == "complete":
+            expected_assessment_state = "partial"
+        expected_inference_state = (
+            "unsupported"
+            if unsupported or capability_blocked
+            else "calibration_blocked"
+            if plan.payload.ground_truth_state == "unavailable"
+            else "descriptive_only"
+        )
+        expected_calibration_state = (
+            "blocked_no_ground_truth"
+            if plan.payload.ground_truth_state == "unavailable"
+            else "pending_validation"
+        )
+        expected_training_state = (
+            "unavailable"
+            if plan.payload.ground_truth_state == "owned_controlled"
+            else "not_applicable"
+        )
+        expected_training_budget = (
+            "unknown" if plan.payload.ground_truth_state == "owned_controlled" else "not_applicable"
+        )
+        family_counts = {
+            split: len(
+                {
+                    pair.family_ref.entity_id
+                    for pair in plan.payload.sample_pairs
+                    if pair.split == split
+                }
+            )
+            for split in ("calibration", "validation", "held_out_test")
+        }
+        if unsupported:
+            expected_power_state = "unsupported"
+            expected_power_limits = ("method_unsupported",)
+        elif capability_blocked:
+            expected_power_state = "unsupported"
+            expected_power_limits = ("capability_missing",)
+        elif any(count < 2 for count in family_counts.values()):
+            expected_power_state = "insufficient_families"
+            expected_power_limits = ("fewer_than_two_families_in_a_split",)
+        else:
+            expected_power_state = "not_estimated"
+            expected_power_limits = ("power_analysis_not_available",)
+        if (
+            payload.assessment_state != expected_assessment_state
+            or payload.inference_state != expected_inference_state
+            or payload.calibration_state != expected_calibration_state
+            or payload.inclusion_claim != "not_assessed"
+            or payload.training_cost_state != expected_training_state
+            or payload.training_cost_micro_usd is not None
+            or payload.training_budget_state != expected_training_budget
+            or payload.power_state != expected_power_state
+            or payload.power_limit_codes != expected_power_limits
+        ):
+            raise InvalidState("behavioral assessment does not reconcile to its frozen outcomes")
+
+    @staticmethod
+    def _behavioral_mean(values: list[Any]) -> str | None:
+        if not values:
+            return None
+        return str(
+            (sum(values, Decimal(0)) / Decimal(len(values))).quantize(
+                Decimal("0.000001"), rounding=ROUND_HALF_UP
+            )
+        )
 
     @classmethod
     def _validate_sealed_manifest_document(cls, connection: Any, document: AuditDocument) -> None:
@@ -384,9 +1127,7 @@ class PostgresBenchmarkAuditRepository:
                 if plan is None or plan["kind"] != "audit_plan":
                     raise InvalidReference("audit run requires a stored audit_plan document")
                 limits = plan["payload"].get("limits", {})
-                query_limit = _frozen_limit(
-                    limits, "max_query_units", "max_query_units_per_plan"
-                )
+                query_limit = _frozen_limit(limits, "max_query_units", "max_query_units_per_plan")
                 storage_limit = _frozen_limit(
                     limits, "max_storage_bytes", "max_storage_bytes_per_plan"
                 )
@@ -554,9 +1295,7 @@ class PostgresBenchmarkAuditRepository:
             with self._engine.begin() as connection:
                 run_row = (
                     connection.execute(
-                        select(audit_run)
-                        .where(audit_run.c.id == audit_run_id)
-                        .with_for_update()
+                        select(audit_run).where(audit_run.c.id == audit_run_id).with_for_update()
                     )
                     .mappings()
                     .one_or_none()
@@ -593,14 +1332,11 @@ class PostgresBenchmarkAuditRepository:
                     ]
                     if expected != actual:
                         raise PersistenceConflict("audit query enqueue replay changed its plan")
-                    jobs = (
-                        connection.execute(
-                            select(stage_job.c.id, stage_job.c.shard_key)
-                            .where(stage_job.c.audit_run_id == audit_run_id)
-                            .order_by(stage_job.c.shard_key)
-                        )
-                        .all()
-                    )
+                    jobs = connection.execute(
+                        select(stage_job.c.id, stage_job.c.shard_key)
+                        .where(stage_job.c.audit_run_id == audit_run_id)
+                        .order_by(stage_job.c.shard_key)
+                    ).all()
                     jobs_by_index = {int(job.shard_key): job.id for job in jobs}
                     if len(jobs_by_index) != len(existing) or set(jobs_by_index) != {
                         row["query_index"] for row in existing

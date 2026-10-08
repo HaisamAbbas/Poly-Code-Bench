@@ -37,6 +37,10 @@ AuditKind = Literal[
     "seal_access_event",
     "canary_observation",
     "behavioral_audit_plan",
+    "behavioral_method_registry",
+    "behavioral_task_validity",
+    "behavioral_observation",
+    "behavioral_assessment",
     "firewall_decision",
     "replacement_plan",
     "monitor_policy",
@@ -1525,6 +1529,603 @@ class BehavioralAuditPlanPayload(StrictAuditModel):
     decision_rules: dict[str, ShortText]
 
 
+class BehavioralMethodDefinition(StrictAuditModel):
+    method_id: ShortText
+    method_version: ShortText
+    source_url: ShortText
+    method_family: Literal["performance_generalization", "likelihood_based", "approved_custom"]
+    required_capabilities: tuple[
+        Literal[
+            "per_sample_scores",
+            "reference_models",
+            "stable_model_revision",
+            "token_likelihoods",
+            "owned_training_manifest",
+        ],
+        ...,
+    ]
+    statistical_tests: tuple[
+        Literal[
+            "constat_reference_corrected_performance",
+            "paired_family_bootstrap",
+            "registered_custom",
+        ],
+        ...,
+    ] = Field(min_length=1, max_length=16)
+    implementation_state: Literal["available", "unsupported", "not_pinned"]
+    implementation_ref: ImmutableArtifactRef | None
+    assumptions: tuple[ShortText, ...] = Field(min_length=1, max_length=32)
+    limitations: tuple[ShortText, ...] = Field(min_length=1, max_length=32)
+
+    @model_validator(mode="after")
+    def method_source_and_implementation_are_pinned(self) -> BehavioralMethodDefinition:
+        if not self.source_url.startswith("https://"):
+            raise ValueError("behavioral method sources must use HTTPS")
+        if len(set(self.required_capabilities)) != len(self.required_capabilities):
+            raise ValueError("behavioral method capabilities must be unique")
+        if not self.statistical_tests or len(set(self.statistical_tests)) != len(
+            self.statistical_tests
+        ):
+            raise ValueError("behavioral methods must declare unique statistical tests")
+        if self.implementation_state == "available":
+            if self.implementation_ref is None or self.implementation_ref.visibility == "public":
+                raise ValueError(
+                    "available methods require a pinned non-public implementation artifact"
+                )
+        elif self.implementation_ref is not None:
+            raise ValueError("unsupported methods cannot claim an executable implementation")
+        return self
+
+
+class BehavioralMethodRegistryPayload(StrictAuditModel):
+    registry_version: ShortText
+    methods: tuple[BehavioralMethodDefinition, ...] = Field(min_length=1, max_length=32)
+    interpretation_limits: tuple[
+        Literal["performance_gap_is_not_training_inclusion", "no_universal_probability"], ...
+    ]
+
+    @model_validator(mode="after")
+    def method_ids_are_unique_and_limits_are_fixed(self) -> BehavioralMethodRegistryPayload:
+        method_ids = [method.method_id for method in self.methods]
+        if len(method_ids) != len(set(method_ids)):
+            raise ValueError("behavioral method IDs must be unique within a registry")
+        if len(set(self.interpretation_limits)) != 2 or set(self.interpretation_limits) != {
+            "performance_gap_is_not_training_inclusion",
+            "no_universal_probability",
+        }:
+            raise ValueError("behavioral registry must retain its interpretation limits")
+        return self
+
+
+class BehavioralTaskValidityPayload(StrictAuditModel):
+    original_task_ref: EntityRef
+    control_task_ref: EntityRef
+    family_ref: EntityRef
+    semantic_relation: Literal["semantically_equivalent", "same_distribution", "invalid", "unknown"]
+    difficulty_gap: Decimal6
+    permitted_difficulty_gap: Decimal6
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=16)
+    author_ref: EntityRef
+    reviewer_ref: EntityRef | None
+    validity_state: Literal["accepted", "pending", "rejected"]
+    validity_limits: tuple[
+        Literal["semantic_equivalence_is_reviewed", "difficulty_match_is_measured"], ...
+    ]
+
+    @model_validator(mode="after")
+    def validity_is_independently_reviewed(self) -> BehavioralTaskValidityPayload:
+        if (
+            self.original_task_ref.entity_kind != "task_version"
+            or self.control_task_ref.entity_kind != "task_version"
+            or self.original_task_ref.entity_id == self.control_task_ref.entity_id
+        ):
+            raise ValueError(
+                "behavioral validity must bind distinct original/control task versions"
+            )
+        if self.family_ref.entity_kind != "task_family":
+            raise ValueError("behavioral validity must bind a stable task family")
+        if len(set(self.validity_limits)) != 2 or set(self.validity_limits) != {
+            "semantic_equivalence_is_reviewed",
+            "difficulty_match_is_measured",
+        }:
+            raise ValueError("behavioral validity must retain semantic and difficulty limits")
+        if Decimal(self.difficulty_gap) < 0 or Decimal(self.permitted_difficulty_gap) < 0:
+            raise ValueError("behavioral difficulty gaps cannot be negative")
+        if self.validity_state == "accepted":
+            if (
+                self.semantic_relation not in {"semantically_equivalent", "same_distribution"}
+                or Decimal(self.difficulty_gap) > Decimal(self.permitted_difficulty_gap)
+                or self.reviewer_ref is None
+                or self.reviewer_ref.entity_kind != "reviewer"
+                or self.author_ref.entity_kind != "reviewer"
+                or self.author_ref.entity_id == self.reviewer_ref.entity_id
+            ):
+                raise ValueError(
+                    "accepted controls require valid semantics, matched difficulty, "
+                    "and independent review"
+                )
+        return self
+
+
+class BehavioralSamplePair(StrictAuditModel):
+    pair_id: UUID
+    original_task_ref: EntityRef
+    control_task_ref: EntityRef
+    family_ref: EntityRef
+    split: Literal["calibration", "validation", "held_out_test"]
+    validity_ref: AuditDocumentRef
+
+    @model_validator(mode="after")
+    def sample_pair_is_bound(self) -> BehavioralSamplePair:
+        if (
+            self.original_task_ref.entity_kind != "task_version"
+            or self.control_task_ref.entity_kind != "task_version"
+            or self.original_task_ref.entity_id == self.control_task_ref.entity_id
+        ):
+            raise ValueError("behavioral pairs require distinct original/control tasks")
+        if self.family_ref.entity_kind != "task_family":
+            raise ValueError("behavioral pairs require a task-family identity")
+        if self.validity_ref.kind != "behavioral_task_validity":
+            raise ValueError("behavioral pairs require reviewed semantic/difficulty evidence")
+        return self
+
+
+class BehavioralModelSlot(StrictAuditModel):
+    model_context_ref: AuditDocumentRef
+    role: Literal["target", "reference"]
+    recipient: ShortText
+    capabilities: tuple[
+        Literal[
+            "per_sample_scores",
+            "reference_models",
+            "stable_model_revision",
+            "token_likelihoods",
+            "owned_training_manifest",
+        ],
+        ...,
+    ]
+    stable_revision_verified: bool
+
+    @model_validator(mode="after")
+    def model_context_is_pinned(self) -> BehavioralModelSlot:
+        if self.model_context_ref.kind != "model_context":
+            raise ValueError("behavioral model slots must bind an exact model-context document")
+        if not _SAFE_ACCESS_LABEL.fullmatch(self.recipient):
+            raise ValueError("behavioral recipients must be bounded identifiers")
+        if len(set(self.capabilities)) != len(self.capabilities):
+            raise ValueError("model capability declarations must be unique")
+        if self.stable_revision_verified and "stable_model_revision" not in self.capabilities:
+            raise ValueError("stable revision claims require the matching declared capability")
+        return self
+
+
+class BehavioralBudget(StrictAuditModel):
+    max_model_calls: UnsignedInteger
+    max_samples: UnsignedInteger
+    max_input_tokens: UnsignedInteger
+    max_output_tokens: UnsignedInteger
+    max_cost_micro_usd: UnsignedInteger
+    max_training_cost_micro_usd: UnsignedInteger
+
+
+class BehavioralAuditPlanPayloadV2(StrictAuditModel):
+    method_registry_ref: AuditDocumentRef
+    method_id: ShortText
+    audit_run_ref: EntityRef
+    sample_pairs: tuple[BehavioralSamplePair, ...] = Field(min_length=3, max_length=10_000)
+    model_slots: tuple[BehavioralModelSlot, ...] = Field(min_length=2, max_length=64)
+    prompt_artifact_ref: ImmutableArtifactRef
+    tool_policy_artifact_ref: ImmutableArtifactRef
+    decoding_artifact_ref: ImmutableArtifactRef
+    grading_artifact_ref: ImmutableArtifactRef
+    exposure_policy_ref: AuditDocumentRef
+    seed: Seed64
+    budget: BehavioralBudget
+    statistical_test: Literal[
+        "constat_reference_corrected_performance",
+        "paired_family_bootstrap",
+        "registered_custom",
+    ]
+    alpha: Decimal6
+    minimum_effect: Decimal6
+    target_power: Decimal6
+    bootstrap_replicates: UnsignedInteger
+    multiplicity: Literal["none", "holm", "bonferroni", "benjamini_hochberg"]
+    planned_hypotheses: UnsignedInteger
+    decision_rule: Literal["adjusted_p_below_alpha_and_effect_at_least_minimum"]
+    ground_truth_state: Literal["owned_controlled", "unavailable"]
+    training_manifest_ref: ImmutableArtifactRef | None
+    exposed_family_refs: tuple[EntityRef, ...] = Field(max_length=10_000)
+    unexposed_family_refs: tuple[EntityRef, ...] = Field(max_length=10_000)
+    preregistered_at: UtcTimestamp
+    interpretation_limits: tuple[
+        Literal[
+            "self_report_is_not_evidence",
+            "performance_gap_is_not_training_inclusion",
+            "no_universal_probability",
+        ],
+        ...,
+    ]
+
+    @model_validator(mode="after")
+    def preregistration_is_complete_and_family_disjoint(self) -> BehavioralAuditPlanPayloadV2:
+        if self.method_registry_ref.kind != "behavioral_method_registry":
+            raise ValueError("behavioral plans require a pinned method registry")
+        if self.audit_run_ref.entity_kind != "audit_run":
+            raise ValueError("behavioral plan must bind its separately budgeted audit run")
+        if self.exposure_policy_ref.kind not in {"audit_plan", "monitor_policy"}:
+            raise ValueError("behavioral exposure policy must be an audit or monitor plan")
+        for artifact_ref in (
+            self.prompt_artifact_ref,
+            self.tool_policy_artifact_ref,
+            self.decoding_artifact_ref,
+            self.grading_artifact_ref,
+        ):
+            if artifact_ref.visibility != "private":
+                raise ValueError("behavioral prompts and configurations must remain private")
+        contexts = [slot.model_context_ref for slot in self.model_slots]
+        recipients = [slot.recipient for slot in self.model_slots]
+        if len(contexts) != len(set(contexts)) or len(recipients) != len(set(recipients)):
+            raise ValueError("behavioral model slots and recipients must be unique")
+        if not any(slot.role == "target" for slot in self.model_slots) or not any(
+            slot.role == "reference" for slot in self.model_slots
+        ):
+            raise ValueError("behavioral plan requires target and reference model cohorts")
+        pair_ids = [pair.pair_id for pair in self.sample_pairs]
+        if len(pair_ids) != len(set(pair_ids)):
+            raise ValueError("behavioral pair IDs must be unique")
+        task_ids = [
+            task.entity_id
+            for pair in self.sample_pairs
+            for task in (pair.original_task_ref, pair.control_task_ref)
+        ]
+        if len(task_ids) != len(set(task_ids)):
+            raise ValueError("behavioral task samples cannot be reused across pairs")
+        families_by_split: dict[str, set[UUID]] = {
+            "calibration": set(),
+            "validation": set(),
+            "held_out_test": set(),
+        }
+        for pair in self.sample_pairs:
+            families_by_split[pair.split].add(pair.family_ref.entity_id)
+        if any(not families for families in families_by_split.values()):
+            raise ValueError("calibration, validation and held-out test require separate families")
+        split_families = [families_by_split[name] for name in families_by_split]
+        if any(
+            left & right
+            for index, left in enumerate(split_families)
+            for right in split_families[index + 1 :]
+        ):
+            raise ValueError("behavioral calibration/validation/test families must be disjoint")
+        expected_samples = len(self.sample_pairs) * 2
+        expected_calls = expected_samples * len(self.model_slots)
+        if (
+            self.budget.max_samples < expected_samples
+            or self.budget.max_model_calls < expected_calls
+            or self.planned_hypotheses < 1
+        ):
+            raise ValueError("behavioral sample/call budgets do not cover the frozen plan")
+        if not Decimal("0") < Decimal(self.alpha) < Decimal("1"):
+            raise ValueError("behavioral alpha must be strictly between zero and one")
+        if not Decimal("0") < Decimal(self.target_power) < Decimal("1"):
+            raise ValueError("behavioral target power must be strictly between zero and one")
+        if Decimal(self.minimum_effect) < 0 or self.bootstrap_replicates < 1:
+            raise ValueError("behavioral effect threshold and bootstrap count are invalid")
+        if (
+            self.statistical_test
+            in {"constat_reference_corrected_performance", "paired_family_bootstrap"}
+            and self.bootstrap_replicates < 2_000
+        ):
+            raise ValueError(
+                "registered family-level bootstrap methods require at least 2,000 resamples"
+            )
+        if self.ground_truth_state == "owned_controlled":
+            if (
+                self.training_manifest_ref is None
+                or self.training_manifest_ref.visibility != "private"
+                or not self.exposed_family_refs
+                or not self.unexposed_family_refs
+                or self.budget.max_training_cost_micro_usd == 0
+            ):
+                raise ValueError(
+                    "controlled calibration requires private owned training evidence and cap"
+                )
+            exposed = {item.entity_id for item in self.exposed_family_refs}
+            unexposed = {item.entity_id for item in self.unexposed_family_refs}
+            if any(
+                item.entity_kind != "task_family"
+                for item in (*self.exposed_family_refs, *self.unexposed_family_refs)
+            ):
+                raise ValueError("controlled exposure labels must identify task families")
+            if exposed & unexposed:
+                raise ValueError("controlled training families must be exposure-disjoint")
+            planned_families = {pair.family_ref.entity_id for pair in self.sample_pairs}
+            if not planned_families <= exposed | unexposed:
+                raise ValueError("controlled training evidence must label every planned family")
+        elif (
+            self.training_manifest_ref is not None
+            or self.exposed_family_refs
+            or self.unexposed_family_refs
+            or self.budget.max_training_cost_micro_usd != 0
+        ):
+            raise ValueError("unavailable ground truth cannot claim training manifests or budget")
+        if len(set(self.interpretation_limits)) != 3 or set(self.interpretation_limits) != {
+            "self_report_is_not_evidence",
+            "performance_gap_is_not_training_inclusion",
+            "no_universal_probability",
+        }:
+            raise ValueError("behavioral plans must preserve every interpretation limit")
+        return self
+
+
+class BehavioralObservationPayload(StrictAuditModel):
+    plan_ref: AuditDocumentRef
+    pair_id: UUID
+    task_ref: EntityRef
+    sample_role: Literal["original", "control"]
+    model_context_ref: AuditDocumentRef
+    outcome: Literal["completed", "failed", "blocked", "not_run"]
+    dispatch_state: Literal["not_dispatched", "authorized_dispatched", "ambiguous"]
+    call_intent_ref: EntityRef | None
+    request_digest: Digest | None
+    access_event_refs: tuple[AuditDocumentRef, ...] = Field(max_length=8)
+    response_artifact_ref: ImmutableArtifactRef | None
+    score: Decimal6 | None
+    score_source: Literal["grader", "structured_metric", "human_review"] | None
+    likelihood_state: Literal["available", "unavailable", "not_requested"]
+    likelihood_value: Decimal6 | None
+    confidence_state: Literal["available", "unavailable", "not_requested"]
+    confidence_value: Decimal6 | None
+    cost_state: Literal["actual", "estimated", "unavailable", "not_applicable"]
+    cost_micro_usd: UnsignedInteger | None
+    usage_state: Literal["reported", "partial", "unavailable", "not_applicable"]
+    input_tokens: UnsignedInteger | None
+    output_tokens: UnsignedInteger | None
+    missing_reason: (
+        Literal[
+            "method_unsupported",
+            "capability_missing",
+            "budget_exhausted",
+            "model_error",
+            "infrastructure_failure",
+            "cancelled",
+            "not_scheduled",
+            "review_pending",
+        ]
+        | None
+    )
+
+    @model_validator(mode="after")
+    def observation_preserves_exposure_and_missingness(self) -> BehavioralObservationPayload:
+        if (
+            self.plan_ref.kind != "behavioral_audit_plan"
+            or self.model_context_ref.kind != "model_context"
+        ):
+            raise ValueError(
+                "behavioral observations must bind their frozen plan and model context"
+            )
+        if self.task_ref.entity_kind != "task_version":
+            raise ValueError("behavioral observations must bind an immutable task version")
+        if self.score is not None and not Decimal("0") <= Decimal(self.score) <= Decimal("1"):
+            raise ValueError("behavioral score must lie within [0,1]")
+        if (self.score is None) != (self.score_source is None):
+            raise ValueError("behavioral scores require their actual measured source")
+        for state, value, label in (
+            (self.likelihood_state, self.likelihood_value, "likelihood"),
+            (self.confidence_state, self.confidence_value, "confidence"),
+        ):
+            if (state == "available") != (value is not None):
+                raise ValueError(f"{label} values must be present only when actually available")
+            if (
+                label == "confidence"
+                and value is not None
+                and not (Decimal("0") <= Decimal(value) <= Decimal("1"))
+            ):
+                raise ValueError("observed confidence values must lie within [0,1]")
+        dispatched = self.dispatch_state != "not_dispatched"
+        if dispatched != (self.call_intent_ref is not None and self.request_digest is not None):
+            raise ValueError(
+                "dispatched diagnostic calls must bind their gateway intent and request digest"
+            )
+        if not dispatched and self.call_intent_ref is not None:
+            raise ValueError("undispatched diagnostics cannot reference a gateway call intent")
+        if self.call_intent_ref is not None and self.call_intent_ref.entity_kind != "call_intent":
+            raise ValueError("diagnostic gateway references must identify call intents")
+        if bool(self.access_event_refs) != (self.request_digest is not None):
+            raise ValueError(
+                "every attempted diagnostic delivery must bind its exact access events"
+            )
+        if dispatched and not self.access_event_refs:
+            raise ValueError("every dispatched model request requires its sealed exposure events")
+        if not dispatched and len(self.access_event_refs) > 1:
+            raise ValueError("a denied, undispatched request must have exactly one access event")
+        if any(ref.kind != "seal_access_event" for ref in self.access_event_refs):
+            raise ValueError("diagnostic access refs must identify sealed access events")
+        if len(set(self.access_event_refs)) != len(self.access_event_refs):
+            raise ValueError("diagnostic access-event references must be unique")
+        if self.outcome == "completed":
+            if (
+                self.dispatch_state == "not_dispatched"
+                or self.response_artifact_ref is None
+                or self.response_artifact_ref.visibility != "private"
+                or self.score is None
+                or self.missing_reason is not None
+            ):
+                raise ValueError(
+                    "completed observations require a private response and measured score"
+                )
+        else:
+            if self.outcome in {"blocked", "not_run"} and dispatched:
+                raise ValueError("blocked and not-run observations cannot claim model dispatch")
+            if self.score is not None:
+                raise ValueError("incomplete observations cannot carry a scored result")
+            if self.response_artifact_ref is not None and (
+                self.outcome != "failed"
+                or not dispatched
+                or self.response_artifact_ref.visibility != "private"
+            ):
+                raise ValueError(
+                    "only failed dispatched calls can retain an unscored private response"
+                )
+            if self.missing_reason is None:
+                raise ValueError(
+                    "failed, blocked and not-run observations require a missingness reason"
+                )
+        if (self.cost_state in {"actual", "estimated"}) != (self.cost_micro_usd is not None):
+            raise ValueError("behavioral cost values must identify actual or estimated accounting")
+        if self.cost_state == "unavailable" and self.cost_micro_usd is not None:
+            raise ValueError("unavailable behavioral costs cannot carry an invented amount")
+        present_tokens = (self.input_tokens is not None, self.output_tokens is not None)
+        if self.usage_state == "reported" and not all(present_tokens):
+            raise ValueError("reported behavioral usage requires both token counts")
+        if self.usage_state == "partial" and not any(present_tokens):
+            raise ValueError("partial behavioral usage requires at least one token count")
+        if self.usage_state == "unavailable" and any(present_tokens):
+            raise ValueError("unavailable behavioral usage cannot carry token counts")
+        if not dispatched and (
+            self.cost_state != "not_applicable"
+            or self.usage_state != "not_applicable"
+            or self.cost_micro_usd is not None
+            or any(present_tokens)
+        ):
+            raise ValueError("undispatched observations cannot claim model usage or cost")
+        if dispatched and (
+            self.cost_state == "not_applicable" or self.usage_state == "not_applicable"
+        ):
+            raise ValueError("dispatched outcomes must preserve available or missing usage state")
+        return self
+
+
+class BehavioralModelPerformance(StrictAuditModel):
+    model_context_ref: AuditDocumentRef
+    role: Literal["target", "reference"]
+    planned_original: UnsignedInteger
+    completed_original: UnsignedInteger
+    mean_original_score: Decimal6 | None
+    planned_control: UnsignedInteger
+    completed_control: UnsignedInteger
+    mean_control_score: Decimal6 | None
+
+    @model_validator(mode="after")
+    def panel_denominators_are_consistent(self) -> BehavioralModelPerformance:
+        if self.model_context_ref.kind != "model_context":
+            raise ValueError("behavioral performance panels must bind model contexts")
+        if (
+            self.completed_original > self.planned_original
+            or self.completed_control > self.planned_control
+            or (self.completed_original == 0) != (self.mean_original_score is None)
+            or (self.completed_control == 0) != (self.mean_control_score is None)
+        ):
+            raise ValueError("behavioral panel counts and descriptive means disagree")
+        return self
+
+
+class BehavioralAssessmentPayload(StrictAuditModel):
+    plan_ref: AuditDocumentRef
+    method_registry_ref: AuditDocumentRef
+    method_id: ShortText
+    observation_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=1_000_000)
+    expected_units: UnsignedInteger
+    dispatched_model_calls: UnsignedInteger
+    completed_units: UnsignedInteger
+    failed_units: UnsignedInteger
+    blocked_units: UnsignedInteger
+    not_run_units: UnsignedInteger
+    model_panels: tuple[BehavioralModelPerformance, ...] = Field(min_length=1, max_length=64)
+    total_cost_state: Literal["actual", "estimated", "unavailable", "not_applicable"]
+    total_cost_micro_usd: UnsignedInteger | None
+    training_cost_state: Literal["unavailable", "not_applicable"]
+    training_cost_micro_usd: UnsignedInteger | None
+    training_budget_state: Literal["unknown", "not_applicable"]
+    total_input_tokens: UnsignedInteger | None
+    total_output_tokens: UnsignedInteger | None
+    budget_state: Literal["within_cap", "over_cap", "unknown"]
+    assessment_state: Literal["complete", "partial", "blocked"]
+    inference_state: Literal["unsupported", "calibration_blocked", "descriptive_only"]
+    power_state: Literal["unsupported", "insufficient_families", "not_estimated"]
+    power_limit_codes: tuple[
+        Literal[
+            "method_unsupported",
+            "capability_missing",
+            "task_validity_not_accepted",
+            "fewer_than_two_families_in_a_split",
+            "power_analysis_not_available",
+        ],
+        ...,
+    ] = Field(min_length=1, max_length=4)
+    calibration_state: Literal["blocked_no_ground_truth", "pending_validation"]
+    inclusion_claim: Literal["not_assessed"]
+    interpretation_limits: tuple[
+        Literal[
+            "self_report_is_not_evidence",
+            "performance_gap_is_not_training_inclusion",
+            "no_universal_probability",
+        ],
+        ...,
+    ]
+
+    @model_validator(mode="after")
+    def assessment_preserves_all_planned_outcomes(self) -> BehavioralAssessmentPayload:
+        if self.plan_ref.kind != "behavioral_audit_plan":
+            raise ValueError("behavioral assessment must bind its preregistered plan")
+        if self.method_registry_ref.kind != "behavioral_method_registry":
+            raise ValueError("behavioral assessment must bind its method registry")
+        if self.expected_units != len(self.observation_refs):
+            raise ValueError("every planned sample/model pair requires a durable outcome")
+        if (
+            self.completed_units + self.failed_units + self.blocked_units + self.not_run_units
+            != self.expected_units
+        ):
+            raise ValueError("behavioral outcome counts must reconcile to the frozen denominator")
+        if self.assessment_state == "complete" and (
+            self.failed_units or self.blocked_units or self.not_run_units
+        ):
+            raise ValueError("complete behavioral assessments cannot hide missing outcomes")
+        if self.inclusion_claim != "not_assessed":
+            raise ValueError("behavioral performance cannot claim training-set inclusion")
+        if len(set(self.power_limit_codes)) != len(self.power_limit_codes):
+            raise ValueError("behavioral power limits must be unique")
+        if self.power_state == "unsupported" and not set(self.power_limit_codes) & {
+            "method_unsupported",
+            "capability_missing",
+            "task_validity_not_accepted",
+        }:
+            raise ValueError("unsupported behavioral power requires an explicit blocker")
+        if self.power_state == "insufficient_families" and (
+            "fewer_than_two_families_in_a_split" not in self.power_limit_codes
+        ):
+            raise ValueError("insufficient behavioral power must identify the split limitation")
+        if self.power_state == "not_estimated" and (
+            "power_analysis_not_available" not in self.power_limit_codes
+        ):
+            raise ValueError("unestimated behavioral power must identify the missing analysis")
+        if len(set(self.interpretation_limits)) != 3 or set(self.interpretation_limits) != {
+            "self_report_is_not_evidence",
+            "performance_gap_is_not_training_inclusion",
+            "no_universal_probability",
+        }:
+            raise ValueError("behavioral assessment must retain every interpretation limit")
+        if len({panel.model_context_ref for panel in self.model_panels}) != len(self.model_panels):
+            raise ValueError("behavioral performance panels must be unique per model context")
+        if (self.total_cost_state in {"actual", "estimated"}) != (
+            self.total_cost_micro_usd is not None
+        ):
+            raise ValueError(
+                "behavioral aggregate cost needs its actual/estimated availability state"
+            )
+        if self.budget_state == "within_cap" and (
+            self.total_cost_state == "unavailable"
+            or self.total_input_tokens is None
+            or self.total_output_tokens is None
+        ):
+            raise ValueError("unknown usage cannot be reported within a frozen budget cap")
+        if (self.training_cost_state == "unavailable") != (
+            self.training_budget_state == "unknown"
+        ) or self.training_cost_micro_usd is not None:
+            raise ValueError("controlled training compute remains explicitly unaccounted")
+        return self
+
+
 class FirewallDecisionPayload(StrictAuditModel):
     task_ref: EntityRef
     audit_ref: AuditDocumentRef
@@ -1784,6 +2385,37 @@ class BehavioralAuditPlanDocument(_PayloadDocument):
     payload_model = BehavioralAuditPlanPayload
 
 
+class BehavioralAuditPlanDocumentV2(_PayloadDocument):
+    kind: Literal["behavioral_audit_plan"] = "behavioral_audit_plan"
+    payload: BehavioralAuditPlanPayloadV2
+    payload_model = BehavioralAuditPlanPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
+class BehavioralMethodRegistryDocument(_PayloadDocument):
+    kind: Literal["behavioral_method_registry"] = "behavioral_method_registry"
+    payload: BehavioralMethodRegistryPayload
+    payload_model = BehavioralMethodRegistryPayload
+
+
+class BehavioralTaskValidityDocument(_PayloadDocument):
+    kind: Literal["behavioral_task_validity"] = "behavioral_task_validity"
+    payload: BehavioralTaskValidityPayload
+    payload_model = BehavioralTaskValidityPayload
+
+
+class BehavioralObservationDocument(_PayloadDocument):
+    kind: Literal["behavioral_observation"] = "behavioral_observation"
+    payload: BehavioralObservationPayload
+    payload_model = BehavioralObservationPayload
+
+
+class BehavioralAssessmentDocument(_PayloadDocument):
+    kind: Literal["behavioral_assessment"] = "behavioral_assessment"
+    payload: BehavioralAssessmentPayload
+    payload_model = BehavioralAssessmentPayload
+
+
 class FirewallDecisionDocument(_PayloadDocument):
     kind: Literal["firewall_decision"] = "firewall_decision"
     payload: FirewallDecisionPayload
@@ -1837,6 +2469,11 @@ AuditDocument = (
     | SealAccessEventDocument
     | CanaryObservationDocument
     | BehavioralAuditPlanDocument
+    | BehavioralAuditPlanDocumentV2
+    | BehavioralMethodRegistryDocument
+    | BehavioralTaskValidityDocument
+    | BehavioralObservationDocument
+    | BehavioralAssessmentDocument
     | FirewallDecisionDocument
     | ReplacementPlanDocument
     | MonitorPolicyDocument
@@ -1863,6 +2500,10 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
         SealAccessEventDocument,
         CanaryObservationDocument,
         BehavioralAuditPlanDocument,
+        BehavioralMethodRegistryDocument,
+        BehavioralTaskValidityDocument,
+        BehavioralObservationDocument,
+        BehavioralAssessmentDocument,
         FirewallDecisionDocument,
         ReplacementPlanDocument,
         MonitorPolicyDocument,
@@ -1877,6 +2518,7 @@ _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("temporal_assessment", 2): TemporalAssessmentDocumentV2,
     ("sealed_manifest", 2): SealedManifestDocumentV2,
     ("canary_policy", 2): CanaryPolicyDocumentV2,
+    ("behavioral_audit_plan", 2): BehavioralAuditPlanDocumentV2,
 }
 
 

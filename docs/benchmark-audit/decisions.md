@@ -142,3 +142,15 @@ Positive scored observations require evidence/configuration/time references, ver
 ### ADDENDUM-DECISION-30 — Audit document v2 storage uses a guarded forward migration
 
 The existing audit document schema-version constraint was v1-only, which prevented Prompt90's v2 evidence from being stored. A forward migration supports versions 1 and 2 without rewriting history. Downgrade checks for v2 rows and refuses to restore the v1-only constraint while any remain. Upgrade/downgrade SQL was rendered offline; live PostgreSQL execution remains pending.
+
+### ADDENDUM-DECISION-31 — ConStat is registered without an invented substitute
+
+Prompt94 registers the ConStat performance-generalization method against its published source, but marks its implementation `not_pinned`. The method's primary/reference comparison and difficulty correction do not establish training-set inclusion. No generic accuracy threshold is called ConStat, and no performance number becomes a universal probability. Sources: [SRI publication page](https://www.sri.inf.ethz.ch/publications/dekoninck2024constat), [NeurIPS 2024 paper](https://proceedings.neurips.cc/paper_files/paper/2024/file/a7f89793b9e6f8c6568dbbb6ff727b9b-Paper-Conference.pdf), [official code repository](https://github.com/eth-sri/ConStat). An exact reviewed implementation artifact and compatible approved capabilities are required before calls.
+
+### ADDENDUM-DECISION-32 — Behavioral deliveries reconcile per retry to the normal gateway
+
+Each dispatched delivery, including retries, requires its own sealed recipient/payload event and ordinary `call_intent`/`call_delivery` records. Observation cost and tokens reconcile against the latest usage settlement; exact request/response artifacts stay private. A denied attempt may retain its access event without claiming model dispatch. Missing usage remains unknown and retries count against the frozen model-call budget. An ambiguous observation can be resolved only by one immutable successor that preserves the frozen unit, request digest, call intent and access history. No behavioral adapter or call was exercised in this environment.
+
+### ADDENDUM-DECISION-33 — Behavioral calibration and power stay explicitly bounded
+
+Plans freeze semantic/difficulty-reviewed controls, family-disjoint splits, alpha, minimum effect, target power, bootstrap count, multiplicity, decision rule and separate training-compute cap. Fewer than two families in any split is reported as `insufficient_families`; larger samples remain `not_estimated` until a reviewed power-analysis adapter exists. Owned-training evidence without accounted compute remains unavailable and calibration pending. No owned training manifest or calibration data were available.

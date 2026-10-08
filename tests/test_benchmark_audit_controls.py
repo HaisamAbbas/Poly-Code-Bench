@@ -127,6 +127,31 @@ def test_schema_keeps_direct_audit_scope_exclusive_and_diagnostic_attempt_metada
     assert "model_context" in str(audit_document_kind.sqltext)
     assert "seal_access_event" in str(audit_document_kind.sqltext)
     assert "canary_observation" in str(audit_document_kind.sqltext)
+    assert all(
+        kind in str(audit_document_kind.sqltext)
+        for kind in (
+            "behavioral_method_registry",
+            "behavioral_task_validity",
+            "behavioral_observation",
+            "behavioral_assessment",
+        )
+    )
+    behavioral_unit_index = next(
+        index
+        for index in audit_document.indexes
+        if index.name == "uq_behavioral_observation_plan_unit"
+    )
+    assert behavioral_unit_index.unique is True
+    assert "behavioral_observation" in str(
+        behavioral_unit_index.dialect_options["postgresql"]["where"]
+    )
+    behavioral_successor_index = next(
+        index
+        for index in audit_document.indexes
+        if index.name == "uq_behavioral_observation_single_successor"
+    )
+    assert behavioral_successor_index.unique is True
+    assert "supersedes_id" in str(behavioral_successor_index.expressions[0])
     sealed_head_index = next(
         index
         for index in audit_document.indexes

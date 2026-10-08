@@ -710,6 +710,381 @@
       },
       "expected_canonical_utf8": "{\"kind\":\"canary_observation\",\"payload\":{\"access_event_ref\":null,\"coverage_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"coverage_manifest\"},\"exact_match\":false,\"external_query\":false,\"interpretation_limits\":[\"absence_is_not_clean\",\"observed_disclosure_is_not_training_proof\"],\"marker_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/vnd.polycodebench.sealed-artifact\",\"visibility\":\"private\"},\"observation\":\"not_observed_in_scope\",\"prior_publication\":\"unknown\",\"source_date_evidence\":[],\"source_ref\":null,\"source_review_ref\":null},\"schema_version\":1}",
       "expected_digest": "sha256:e8433aec3edf705997f66599b8431080771a6891470a076bc9d931678cff3b55"
+    },
+    {
+      "name": "behavioral_method_registry-v1",
+      "kind": "behavioral_method_registry",
+      "schema_version": 1,
+      "payload": {
+        "registry_version": "behavioral-methods-v1",
+        "methods": [
+          {
+            "method_id": "constat",
+            "method_version": "NeurIPS-2024",
+            "source_url": "https://www.sri.inf.ethz.ch/publications/dekoninck2024constat",
+            "method_family": "performance_generalization",
+            "required_capabilities": [
+              "per_sample_scores",
+              "reference_models",
+              "stable_model_revision"
+            ],
+            "statistical_tests": [
+              "constat_reference_corrected_performance"
+            ],
+            "implementation_state": "not_pinned",
+            "implementation_ref": null,
+            "assumptions": [
+              "Reference models correct for task difficulty."
+            ],
+            "limitations": [
+              "A performance gap does not establish training inclusion."
+            ]
+          }
+        ],
+        "interpretation_limits": [
+          "performance_gap_is_not_training_inclusion",
+          "no_universal_probability"
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"behavioral_method_registry\",\"payload\":{\"interpretation_limits\":[\"performance_gap_is_not_training_inclusion\",\"no_universal_probability\"],\"methods\":[{\"assumptions\":[\"Reference models correct for task difficulty.\"],\"implementation_ref\":null,\"implementation_state\":\"not_pinned\",\"limitations\":[\"A performance gap does not establish training inclusion.\"],\"method_family\":\"performance_generalization\",\"method_id\":\"constat\",\"method_version\":\"NeurIPS-2024\",\"required_capabilities\":[\"per_sample_scores\",\"reference_models\",\"stable_model_revision\"],\"source_url\":\"https://www.sri.inf.ethz.ch/publications/dekoninck2024constat\",\"statistical_tests\":[\"constat_reference_corrected_performance\"]}],\"registry_version\":\"behavioral-methods-v1\"},\"schema_version\":1}",
+      "expected_digest": "sha256:0562d2e3493ab6dc238b31a58187087af0f656f747edcee93d3101bd16ba15e5"
+    },
+    {
+      "name": "behavioral_task_validity-v1",
+      "kind": "behavioral_task_validity",
+      "schema_version": 1,
+      "payload": {
+        "original_task_ref": {
+          "entity_id": "00000001-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "control_task_ref": {
+          "entity_id": "00000002-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "family_ref": {
+          "entity_id": "00000003-2222-4222-8222-222222222222",
+          "entity_kind": "task_family",
+          "digest": null
+        },
+        "semantic_relation": "semantically_equivalent",
+        "difficulty_gap": "0.000000",
+        "permitted_difficulty_gap": "0.050000",
+        "evidence_refs": [
+          {
+            "document_id": "00000004-1111-4111-8111-111111111111",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "match_evidence"
+          }
+        ],
+        "author_ref": {
+          "entity_id": "00000005-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "reviewer_ref": {
+          "entity_id": "00000006-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "validity_state": "accepted",
+        "validity_limits": [
+          "semantic_equivalence_is_reviewed",
+          "difficulty_match_is_measured"
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"behavioral_task_validity\",\"payload\":{\"author_ref\":{\"digest\":null,\"entity_id\":\"00000005-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"control_task_ref\":{\"digest\":null,\"entity_id\":\"00000002-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"difficulty_gap\":\"0.000000\",\"evidence_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000004-1111-4111-8111-111111111111\",\"kind\":\"match_evidence\"}],\"family_ref\":{\"digest\":null,\"entity_id\":\"00000003-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"00000001-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"permitted_difficulty_gap\":\"0.050000\",\"reviewer_ref\":{\"digest\":null,\"entity_id\":\"00000006-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"semantic_relation\":\"semantically_equivalent\",\"validity_limits\":[\"semantic_equivalence_is_reviewed\",\"difficulty_match_is_measured\"],\"validity_state\":\"accepted\"},\"schema_version\":1}",
+      "expected_digest": "sha256:db4db0e5862600dafe38e9a7113ea2f443f4d175c5d7719c1ed0550490b990aa"
+    },
+    {
+      "name": "behavioral_observation-v1",
+      "kind": "behavioral_observation",
+      "schema_version": 1,
+      "payload": {
+        "plan_ref": {
+          "document_id": "00000007-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "behavioral_audit_plan"
+        },
+        "pair_id": "88888888-8888-4888-8888-888888888888",
+        "task_ref": {
+          "entity_id": "00000001-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "sample_role": "original",
+        "model_context_ref": {
+          "document_id": "00000009-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "model_context"
+        },
+        "outcome": "blocked",
+        "dispatch_state": "not_dispatched",
+        "call_intent_ref": null,
+        "request_digest": null,
+        "response_artifact_ref": null,
+        "score": null,
+        "score_source": null,
+        "likelihood_state": "unavailable",
+        "likelihood_value": null,
+        "confidence_state": "not_requested",
+        "confidence_value": null,
+        "cost_state": "not_applicable",
+        "cost_micro_usd": null,
+        "usage_state": "not_applicable",
+        "input_tokens": null,
+        "output_tokens": null,
+        "missing_reason": "method_unsupported",
+        "access_event_refs": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"behavioral_observation\",\"payload\":{\"access_event_refs\":[],\"call_intent_ref\":null,\"confidence_state\":\"not_requested\",\"confidence_value\":null,\"cost_micro_usd\":null,\"cost_state\":\"not_applicable\",\"dispatch_state\":\"not_dispatched\",\"input_tokens\":null,\"likelihood_state\":\"unavailable\",\"likelihood_value\":null,\"missing_reason\":\"method_unsupported\",\"model_context_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000009-1111-4111-8111-111111111111\",\"kind\":\"model_context\"},\"outcome\":\"blocked\",\"output_tokens\":null,\"pair_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000007-1111-4111-8111-111111111111\",\"kind\":\"behavioral_audit_plan\"},\"request_digest\":null,\"response_artifact_ref\":null,\"sample_role\":\"original\",\"score\":null,\"score_source\":null,\"task_ref\":{\"digest\":null,\"entity_id\":\"00000001-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"usage_state\":\"not_applicable\"},\"schema_version\":1}",
+      "expected_digest": "sha256:df5eaeb475c52ffbb53a356d4c348a1304b1add63f11a11c6685deb5e402554e"
+    },
+    {
+      "name": "behavioral_assessment-v1",
+      "kind": "behavioral_assessment",
+      "schema_version": 1,
+      "payload": {
+        "plan_ref": {
+          "document_id": "00000007-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "behavioral_audit_plan"
+        },
+        "method_registry_ref": {
+          "document_id": "0000000a-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "behavioral_method_registry"
+        },
+        "method_id": "constat",
+        "observation_refs": [
+          {
+            "document_id": "0000000b-1111-4111-8111-111111111111",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "behavioral_observation"
+          }
+        ],
+        "expected_units": 1,
+        "completed_units": 0,
+        "failed_units": 0,
+        "blocked_units": 1,
+        "not_run_units": 0,
+        "model_panels": [
+          {
+            "model_context_ref": {
+              "document_id": "00000009-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "model_context"
+            },
+            "role": "target",
+            "planned_original": 1,
+            "completed_original": 0,
+            "mean_original_score": null,
+            "planned_control": 0,
+            "completed_control": 0,
+            "mean_control_score": null
+          }
+        ],
+        "total_cost_state": "not_applicable",
+        "total_cost_micro_usd": null,
+        "total_input_tokens": 0,
+        "total_output_tokens": 0,
+        "budget_state": "within_cap",
+        "assessment_state": "blocked",
+        "inference_state": "unsupported",
+        "calibration_state": "blocked_no_ground_truth",
+        "inclusion_claim": "not_assessed",
+        "interpretation_limits": [
+          "self_report_is_not_evidence",
+          "performance_gap_is_not_training_inclusion",
+          "no_universal_probability"
+        ],
+        "training_cost_state": "not_applicable",
+        "training_cost_micro_usd": null,
+        "training_budget_state": "not_applicable",
+        "power_state": "unsupported",
+        "power_limit_codes": [
+          "method_unsupported"
+        ],
+        "dispatched_model_calls": 0
+      },
+      "expected_canonical_utf8": "{\"kind\":\"behavioral_assessment\",\"payload\":{\"assessment_state\":\"blocked\",\"blocked_units\":1,\"budget_state\":\"within_cap\",\"calibration_state\":\"blocked_no_ground_truth\",\"completed_units\":0,\"dispatched_model_calls\":0,\"expected_units\":1,\"failed_units\":0,\"inclusion_claim\":\"not_assessed\",\"inference_state\":\"unsupported\",\"interpretation_limits\":[\"self_report_is_not_evidence\",\"performance_gap_is_not_training_inclusion\",\"no_universal_probability\"],\"method_id\":\"constat\",\"method_registry_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000000a-1111-4111-8111-111111111111\",\"kind\":\"behavioral_method_registry\"},\"model_panels\":[{\"completed_control\":0,\"completed_original\":0,\"mean_control_score\":null,\"mean_original_score\":null,\"model_context_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000009-1111-4111-8111-111111111111\",\"kind\":\"model_context\"},\"planned_control\":0,\"planned_original\":1,\"role\":\"target\"}],\"not_run_units\":0,\"observation_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000000b-1111-4111-8111-111111111111\",\"kind\":\"behavioral_observation\"}],\"plan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000007-1111-4111-8111-111111111111\",\"kind\":\"behavioral_audit_plan\"},\"power_limit_codes\":[\"method_unsupported\"],\"power_state\":\"unsupported\",\"total_cost_micro_usd\":null,\"total_cost_state\":\"not_applicable\",\"total_input_tokens\":0,\"total_output_tokens\":0,\"training_budget_state\":\"not_applicable\",\"training_cost_micro_usd\":null,\"training_cost_state\":\"not_applicable\"},\"schema_version\":1}",
+      "expected_digest": "sha256:ca2a4d0bbdac4b1c2d8154a7900b5c5fd353160b0a33eb39608f6af1924e82bd"
+    },
+    {
+      "name": "behavioral_audit_plan-v2",
+      "kind": "behavioral_audit_plan",
+      "schema_version": 2,
+      "payload": {
+        "method_registry_ref": {
+          "document_id": "00000028-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "behavioral_method_registry"
+        },
+        "method_id": "constat",
+        "audit_run_ref": {
+          "entity_id": "00000029-2222-4222-8222-222222222222",
+          "entity_kind": "audit_run",
+          "digest": null
+        },
+        "sample_pairs": [
+          {
+            "pair_id": "00000068-4444-4444-8444-444444444444",
+            "original_task_ref": {
+              "entity_id": "00000068-2222-4222-8222-222222222222",
+              "entity_kind": "task_version",
+              "digest": null
+            },
+            "control_task_ref": {
+              "entity_id": "00000069-2222-4222-8222-222222222222",
+              "entity_kind": "task_version",
+              "digest": null
+            },
+            "family_ref": {
+              "entity_id": "0000006a-2222-4222-8222-222222222222",
+              "entity_kind": "task_family",
+              "digest": null
+            },
+            "split": "calibration",
+            "validity_ref": {
+              "document_id": "0000006b-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "behavioral_task_validity"
+            }
+          },
+          {
+            "pair_id": "0000006c-4444-4444-8444-444444444444",
+            "original_task_ref": {
+              "entity_id": "0000006c-2222-4222-8222-222222222222",
+              "entity_kind": "task_version",
+              "digest": null
+            },
+            "control_task_ref": {
+              "entity_id": "0000006d-2222-4222-8222-222222222222",
+              "entity_kind": "task_version",
+              "digest": null
+            },
+            "family_ref": {
+              "entity_id": "0000006e-2222-4222-8222-222222222222",
+              "entity_kind": "task_family",
+              "digest": null
+            },
+            "split": "validation",
+            "validity_ref": {
+              "document_id": "0000006f-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "behavioral_task_validity"
+            }
+          },
+          {
+            "pair_id": "00000070-4444-4444-8444-444444444444",
+            "original_task_ref": {
+              "entity_id": "00000070-2222-4222-8222-222222222222",
+              "entity_kind": "task_version",
+              "digest": null
+            },
+            "control_task_ref": {
+              "entity_id": "00000071-2222-4222-8222-222222222222",
+              "entity_kind": "task_version",
+              "digest": null
+            },
+            "family_ref": {
+              "entity_id": "00000072-2222-4222-8222-222222222222",
+              "entity_kind": "task_family",
+              "digest": null
+            },
+            "split": "held_out_test",
+            "validity_ref": {
+              "document_id": "00000073-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "behavioral_task_validity"
+            }
+          }
+        ],
+        "model_slots": [
+          {
+            "model_context_ref": {
+              "document_id": "0000002a-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "model_context"
+            },
+            "role": "target",
+            "recipient": "model.target",
+            "capabilities": [],
+            "stable_revision_verified": false
+          },
+          {
+            "model_context_ref": {
+              "document_id": "0000002b-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "model_context"
+            },
+            "role": "reference",
+            "recipient": "model.reference",
+            "capabilities": [],
+            "stable_revision_verified": false
+          }
+        ],
+        "prompt_artifact_ref": {
+          "artifact_id": "0000002c-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "text/plain"
+        },
+        "tool_policy_artifact_ref": {
+          "artifact_id": "0000002d-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "decoding_artifact_ref": {
+          "artifact_id": "0000002e-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "exposure_policy_ref": {
+          "document_id": "0000002f-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "seed": "7",
+        "budget": {
+          "max_model_calls": 12,
+          "max_samples": 6,
+          "max_input_tokens": 10000,
+          "max_output_tokens": 1000,
+          "max_cost_micro_usd": 100000,
+          "max_training_cost_micro_usd": 0
+        },
+        "statistical_test": "constat_reference_corrected_performance",
+        "alpha": "0.050000",
+        "minimum_effect": "0.100000",
+        "bootstrap_replicates": 2000,
+        "multiplicity": "holm",
+        "planned_hypotheses": 1,
+        "ground_truth_state": "unavailable",
+        "training_manifest_ref": null,
+        "exposed_family_refs": [],
+        "unexposed_family_refs": [],
+        "preregistered_at": "2026-10-08T12:00:00Z",
+        "interpretation_limits": [
+          "self_report_is_not_evidence",
+          "performance_gap_is_not_training_inclusion",
+          "no_universal_probability"
+        ],
+        "target_power": "0.800000",
+        "decision_rule": "adjusted_p_below_alpha_and_effect_at_least_minimum",
+        "grading_artifact_ref": {
+          "artifact_id": "00000030-3333-4333-8333-333333333333",
+          "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "visibility": "private",
+          "media_type": "application/json"
+        }
+      },
+      "expected_canonical_utf8": "{\"kind\":\"behavioral_audit_plan\",\"payload\":{\"alpha\":\"0.050000\",\"audit_run_ref\":{\"digest\":null,\"entity_id\":\"00000029-2222-4222-8222-222222222222\",\"entity_kind\":\"audit_run\"},\"bootstrap_replicates\":2000,\"budget\":{\"max_cost_micro_usd\":100000,\"max_input_tokens\":10000,\"max_model_calls\":12,\"max_output_tokens\":1000,\"max_samples\":6,\"max_training_cost_micro_usd\":0},\"decision_rule\":\"adjusted_p_below_alpha_and_effect_at_least_minimum\",\"decoding_artifact_ref\":{\"artifact_id\":\"0000002e-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"exposed_family_refs\":[],\"exposure_policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000002f-1111-4111-8111-111111111111\",\"kind\":\"audit_plan\"},\"grading_artifact_ref\":{\"artifact_id\":\"00000030-3333-4333-8333-333333333333\",\"digest\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"ground_truth_state\":\"unavailable\",\"interpretation_limits\":[\"self_report_is_not_evidence\",\"performance_gap_is_not_training_inclusion\",\"no_universal_probability\"],\"method_id\":\"constat\",\"method_registry_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000028-1111-4111-8111-111111111111\",\"kind\":\"behavioral_method_registry\"},\"minimum_effect\":\"0.100000\",\"model_slots\":[{\"capabilities\":[],\"model_context_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000002a-1111-4111-8111-111111111111\",\"kind\":\"model_context\"},\"recipient\":\"model.target\",\"role\":\"target\",\"stable_revision_verified\":false},{\"capabilities\":[],\"model_context_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000002b-1111-4111-8111-111111111111\",\"kind\":\"model_context\"},\"recipient\":\"model.reference\",\"role\":\"reference\",\"stable_revision_verified\":false}],\"multiplicity\":\"holm\",\"planned_hypotheses\":1,\"preregistered_at\":\"2026-10-08T12:00:00Z\",\"prompt_artifact_ref\":{\"artifact_id\":\"0000002c-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"text/plain\",\"visibility\":\"private\"},\"sample_pairs\":[{\"control_task_ref\":{\"digest\":null,\"entity_id\":\"00000069-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"family_ref\":{\"digest\":null,\"entity_id\":\"0000006a-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"00000068-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"pair_id\":\"00000068-4444-4444-8444-444444444444\",\"split\":\"calibration\",\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000006b-1111-4111-8111-111111111111\",\"kind\":\"behavioral_task_validity\"}},{\"control_task_ref\":{\"digest\":null,\"entity_id\":\"0000006d-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"family_ref\":{\"digest\":null,\"entity_id\":\"0000006e-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"0000006c-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"pair_id\":\"0000006c-4444-4444-8444-444444444444\",\"split\":\"validation\",\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000006f-1111-4111-8111-111111111111\",\"kind\":\"behavioral_task_validity\"}},{\"control_task_ref\":{\"digest\":null,\"entity_id\":\"00000071-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"family_ref\":{\"digest\":null,\"entity_id\":\"00000072-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"00000070-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"pair_id\":\"00000070-4444-4444-8444-444444444444\",\"split\":\"held_out_test\",\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000073-1111-4111-8111-111111111111\",\"kind\":\"behavioral_task_validity\"}}],\"seed\":\"7\",\"statistical_test\":\"constat_reference_corrected_performance\",\"target_power\":\"0.800000\",\"tool_policy_artifact_ref\":{\"artifact_id\":\"0000002d-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"training_manifest_ref\":null,\"unexposed_family_refs\":[]},\"schema_version\":2}",
+      "expected_digest": "sha256:decf3e0b2b5e3569be9754cac3fbb2ac4c070e4dd25efbdf5dc79c7338129f57"
     }
   ]
 }

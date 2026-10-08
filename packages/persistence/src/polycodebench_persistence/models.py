@@ -99,7 +99,8 @@ audit_document = Table(
         "kind IN ('benchmark_snapshot','task_fingerprint','corpus_snapshot','audit_plan',"
         "'query_manifest','coverage_manifest','match_evidence','model_context','risk_policy','risk_assessment',"
         "'temporal_assessment','sealed_manifest','canary_policy','seal_access_event',"
-        "'canary_observation','behavioral_audit_plan',"
+        "'canary_observation','behavioral_audit_plan','behavioral_method_registry',"
+        "'behavioral_task_validity','behavioral_observation','behavioral_assessment',"
         "'firewall_decision','replacement_plan','monitor_policy','benchmark_health',"
         "'audit_attestation')",
         name="kind",
@@ -115,6 +116,22 @@ audit_document = Table(
     CheckConstraint("supersedes_id IS NULL OR supersedes_id <> id", name="not_self_successor"),
     Index("ix_audit_document_kind_created", "kind", "created_at"),
     Index("ix_audit_document_supersedes", "supersedes_id"),
+    Index(
+        "uq_behavioral_observation_plan_unit",
+        text("(payload->'plan_ref'->>'document_id')"),
+        text("(payload->>'pair_id')"),
+        text("(payload->'task_ref'->>'entity_id')"),
+        text("(payload->>'sample_role')"),
+        text("(payload->'model_context_ref'->>'document_id')"),
+        unique=True,
+        postgresql_where=text("kind = 'behavioral_observation' AND supersedes_id IS NULL"),
+    ),
+    Index(
+        "uq_behavioral_observation_single_successor",
+        "supersedes_id",
+        unique=True,
+        postgresql_where=text("kind = 'behavioral_observation' AND supersedes_id IS NOT NULL"),
+    ),
     Index(
         "uq_sealed_manifest_single_successor",
         "supersedes_id",
@@ -1360,8 +1377,7 @@ call_intent = Table(
     created_at(),
     CheckConstraint("num_nonnulls(attempt_id,evaluation_id,audit_run_id) = 1", name="one_scope"),
     CheckConstraint(
-        "diagnostic_audit_run_id IS NULL OR "
-        "(attempt_id IS NOT NULL AND audit_run_id IS NULL)",
+        "diagnostic_audit_run_id IS NULL OR (attempt_id IS NOT NULL AND audit_run_id IS NULL)",
         name="diagnostic_audit_context_scope",
     ),
     CheckConstraint("request_digest ~ '^sha256:[0-9a-f]{64}$'", name="request_digest_format"),

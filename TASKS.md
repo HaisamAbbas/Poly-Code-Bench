@@ -22,7 +22,7 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 98 — private API, CLI, SDK and permission contracts (partial foundations; transition adapters, shared ACL, private artifact-byte authorization and live service evidence remain).
 - [x] Prompt 99 — benchmark health dashboard and evidence journeys (partial foundations; live reviewed projections, private curator ACL/transitions and full context/trend/revocation journeys remain unavailable).
 - [x] Prompt 100 — signed audit attestations and public verification (partial foundations; production signer, reviewer, timestamp, trust publication and live PostgreSQL evidence remain blocked).
-- [ ] Prompt 101 — actual benchmark pilot and detector calibration.
+- [x] Prompt 101 — actual benchmark pilot and detector calibration (partial preflight and calibration foundations; approved source bytes/rights, live scans, independent labels and behavioral ground truth remain blocked).
 - [ ] Prompt 102 — live replacements, sealed workflow and monitoring evidence.
 - [ ] Prompt 103 — operations, malicious-input defenses and recovery/load.
 - [ ] Prompt 104 — broader benchmark adapters and scope conformance.

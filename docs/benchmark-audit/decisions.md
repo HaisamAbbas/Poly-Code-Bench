@@ -211,3 +211,15 @@ A signature can be mathematically valid while current endorsement is unavailable
 ### ADDENDUM-DECISION-47 - Corrections are immutable successor links
 
 A corrected attestation is stored as a successor with an explicit predecessor link. The append-only lifecycle event binds the persisted successor ID and semantic digest. Aggregate health report publication remains distinct from task-text publication.
+
+### ADDENDUM-DECISION-48 - Pilot membership must bind the imported population
+
+The 100-task sample for each benchmark is recomputed from the complete eligible-ID population using the frozen seed, exact revision, split and variant. A trusted importer adapter must verify that population against the immutable pinned source bytes and rights evidence before preflight can be ready. Caller-supplied IDs or a syntactically valid sample do not establish source membership.
+
+### ADDENDUM-DECISION-49 - Calibration requires verified family-held-out evidence
+
+Calibration plans freeze source snapshots, family assignments, detector/rubric versions, metric thresholds and the deterministic family-cluster bootstrap before predictions. A trusted adapter must verify the snapshots and independent immutable label artifacts; unverified observations are descriptive only. Reported metrics never enable semantic auto-admission in this implementation.
+
+### ADDENDUM-DECISION-50 - Behavioral training evidence is separate from source overlap
+
+Source matches, endpoint accuracy and detector calibration do not establish model-training inclusion. Without authorized controlled trained/untrained manifests and reference-model evidence, behavioral inference remains explicitly blocked.

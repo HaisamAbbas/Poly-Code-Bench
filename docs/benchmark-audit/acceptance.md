@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt100, BWP-01 and BWP-02 are complete; BWP-03 through BWP-18 are partial foundations pending live database/source/resource/reviewer/calibration and lifecycle evidence. BWP-19 through BWP-24 remain pending. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+Through Prompt101, BWP-01 and BWP-02 are complete; BWP-03 through BWP-19 are partial foundations pending live database/source/resource/reviewer/calibration and lifecycle evidence. BWP-20 through BWP-24 remain pending. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -33,10 +33,10 @@ At Prompt100, BWP-01 and BWP-02 are complete; BWP-03 through BWP-18 are partial 
 | BREQ-23 | 100 | BX-48–50 | partial | reports/prompt-100.md; canonical Ed25519 public claims, document digest binding, stale/offline qualification, lifecycle reducer, and correction links pass synthetic checks; approved signer/reviewer authority, timestamp proof, production trust-store publication, and live database/revocation evidence remain unavailable |
 | BREQ-24 | 86–90,93,98–100,103 | BX-07,11,14,20,28–30,44,47–50,58 | partial | reports/prompt-86.md through reports/prompt-90.md, reports/prompt-98.md through reports/prompt-100.md; untrusted source/judge boundaries, tenant/owner-scoped reads, allowlisted no-store projections, signed-claim privacy and invalid-signature claim suppression are tested; private artifact-byte authorization, audit-specific exposure writer, shared reviewer ACL, live trust/revocation checks and production authorization evidence remain absent |
 | BREQ-25 | 85,89,96,98,103 | BX-04–05,16–17,38,44,56–57 | partial | six exclusive queue FKs, CAS enqueue, tenant/idempotent plan/run API creation and fencing reuse are implemented; Prompt89 has no fenced query-result/checkpoint writer; live migration/claim/recovery verification is pending; see reports/prompt-85.md, reports/prompt-89.md and reports/prompt-98.md |
-| BREQ-26 | 94,101 | BX-31–33,52–53 | partial | reports/prompt-94.md; owned-training manifests and separate compute caps are represented, while authorized training evidence and calibration remain blocked |
-| BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
+| BREQ-26 | 94,101 | BX-31–33,52–53 | partial | reports/prompt-94.md and reports/prompt-101.md; owned-training manifests and separate compute caps are represented, but no authorized trained/untrained manifests or behavioral ground truth exist |
+| BREQ-27 | 101–102 | BX-51–55 | partial | reports/prompt-101.md; exact-scope preflight and family-cluster calibration contracts exist, while the actual 300-item scans, independent labels and Prompt102 campaign evidence are unavailable |
 | BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
-| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog, connector, bounded retrieval, coverage and local replay contracts exist; approved snapshots/indexes and durable retrieval replay remain pending; see reports/prompt-88.md and reports/prompt-89.md |
+| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog, connector, bounded retrieval, coverage, local replay and exact-source pilot preflight contracts exist; approved snapshots/indexes, actual scan evidence and durable retrieval replay remain pending; see reports/prompt-88.md, reports/prompt-89.md and reports/prompt-101.md |
 | BREQ-30 | 103,106 | BX-56–58,60 | pending | see prompt 103 report |
 | BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
 | BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
@@ -63,7 +63,7 @@ At Prompt100, BWP-01 and BWP-02 are complete; BWP-03 through BWP-18 are partial 
 | BWP-16 | 98 | partial | reports/prompt-98.md; tenant-scoped API, CLI and generated SDK foundations pass local checks; transition adapters, shared reviewer ACL, private artifact-byte authorization and live service evidence remain |
 | BWP-17 | 99 | partial | reports/prompt-99.md; public aggregate report and safe curator-blocked pages pass synthetic browser checks; private transitions, comparative/evidence journeys and live reviewed projection remain unavailable |
 | BWP-18 | 100 | partial | reports/prompt-100.md; Ed25519 verification, canonical digest binding, stale/offline qualification, append-only lifecycle repository methods, public verification route and limitations UI are implemented; approved trust/key/reviewer authority, trusted timestamp proof, transition API, live PostgreSQL and reviewed publication remain unavailable |
-| BWP-19 | 101 | pending | prompt report |
+| BWP-19 | 101 | partial | reports/prompt-101.md; frozen 300-item preflight, trusted population/plan/source/label resolver boundaries, family-cluster calibration and bounded resampling work exist; no approved source bytes/rights, independent labels, live scan or behavioral ground truth are available |
 | BWP-20 | 102 | pending | prompt report |
 | BWP-21 | 103 | pending | prompt report |
 | BWP-22 | 104 | pending | prompt report |
@@ -148,10 +148,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-18-B | 100 | partial | reports/prompt-100.md; real Ed25519 operations, public-only trust records, tamper/key/digest/expiry checks pass synthetic tests; approved key custody, trust-store publication and timestamp proof are unavailable |
 | BAT-18-C | 100 | partial | reports/prompt-100.md; role-separated transition reducer, immutable event-chain append/read adapter, expiry/revocation/successor checks exist; transition API, live DB execution, key rotation and live revocation feed remain |
 | BAT-18-D | 100 | partial | reports/prompt-100.md; UI discloses scoped authority, model-context limits, no unseen-data guarantee and task-text separation; invalid signatures hide claims and verified supersession links to a successor; live reviewed publication remains unavailable |
-| BAT-19-A | 101 | pending | prompt report |
-| BAT-19-B | 101 | pending | prompt report |
-| BAT-19-C | 101 | pending | prompt report |
-| BAT-19-D | 101 | pending | prompt report |
+| BAT-19-A | 101 | partial | reports/prompt-101.md; exact revision/split/seeded 100-ID membership and bounded scopes are preflighted, but no approved imports, rights, caps or reviewer roster are available |
+| BAT-19-B | 101 | blocked | reports/prompt-101.md; no authorized corpus snapshots/bytes or live connectors exist to produce 300 audit records, bounded retrieval, coverage or cost reports |
+| BAT-19-C | 101 | partial | reports/prompt-101.md; held-out family bootstrap, metric, control and reviewer-evidence contracts exist; 100 actual independent labels across 30 families are absent |
+| BAT-19-D | 101 | blocked | reports/prompt-101.md; no authorized trained/untrained manifests or reference model are available; source-overlap evidence is kept separate |
 | BAT-20-A | 102 | pending | prompt report |
 | BAT-20-B | 102 | pending | prompt report |
 | BAT-20-C | 102 | pending | prompt report |
@@ -227,9 +227,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-48 | 100 | partial | reports/prompt-100.md; exact Ed25519 bytes, document digest, wrong-key/tamper/expiry/revocation and fresh-state checks pass synthetic tests; no approved signer, timestamp authority, real scope source or live trust publisher |
 | BX-49 | 100 | partial | reports/prompt-100.md; append-only lifecycle event chain, role separation, expiry, revocation and successor digest checks are implemented; no authenticated transition API or live PostgreSQL/key-rotation/revocation evidence |
 | BX-50 | 100 | partial | reports/prompt-100.md; synthetic browser checks verify claim suppression, scope caveats, task-text separation and correction link; no human-reviewed live public report or production access review |
-| BX-51 | 101 | pending | criterion in addendum §26; prompt report |
-| BX-52 | 101 | pending | criterion in addendum §26; prompt report |
-| BX-53 | 101 | pending | criterion in addendum §26; prompt report |
+| BX-51 | 101 | partial | reports/prompt-101.md; exact sample and bounded source preflight checks exist, but no approved source bytes/rights or actual 300-item scan evidence |
+| BX-52 | 101 | partial | reports/prompt-101.md; family-cluster precision/recall/FPR intervals and evidence-backed plan/reviewer gates are implemented; actual independent held-out labels and source diversity are unavailable |
+| BX-53 | 101 | blocked | reports/prompt-101.md; no controlled trained/untrained manifests or approved behavioral ground truth; source overlap and existing endpoint accuracy are not substitutes |
 | BX-54 | 102 | pending | criterion in addendum §26; prompt report |
 | BX-55 | 102 | pending | criterion in addendum §26; prompt report |
 | BX-56 | 103 | pending | criterion in addendum §26; prompt report |
@@ -248,7 +248,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BA3 | 92–94 | partial | `phase-BA3.md` |
 | BA4 | 95-97 | partial | `reports/phase-BA4.md` |
 | BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompts98–100 foundations implemented; shared curator authorization, approved signer/reviewer authority, trusted timestamps, live PostgreSQL/revocation and reviewed source evidence remain unavailable |
-| BA6 | 101–103 | pending | `reports/phase-BA6.md` |
+| BA6 | 101–103 | partial | `reports/phase-BA6.md`; Prompt101 preflight/calibration contracts exist, but live pilot inputs and Prompt102–103 evidence remain unavailable |
 | BA7 | 104–106 | pending | `reports/phase-BA7.md` |
 
 Update each status only when its evidence exists. A phase is partial if mandatory live, source, human or modality evidence remains unavailable.

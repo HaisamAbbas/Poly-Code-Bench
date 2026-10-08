@@ -248,3 +248,13 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --locked python scripts/export_public_api_openapi.py`; `corepack pnpm --filter @polycodebench/web api:types`; `corepack pnpm --filter @polycodebench/web api:types:check` | Passed | OpenAPI export and generated public API types are current. |
 | `corepack pnpm --filter @polycodebench/web typecheck`; `corepack pnpm --filter @polycodebench/web lint`; `corepack pnpm --filter @polycodebench/web test:e2e:prompt100`; `corepack pnpm --filter @polycodebench/web build` | Passed | Typecheck, lint, three isolated browser scenarios and production build passed. |
 | PostgreSQL attestation lifecycle integration, approved signer/key custody, human review, trusted timestamp and live revocation | Blocked | No such runtime or authority was configured; repository append/read methods were not executed against PostgreSQL. |
+
+## Prompt101 pilot preflight and detector calibration
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run --locked python -c "import platform,sys; platform.machine=lambda:'AMD64'; import pytest; sys.exit(pytest.main(['-q','tests/test_benchmark_pilot.py','tests/test_benchmark_importers.py','tests/test_match_verification.py','tests/test_benchmark_health.py']))"` | Passed: 51 tests | Synthetic exact-membership, trusted-resolver, chronology, calibration, reviewer, control and family-bootstrap checks. No live corpus, reviewer, model, source or database access. |
+| `uv run --locked ruff check packages/core/src/polycodebench_core/benchmark_pilot.py packages/services/src/polycodebench_services/benchmark_pilot.py tests/test_benchmark_pilot.py` | Passed | Prompt101 Python source and tests lint clean. |
+| `uv run --locked ruff format --check packages/core/src/polycodebench_core/benchmark_pilot.py packages/services/src/polycodebench_services/benchmark_pilot.py tests/test_benchmark_pilot.py` | Passed | All three changed Python files are formatted. |
+| `uv run --locked mypy packages/core/src/polycodebench_core/benchmark_pilot.py packages/services/src/polycodebench_services/benchmark_pilot.py tests/test_benchmark_pilot.py` | Passed | Core/service contracts and tests type-check. |
+| Live benchmark imports, authorized corpus snapshots/rights, actual 300-item scan, independent 100-pair labels, trained/untrained manifests, reviewer roster and production evidence resolver | Blocked | None was configured or contacted; preflight has no query dispatch path. |

@@ -4,6 +4,12 @@ This is the no-cloud, loopback-only development stack. It uses the repository's 
 
 Do not expose these containers to the LAN or internet. Keycloak runs in development mode over HTTP, and the generated reviewer token is a trusted local development identity rather than proof of production MFA. Do not reuse `.env` values in another environment.
 
+## Docker Desktop storage and registry access on Windows
+
+With the WSL 2 backend, Docker Desktop stores its engine data under `%LOCALAPPDATA%\Docker\wsl` by default. When that drive is low on space, use **Settings → Resources → Advanced → Disk image location** to move the data disk to a drive with room; Docker Desktop updates its configured location during the move. See [Docker Desktop's WSL backend documentation](https://docs.docker.com/desktop/features/wsl/) and [settings reference](https://docs.docker.com/desktop/settings-and-maintenance/settings/).
+
+Docker image pulls use Docker Desktop's **Containers proxy** setting. If Windows can reach the required registry directly and a pull fails with a `proxyconnect` timeout to `http.docker.internal`, set **Settings → Resources → Proxies → Containers proxy → No proxy**, apply the setting, and restart Docker Desktop. Confirm the resulting proxy values with `docker info` before rebuilding. Docker documents the [Containers proxy modes](https://docs.docker.com/desktop/settings-and-maintenance/settings/).
+
 ## One-time local setup
 
 Run from the repository root in PowerShell:

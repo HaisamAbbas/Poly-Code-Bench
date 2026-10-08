@@ -36,10 +36,11 @@ The control-services module advertises API through the environment-scoped ECS Se
 name `api`, which is the URL baked into the web image. The web task health path is `/`.
 
 Production-shaped API, web, and scheduler lease-reaper image builds exist. The scheduler image is
-not a job worker. The solve supervisor has an identity-gated runner, and the evaluator now has an
-identity-gated grading runner plus a separate migrator registration command. Neither supervisor
-has a reviewed staging image, registration, or dispatch verification. The model/judge gateways,
-scorer, and publisher still lack complete long-running processing modes. These image builds do not
+not a job worker. The solve supervisor has an identity-gated runner, the evaluator has a separate
+migrator registration command and identity-gated grading runner, and the scorer has a role-gated
+bounded poller. These modes have not been built as reviewed staging images or verified against
+staging. The model/judge gateways and publisher still lack complete long-running processing modes.
+These image builds do not
 make E2E-42/E2E-43 deployable; do not scale roles without a passing runtime check. Build details
 and the evidence scope are recorded in
 [`container-images.md`](container-images.md).
@@ -94,14 +95,17 @@ docker build --platform linux/amd64 --file Dockerfile.scheduler --build-arg `
 docker build --platform linux/amd64 --file Dockerfile.eval-worker --build-arg `
   PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --build-arg `
   PCB_GUEST_KNOWN_HOSTS_SOURCE=<reviewed-guest-host-keys-file> --tag pcb-eval-worker:staging .
+docker build --platform linux/amd64 --file Dockerfile.scorer --build-arg `
+  PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --tag pcb-scorer:staging .
 #    Push API to the api and ops ECR repositories, web to web, scheduler to scheduler,
-#    and the evaluator image to eval-supervisor. Its registered image identities must match
-#    the config/images documents embedded in this immutable image.
+#    evaluator to eval-supervisor, and scorer to scorer. Evaluator image identities must match
+#    the config/images documents embedded in its immutable image.
 #    Resolve immutable ECR digests and update only the matching task image references.
 #    Keep the scheduler count at 0 until its staged PostgreSQL connection/reaper behavior is
 #    verified. Keep eval-supervisor at 0 until a migrator registers its resource plan and the
-#    owner explicitly enables dispatch. Other worker/gateway roles remain at 0 until their
-#    processing daemons and images are verified.
+#    owner explicitly enables dispatch. Keep scorer at 0 with scoring dispatch false until the
+#    image and bounded scorecard writes pass a staging runtime check. Other worker/gateway roles
+#    remain at 0 until their processing daemons and images are verified.
 
 # 5. Schema (migrator task; refuses non-expand migrations)
 # Bootstrap PostgreSQL roles with provision_roles.sql before migration and apply
@@ -121,10 +125,11 @@ aws logs filter-log-events --log-group-name /pcb/staging/api --filter-pattern '"
 This bootstrap is infrastructure preparation, not the full staging acceptance run. Although a
 scheduler image exists, it only reaps expired leases and has not been exercised against staging
 PostgreSQL. The solve/evaluation supervisors have guarded source commands, but neither has a
-reviewed, built staging image, registered capacity, or verified runtime. The model/judge gateways,
-scorer and publisher still lack complete long-running processing modes. Their Terraform example
-counts remain zero; the API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise
-worker/gateway counts or point them at the API image.
+reviewed, built staging image, registered capacity, or verified runtime. The scorer has a bounded
+role-gated poller but no reviewed, built staging image or runtime check. The model/judge gateways
+and publisher still lack complete long-running processing modes. Their Terraform example counts
+remain zero; the API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise worker/gateway
+counts or point them at the API image.
 
 ## 3. Staging acceptance runs (E2E-42, E2E-43)
 

@@ -1,7 +1,7 @@
 # Application container builds
 
 The repository builds pinned, multi-stage images for the public API, Next.js web app, the
-scheduler lease reaper, the solve supervisor, and the evaluator supervisor. All final images run as UID/GID `10001`, contain no local `.cache`,
+scheduler lease reaper, solve/evaluation supervisors, and the scorer. All final images run as UID/GID `10001`, contain no local `.cache`,
 `.local`, `.protected`, `.env`, task-pack, or test-fixture data, and are suitable for read-only
 root filesystems with `/tmp` mounted writable. API and scheduler images include `pcb-ops` and the
 migration/configuration files their guarded commands need.
@@ -21,6 +21,8 @@ docker build --platform linux/amd64 --file Dockerfile.solve-worker `
   --tag pcb-solve-worker:local .
 docker build --platform linux/amd64 --file Dockerfile.eval-worker `
   --tag pcb-eval-worker:local .
+docker build --platform linux/amd64 --file Dockerfile.scorer `
+  --tag pcb-scorer:local .
 ```
 
 `PCB_PUBLIC_API_URL` is captured by the Next build for its same-origin rewrites and read at
@@ -109,6 +111,15 @@ set `PCB_WORKER_DISPATCH_ENABLED=true`. That worker rechecks the eval-supervisor
 requires matching EC2 grading capacity, uses only the `grading` subnet/security group/template, and
 executes one version-pinned language guest at a time. Its evidence tier is `production_worker`.
 
+The scorer image installs the seven language plugins and copies only the versioned plugin allowlist,
+scoring policy/ownership documents, and language profile source. `pcb-worker score-pending` scans
+oldest-first in bounded batches, scores only completed internal evaluations with verified frozen
+inputs, and uses a per-evaluation PostgreSQL advisory lock before writing. A concurrent scorer
+rechecks the scorecard while holding that lock, so it does not create a second outcome artifact or
+scorecard. The command needs the scorer role's database and internal-artifact permissions; it has no
+model credentials, guest-launch permission, or publication capability. Terraform examples set
+`PCB_SCORING_DISPATCH_ENABLED=false` and keep the scorer service count at zero.
+
 The guest AMI must be built with the public half of the matching role-specific SSH key installed
 for the manifest's `sandbox.control_user` using `infra/sandbox/aws/guest/bootstrap-control.sh`;
 the private half belongs only in that supervisor role's Secrets Manager reference. The AMI build
@@ -125,8 +136,8 @@ guest isolation checks. Local ops and solve images built and smoke-checked on 20
 10001; their default manifests/allowlists refuse production actions. No production image build,
 worker registration, queue dispatch, guest launch, ECR push or model call has been performed. The
 AWS account, approved AMI, host-key bundle, production candidate allowlist and spend authorization
-remain unavailable. The evaluator command and image are now defined but have not been built or
-exercised against AWS. Scoring and publication still lack complete long-running processing modes,
+remain unavailable. The evaluator and scorer commands and images are now defined but have not been
+built or exercised against AWS. Publication still lacks a complete long-running processing mode,
 as do the model and judge gateways.
 
 ## Current web image rebuild (2026-10-07)

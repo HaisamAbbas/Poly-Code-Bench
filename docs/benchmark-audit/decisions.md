@@ -154,3 +154,20 @@ Each dispatched delivery, including retries, requires its own sealed recipient/p
 ### ADDENDUM-DECISION-33 — Behavioral calibration and power stay explicitly bounded
 
 Plans freeze semantic/difficulty-reviewed controls, family-disjoint splits, alpha, minimum effect, target power, bootstrap count, multiplicity, decision rule and separate training-compute cap. Fewer than two families in any split is reported as `insufficient_families`; larger samples remain `not_estimated` until a reviewed power-analysis adapter exists. Owned-training evidence without accounted compute remains unavailable and calibration pending. No owned training manifest or calibration data were available.
+
+
+### ADDENDUM-DECISION-34 - Firewall admission never infers novelty from no hits
+
+A task can be admitted only from complete preregistered finite scope plus accepted validity/rights, validated risk, required temporal review and a distinct reviewer. Failed, truncated, unsupported, unresolved or uncalibrated evidence remains review. Prohibited overlap, invalid validity and denied rights reject. AI novelty output has no admission authority.
+
+### ADDENDUM-DECISION-35 - Replacement independence is preregistered and bounded
+
+Source-family rights, author/checker groups, distinct private generator/checker configs, difficulty/exposure policy, quotas and maximum drafts/rounds/cost/wall time are fixed before task freeze. The author, checker and final reviewer are distinct. Production-worker admission evidence and independent private tests/oracle evidence are mandatory for acceptance.
+
+### ADDENDUM-DECISION-36 - Family lineage and split are durable properties
+
+Transformed variants retain their source-family cluster. Independent prospective tasks require a separate lineage and accepted template review. A source family cannot cross splits within a derived manifest or across the split manifests for one benchmark registry/version.
+
+### ADDENDUM-DECISION-37 - Derived scores never silently replace official scores
+
+Official source snapshots and membership remain immutable. A derived manifest accounts for every official item and records retained/replaced/excluded disposition, validation/oracle mapping, competency/difficulty mapping, a private sampling policy, computed family/split/competency/difficulty distributions and derived membership digest. Official and derived labels differ and automatic comparison is disabled. Production distribution and publication review remain pending.

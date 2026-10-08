@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, cast
 from uuid import UUID, uuid4
@@ -17,26 +18,49 @@ from polycodebench_core.application_errors import (
 from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
     AuditDocumentRef,
+    AuditPlanDocument,
     AuditRunState,
     BehavioralAssessmentDocument,
     BehavioralAuditPlanDocumentV2,
     BehavioralMethodRegistryDocument,
     BehavioralObservationDocument,
     BehavioralTaskValidityDocument,
+    BenchmarkSnapshotDocument,
     CanaryObservationDocument,
+    CoverageManifestDocument,
+    DerivedBenchmarkManifestDocument,
+    FirewallDecisionDocumentV2,
+    FirewallPolicyDocumentV2,
+    FirewallScopeDocument,
     ImmutableArtifactRef,
     MatchEvidenceDocument,
     MatchEvidenceDocumentV2,
     MatchEvidencePayloadV2,
     ModelContextDocument,
+    QueryManifestDocument,
+    ReplacementPlanDocumentV2,
+    ReplacementSourceMetadataDocument,
+    ReplacementValidationDocument,
+    RiskAssessmentDocumentV2,
     SealAccessEventDocument,
     SealedManifestDocumentV2,
+    TemporalAssessmentDocumentV2,
     audit_document_digest,
     parse_audit_document,
     validate_audit_transition,
     validate_sealed_manifest_transition,
 )
-from polycodebench_core.canonical import canonical_json_bytes
+from polycodebench_core.benchmark_firewall import (
+    build_firewall_decision,
+    validate_derived_family_split_consistency,
+    validate_replacement_draft_budget,
+)
+from polycodebench_core.canonical import (
+    canonical_document_digest,
+    canonical_json_bytes,
+)
+from polycodebench_core.models import AdmissionExecutionReport
+from polycodebench_core.models import TaskVersion as TaskVersionContract
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.engine import Engine
@@ -50,16 +74,22 @@ from polycodebench_persistence.models import (
     audit_event,
     audit_query,
     audit_run,
+    benchmark_import_manifest,
+    benchmark_item,
+    benchmark_snapshot,
     budget_account,
     call_delivery,
     call_intent,
     campaign,
     config_document,
+    match_candidate,
     model_revision,
+    risk_assessment,
     run,
     stage_job,
     stage_job_event,
     task_version,
+    temporal_assessment,
     usage_record,
 )
 
@@ -188,6 +218,7 @@ class PostgresBenchmarkAuditRepository:
         cls._validate_references(connection, document.payload)
         cls._validate_canary_observation(connection, document)
         cls._validate_sealed_manifest_document(connection, document)
+        cls._validate_firewall_document(connection, document)
         existing = (
             connection.execute(select(audit_document).where(audit_document.c.id == document.id))
             .mappings()
@@ -328,6 +359,578 @@ class PostgresBenchmarkAuditRepository:
 
         if isinstance(document, BehavioralAssessmentDocument):
             cls._validate_behavioral_assessment(connection, document)
+
+    @classmethod
+    def _validate_firewall_document(cls, connection: Any, document: AuditDocument) -> None:
+        if (
+            isinstance(
+                document,
+                (
+                    FirewallPolicyDocumentV2,
+                    FirewallScopeDocument,
+                    ReplacementSourceMetadataDocument,
+                    ReplacementPlanDocumentV2,
+                    ReplacementValidationDocument,
+                    DerivedBenchmarkManifestDocument,
+                ),
+            )
+            and document.supersedes_id is not None
+        ):
+            raise InvalidState("Prompt95 evidence is immutable; create a new version or draft")
+
+        if isinstance(document, ReplacementSourceMetadataDocument):
+            if (
+                document.payload.rights_state == "approved"
+                and not document.payload.rights_evidence_refs
+            ):
+                raise InvalidState("approved replacement sources require reviewed rights evidence")
+            return
+
+        if isinstance(document, FirewallPolicyDocumentV2):
+            policy_payload = document.payload
+            snapshot = cls._document_by_ref(connection, policy_payload.benchmark_ref)
+            plan = cls._document_by_ref(connection, policy_payload.audit_plan_ref)
+            if not isinstance(snapshot, BenchmarkSnapshotDocument) or not isinstance(
+                plan, AuditPlanDocument
+            ):
+                raise InvalidReference(
+                    "firewall policy requires an official snapshot and audit plan"
+                )
+            if plan.payload.benchmark_ref != policy_payload.benchmark_ref:
+                raise InvalidState("firewall policy audit plan differs from its official snapshot")
+            if not {unit.source_ref for unit in policy_payload.required_scope} <= set(
+                plan.payload.source_plan
+            ):
+                raise InvalidState("firewall policy scope exceeds its frozen source plan")
+            return
+
+        if isinstance(document, ReplacementPlanDocumentV2):
+            replacement_plan = document.payload
+            metadata = cls._document_by_ref(connection, replacement_plan.source_metadata_ref)
+            if not isinstance(metadata, ReplacementSourceMetadataDocument):
+                raise InvalidReference("replacement plan source-family metadata is missing")
+            if metadata.payload.rights_state != "approved":
+                raise InvalidState(
+                    "replacement work is blocked until source-family rights are approved"
+                )
+            approved_sources = set(metadata.payload.approved_source_ids)
+            if (
+                not {quota.source_id for quota in replacement_plan.source_quotas}
+                <= approved_sources
+            ):
+                raise InvalidState("replacement quotas exceed approved source-family metadata")
+            if not set(replacement_plan.seed_ancestry_refs) <= set(metadata.payload.source_refs):
+                raise InvalidState(
+                    "replacement seed ancestry is outside the approved source family"
+                )
+            return
+
+        if isinstance(document, FirewallScopeDocument):
+            scope_payload = document.payload
+            policy = cls._document_by_ref(connection, scope_payload.policy_ref)
+            plan = cls._document_by_ref(connection, scope_payload.audit_ref)
+            if not isinstance(policy, FirewallPolicyDocumentV2) or not isinstance(
+                plan, AuditPlanDocument
+            ):
+                raise InvalidReference("firewall scope requires its frozen policy and plan")
+            if policy.payload.audit_plan_ref != scope_payload.audit_ref:
+                raise InvalidState("firewall scope is outside its preregistered plan")
+            if scope_payload.task_ref not in plan.payload.task_refs:
+                raise InvalidReference("firewall task was not included in its frozen audit plan")
+            required = {unit.scope_key: unit for unit in policy.payload.required_scope}
+            outcomes = {item.scope_key: item for item in scope_payload.outcomes}
+            if set(outcomes) != set(required):
+                raise InvalidState("firewall outcomes must cover every frozen scope unit exactly")
+            for scope_key, outcome in outcomes.items():
+                unit = required[scope_key]
+                evidence = [cls._document_by_ref(connection, ref) for ref in outcome.evidence_refs]
+                if outcome.state == "no_match":
+                    coverage_docs = [
+                        item for item in evidence if isinstance(item, CoverageManifestDocument)
+                    ]
+                    if not coverage_docs:
+                        raise InvalidReference(
+                            "no-match outcomes require finite coverage manifests"
+                        )
+                    for coverage in coverage_docs:
+                        coverage_payload = coverage.payload
+                        if (
+                            not coverage_payload.planned_queries
+                            or set(coverage_payload.planned_queries)
+                            != set(coverage_payload.executed_queries)
+                            or coverage_payload.outages
+                            or coverage_payload.unsupported_modalities
+                            or coverage_payload.truncation
+                            or unit.source_ref not in coverage_payload.eligible_sources
+                        ):
+                            raise InvalidState(
+                                "no-match coverage is incomplete or outside the policy"
+                            )
+                        for query_ref in coverage_payload.planned_queries:
+                            query = cls._document_by_ref(connection, query_ref)
+                            if not isinstance(query, QueryManifestDocument):
+                                raise InvalidReference(
+                                    "coverage manifest query reference is invalid"
+                                )
+                            query_payload = query.payload
+                            query_row = (
+                                connection.execute(
+                                    select(audit_query.c.state, audit_query.c.audit_run_id)
+                                    .select_from(
+                                        audit_query.join(
+                                            audit_run,
+                                            audit_run.c.id == audit_query.c.audit_run_id,
+                                        )
+                                    )
+                                    .where(
+                                        audit_query.c.query_document_id == query.id,
+                                        audit_run.c.plan_document_id
+                                        == scope_payload.audit_ref.document_id,
+                                    )
+                                )
+                                .mappings()
+                                .one_or_none()
+                            )
+                            if (
+                                query_payload.audit_ref != scope_payload.audit_ref
+                                or query_payload.task_ref != scope_payload.task_ref
+                                or query_payload.connector_snapshot != unit.source_ref
+                                or unit.component_ref not in query_payload.component_refs
+                                or query_row is None
+                                or query_row["state"] != "complete"
+                            ):
+                                raise InvalidState(
+                                    "no-match evidence requires a completed query "
+                                    "for this exact scope"
+                                )
+                            unresolved_candidates = connection.execute(
+                                select(match_candidate.c.id)
+                                .where(
+                                    match_candidate.c.audit_run_id == query_row["audit_run_id"],
+                                    match_candidate.c.task_version_id
+                                    == scope_payload.task_ref.entity_id,
+                                    match_candidate.c.source_document_id
+                                    == unit.source_ref.document_id,
+                                    match_candidate.c.state.not_in(("rejected", "superseded")),
+                                )
+                                .limit(1)
+                            ).scalar_one_or_none()
+                            if unresolved_candidates is not None:
+                                raise InvalidState(
+                                    "no-match scope contains an unresolved or accepted candidate"
+                                )
+                elif outcome.state == "match":
+                    match_docs = [
+                        item for item in evidence if isinstance(item, MatchEvidenceDocumentV2)
+                    ]
+                    if not match_docs:
+                        raise InvalidReference("match outcomes require reviewed v2 match evidence")
+                    if not any(
+                        item.payload.task_ref == scope_payload.task_ref
+                        and item.payload.source_snapshot_ref == unit.source_ref
+                        and unit.component_ref in item.payload.component_refs
+                        and item.payload.relation == outcome.relation
+                        and item.payload.review_state == "accepted"
+                        for item in match_docs
+                    ):
+                        raise InvalidState(
+                            "match finding does not bind the exact task/source scope"
+                        )
+            return
+
+        if isinstance(document, ReplacementValidationDocument):
+            validation_payload = document.payload
+            plan = cls._document_by_ref(connection, validation_payload.plan_ref)
+            if not isinstance(plan, ReplacementPlanDocumentV2):
+                raise InvalidReference("replacement validation requires a preregistered v2 plan")
+            source_metadata = cls._document_by_ref(connection, plan.payload.source_metadata_ref)
+            if not isinstance(source_metadata, ReplacementSourceMetadataDocument):
+                raise InvalidReference("replacement source-family metadata is missing")
+            if (
+                validation_payload.source_family_id != source_metadata.payload.source_family_id
+                or validation_payload.source_id not in source_metadata.payload.approved_source_ids
+                or validation_payload.draft_index > plan.payload.budgets.max_drafts
+                or validation_payload.author_ref not in plan.payload.authors
+                or not set(validation_payload.checker_refs) <= set(plan.payload.checkers)
+                or validation_payload.difficulty_policy_ref != plan.payload.difficulty_policy_ref
+                or source_metadata.payload.rights_state != "approved"
+            ):
+                raise InvalidState(
+                    "replacement validation exceeds its preregistered plan or rights"
+                )
+            if validation_payload.exposure_scope_ref is not None:
+                exposure_scope = cls._document_by_ref(
+                    connection, validation_payload.exposure_scope_ref
+                )
+                if not isinstance(exposure_scope, FirewallScopeDocument):
+                    raise InvalidReference("replacement exposure evidence is not a firewall scope")
+                if exposure_scope.payload.task_ref != validation_payload.task_ref:
+                    raise InvalidState("replacement exposure scope belongs to a different task")
+                if (
+                    plan.payload.exposure_policy_ref.kind != "audit_plan"
+                    or exposure_scope.payload.audit_ref != plan.payload.exposure_policy_ref
+                ):
+                    raise InvalidState(
+                        "replacement exposure scope does not match its frozen exposure policy"
+                    )
+                exposure_policy = cls._document_by_ref(
+                    connection, exposure_scope.payload.policy_ref
+                )
+                if not isinstance(exposure_policy, FirewallPolicyDocumentV2):
+                    raise InvalidReference("replacement exposure policy is not a firewall policy")
+                complete_scope = all(
+                    outcome.state in {"no_match", "match"}
+                    for outcome in exposure_scope.payload.outcomes
+                )
+                prohibited_match = any(
+                    outcome.state == "match"
+                    and outcome.relation in exposure_policy.payload.prohibited_relations
+                    for outcome in exposure_scope.payload.outcomes
+                )
+                expected_exposure_state = (
+                    "prohibited"
+                    if prohibited_match
+                    else "within_policy"
+                    if complete_scope
+                    else "unknown"
+                )
+                if validation_payload.exposure_state != expected_exposure_state:
+                    raise InvalidState(
+                        "replacement exposure state contradicts its complete firewall scope"
+                    )
+            elif validation_payload.review_state == "accepted":
+                raise InvalidState("accepted replacement requires task-specific exposure evidence")
+            connection.execute(
+                select(audit_document.c.id).where(audit_document.c.id == plan.id).with_for_update()
+            ).scalar_one()
+            prior_validation_payloads = (
+                connection.execute(
+                    select(audit_document.c.payload).where(
+                        audit_document.c.kind == "replacement_validation",
+                        audit_document.c.supersedes_id.is_(None),
+                        audit_document.c.payload["plan_ref"]["document_id"].astext == str(plan.id),
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            prior_source_count = sum(
+                payload.get("source_id") == validation_payload.source_id
+                for payload in prior_validation_payloads
+            )
+            try:
+                validate_replacement_draft_budget(
+                    plan=plan.payload,
+                    source_id=validation_payload.source_id,
+                    existing_total=len(prior_validation_payloads),
+                    existing_for_source=prior_source_count,
+                )
+            except ValueError as error:
+                raise InvalidState(str(error)) from error
+            candidate = (
+                connection.execute(
+                    select(task_version)
+                    .where(task_version.c.id == validation_payload.task_ref.entity_id)
+                    .with_for_update(read=True)
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if candidate is None:
+                raise InvalidReference("replacement validation task version is not registered")
+            task_document = TaskVersionContract.model_validate(candidate["document"])
+            execution = AdmissionExecutionReport.model_validate(candidate["admission_evidence"])
+            plan_created = connection.execute(
+                select(audit_document.c.created_at).where(audit_document.c.id == plan.id)
+            ).scalar_one_or_none()
+            plan_preregistered_at = datetime.fromisoformat(
+                plan.payload.preregistered_at.replace("Z", "+00:00")
+            )
+            manifest = connection.execute(
+                select(artifact.c.content_digest, artifact.c.status, artifact.c.visibility).where(
+                    artifact.c.id == candidate["manifest_artifact_id"]
+                )
+            ).one_or_none()
+            from polycodebench_core.tasksets import package_snapshot_digest
+
+            if (
+                execution.execution_tier != "production_worker"
+                or not execution.passed
+                or execution.report_digest != task_document.admission_report.report_digest
+                or execution.runtime_image_digest != task_document.runtime.image_digest
+                or canonical_document_digest(task_document) != candidate["digest"]
+                or plan_created is None
+                or candidate["frozen_at"] is None
+                or plan_preregistered_at > plan_created
+                or plan_preregistered_at > candidate["frozen_at"]
+                or candidate["frozen_at"] < plan_created
+                or manifest is None
+                or manifest.status != "verified"
+                or manifest.visibility != "internal"
+                or execution.package_digest
+                != package_snapshot_digest(
+                    str(manifest.content_digest),
+                    task_document.visible_bundle.digest,
+                    task_document.hidden_bundle.digest,
+                )
+                or task_document.source.rights_record_id != source_metadata.payload.rights_record_id
+                or task_document.source.source_kind != validation_payload.source_id
+            ):
+                raise InvalidState(
+                    "replacement requires complete trusted-worker, rights and oracle "
+                    "admission evidence"
+                )
+            parents = (
+                connection.execute(
+                    select(task_version.c.cluster_id).where(
+                        task_version.c.id.in_(
+                            [item.entity_id for item in validation_payload.parent_task_refs]
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if len(parents) != len(validation_payload.parent_task_refs):
+                raise InvalidReference("replacement ancestry includes an unknown task version")
+            if plan.payload.mode == "source_family_transformation":
+                if any(
+                    cluster != source_metadata.payload.source_family_id for cluster in parents
+                ) or (
+                    candidate["cluster_id"] != source_metadata.payload.source_family_id
+                    or validation_payload.family_relation != "source_family"
+                ):
+                    raise InvalidState(
+                        "transformed tasks must retain their source-family split ancestry"
+                    )
+            elif (
+                source_metadata.payload.source_family_id not in parents
+                or candidate["cluster_id"] in parents
+                or validation_payload.family_relation != "independent_prospective"
+            ):
+                raise InvalidState(
+                    "prospective tasks require a separately reviewed independent family"
+                )
+            return
+
+        if isinstance(document, FirewallDecisionDocumentV2):
+            decision = document.payload
+            policy = cls._document_by_ref(connection, decision.policy_ref)
+            scope = cls._document_by_ref(connection, decision.scope_ref)
+            risk = cls._document_by_ref(connection, decision.risk_assessment_ref)
+            validation = cls._document_by_ref(connection, decision.validity_ref)
+            temporal = None
+            if decision.temporal_ref is not None:
+                temporal = cls._document_by_ref(connection, decision.temporal_ref)
+            if (
+                not isinstance(policy, FirewallPolicyDocumentV2)
+                or not isinstance(scope, FirewallScopeDocument)
+                or not isinstance(risk, RiskAssessmentDocumentV2)
+                or not isinstance(validation, ReplacementValidationDocument)
+                or (temporal is not None and not isinstance(temporal, TemporalAssessmentDocumentV2))
+            ):
+                raise InvalidReference("firewall decision references incompatible evidence")
+            risk_row = connection.execute(
+                select(risk_assessment.c.task_version_id, risk_assessment.c.state).where(
+                    risk_assessment.c.document_id == risk.id
+                )
+            ).one_or_none()
+            if (
+                risk_row is None
+                or risk_row.task_version_id != decision.task_ref.entity_id
+                or risk_row.state != risk.payload.state
+            ):
+                raise InvalidReference("firewall risk assessment is not persisted for this task")
+            if temporal is not None:
+                temporal_task = connection.execute(
+                    select(temporal_assessment.c.task_version_id).where(
+                        temporal_assessment.c.document_id == temporal.id
+                    )
+                ).scalar_one_or_none()
+                if temporal_task != decision.task_ref.entity_id:
+                    raise InvalidReference(
+                        "firewall temporal assessment is not persisted for this task"
+                    )
+            expected = build_firewall_decision(
+                policy=policy,
+                scope=scope,
+                risk=risk,
+                validation=validation,
+                temporal=temporal,
+                reviewer=decision.reviewer,
+            )
+            if document.supersedes_id is None:
+                if decision.resolution_reason is not None or decision != expected:
+                    raise InvalidState(
+                        "root firewall decisions must equal the frozen evidence result"
+                    )
+            else:
+                previous_row = (
+                    connection.execute(
+                        select(audit_document)
+                        .where(audit_document.c.id == document.supersedes_id)
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if previous_row is None:
+                    raise InvalidReference("firewall decision predecessor is missing")
+                previous = cls._document_from_row(previous_row)
+                if not isinstance(previous, FirewallDecisionDocumentV2):
+                    raise InvalidState("firewall v2 decisions can only succeed v2 decisions")
+                prior = previous.payload
+                old_refs = {
+                    prior.scope_ref,
+                    prior.risk_assessment_ref,
+                    prior.validity_ref,
+                    *(() if prior.temporal_ref is None else (prior.temporal_ref,)),
+                    *prior.exposure_refs,
+                }
+                new_refs = {
+                    decision.scope_ref,
+                    decision.risk_assessment_ref,
+                    decision.validity_ref,
+                    *(() if decision.temporal_ref is None else (decision.temporal_ref,)),
+                    *decision.exposure_refs,
+                }
+                if (
+                    prior.result != "review"
+                    or prior.task_ref != decision.task_ref
+                    or prior.policy_ref != decision.policy_ref
+                    or prior.reviewer.entity_id == decision.reviewer.entity_id
+                    or not old_refs <= new_refs
+                    or not old_refs < new_refs
+                    or decision.resolution_reason is None
+                    or decision.model_copy(update={"resolution_reason": None}) != expected
+                ):
+                    raise InvalidState(
+                        "firewall successors need independent review and new "
+                        "non-regressing evidence"
+                    )
+            return
+
+        if isinstance(document, DerivedBenchmarkManifestDocument):
+            manifest_payload = document.payload
+            official = cls._document_by_ref(connection, manifest_payload.official_snapshot_ref)
+            if not isinstance(official, BenchmarkSnapshotDocument):
+                raise InvalidReference("derived benchmark must bind an official snapshot")
+            snapshot_row = (
+                connection.execute(
+                    select(benchmark_snapshot).where(
+                        benchmark_snapshot.c.document_id == official.id
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if (
+                snapshot_row is None
+                or snapshot_row["membership_digest"] != manifest_payload.official_membership_digest
+                or snapshot_row["split"] != manifest_payload.entries[0].split
+                or any(item.split != snapshot_row["split"] for item in manifest_payload.entries)
+            ):
+                raise InvalidState("derived manifest does not preserve the official split/version")
+            related_snapshot_document_ids = (
+                connection.execute(
+                    select(benchmark_snapshot.c.document_id).where(
+                        benchmark_snapshot.c.registry_id == snapshot_row["registry_id"],
+                        benchmark_snapshot.c.version == snapshot_row["version"],
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            related_rows = (
+                connection.execute(
+                    select(audit_document).where(
+                        audit_document.c.kind == "derived_benchmark_manifest",
+                        audit_document.c.payload["official_snapshot_ref"]["document_id"].astext.in_(
+                            [str(item) for item in related_snapshot_document_ids]
+                        ),
+                    )
+                )
+                .mappings()
+                .all()
+            )
+            related_manifests = [
+                existing_document.payload
+                for row in related_rows
+                if isinstance(
+                    existing_document := cls._document_from_row(row),
+                    DerivedBenchmarkManifestDocument,
+                )
+            ]
+            try:
+                validate_derived_family_split_consistency(
+                    candidate=manifest_payload,
+                    related_manifests=related_manifests,
+                )
+            except ValueError as error:
+                raise InvalidState(str(error)) from error
+            official_ids = {item.entity_id for item in official.payload.membership}
+            entry_ids = {item.original_item_ref.entity_id for item in manifest_payload.entries}
+            if official_ids != entry_ids:
+                raise InvalidState(
+                    "derived manifest must account for every official item exactly once"
+                )
+            import_row = connection.execute(
+                select(benchmark_import_manifest.c.result_state).where(
+                    benchmark_import_manifest.c.snapshot_id == snapshot_row["id"]
+                )
+            ).scalar_one_or_none()
+            item_rows = (
+                connection.execute(
+                    select(benchmark_item.c.source_digest, benchmark_item.c.import_state).where(
+                        benchmark_item.c.snapshot_id == snapshot_row["id"]
+                    )
+                )
+                .mappings()
+                .all()
+            )
+            if (
+                import_row != "complete"
+                or not item_rows
+                or any(row["import_state"] != "imported" for row in item_rows)
+            ):
+                raise InvalidState(
+                    "derived manifests require a complete rights-approved official import"
+                )
+            official_digests = sorted(
+                item.digest for item in official.payload.membership if item.digest is not None
+            )
+            imported_digests = sorted(row["source_digest"] for row in item_rows)
+            if official_digests != imported_digests:
+                raise InvalidState(
+                    "official membership evidence differs from imported source bytes"
+                )
+            for entry in manifest_payload.entries:
+                if entry.disposition != "replaced":
+                    continue
+                if entry.validation_ref is None:
+                    raise InvalidReference("derived replacements require their independent review")
+                validation = cls._document_by_ref(connection, entry.validation_ref)
+                if not isinstance(validation, ReplacementValidationDocument):
+                    raise InvalidReference("derived replacements require their independent review")
+                if (
+                    validation.payload.task_ref != entry.replacement_task_ref
+                    or validation.payload.review_state != "accepted"
+                    or validation.payload.oracle_state != "independently_verified"
+                    or validation.payload.source_family_id != entry.source_family_id
+                ):
+                    raise InvalidState(
+                        "derived replacement lacks accepted validity and oracle evidence"
+                    )
+                derived_cluster = connection.execute(
+                    select(task_version.c.cluster_id).where(
+                        task_version.c.id == entry.replacement_task_ref.entity_id
+                    )
+                ).scalar_one_or_none()
+                if derived_cluster != entry.derived_source_family_id:
+                    raise InvalidState(
+                        "derived source-family mapping differs from the admitted task lineage"
+                    )
+            return
 
     @classmethod
     def _validate_behavioral_observation(

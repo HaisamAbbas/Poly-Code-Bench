@@ -1085,6 +1085,426 @@
       },
       "expected_canonical_utf8": "{\"kind\":\"behavioral_audit_plan\",\"payload\":{\"alpha\":\"0.050000\",\"audit_run_ref\":{\"digest\":null,\"entity_id\":\"00000029-2222-4222-8222-222222222222\",\"entity_kind\":\"audit_run\"},\"bootstrap_replicates\":2000,\"budget\":{\"max_cost_micro_usd\":100000,\"max_input_tokens\":10000,\"max_model_calls\":12,\"max_output_tokens\":1000,\"max_samples\":6,\"max_training_cost_micro_usd\":0},\"decision_rule\":\"adjusted_p_below_alpha_and_effect_at_least_minimum\",\"decoding_artifact_ref\":{\"artifact_id\":\"0000002e-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"exposed_family_refs\":[],\"exposure_policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000002f-1111-4111-8111-111111111111\",\"kind\":\"audit_plan\"},\"grading_artifact_ref\":{\"artifact_id\":\"00000030-3333-4333-8333-333333333333\",\"digest\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"ground_truth_state\":\"unavailable\",\"interpretation_limits\":[\"self_report_is_not_evidence\",\"performance_gap_is_not_training_inclusion\",\"no_universal_probability\"],\"method_id\":\"constat\",\"method_registry_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000028-1111-4111-8111-111111111111\",\"kind\":\"behavioral_method_registry\"},\"minimum_effect\":\"0.100000\",\"model_slots\":[{\"capabilities\":[],\"model_context_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000002a-1111-4111-8111-111111111111\",\"kind\":\"model_context\"},\"recipient\":\"model.target\",\"role\":\"target\",\"stable_revision_verified\":false},{\"capabilities\":[],\"model_context_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000002b-1111-4111-8111-111111111111\",\"kind\":\"model_context\"},\"recipient\":\"model.reference\",\"role\":\"reference\",\"stable_revision_verified\":false}],\"multiplicity\":\"holm\",\"planned_hypotheses\":1,\"preregistered_at\":\"2026-10-08T12:00:00Z\",\"prompt_artifact_ref\":{\"artifact_id\":\"0000002c-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"text/plain\",\"visibility\":\"private\"},\"sample_pairs\":[{\"control_task_ref\":{\"digest\":null,\"entity_id\":\"00000069-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"family_ref\":{\"digest\":null,\"entity_id\":\"0000006a-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"00000068-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"pair_id\":\"00000068-4444-4444-8444-444444444444\",\"split\":\"calibration\",\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000006b-1111-4111-8111-111111111111\",\"kind\":\"behavioral_task_validity\"}},{\"control_task_ref\":{\"digest\":null,\"entity_id\":\"0000006d-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"family_ref\":{\"digest\":null,\"entity_id\":\"0000006e-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"0000006c-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"pair_id\":\"0000006c-4444-4444-8444-444444444444\",\"split\":\"validation\",\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000006f-1111-4111-8111-111111111111\",\"kind\":\"behavioral_task_validity\"}},{\"control_task_ref\":{\"digest\":null,\"entity_id\":\"00000071-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"family_ref\":{\"digest\":null,\"entity_id\":\"00000072-2222-4222-8222-222222222222\",\"entity_kind\":\"task_family\"},\"original_task_ref\":{\"digest\":null,\"entity_id\":\"00000070-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"pair_id\":\"00000070-4444-4444-8444-444444444444\",\"split\":\"held_out_test\",\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000073-1111-4111-8111-111111111111\",\"kind\":\"behavioral_task_validity\"}}],\"seed\":\"7\",\"statistical_test\":\"constat_reference_corrected_performance\",\"target_power\":\"0.800000\",\"tool_policy_artifact_ref\":{\"artifact_id\":\"0000002d-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"training_manifest_ref\":null,\"unexposed_family_refs\":[]},\"schema_version\":2}",
       "expected_digest": "sha256:decf3e0b2b5e3569be9754cac3fbb2ac4c070e4dd25efbdf5dc79c7338129f57"
+    },
+    {
+      "name": "firewall_policy-v2",
+      "kind": "firewall_policy",
+      "schema_version": 2,
+      "payload": {
+        "benchmark_ref": {
+          "document_id": "00000080-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "benchmark_snapshot"
+        },
+        "audit_plan_ref": {
+          "document_id": "00000081-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "policy_version": "firewall-v1",
+        "required_scope": [
+          {
+            "scope_key": "source-a:component-a",
+            "source_ref": {
+              "document_id": "00000082-1111-4111-8111-111111111111",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "kind": "corpus_snapshot"
+            },
+            "component_ref": {
+              "entity_id": "00000083-2222-4222-8222-222222222222",
+              "entity_kind": "audit_component",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "modality": "code"
+          }
+        ],
+        "prohibited_relations": [
+          "exact_component",
+          "near_exact_component",
+          "semantic_duplicate"
+        ],
+        "require_temporal_review": true,
+        "high_risk_action": "review"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"firewall_policy\",\"payload\":{\"audit_plan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000081-1111-4111-8111-111111111111\",\"kind\":\"audit_plan\"},\"benchmark_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000080-1111-4111-8111-111111111111\",\"kind\":\"benchmark_snapshot\"},\"high_risk_action\":\"review\",\"policy_version\":\"firewall-v1\",\"prohibited_relations\":[\"exact_component\",\"near_exact_component\",\"semantic_duplicate\"],\"require_temporal_review\":true,\"required_scope\":[{\"component_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"entity_id\":\"00000083-2222-4222-8222-222222222222\",\"entity_kind\":\"audit_component\"},\"modality\":\"code\",\"scope_key\":\"source-a:component-a\",\"source_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000082-1111-4111-8111-111111111111\",\"kind\":\"corpus_snapshot\"}}]},\"schema_version\":2}",
+      "expected_digest": "sha256:70a40375952f7cca97b236da8e2ccc08885cc77ec9fb91dbd4b6c4a4952b21e1"
+    },
+    {
+      "name": "firewall_scope-v1",
+      "kind": "firewall_scope",
+      "schema_version": 1,
+      "payload": {
+        "task_ref": {
+          "entity_id": "00000084-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "policy_ref": {
+          "document_id": "00000085-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "firewall_policy"
+        },
+        "audit_ref": {
+          "document_id": "00000081-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "outcomes": [
+          {
+            "scope_key": "source-a:component-a",
+            "state": "no_match",
+            "relation": "no_substantive_match",
+            "evidence_refs": [
+              {
+                "document_id": "00000089-1111-4111-8111-111111111111",
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "kind": "coverage_manifest"
+              }
+            ]
+          }
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"firewall_scope\",\"payload\":{\"audit_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000081-1111-4111-8111-111111111111\",\"kind\":\"audit_plan\"},\"outcomes\":[{\"evidence_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000089-1111-4111-8111-111111111111\",\"kind\":\"coverage_manifest\"}],\"relation\":\"no_substantive_match\",\"scope_key\":\"source-a:component-a\",\"state\":\"no_match\"}],\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000085-1111-4111-8111-111111111111\",\"kind\":\"firewall_policy\"},\"task_ref\":{\"digest\":null,\"entity_id\":\"00000084-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:687f62e1805b4672d4f1162cc72ca2fc597cfc9923052619f99f4f6f045c14b1"
+    },
+    {
+      "name": "firewall_decision-v2",
+      "kind": "firewall_decision",
+      "schema_version": 2,
+      "payload": {
+        "task_ref": {
+          "entity_id": "00000084-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "policy_ref": {
+          "document_id": "00000085-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "firewall_policy"
+        },
+        "scope_ref": {
+          "document_id": "00000086-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "firewall_scope"
+        },
+        "risk_assessment_ref": {
+          "document_id": "00000087-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "risk_assessment"
+        },
+        "validity_ref": {
+          "document_id": "00000088-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "replacement_validation"
+        },
+        "temporal_ref": null,
+        "exposure_refs": [],
+        "result": "review",
+        "reasons": [
+          "scope_incomplete"
+        ],
+        "reviewer": {
+          "entity_id": "0000008a-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "resolution_reason": null
+      },
+      "expected_canonical_utf8": "{\"kind\":\"firewall_decision\",\"payload\":{\"exposure_refs\":[],\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000085-1111-4111-8111-111111111111\",\"kind\":\"firewall_policy\"},\"reasons\":[\"scope_incomplete\"],\"resolution_reason\":null,\"result\":\"review\",\"reviewer\":{\"digest\":null,\"entity_id\":\"0000008a-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"risk_assessment_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000087-1111-4111-8111-111111111111\",\"kind\":\"risk_assessment\"},\"scope_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000086-1111-4111-8111-111111111111\",\"kind\":\"firewall_scope\"},\"task_ref\":{\"digest\":null,\"entity_id\":\"00000084-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"temporal_ref\":null,\"validity_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000088-1111-4111-8111-111111111111\",\"kind\":\"replacement_validation\"}},\"schema_version\":2}",
+      "expected_digest": "sha256:a0901c09a2b913afacc78cb6af3a984093c6b567a237afd46a9ed530dca7175d"
+    },
+    {
+      "name": "replacement_source_metadata-v1",
+      "kind": "replacement_source_metadata",
+      "schema_version": 1,
+      "payload": {
+        "source_family_id": "family-a",
+        "rights_record_id": "rights-record-a",
+        "approved_source_ids": [
+          "source-a"
+        ],
+        "source_refs": [
+          {
+            "document_id": "0000008b-1111-4111-8111-111111111111",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "corpus_snapshot"
+          }
+        ],
+        "rights_state": "approved",
+        "rights_evidence_refs": [
+          {
+            "document_id": "0000008c-1111-4111-8111-111111111111",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "corpus_snapshot"
+          }
+        ],
+        "curator_ref": {
+          "entity_id": "0000008d-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "reviewer_ref": {
+          "entity_id": "0000008e-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "reviewed_at": "2026-10-08T12:00:00Z"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"replacement_source_metadata\",\"payload\":{\"approved_source_ids\":[\"source-a\"],\"curator_ref\":{\"digest\":null,\"entity_id\":\"0000008d-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"reviewed_at\":\"2026-10-08T12:00:00Z\",\"reviewer_ref\":{\"digest\":null,\"entity_id\":\"0000008e-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"rights_evidence_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000008c-1111-4111-8111-111111111111\",\"kind\":\"corpus_snapshot\"}],\"rights_record_id\":\"rights-record-a\",\"rights_state\":\"approved\",\"source_family_id\":\"family-a\",\"source_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000008b-1111-4111-8111-111111111111\",\"kind\":\"corpus_snapshot\"}]},\"schema_version\":1}",
+      "expected_digest": "sha256:0fcfeb43f5f9cbfe4c6bd29e77c48f311463ef804c65864a81a572d719cb4a81"
+    },
+    {
+      "name": "replacement_plan-v2",
+      "kind": "replacement_plan",
+      "schema_version": 2,
+      "payload": {
+        "source_metadata_ref": {
+          "document_id": "0000008f-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "replacement_source_metadata"
+        },
+        "mode": "source_family_transformation",
+        "seed_ancestry_refs": [
+          {
+            "document_id": "00000090-1111-4111-8111-111111111111",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "task_fingerprint"
+          }
+        ],
+        "competency_brief": {
+          "artifact_id": "00000091-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "authors": [
+          {
+            "entity_id": "00000092-2222-4222-8222-222222222222",
+            "entity_kind": "reviewer",
+            "digest": null
+          }
+        ],
+        "checkers": [
+          {
+            "entity_id": "00000093-2222-4222-8222-222222222222",
+            "entity_kind": "reviewer",
+            "digest": null
+          }
+        ],
+        "generator_config_ref": {
+          "artifact_id": "00000094-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "checker_config_ref": {
+          "artifact_id": "00000095-3333-4333-8333-333333333333",
+          "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "difficulty_policy_ref": {
+          "artifact_id": "00000096-3333-4333-8333-333333333333",
+          "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "exposure_policy_ref": {
+          "document_id": "00000097-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "source_quotas": [
+          {
+            "source_id": "source-a",
+            "maximum_drafts": 1
+          }
+        ],
+        "budgets": {
+          "max_drafts": 1,
+          "max_rounds": 1,
+          "max_cost_micro_usd": 10,
+          "max_wall_seconds": 300
+        },
+        "preregistered_at": "2026-10-08T12:00:00Z"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"replacement_plan\",\"payload\":{\"authors\":[{\"digest\":null,\"entity_id\":\"00000092-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"}],\"budgets\":{\"max_cost_micro_usd\":10,\"max_drafts\":1,\"max_rounds\":1,\"max_wall_seconds\":300},\"checker_config_ref\":{\"artifact_id\":\"00000095-3333-4333-8333-333333333333\",\"digest\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"checkers\":[{\"digest\":null,\"entity_id\":\"00000093-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"}],\"competency_brief\":{\"artifact_id\":\"00000091-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"difficulty_policy_ref\":{\"artifact_id\":\"00000096-3333-4333-8333-333333333333\",\"digest\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"exposure_policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000097-1111-4111-8111-111111111111\",\"kind\":\"audit_plan\"},\"generator_config_ref\":{\"artifact_id\":\"00000094-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"mode\":\"source_family_transformation\",\"preregistered_at\":\"2026-10-08T12:00:00Z\",\"seed_ancestry_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000090-1111-4111-8111-111111111111\",\"kind\":\"task_fingerprint\"}],\"source_metadata_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"0000008f-1111-4111-8111-111111111111\",\"kind\":\"replacement_source_metadata\"},\"source_quotas\":[{\"maximum_drafts\":1,\"source_id\":\"source-a\"}]},\"schema_version\":2}",
+      "expected_digest": "sha256:f4dbcb3c687607bc408571ae032b8dda009e458960886841381d2b707605c24f"
+    },
+    {
+      "name": "replacement_validation-v1",
+      "kind": "replacement_validation",
+      "schema_version": 1,
+      "payload": {
+        "plan_ref": {
+          "document_id": "00000098-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "replacement_plan"
+        },
+        "task_ref": {
+          "entity_id": "00000099-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "source_family_id": "family-a",
+        "draft_index": 1,
+        "family_relation": "source_family",
+        "parent_task_refs": [
+          {
+            "entity_id": "0000009a-2222-4222-8222-222222222222",
+            "entity_kind": "task_version",
+            "digest": null
+          }
+        ],
+        "author_ref": {
+          "entity_id": "0000009b-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "checker_refs": [
+          {
+            "entity_id": "0000009c-2222-4222-8222-222222222222",
+            "entity_kind": "reviewer",
+            "digest": null
+          }
+        ],
+        "reviewer_ref": {
+          "entity_id": "0000009d-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        },
+        "correctness_state": "pending",
+        "rights_state": "approved",
+        "fidelity_state": "pending",
+        "oracle_state": "pending",
+        "difficulty_state": "pending",
+        "lineage_state": "verified_source_family",
+        "template_review_state": "not_applicable",
+        "exposure_state": "within_policy",
+        "test_artifact_ref": {
+          "artifact_id": "0000009e-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "oracle_artifact_ref": {
+          "artifact_id": "0000009f-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "difficulty_policy_ref": {
+          "artifact_id": "000000a0-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "evidence_refs": [
+          {
+            "document_id": "000000a1-1111-4111-8111-111111111111",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "corpus_snapshot"
+          }
+        ],
+        "review_state": "pending",
+        "reason_codes": [
+          "evidence_pending"
+        ],
+        "source_id": "source-a",
+        "exposure_scope_ref": {
+          "document_id": "000000a4-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "firewall_scope"
+        }
+      },
+      "expected_canonical_utf8": "{\"kind\":\"replacement_validation\",\"payload\":{\"author_ref\":{\"digest\":null,\"entity_id\":\"0000009b-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"checker_refs\":[{\"digest\":null,\"entity_id\":\"0000009c-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"}],\"correctness_state\":\"pending\",\"difficulty_policy_ref\":{\"artifact_id\":\"000000a0-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"difficulty_state\":\"pending\",\"draft_index\":1,\"evidence_refs\":[{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"000000a1-1111-4111-8111-111111111111\",\"kind\":\"corpus_snapshot\"}],\"exposure_scope_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"000000a4-1111-4111-8111-111111111111\",\"kind\":\"firewall_scope\"},\"exposure_state\":\"within_policy\",\"family_relation\":\"source_family\",\"fidelity_state\":\"pending\",\"lineage_state\":\"verified_source_family\",\"oracle_artifact_ref\":{\"artifact_id\":\"0000009f-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"oracle_state\":\"pending\",\"parent_task_refs\":[{\"digest\":null,\"entity_id\":\"0000009a-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"}],\"plan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"00000098-1111-4111-8111-111111111111\",\"kind\":\"replacement_plan\"},\"reason_codes\":[\"evidence_pending\"],\"review_state\":\"pending\",\"reviewer_ref\":{\"digest\":null,\"entity_id\":\"0000009d-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"rights_state\":\"approved\",\"source_family_id\":\"family-a\",\"source_id\":\"source-a\",\"task_ref\":{\"digest\":null,\"entity_id\":\"00000099-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"template_review_state\":\"not_applicable\",\"test_artifact_ref\":{\"artifact_id\":\"0000009e-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:31af368b259253ad48c354033b30fb251742264baac1f313bcc142fae9843de0"
+    },
+    {
+      "name": "derived_benchmark_manifest-v1",
+      "kind": "derived_benchmark_manifest",
+      "schema_version": 1,
+      "payload": {
+        "official_snapshot_ref": {
+          "document_id": "000000a2-1111-4111-8111-111111111111",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "benchmark_snapshot"
+        },
+        "official_membership_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "derived_version": "derived-v1",
+        "entries": [
+          {
+            "original_item_ref": {
+              "entity_id": "000000a3-2222-4222-8222-222222222222",
+              "entity_kind": "benchmark_item",
+              "digest": null
+            },
+            "original_task_ref": null,
+            "derived_item_ref": {
+              "entity_id": "000000a3-2222-4222-8222-222222222222",
+              "entity_kind": "derived_benchmark_item",
+              "digest": null
+            },
+            "replacement_task_ref": null,
+            "disposition": "retained",
+            "source_family_id": "family-a",
+            "split": "test",
+            "original_difficulty": "medium",
+            "derived_difficulty": "medium",
+            "validation_ref": null,
+            "oracle_mapping_ref": null,
+            "reason": null,
+            "derived_source_family_id": "family-a",
+            "original_competency": "algorithms",
+            "derived_competency": "algorithms"
+          }
+        ],
+        "derived_membership_digest": "sha256:82361c6d8bd10434803241f448f7e35858f2ae66378b29a00da856baa7a8c128",
+        "change_summary_ref": {
+          "artifact_id": "000000a4-3333-4333-8333-333333333333",
+          "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "official_metric_label": "official-score",
+        "derived_metric_label": "derived-score",
+        "comparability": "separate_labels_no_automatic_comparison",
+        "created_at": "2026-10-08T12:00:00Z",
+        "sampling_policy_ref": {
+          "artifact_id": "000000a5-3333-4333-8333-333333333333",
+          "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "distribution": [
+          {
+            "dimension": "source_family",
+            "label": "family-a",
+            "official_items": 1,
+            "derived_items": 1
+          },
+          {
+            "dimension": "split",
+            "label": "test",
+            "official_items": 1,
+            "derived_items": 1
+          },
+          {
+            "dimension": "competency",
+            "label": "algorithms",
+            "official_items": 1,
+            "derived_items": 1
+          },
+          {
+            "dimension": "difficulty",
+            "label": "medium",
+            "official_items": 1,
+            "derived_items": 1
+          }
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"derived_benchmark_manifest\",\"payload\":{\"change_summary_ref\":{\"artifact_id\":\"000000a4-3333-4333-8333-333333333333\",\"digest\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"comparability\":\"separate_labels_no_automatic_comparison\",\"created_at\":\"2026-10-08T12:00:00Z\",\"derived_membership_digest\":\"sha256:82361c6d8bd10434803241f448f7e35858f2ae66378b29a00da856baa7a8c128\",\"derived_metric_label\":\"derived-score\",\"derived_version\":\"derived-v1\",\"distribution\":[{\"derived_items\":1,\"dimension\":\"source_family\",\"label\":\"family-a\",\"official_items\":1},{\"derived_items\":1,\"dimension\":\"split\",\"label\":\"test\",\"official_items\":1},{\"derived_items\":1,\"dimension\":\"competency\",\"label\":\"algorithms\",\"official_items\":1},{\"derived_items\":1,\"dimension\":\"difficulty\",\"label\":\"medium\",\"official_items\":1}],\"entries\":[{\"derived_competency\":\"algorithms\",\"derived_difficulty\":\"medium\",\"derived_item_ref\":{\"digest\":null,\"entity_id\":\"000000a3-2222-4222-8222-222222222222\",\"entity_kind\":\"derived_benchmark_item\"},\"derived_source_family_id\":\"family-a\",\"disposition\":\"retained\",\"oracle_mapping_ref\":null,\"original_competency\":\"algorithms\",\"original_difficulty\":\"medium\",\"original_item_ref\":{\"digest\":null,\"entity_id\":\"000000a3-2222-4222-8222-222222222222\",\"entity_kind\":\"benchmark_item\"},\"original_task_ref\":null,\"reason\":null,\"replacement_task_ref\":null,\"source_family_id\":\"family-a\",\"split\":\"test\",\"validation_ref\":null}],\"official_membership_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"official_metric_label\":\"official-score\",\"official_snapshot_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"000000a2-1111-4111-8111-111111111111\",\"kind\":\"benchmark_snapshot\"},\"sampling_policy_ref\":{\"artifact_id\":\"000000a5-3333-4333-8333-333333333333\",\"digest\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"media_type\":\"application/json\",\"visibility\":\"private\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:fe4be3a1c279b7974a2d8bdf249c564aa2b3d2f84fd89ea1a9dfaf46dd935513"
     }
   ]
 }

@@ -136,6 +136,13 @@ def test_schema_keeps_direct_audit_scope_exclusive_and_diagnostic_attempt_metada
             "behavioral_assessment",
         )
     )
+    p95_successors = next(
+        constraint
+        for constraint in audit_document.constraints
+        if isinstance(constraint, CheckConstraint)
+        and getattr(constraint, "name", "").endswith("p95_successors")
+    )
+    assert "supersedes_id IS NULL" in str(p95_successors.sqltext)
     behavioral_unit_index = next(
         index
         for index in audit_document.indexes
@@ -152,6 +159,26 @@ def test_schema_keeps_direct_audit_scope_exclusive_and_diagnostic_attempt_metada
     )
     assert behavioral_successor_index.unique is True
     assert "supersedes_id" in str(behavioral_successor_index.expressions[0])
+    assert all(
+        kind in str(audit_document_kind.sqltext)
+        for kind in (
+            "firewall_policy",
+            "firewall_scope",
+            "replacement_source_metadata",
+            "replacement_validation",
+            "derived_benchmark_manifest",
+        )
+    )
+    for name in (
+        "uq_firewall_policy_benchmark_version",
+        "uq_firewall_scope_policy_task",
+        "uq_firewall_decision_policy_task_head",
+        "uq_firewall_decision_single_successor",
+        "uq_replacement_validation_plan_task_draft",
+        "uq_derived_benchmark_version",
+    ):
+        index = next(item for item in audit_document.indexes if item.name == name)
+        assert index.unique is True
     sealed_head_index = next(
         index
         for index in audit_document.indexes

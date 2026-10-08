@@ -160,5 +160,23 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `$env:PCB_MIGRATION_DATABASE_URL='postgresql+psycopg://offline:offline@localhost/polycodebench'; .\.venv\Scripts\python.exe -c "import platform; platform.machine=lambda: 'AMD64'; from alembic.config import main; main()" -c packages/persistence/alembic.ini upgrade 93b11c2d7e4f:head --sql | Out-Null` | Passed: offline PostgreSQL DDL rendered | Adds behavioral document kinds, a unique root planned observation-unit index and a linear immutable-successor index; no connection or execution occurred. |
 | `$env:PCB_MIGRATION_DATABASE_URL='postgresql+psycopg://offline:offline@localhost/polycodebench'; .\.venv\Scripts\python.exe -c "import platform; platform.machine=lambda: 'AMD64'; from alembic.config import main; main()" -c packages/persistence/alembic.ini downgrade a194d6c3e781:93b11c2d7e4f --sql | Out-Null` | Passed: guarded offline downgrade rendered | Refuses removal while behavioral documents or plan-v2 rows exist. No database execution occurred. |
 | `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `a194d6c3e781` is the only head | Migration graph remains linear. |
+| `corepack pnpm --filter @polycodebench/contracts test:contracts` | Passed: TypeScript canonical v1/v2 envelopes and 256 property cases | Shared canonical vectors remain cross-runtime consistent. |
 | `uv lock --check --offline` | Passed: 138 packages resolved | No new dependency was required. |
 | Approved method/model/source/training/database availability | Blocked | No executable pinned ConStat adapter, approved stable model contexts, exposure writer/KMS, audit database, accepted live control review or authorized controlled-training evidence is configured; no model request was made. |
+
+
+## Prompt95 firewall admission and replacements
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run python -c "import platform,sys; platform.machine=lambda: 'AMD64'; import pytest; sys.exit(pytest.main(['-q','tests/test_benchmark_firewall.py','tests/test_benchmark_audit_documents.py','tests/test_benchmark_audit_controls.py']))"` | Passed: 34 passed | Pure decision and strict contract/persistence-metadata tests use synthetic data. No database/source/model access. |
+| Ruff check on Prompt95 implementation, migration and tests | Passed: all checks passed | Changed Python implementation and tests. |
+| Ruff format check on Prompt95 implementation, migration and tests | Passed: 9 files already formatted | Changed Python implementation and tests. |
+| `uv run mypy --strict` on Prompt95 contracts, service, persistence and tests | Passed: no issues in 8 source files | Strict static typing. |
+| `corepack pnpm --filter @polycodebench/contracts test:contracts` | Passed: TypeScript canonical v1/v2 envelopes and 256 property cases | Shared canonical vectors remain cross-runtime consistent. |
+| Combined Prompt85-95 audit regression | Passed: 173 passed | Local synthetic fixtures only; no database/source/model calls. |
+| `git diff --check` | Passed | No whitespace errors. |
+| `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `d4f7b2a196c3` is the only head | Migration graph remains linear. |
+| Offline Alembic upgrade `a194d6c3e781:head` and guarded downgrade `d4f7b2a196c3:a194d6c3e781` with placeholder PostgreSQL URL | Passed: SQL rendered | No live connection or database execution. |
+| `uv lock --check --offline` | Passed: 138 packages resolved | No new dependency was required. |
+| Production worker/source/reviewer/PostgreSQL availability | Blocked | No trusted production worker report, rights-authorized corpus, human role verifier, generation runner/cost ledger or integration DB is configured. No external or database operation was attempted. |

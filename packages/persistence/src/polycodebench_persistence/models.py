@@ -101,7 +101,9 @@ audit_document = Table(
         "'temporal_assessment','sealed_manifest','canary_policy','seal_access_event',"
         "'canary_observation','behavioral_audit_plan','behavioral_method_registry',"
         "'behavioral_task_validity','behavioral_observation','behavioral_assessment',"
-        "'firewall_decision','replacement_plan','monitor_policy','benchmark_health',"
+        "'firewall_policy','firewall_scope','firewall_decision','replacement_source_metadata',"
+        "'replacement_plan','replacement_validation','derived_benchmark_manifest',"
+        "'monitor_policy','benchmark_health',"
         "'audit_attestation')",
         name="kind",
     ),
@@ -114,6 +116,14 @@ audit_document = Table(
     ),
     CheckConstraint("document_row_version >= 0", name="document_row_version_nonnegative"),
     CheckConstraint("supersedes_id IS NULL OR supersedes_id <> id", name="not_self_successor"),
+    CheckConstraint(
+        "kind NOT IN ('firewall_policy','firewall_scope','replacement_source_metadata',"
+        "'replacement_plan','replacement_validation','derived_benchmark_manifest',"
+        "'firewall_decision') "
+        "OR (kind IN ('firewall_decision','replacement_plan') AND schema_version = 1) "
+        "OR (kind = 'firewall_decision' AND schema_version = 2) OR supersedes_id IS NULL",
+        name="p95_successors",
+    ),
     Index("ix_audit_document_kind_created", "kind", "created_at"),
     Index("ix_audit_document_supersedes", "supersedes_id"),
     Index(
@@ -137,6 +147,52 @@ audit_document = Table(
         "supersedes_id",
         unique=True,
         postgresql_where=text("kind = 'sealed_manifest' AND supersedes_id IS NOT NULL"),
+    ),
+    Index(
+        "uq_firewall_policy_benchmark_version",
+        text("(payload->'benchmark_ref'->>'document_id')"),
+        text("(payload->>'policy_version')"),
+        unique=True,
+        postgresql_where=text("kind = 'firewall_policy' AND schema_version = 2"),
+    ),
+    Index(
+        "uq_firewall_scope_policy_task",
+        text("(payload->'policy_ref'->>'document_id')"),
+        text("(payload->'task_ref'->>'entity_id')"),
+        unique=True,
+        postgresql_where=text("kind = 'firewall_scope' AND supersedes_id IS NULL"),
+    ),
+    Index(
+        "uq_firewall_decision_policy_task_head",
+        text("(payload->'policy_ref'->>'document_id')"),
+        text("(payload->'task_ref'->>'entity_id')"),
+        unique=True,
+        postgresql_where=text(
+            "kind = 'firewall_decision' AND schema_version = 2 AND supersedes_id IS NULL"
+        ),
+    ),
+    Index(
+        "uq_firewall_decision_single_successor",
+        "supersedes_id",
+        unique=True,
+        postgresql_where=text(
+            "kind = 'firewall_decision' AND schema_version = 2 AND supersedes_id IS NOT NULL"
+        ),
+    ),
+    Index(
+        "uq_replacement_validation_plan_task_draft",
+        text("(payload->'plan_ref'->>'document_id')"),
+        text("(payload->'task_ref'->>'entity_id')"),
+        text("(payload->>'draft_index')"),
+        unique=True,
+        postgresql_where=text("kind = 'replacement_validation' AND supersedes_id IS NULL"),
+    ),
+    Index(
+        "uq_derived_benchmark_version",
+        text("(payload->'official_snapshot_ref'->>'document_id')"),
+        text("(payload->>'derived_version')"),
+        unique=True,
+        postgresql_where=text("kind = 'derived_benchmark_manifest' AND supersedes_id IS NULL"),
     ),
 )
 

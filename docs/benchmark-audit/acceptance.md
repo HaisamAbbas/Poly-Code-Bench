@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt94, BWP-01 and BWP-02 are complete; BWP-03 through BWP-12 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt95, BWP-01 and BWP-02 are complete; BWP-03 through BWP-13 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -22,10 +22,10 @@ At Prompt94, BWP-01 and BWP-02 are complete; BWP-03 through BWP-12 are partial p
 | BREQ-12 | 93,102 | BX-30,54 | partial | reports/prompt-93.md; local synthetic canary checks are tested, but no reviewed source/date evidence or production query adapter exists |
 | BREQ-13 | 94,101 | BX-31–33,53 | partial | reports/prompt-94.md; opt-in preregistration and descriptive observations exist, while a pinned method, approved model capabilities and controlled calibration remain unavailable |
 | BREQ-14 | 85,94 | BX-05,32–33 | partial | `run.purpose`, audit metadata, gateway linkage and frozen diagnostic protocols are implemented; live dispatch authorization and model exposure integrations remain gated; see reports/prompt-85.md and reports/prompt-94.md |
-| BREQ-15 | 95 | BX-34 | pending | see prompt 95 report |
-| BREQ-16 | 95,102 | BX-35,54 | pending | see prompt 95 report |
-| BREQ-17 | 95,102 | BX-36,54 | pending | see prompt 95 report |
-| BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md; source versions stay immutable, derived-version semantics and score comparability remain later work |
+| BREQ-15 | 95 | BX-34 | partial | reports/prompt-95.md; finite-scope, validity, rights, temporal, risk and reviewed-overlap decisions are fail-closed; live authorized evidence is unavailable |
+| BREQ-16 | 95,102 | BX-35,54 | partial | reports/prompt-95.md; preregistered total/per-source draft quotas and distinct author/checker/reviewer contracts exist; round/cost/time caps are frozen but no authorized generation runner accounts them; production worker, human identity and live oracle evidence remain unavailable |
+| BREQ-17 | 95,102 | BX-36,54 | partial | reports/prompt-95.md; ancestry, source-family and prospective template gates are persisted; no approved task-generation or exposure-review pipeline is available |
+| BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md and reports/prompt-95.md; official membership remains immutable; derived manifests compute family/split/competency/difficulty distributions and separate score labels; live import and projection review remain unavailable |
 | BREQ-19 | 96,102 | BX-38–40,55 | pending | see prompt 96 report |
 | BREQ-20 | 90,96,100 | BX-21,39–40,49 | partial | reports/prompt-90.md; immutable correction successors and review-event contracts exist; source dispute storage and later monitor/key correction workflows remain pending |
 | BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
@@ -57,7 +57,7 @@ At Prompt94, BWP-01 and BWP-02 are complete; BWP-03 through BWP-12 are partial p
 | BWP-10 | 92 | partial | reports/prompt-92.md; model-context snapshots, chronology precedence, interval outcomes and commitment verification are implemented; live source/model/TSA evidence remains unavailable |
 | BWP-11 | 93 | partial | reports/prompt-93.md; sealed access, monotonic history and private canary contracts are tested with local adapters; approved KMS, PostgreSQL integration and source review remain pending |
 | BWP-12 | 94 | partial | reports/prompt-94.md; registry, frozen plans, descriptive reconciliation and calibration/power limits exist; no pinned method adapter, approved model access or owned-training calibration is available |
-| BWP-13 | 95 | pending | prompt report |
+| BWP-13 | 95 | partial | reports/prompt-95.md; fail-closed firewall, bounded replacement contracts and derived manifests exist; production admission authority and live source/task evidence are unavailable |
 | BWP-14 | 96 | pending | prompt report |
 | BWP-15 | 97 | pending | prompt report |
 | BWP-16 | 98 | pending | prompt report |
@@ -124,10 +124,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-12-B | 94 | partial | reports/prompt-94.md; original/control validity, family splits, contexts, prompts, decoding, tests, multiplicity, decision rules and budgets are frozen in schema v2; no independent live validity review exists |
 | BAT-12-C | 94 | partial | reports/prompt-94.md; all planned outcomes and per-retry access/cost/token records reconcile to the gateway contracts; database execution and live calls were unavailable |
 | BAT-12-D | 94 | partial | reports/prompt-94.md; owned exposure-separated manifests and separate training caps are represented; training compute, power analysis and calibration data remain unavailable |
-| BAT-13-A | 95 | pending | prompt report |
-| BAT-13-B | 95 | pending | prompt report |
-| BAT-13-C | 95 | pending | prompt report |
-| BAT-13-D | 95 | pending | prompt report |
+| BAT-13-A | 95 | partial | reports/prompt-95.md; deterministic decision reduction and finite coverage persistence checks are tested; no authorized live source/risk/reviewer evidence |
+| BAT-13-B | 95 | partial | reports/prompt-95.md; approved source IDs bind to task sources; total/per-source draft caps are serialized under a plan lock; round/cost/time caps are frozen but generation execution is unavailable; distinct participants and private oracle evidence are required |
+| BAT-13-C | 95 | partial | reports/prompt-95.md; transformed ancestry, prospective template review and cross-split family invariants are enforced; exposure pipeline and reviewed family data are absent |
+| BAT-13-D | 95 | partial | reports/prompt-95.md; official membership, dispositions, oracle/validation links, competency/difficulty mappings, private sampling policy, computed distributions, score labels and membership digest are preserved; production projection review is absent |
 | BAT-14-A | 96 | pending | prompt report |
 | BAT-14-B | 96 | pending | prompt report |
 | BAT-14-C | 96 | pending | prompt report |
@@ -210,10 +210,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-31 | 94 | partial | reports/prompt-94.md; ConStat remains unsupported until an exact implementation is pinned; no heuristic substitute is emitted |
 | BX-32 | 94 | partial | reports/prompt-94.md; preregistration validates family-disjoint splits, reviewed controls, exact configs, statistics and budgets; independent live control evidence is unavailable |
 | BX-33 | 94 | partial | reports/prompt-94.md; planned outcomes, retries, access, cost, tokens and missingness reconcile; production persistence, supported method execution and calibration remain unavailable |
-| BX-34 | 95 | pending | criterion in addendum §26; prompt report |
-| BX-35 | 95 | pending | criterion in addendum §26; prompt report |
-| BX-36 | 95 | pending | criterion in addendum §26; prompt report |
-| BX-37 | 95 | pending | criterion in addendum §26; prompt report |
+| BX-34 | 95 | partial | reports/prompt-95.md; incomplete scope/validity/rights/temporal/calibration stays review, prohibited overlap/invalidity/denied rights rejects, and zero hits do not bypass checks; live authorized evidence missing |
+| BX-35 | 95 | partial | reports/prompt-95.md; approved source metadata, per-source and total draft caps, distinct participants and private test/oracle evidence are enforced; round/cost/time caps are frozen but no generation runner accounts them; production worker/reviewer verification missing |
+| BX-36 | 95 | partial | reports/prompt-95.md; transformed tasks retain family ancestry, prospective tasks require accepted template review and split consistency is enforced; no reviewed family/exposure evidence |
+| BX-37 | 95 | partial | reports/prompt-95.md; derived version accounts for official membership, replacements/exclusions/oracles, difficulty, separate labels and no automatic comparison; production distribution review/import projection missing |
 | BX-38 | 96 | pending | criterion in addendum §26; prompt report |
 | BX-39 | 96 | pending | criterion in addendum §26; prompt report |
 | BX-40 | 96 | pending | criterion in addendum §26; prompt report |
@@ -246,7 +246,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BA1 | 86–88 | partial | `phase-BA1.md` |
 | BA2 | 89–91 | pending | `reports/phase-BA2.md` |
 | BA3 | 92–94 | partial | `phase-BA3.md` |
-| BA4 | 95–97 | pending | `reports/phase-BA4.md` |
+| BA4 | 95-97 | partial | `reports/phase-BA4.md` |
 | BA5 | 98–100 | pending | `reports/phase-BA5.md` |
 | BA6 | 101–103 | pending | `reports/phase-BA6.md` |
 | BA7 | 104–106 | pending | `reports/phase-BA7.md` |

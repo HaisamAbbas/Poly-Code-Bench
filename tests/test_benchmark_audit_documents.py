@@ -54,7 +54,7 @@ def _document() -> dict[str, Any]:
 
 
 def test_all_registered_kinds_have_separate_strict_payload_models() -> None:
-    assert len(_DOCUMENT_MODELS) == 25
+    assert len(_DOCUMENT_MODELS) == 30
     assert set(_DOCUMENT_MODELS) == {
         "benchmark_snapshot",
         "task_fingerprint",
@@ -76,8 +76,13 @@ def test_all_registered_kinds_have_separate_strict_payload_models() -> None:
         "behavioral_task_validity",
         "behavioral_observation",
         "behavioral_assessment",
+        "firewall_policy",
+        "firewall_scope",
         "firewall_decision",
+        "replacement_source_metadata",
         "replacement_plan",
+        "replacement_validation",
+        "derived_benchmark_manifest",
         "monitor_policy",
         "benchmark_health",
         "audit_attestation",

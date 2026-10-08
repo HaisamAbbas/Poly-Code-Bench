@@ -41,8 +41,13 @@ AuditKind = Literal[
     "behavioral_task_validity",
     "behavioral_observation",
     "behavioral_assessment",
+    "firewall_policy",
+    "firewall_scope",
     "firewall_decision",
+    "replacement_source_metadata",
     "replacement_plan",
+    "replacement_validation",
+    "derived_benchmark_manifest",
     "monitor_policy",
     "benchmark_health",
     "audit_attestation",
@@ -99,6 +104,20 @@ TemporalExplanationCode = Literal[
     "unverified_source_could_precede_cutoff",
 ]
 FirewallState = Literal["admit", "review", "reject"]
+FirewallReason = Literal[
+    "scope_incomplete",
+    "prohibited_overlap",
+    "validity_rejected",
+    "validity_pending",
+    "rights_denied",
+    "rights_pending",
+    "high_risk_rejected",
+    "risk_scope_incomplete",
+    "high_risk_review",
+    "temporal_unresolved",
+    "temporal_exposure_detected",
+    "reviewer_not_independent",
+]
 SealState = Literal["sealed", "authorized_disclosure", "public_exposed", "compromised", "retired"]
 
 _StrictModel = ConfigDict(extra="forbid", strict=True, frozen=True)
@@ -2126,6 +2145,304 @@ class BehavioralAssessmentPayload(StrictAuditModel):
         return self
 
 
+class FirewallScopeUnit(StrictAuditModel):
+    scope_key: ShortText
+    source_ref: AuditDocumentRef
+    component_ref: EntityRef
+    modality: Literal["text", "code", "image", "audio", "video", "repository"]
+
+    @model_validator(mode="after")
+    def scope_unit_is_bound(self) -> FirewallScopeUnit:
+        if self.source_ref.kind != "corpus_snapshot":
+            raise ValueError("firewall source scope must bind immutable corpus snapshots")
+        if self.component_ref.entity_kind != "audit_component" or self.component_ref.digest is None:
+            raise ValueError("firewall scope components must identify task components")
+        return self
+
+
+class FirewallScopeOutcome(StrictAuditModel):
+    scope_key: ShortText
+    state: Literal["no_match", "match", "unresolved", "failed", "truncated", "unsupported"]
+    relation: MatchRelation | None
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
+
+    @model_validator(mode="after")
+    def scope_outcome_has_support(self) -> FirewallScopeOutcome:
+        if len(set(self.evidence_refs)) != len(self.evidence_refs):
+            raise ValueError("firewall scope evidence references must be unique")
+        if self.state == "no_match":
+            if self.relation != "no_substantive_match" or not any(
+                ref.kind == "coverage_manifest" for ref in self.evidence_refs
+            ):
+                raise ValueError("a no-match outcome requires completed finite-scope coverage")
+        elif self.state == "match":
+            if self.relation in {None, "no_substantive_match", "unresolved"} or not any(
+                ref.kind == "match_evidence" for ref in self.evidence_refs
+            ):
+                raise ValueError("a match outcome requires resolved match evidence")
+        elif self.state == "unresolved":
+            if self.relation != "unresolved":
+                raise ValueError("unresolved scope outcomes must retain their unresolved relation")
+        elif self.relation is not None:
+            raise ValueError("failed, truncated and unsupported scope cannot claim a relation")
+        return self
+
+
+class FirewallPolicyPayloadV2(StrictAuditModel):
+    benchmark_ref: AuditDocumentRef
+    audit_plan_ref: AuditDocumentRef
+    policy_version: ShortText
+    required_scope: tuple[FirewallScopeUnit, ...] = Field(min_length=1, max_length=10_000)
+    prohibited_relations: tuple[MatchRelation, ...] = Field(min_length=1, max_length=7)
+    require_temporal_review: bool
+    high_risk_action: Literal["review", "reject"]
+
+    @model_validator(mode="after")
+    def firewall_policy_is_finite(self) -> FirewallPolicyPayloadV2:
+        if (
+            self.benchmark_ref.kind != "benchmark_snapshot"
+            or self.audit_plan_ref.kind != "audit_plan"
+        ):
+            raise ValueError("firewall policy must bind an official snapshot and finite audit plan")
+        keys = [unit.scope_key for unit in self.required_scope]
+        if len(keys) != len(set(keys)):
+            raise ValueError("firewall scope keys must be unique")
+        if len(set(self.prohibited_relations)) != len(self.prohibited_relations):
+            raise ValueError("firewall prohibited relations must be unique")
+        if "unresolved" in self.prohibited_relations:
+            raise ValueError("unresolved evidence must be reviewed, not classified as a match")
+        return self
+
+
+class FirewallScopePayload(StrictAuditModel):
+    task_ref: EntityRef
+    policy_ref: AuditDocumentRef
+    audit_ref: AuditDocumentRef
+    outcomes: tuple[FirewallScopeOutcome, ...] = Field(min_length=1, max_length=10_000)
+
+    @model_validator(mode="after")
+    def scope_outcomes_are_unique_and_typed(self) -> FirewallScopePayload:
+        if self.task_ref.entity_kind != "task_version":
+            raise ValueError("firewall scope must bind an immutable task version")
+        if self.policy_ref.kind != "firewall_policy" or self.audit_ref.kind != "audit_plan":
+            raise ValueError("firewall scope must bind its policy and finite audit plan")
+        keys = [item.scope_key for item in self.outcomes]
+        if len(keys) != len(set(keys)):
+            raise ValueError("firewall scope outcomes cannot repeat a planned unit")
+        return self
+
+
+class ReplacementSourceMetadataPayload(StrictAuditModel):
+    source_family_id: ShortText
+    rights_record_id: ShortText
+    approved_source_ids: tuple[ShortText, ...] = Field(min_length=1, max_length=256)
+    source_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=256)
+    rights_state: Literal["approved", "denied", "pending"]
+    rights_evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=64)
+    curator_ref: EntityRef
+    reviewer_ref: EntityRef
+    reviewed_at: UtcTimestamp
+
+    @model_validator(mode="after")
+    def source_family_metadata_is_reviewed(self) -> ReplacementSourceMetadataPayload:
+        if (
+            len(set(self.approved_source_ids)) != len(self.approved_source_ids)
+            or len(set(self.source_refs)) != len(self.source_refs)
+            or len(set(self.rights_evidence_refs)) != len(self.rights_evidence_refs)
+        ):
+            raise ValueError("source-family evidence references must be unique")
+        if (
+            self.curator_ref.entity_kind != "reviewer"
+            or self.reviewer_ref.entity_kind != "reviewer"
+            or self.curator_ref.entity_id == self.reviewer_ref.entity_id
+        ):
+            raise ValueError("source-family metadata requires an independent human reviewer")
+        return self
+
+
+class ReplacementSourceQuota(StrictAuditModel):
+    source_id: ShortText
+    maximum_drafts: UnsignedInteger
+
+
+class ReplacementBudgets(StrictAuditModel):
+    max_drafts: Annotated[int, Field(ge=1, le=1_000)]
+    max_rounds: Annotated[int, Field(ge=1, le=8)]
+    max_cost_micro_usd: Annotated[int, Field(ge=1, le=2**53 - 1)]
+    max_wall_seconds: Annotated[int, Field(ge=1, le=604_800)]
+
+
+class ReplacementPlanPayloadV2(StrictAuditModel):
+    source_metadata_ref: AuditDocumentRef
+    mode: Literal["source_family_transformation", "independent_prospective"]
+    seed_ancestry_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=256)
+    competency_brief: ImmutableArtifactRef
+    authors: tuple[EntityRef, ...] = Field(min_length=1, max_length=32)
+    checkers: tuple[EntityRef, ...] = Field(min_length=1, max_length=32)
+    generator_config_ref: ImmutableArtifactRef
+    checker_config_ref: ImmutableArtifactRef
+    difficulty_policy_ref: ImmutableArtifactRef
+    exposure_policy_ref: AuditDocumentRef
+    source_quotas: tuple[ReplacementSourceQuota, ...] = Field(min_length=1, max_length=256)
+    budgets: ReplacementBudgets
+    preregistered_at: UtcTimestamp
+
+    @model_validator(mode="after")
+    def replacement_work_is_preregistered_and_bounded(self) -> ReplacementPlanPayloadV2:
+        if self.source_metadata_ref.kind != "replacement_source_metadata":
+            raise ValueError("replacement plans require approved source-family metadata")
+        if self.exposure_policy_ref.kind not in {"audit_plan", "monitor_policy"}:
+            raise ValueError("replacement plans must freeze a recognized exposure policy")
+        if any(
+            ref.visibility != "private"
+            for ref in (
+                self.competency_brief,
+                self.generator_config_ref,
+                self.checker_config_ref,
+                self.difficulty_policy_ref,
+            )
+        ):
+            raise ValueError("replacement briefs, configs and difficulty policies must be private")
+        author_ids = {item.entity_id for item in self.authors}
+        checker_ids = {item.entity_id for item in self.checkers}
+        if any(item.entity_kind != "reviewer" for item in (*self.authors, *self.checkers)):
+            raise ValueError("replacement authors and checkers must be identified reviewers")
+        if author_ids & checker_ids:
+            raise ValueError("a replacement author cannot independently check their own work")
+        if len(author_ids) != len(self.authors) or len(checker_ids) != len(self.checkers):
+            raise ValueError("replacement authors and checkers must be unique")
+        if len({item.source_id for item in self.source_quotas}) != len(self.source_quotas):
+            raise ValueError("replacement source quotas must be unique")
+        if sum(item.maximum_drafts for item in self.source_quotas) < self.budgets.max_drafts:
+            raise ValueError("approved source-family quotas must cover the frozen draft cap")
+        if self.generator_config_ref.digest == self.checker_config_ref.digest:
+            raise ValueError("replacement generator and independent checker configs must differ")
+        allowed_seed_kinds = {"task_fingerprint", "match_evidence", "benchmark_snapshot"}
+        if any(ref.kind not in allowed_seed_kinds for ref in self.seed_ancestry_refs):
+            raise ValueError(
+                "replacement seed ancestry must cite task, match or benchmark evidence"
+            )
+        return self
+
+
+class ReplacementValidationPayload(StrictAuditModel):
+    plan_ref: AuditDocumentRef
+    task_ref: EntityRef
+    source_family_id: ShortText
+    source_id: ShortText
+    draft_index: Annotated[int, Field(ge=1, le=1_000)]
+    family_relation: Literal["source_family", "independent_prospective", "unknown"]
+    parent_task_refs: tuple[EntityRef, ...] = Field(min_length=1, max_length=256)
+    author_ref: EntityRef
+    checker_refs: tuple[EntityRef, ...] = Field(min_length=1, max_length=32)
+    reviewer_ref: EntityRef
+    correctness_state: Literal["verified", "invalid", "pending"]
+    rights_state: Literal["approved", "denied", "pending"]
+    fidelity_state: Literal["valid", "invalid", "pending"]
+    oracle_state: Literal["independently_verified", "failed", "pending"]
+    difficulty_state: Literal["calibrated", "invalid", "pending"]
+    lineage_state: Literal[
+        "verified_source_family", "verified_independent", "uncertain", "prohibited"
+    ]
+    template_review_state: Literal["accepted", "rejected", "pending", "not_applicable"]
+    exposure_state: Literal["within_policy", "prohibited", "unknown"]
+    exposure_scope_ref: AuditDocumentRef | None
+    test_artifact_ref: ImmutableArtifactRef
+    oracle_artifact_ref: ImmutableArtifactRef
+    difficulty_policy_ref: ImmutableArtifactRef
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=128)
+    review_state: Literal["accepted", "pending", "rejected"]
+    reason_codes: tuple[
+        Literal[
+            "correctness_invalid",
+            "rights_denied",
+            "fidelity_invalid",
+            "oracle_failed",
+            "difficulty_invalid",
+            "lineage_prohibited",
+            "template_review_rejected",
+            "exposure_prohibited",
+            "evidence_pending",
+        ],
+        ...,
+    ]
+
+    @model_validator(mode="after")
+    def replacement_validation_requires_independent_checks(self) -> ReplacementValidationPayload:
+        if self.plan_ref.kind != "replacement_plan" or self.task_ref.entity_kind != "task_version":
+            raise ValueError("replacement validation must bind a plan and immutable task version")
+        if self.exposure_scope_ref is not None and self.exposure_scope_ref.kind != "firewall_scope":
+            raise ValueError("replacement exposure evidence must reference a firewall scope")
+        if self.exposure_state in {"within_policy", "prohibited"} and (
+            self.exposure_scope_ref is None
+        ):
+            raise ValueError(
+                "resolved replacement exposure requires a task-specific firewall scope"
+            )
+        if any(item.entity_kind != "task_version" for item in self.parent_task_refs):
+            raise ValueError("replacement ancestry must identify immutable task versions")
+        all_reviewers = (self.author_ref, *self.checker_refs, self.reviewer_ref)
+        if any(item.entity_kind != "reviewer" for item in all_reviewers):
+            raise ValueError("replacement author, checker and reviewer identities must be typed")
+        reviewer_ids = [item.entity_id for item in all_reviewers]
+        if len(reviewer_ids) != len(set(reviewer_ids)):
+            raise ValueError("replacement author, checkers and reviewer must be independent")
+        if any(
+            artifact.visibility != "private"
+            for artifact in (
+                self.test_artifact_ref,
+                self.oracle_artifact_ref,
+                self.difficulty_policy_ref,
+            )
+        ):
+            raise ValueError("replacement tests, oracle and difficulty evidence stay private")
+        if len(set(self.checker_refs)) != len(self.checker_refs) or len(
+            set(self.evidence_refs)
+        ) != len(self.evidence_refs):
+            raise ValueError("replacement checkers and evidence references must be unique")
+        if (
+            self.family_relation == "source_family"
+            and self.lineage_state != "verified_source_family"
+        ):
+            raise ValueError("source-family replacements must retain their reviewed ancestry")
+        if self.family_relation == "independent_prospective" and (
+            self.lineage_state != "verified_independent" or self.template_review_state != "accepted"
+        ):
+            raise ValueError(
+                "independent prospective tasks require accepted template/lineage review"
+            )
+        if self.family_relation == "unknown" and self.lineage_state != "uncertain":
+            raise ValueError("unknown family ancestry cannot claim independent lineage")
+        hard_failures = {
+            "correctness_invalid": self.correctness_state == "invalid",
+            "rights_denied": self.rights_state == "denied",
+            "fidelity_invalid": self.fidelity_state == "invalid",
+            "oracle_failed": self.oracle_state == "failed",
+            "difficulty_invalid": self.difficulty_state == "invalid",
+            "lineage_prohibited": self.lineage_state == "prohibited",
+            "template_review_rejected": self.template_review_state == "rejected",
+            "exposure_prohibited": self.exposure_state == "prohibited",
+        }
+        expected_reasons = tuple(code for code, failed in hard_failures.items() if failed)
+        all_verified = (
+            self.correctness_state == "verified"
+            and self.rights_state == "approved"
+            and self.fidelity_state == "valid"
+            and self.oracle_state == "independently_verified"
+            and self.difficulty_state == "calibrated"
+            and self.lineage_state in {"verified_source_family", "verified_independent"}
+            and self.template_review_state in {"accepted", "not_applicable"}
+            and self.exposure_state == "within_policy"
+        )
+        expected_state: Literal["accepted", "pending", "rejected"] = (
+            "rejected" if expected_reasons else "accepted" if all_verified else "pending"
+        )
+        expected_reasons = expected_reasons or (() if all_verified else ("evidence_pending",))
+        if self.review_state != expected_state or self.reason_codes != expected_reasons:
+            raise ValueError("replacement review state must be derived from its independent gates")
+        return self
+
+
 class FirewallDecisionPayload(StrictAuditModel):
     task_ref: EntityRef
     audit_ref: AuditDocumentRef
@@ -2149,6 +2466,210 @@ class ReplacementPlanPayload(StrictAuditModel):
     exposure: AuditDocumentRef
     source_quotas: dict[str, UnsignedInteger]
     budgets: dict[str, UnsignedInteger]
+
+
+class FirewallDecisionPayloadV2(StrictAuditModel):
+    task_ref: EntityRef
+    policy_ref: AuditDocumentRef
+    scope_ref: AuditDocumentRef
+    risk_assessment_ref: AuditDocumentRef
+    validity_ref: AuditDocumentRef
+    temporal_ref: AuditDocumentRef | None
+    exposure_refs: tuple[AuditDocumentRef, ...]
+    result: FirewallState
+    reasons: tuple[FirewallReason, ...]
+    reviewer: EntityRef
+    resolution_reason: ShortText | None
+
+    @model_validator(mode="after")
+    def firewall_decision_binds_required_evidence(self) -> FirewallDecisionPayloadV2:
+        if self.task_ref.entity_kind != "task_version":
+            raise ValueError("firewall decisions must bind immutable task versions")
+        expected_kinds = {
+            "policy_ref": "firewall_policy",
+            "scope_ref": "firewall_scope",
+            "risk_assessment_ref": "risk_assessment",
+            "validity_ref": "replacement_validation",
+        }
+        for field_name, expected_kind in expected_kinds.items():
+            if getattr(self, field_name).kind != expected_kind:
+                raise ValueError(f"firewall {field_name} must reference {expected_kind}")
+        if self.temporal_ref is not None and self.temporal_ref.kind != "temporal_assessment":
+            raise ValueError("firewall temporal evidence must reference a temporal assessment")
+        if any(ref.kind != "match_evidence" for ref in self.exposure_refs):
+            raise ValueError("firewall exposure findings must reference match evidence")
+        if len(set(self.exposure_refs)) != len(self.exposure_refs):
+            raise ValueError("firewall exposure references must be unique")
+        if self.reviewer.entity_kind != "reviewer":
+            raise ValueError("firewall decisions require an identified human reviewer")
+        expected_result: FirewallState = (
+            "reject"
+            if "prohibited_overlap" in self.reasons
+            or "validity_rejected" in self.reasons
+            or "rights_denied" in self.reasons
+            or "high_risk_rejected" in self.reasons
+            else "review"
+            if self.reasons
+            else "admit"
+        )
+        if self.result != expected_result:
+            raise ValueError("firewall result must follow its enumerated evidence blockers")
+        return self
+
+
+class DerivedBenchmarkEntry(StrictAuditModel):
+    original_item_ref: EntityRef
+    original_task_ref: EntityRef | None
+    derived_item_ref: EntityRef
+    replacement_task_ref: EntityRef | None
+    disposition: Literal["retained", "replaced", "excluded"]
+    source_family_id: ShortText
+    derived_source_family_id: ShortText | None
+    split: ShortText
+    original_competency: ShortText
+    derived_competency: ShortText | None
+    original_difficulty: ShortText
+    derived_difficulty: ShortText | None
+    validation_ref: AuditDocumentRef | None
+    oracle_mapping_ref: ImmutableArtifactRef | None
+    reason: ShortText | None
+
+    @model_validator(mode="after")
+    def derived_entry_is_complete(self) -> DerivedBenchmarkEntry:
+        if (
+            self.original_item_ref.entity_kind != "benchmark_item"
+            or self.derived_item_ref.entity_kind != "derived_benchmark_item"
+        ):
+            raise ValueError("derived entries must bind original and derived membership identities")
+        if (
+            self.original_task_ref is not None
+            and self.original_task_ref.entity_kind != "task_version"
+        ):
+            raise ValueError("mapped original tasks must identify immutable task versions")
+        if self.disposition == "retained":
+            if (
+                self.replacement_task_ref is not None
+                or self.validation_ref is not None
+                or self.oracle_mapping_ref is not None
+            ):
+                raise ValueError("retained items cannot claim replacement artifacts")
+            if self.derived_difficulty != self.original_difficulty:
+                raise ValueError("retained items must preserve their official difficulty")
+            if (
+                self.derived_source_family_id != self.source_family_id
+                or self.derived_competency != self.original_competency
+            ):
+                raise ValueError("retained items must preserve family and competency")
+        elif self.disposition == "replaced":
+            if (
+                self.replacement_task_ref is None
+                or self.replacement_task_ref.entity_kind != "task_version"
+                or self.validation_ref is None
+                or self.validation_ref.kind != "replacement_validation"
+                or self.oracle_mapping_ref is None
+                or self.oracle_mapping_ref.visibility != "private"
+                or self.derived_difficulty is None
+                or self.derived_source_family_id is None
+                or self.derived_competency is None
+            ):
+                raise ValueError("replacements require independent validity and oracle mapping")
+        elif (
+            self.replacement_task_ref is not None
+            or self.validation_ref is not None
+            or self.oracle_mapping_ref is not None
+            or self.derived_source_family_id is not None
+            or self.derived_competency is not None
+            or self.derived_difficulty is not None
+        ):
+            raise ValueError("excluded items cannot carry replacement membership")
+        if (self.disposition == "excluded") != (self.reason is not None):
+            raise ValueError("exclusions require a reason and included items cannot claim one")
+        return self
+
+
+class DerivedDistributionCount(StrictAuditModel):
+    dimension: Literal["source_family", "split", "competency", "difficulty"]
+    label: ShortText
+    official_items: UnsignedInteger
+    derived_items: UnsignedInteger
+
+
+class DerivedBenchmarkManifestPayload(StrictAuditModel):
+    official_snapshot_ref: AuditDocumentRef
+    official_membership_digest: Digest
+    derived_version: ShortText
+    entries: tuple[DerivedBenchmarkEntry, ...] = Field(min_length=1, max_length=1_000_000)
+    derived_membership_digest: Digest
+    change_summary_ref: ImmutableArtifactRef
+    sampling_policy_ref: ImmutableArtifactRef
+    distribution: tuple[DerivedDistributionCount, ...] = Field(min_length=4, max_length=100_000)
+    official_metric_label: ShortText
+    derived_metric_label: ShortText
+    comparability: Literal["separate_labels_no_automatic_comparison"]
+    created_at: UtcTimestamp
+
+    @model_validator(mode="after")
+    def derived_manifest_preserves_official_membership(self) -> DerivedBenchmarkManifestPayload:
+        if self.official_snapshot_ref.kind != "benchmark_snapshot":
+            raise ValueError("derived manifests must preserve an immutable official snapshot")
+        if any(
+            artifact.visibility != "private"
+            for artifact in (self.change_summary_ref, self.sampling_policy_ref)
+        ):
+            raise ValueError("derived change and sampling artifacts must remain private")
+        if self.official_metric_label == self.derived_metric_label:
+            raise ValueError("official and derived metrics require distinct labels")
+        original_item_ids = [item.original_item_ref.entity_id for item in self.entries]
+        derived_item_ids = [item.derived_item_ref.entity_id for item in self.entries]
+        if len(original_item_ids) != len(set(original_item_ids)):
+            raise ValueError("derived manifests must account for each original item once")
+        if len(derived_item_ids) != len(set(derived_item_ids)):
+            raise ValueError("derived membership identities must be unique")
+        family_splits: dict[str, set[str]] = {}
+        for entry in self.entries:
+            family_splits.setdefault(entry.source_family_id, set()).add(entry.split)
+            if entry.derived_source_family_id is not None:
+                family_splits.setdefault(entry.derived_source_family_id, set()).add(entry.split)
+        if any(len(splits) > 1 for splits in family_splits.values()):
+            raise ValueError("source-family variants cannot cross official splits")
+        expected_counts: dict[tuple[str, str], list[int]] = {}
+        for dimension, original_name, derived_name in (
+            ("source_family", "source_family_id", "derived_source_family_id"),
+            ("split", "split", "split"),
+            ("competency", "original_competency", "derived_competency"),
+            ("difficulty", "original_difficulty", "derived_difficulty"),
+        ):
+            for entry in self.entries:
+                original_label = getattr(entry, original_name)
+                original_count = expected_counts.setdefault((dimension, original_label), [0, 0])
+                original_count[0] += 1
+                if entry.disposition != "excluded":
+                    derived_label = getattr(entry, derived_name)
+                    if derived_label is None:
+                        raise ValueError(
+                            "included derived items require complete distribution labels"
+                        )
+                    derived_count = expected_counts.setdefault((dimension, derived_label), [0, 0])
+                    derived_count[1] += 1
+        supplied_counts = {
+            (item.dimension, item.label): (item.official_items, item.derived_items)
+            for item in self.distribution
+        }
+        if len(supplied_counts) != len(self.distribution):
+            raise ValueError("derived distribution dimensions and labels must be unique")
+        if supplied_counts != {
+            key: (counts[0], counts[1]) for key, counts in expected_counts.items()
+        }:
+            raise ValueError("derived distribution counts do not match manifest entries")
+        derived_ids = sorted(
+            str(item.derived_item_ref.entity_id)
+            for item in self.entries
+            if item.disposition != "excluded"
+        )
+        expected = sha256_bytes(canonical_json_bytes(derived_ids))
+        if self.derived_membership_digest != expected:
+            raise ValueError("derived membership digest does not match its immutable entries")
+        return self
 
 
 class MonitorPolicyPayload(StrictAuditModel):
@@ -2422,10 +2943,55 @@ class FirewallDecisionDocument(_PayloadDocument):
     payload_model = FirewallDecisionPayload
 
 
+class FirewallDecisionDocumentV2(_PayloadDocument):
+    kind: Literal["firewall_decision"] = "firewall_decision"
+    payload: FirewallDecisionPayloadV2
+    payload_model = FirewallDecisionPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
+class FirewallPolicyDocumentV2(_PayloadDocument):
+    kind: Literal["firewall_policy"] = "firewall_policy"
+    payload: FirewallPolicyPayloadV2
+    payload_model = FirewallPolicyPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
+class FirewallScopeDocument(_PayloadDocument):
+    kind: Literal["firewall_scope"] = "firewall_scope"
+    payload: FirewallScopePayload
+    payload_model = FirewallScopePayload
+
+
+class ReplacementSourceMetadataDocument(_PayloadDocument):
+    kind: Literal["replacement_source_metadata"] = "replacement_source_metadata"
+    payload: ReplacementSourceMetadataPayload
+    payload_model = ReplacementSourceMetadataPayload
+
+
 class ReplacementPlanDocument(_PayloadDocument):
     kind: Literal["replacement_plan"] = "replacement_plan"
     payload: ReplacementPlanPayload
     payload_model = ReplacementPlanPayload
+
+
+class ReplacementPlanDocumentV2(_PayloadDocument):
+    kind: Literal["replacement_plan"] = "replacement_plan"
+    payload: ReplacementPlanPayloadV2
+    payload_model = ReplacementPlanPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
+class ReplacementValidationDocument(_PayloadDocument):
+    kind: Literal["replacement_validation"] = "replacement_validation"
+    payload: ReplacementValidationPayload
+    payload_model = ReplacementValidationPayload
+
+
+class DerivedBenchmarkManifestDocument(_PayloadDocument):
+    kind: Literal["derived_benchmark_manifest"] = "derived_benchmark_manifest"
+    payload: DerivedBenchmarkManifestPayload
+    payload_model = DerivedBenchmarkManifestPayload
 
 
 class MonitorPolicyDocument(_PayloadDocument):
@@ -2475,7 +3041,14 @@ AuditDocument = (
     | BehavioralObservationDocument
     | BehavioralAssessmentDocument
     | FirewallDecisionDocument
+    | FirewallDecisionDocumentV2
+    | FirewallPolicyDocumentV2
+    | FirewallScopeDocument
+    | ReplacementSourceMetadataDocument
     | ReplacementPlanDocument
+    | ReplacementPlanDocumentV2
+    | ReplacementValidationDocument
+    | DerivedBenchmarkManifestDocument
     | MonitorPolicyDocument
     | BenchmarkHealthDocument
     | AuditAttestationDocument
@@ -2505,7 +3078,12 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
         BehavioralObservationDocument,
         BehavioralAssessmentDocument,
         FirewallDecisionDocument,
+        FirewallPolicyDocumentV2,
+        FirewallScopeDocument,
+        ReplacementSourceMetadataDocument,
         ReplacementPlanDocument,
+        ReplacementValidationDocument,
+        DerivedBenchmarkManifestDocument,
         MonitorPolicyDocument,
         BenchmarkHealthDocument,
         AuditAttestationDocument,
@@ -2519,6 +3097,9 @@ _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("sealed_manifest", 2): SealedManifestDocumentV2,
     ("canary_policy", 2): CanaryPolicyDocumentV2,
     ("behavioral_audit_plan", 2): BehavioralAuditPlanDocumentV2,
+    ("firewall_decision", 2): FirewallDecisionDocumentV2,
+    ("firewall_policy", 2): FirewallPolicyDocumentV2,
+    ("replacement_plan", 2): ReplacementPlanDocumentV2,
 }
 
 

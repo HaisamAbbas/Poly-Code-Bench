@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–93 are partial foundations; Prompt94 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83-84 are complete; Prompts85-95 are partial foundations; Prompt96 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -153,4 +153,15 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Persistence binds observations to pre-dispatch audit runs, actual task rows, exact pinned model revisions, the frozen decoding config, private request/response artifacts, ordinary gateway intents/deliveries, matching sealed recipient/payload events and latest usage settlements. Migration `a194d6c3e781` adds the four document kinds, unique observation roots and linear successors for ambiguity resolution, and a data-preserving guarded downgrade.
 - Partial, not complete: ConStat has no pinned executable adapter; there are no approved model contexts/capabilities, production exposure writer/KMS, audit database, independent live control review, owned authorized training manifest, accounted training compute, or validated power/calibration dataset. All behavioral tests are synthetic. No model/source call or database write occurred; migration SQL was rendered offline.
 - Specification discrepancy: §1.1 says five source Markdown files were read, but lists/hashes three. This discrepancy remains as recorded in Prompt93.
+- Commit: `6d8b4d6`.
 - Exact next prompt: Prompt95 / BWP-13. Implement firewall admission and independently validated replacements while preserving official versions and requiring complete scoped evidence, rights, validity, lineage and independent review.
+
+
+## Prompt95 / BWP-13
+
+- Added strict v2 firewall policy/decision contracts, exact finite scope outcomes and fail-closed reduction. A complete no-match scope is insufficient without accepted task validity, rights, calibrated risk, required temporal review and a separate final reviewer; prohibited overlap, invalidity and denied rights reject. Persistence binds no-match outcomes to completed exact-scope queries and refuses unresolved or accepted candidates from being called no-match.
+- Added reviewed source-family metadata, bounded replacement plans, frozen private configs/difficulty/exposure policy, source quotas consumed under a per-plan lock and distinct author/checker/final reviewer requirements. Replacement validation binds task sources to approved source IDs, enforces total/per-source draft caps under a locked plan row, ties exposure status to the complete task-specific firewall scope, and requires trusted production-worker reports, exact task/package/runtime digests, private test/oracle artifacts, approved rights and recorded family ancestry. Transformed tasks retain source-family cluster lineage; prospective tasks require independent lineage and accepted template review.
+- Added immutable derived manifests that account for every official item, preserve imported source membership, record retain/replace/exclude dispositions, private oracle mappings and validation refs, competency/difficulty mappings, private sampling policy, computed family/split/competency/difficulty distributions, derived membership digest and distinct official/derived score labels with automatic comparison disabled. Family assignments cannot cross splits within a manifest or across split manifests for the same registry/version.
+- Added document-kind and append-only successor checks plus unique policy/scope/decision/validation/derived-version indexes in migration `d4f7b2a196c3`; downgrade refuses to remove persisted Prompt95 evidence. Added shared canonical vectors and focused decision/contract regressions.
+- Partial, not complete: this checkout has no production-worker admission evidence, authorized source/rights verifier, trusted reviewer identity/role service, approved benchmark/corpus bytes, task-generation/lineage service, PostgreSQL integration database or production derived-set distribution/reporting path. Production persistence checks are static/offline only; fixtures are synthetic and no source, model or database operation occurred.
+- Exact next prompt: Prompt96 / BWP-14, continuous monitoring, risk changes and owner alerts.

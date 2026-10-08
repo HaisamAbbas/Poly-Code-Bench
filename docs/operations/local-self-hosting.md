@@ -48,6 +48,8 @@ This browser smoke uses the generated local account, writes one synthetic metada
 
 Local refresh on 2026-10-07 passed: all nine PostgreSQL release-backed pages, Keycloak login, reviewer authorization, owner isolation, keyboard access and mobile layout. The refreshed API also exposes the release-scoped artifact routes, with its catalog migration at `d4f082b91c33`. Sanitized evidence is in `docs/implementation/evidence/prompt-33/local-functional-stack-2026-10-07.json`; the browser screenshots remain in ignored `.cache/`.
 
+Runtime refresh on 2026-10-08 passed against the current loopback stack: PostgreSQL is healthy at migration `2a62b6001aa1`; API health, readiness and release-list routes return 200; the nine-page browser smoke again passed OIDC sign-in, metadata-only submission, reviewer authorization, owner isolation, keyboard access and mobile layout; and the PostgreSQL submission integration module passed all four tests. The release responses and pages identify their contents as synthetic test data, not benchmark results. Current sanitized evidence is in `docs/implementation/evidence/prompt-33/local-functional-stack-2026-10-08.json`; screenshots stay local under ignored `.cache/`.
+
 To run the PostgreSQL-backed submission/approval integration against the disposable local test database, set the opt-in test URLs from `.env` and run only that integration module:
 
 ```powershell

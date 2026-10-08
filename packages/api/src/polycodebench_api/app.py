@@ -14,6 +14,7 @@ from uuid import uuid4
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fastapi import FastAPI, Request
 from polycodebench_persistence.artifacts import PostgresPublicArtifactReader
+from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.endpoints import PostgresEndpointRepository
 from polycodebench_persistence.object_store import S3ArtifactStore
@@ -27,8 +28,14 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from polycodebench_api.auth import TokenDirectory
+from polycodebench_api.benchmark_audit_access import OwnerAuditAccessPolicy
+from polycodebench_api.benchmark_audit_routes import private_router as benchmark_audit_router
+from polycodebench_api.benchmark_audit_routes import public_reports_router
+from polycodebench_api.benchmark_audit_routes import public_router as public_health_router
 from polycodebench_api.context import (
     ApiServices,
+    AuditAccessPolicy,
+    PublicBenchmarkHealthProjection,
     PublicReleaseCatalog,
     RunSummarySource,
     SubmissionRepository,
@@ -95,6 +102,9 @@ def create_app(
     submissions: SubmissionRepository | None = None,
     persistence_database: Database | None = None,
     artifact_access: ArtifactAccessService | None = None,
+    benchmark_audit: PostgresBenchmarkAuditRepository | None = None,
+    audit_access: AuditAccessPolicy | None = None,
+    public_benchmark_health: PublicBenchmarkHealthProjection | None = None,
 ) -> FastAPI:
     """Mount the established read routes over one reviewed release store.
 
@@ -182,10 +192,21 @@ def create_app(
             if artifact_access is not None
             else _public_artifact_access(persistence_database)
         ),
+        benchmark_audit=(
+            benchmark_audit
+            if benchmark_audit is not None
+            else (
+                PostgresBenchmarkAuditRepository(persistence_database.engine)
+                if persistence_database is not None
+                else None
+            )
+        ),
+        audit_access=audit_access if audit_access is not None else OwnerAuditAccessPolicy(),
+        public_benchmark_health=public_benchmark_health,
         target=os.environ.get("PCB_PUBLICATION_TARGET", "local:board"),
     )
     app = FastAPI(
-        title="PolyCodeBench Public API",
+        title="PolyCodeBench API",
         version="1.0.0",
         description="Published projections and authenticated, review-gated submission requests.",
         lifespan=lifespan,
@@ -195,6 +216,9 @@ def create_app(
     install_error_handlers(app)
     app.include_router(public_router)
     app.include_router(submission_router)
+    app.include_router(benchmark_audit_router)
+    app.include_router(public_health_router)
+    app.include_router(public_reports_router)
 
     @app.middleware("http")
     async def attach_request_id(request: Request, call_next):  # type: ignore[no-untyped-def]

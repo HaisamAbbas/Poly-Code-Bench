@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83-84 are complete; Prompts85-97 are partial foundations; Prompt98 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83-84 are complete; Prompts85-98 are partial foundations. Prompt98 adds private tenant-scoped API/CLI/SDK foundations, but transition adapters, shared ACL, private artifact-byte authorization and live service evidence remain. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -187,3 +187,12 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Partial, not complete: tests use synthetic inputs; no approved benchmark/corpus source scope, live query coverage, temporal exposure source, PostgreSQL integration, independent detector labels, or authenticated health projection is available. Migration SQL was rendered offline only. Health outputs remain descriptive and do not change native benchmark, code-quality, ranking, or behavior-statistic contracts.
 - No new Prompt97 specification discrepancy. The Prompt93 source-input discrepancy remains: section 1.1 describes five source Markdown files but lists and hashes three.
 - Exact next prompt: Prompt98 / BWP-16, private API, CLI, SDK and permission contracts.
+
+## Prompt98 / BWP-16
+
+- Added private tenant-filtered audit document/run reads and create-only plan/run API operations with role/MFA checks, owner object authorization, signed pagination, ETags, bounded strict JSON, duplicate-member rejection, idempotency, safe correlated errors and no-store responses. Plan/run creation never authorizes dispatch. Added allowlisted public health/report reads that expose no raw audit document.
+- Added nullable tenant binding for new audit document rows and tenant-scoped/idempotent persistence. Legacy null-tenant rows remain invisible to tenant API requests; document references must remain in one tenant. Migration `b7c3e9a4d281` is the only Alembic head and its guarded downgrade renders offline.
+- Added `pcb audit` commands with explicit exit codes and regenerated OpenAPI/TypeScript SDK contracts. Registry, plan, run, status and attestation reads are mapped; missing transition adapters fail closed. Dry-run is local only and the CLI refuses redirects.
+- Partial: no shared reviewer ACL, private audit artifact-byte adapter, API transition writers for review/temporal/seal/firewall/replacement/monitor/health or attestation verification, or live PostgreSQL/service evidence is available. No source/model/guest/signing/publication/notification operation occurred. Public health needs an injected reviewed projection store.
+- `ADDENDUM-DECISION-42` records tenant/owner scope; `ADDENDUM-DECISION-43` records fail-closed unsupported operations. No new specification discrepancy; the §1 source-list mismatch (five referenced, three listed/hashed) remains.
+- Exact next prompt: Prompt99 / BWP-17, benchmark health dashboard and evidence journeys.

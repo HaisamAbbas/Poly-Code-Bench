@@ -83,6 +83,7 @@ audit_document = Table(
     Column("payload", JSONB, nullable=False),
     Column("supersedes_id", Uuid(as_uuid=True), nullable=True),
     Column("created_by", String(255), nullable=False),
+    Column("tenant_id", Uuid(as_uuid=True), nullable=True),
     Column("document_created_at", String(35), nullable=False),
     Column("timestamp_precision", String(16), nullable=False),
     Column("trace_id", Uuid(as_uuid=True), nullable=True),

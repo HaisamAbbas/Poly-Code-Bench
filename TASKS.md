@@ -19,7 +19,7 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 95 — firewall admission and independently validated replacements (partial foundations; production prerequisites recorded in the report).
 - [x] Prompt 96 - continuous monitoring, risk changes and owner alerts (partial foundations; production prerequisites recorded in the report).
 - [x] Prompt 97 - benchmark health aggregation and comparable trends (partial foundations; production prerequisites recorded in the report).
-- [ ] Prompt 98 — private API, CLI, SDK and permission contracts.
+- [x] Prompt 98 — private API, CLI, SDK and permission contracts (partial foundations; transition adapters, shared ACL, private artifact-byte authorization and live service evidence remain).
 - [ ] Prompt 99 — benchmark health dashboard and evidence journeys.
 - [ ] Prompt 100 — signed audit attestations and public verification.
 - [ ] Prompt 101 — actual benchmark pilot and detector calibration.

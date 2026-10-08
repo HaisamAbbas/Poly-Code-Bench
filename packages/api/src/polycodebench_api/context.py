@@ -8,6 +8,8 @@ from typing import Protocol, cast
 from uuid import UUID
 
 from fastapi import Request
+from polycodebench_core.benchmark_audit_documents import AuditDocument
+from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_publication.releases import SigningKey
 from polycodebench_services.artifacts import ArtifactAccessService
 from polycodebench_services.model_endpoints import ModelEndpointService
@@ -88,6 +90,24 @@ class PublicReleaseCatalog(Protocol):
     def audit(self) -> list[dict[str, object]]: ...
 
 
+class AuditAccessPolicy(Protocol):
+    """Trusted object-level authorization for private audit documents."""
+
+    def allows(
+        self,
+        *,
+        principal: ApiPrincipal,
+        document: AuditDocument,
+        action: str,
+    ) -> bool: ...
+
+
+class PublicBenchmarkHealthProjection(Protocol):
+    """Reviewed, redacted public health projection; never a raw audit-document reader."""
+
+    def get(self, report_id: UUID) -> Mapping[str, object] | None: ...
+
+
 @dataclass(frozen=True)
 class ApiServices:
     """Everything a route needs, assembled once at application construction."""
@@ -105,6 +125,9 @@ class ApiServices:
     artifact_ttl_seconds: int = 900
     submission_rate_limit: int = 5
     submission_rate_window_seconds: int = 3600
+    benchmark_audit: PostgresBenchmarkAuditRepository | None = None
+    audit_access: AuditAccessPolicy | None = None
+    public_benchmark_health: PublicBenchmarkHealthProjection | None = None
 
 
 def services_of(request: Request) -> ApiServices:

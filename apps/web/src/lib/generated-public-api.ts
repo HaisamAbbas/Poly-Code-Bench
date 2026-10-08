@@ -146,6 +146,91 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/v1/benchmark-audit/plans": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Create Audit Plan */
+        readonly post: operations["create_audit_plan_v1_benchmark_audit_plans_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/benchmark-audit/registry": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Registry */
+        readonly get: operations["get_registry_v1_benchmark_audit_registry_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/benchmark-audit/runs": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Create Audit Run */
+        readonly post: operations["create_audit_run_v1_benchmark_audit_runs_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/benchmark-audit/{resource}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List Audit Documents */
+        readonly get: operations["list_audit_documents_v1_benchmark_audit__resource__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/benchmark-audit/{resource}/{document_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Audit Document */
+        readonly get: operations["get_audit_document_v1_benchmark_audit__resource___document_id__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/v1/compare": {
         readonly parameters: {
             readonly query?: never;
@@ -263,6 +348,40 @@ export interface paths {
         };
         /** Get Model */
         readonly get: operations["get_model_v1_models__model_config_id__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/public/audit-reports/{report_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Public Health Report */
+        readonly get: operations["get_public_health_report_v1_public_audit_reports__report_id__get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/public/benchmark-health/{report_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Public Health Report */
+        readonly get: operations["get_public_health_report_v1_public_benchmark_health__report_id__get"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -508,6 +627,1276 @@ export interface components {
             /** Size Bytes */
             readonly size_bytes: number;
         };
+        /** AuditApiErrorDetail */
+        readonly AuditApiErrorDetail: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            readonly code: "INVALID_CURSOR" | "INVALID_FILTER" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "IDEMPOTENCY_CONFLICT" | "RESULT_CONFLICT" | "LEASE_LOST" | "INCOMPATIBLE_COHORT" | "RELEASE_NOT_READY" | "VERSION_CONFLICT" | "SCHEMA_INVALID" | "CAPABILITY_UNSUPPORTED" | "TASK_INVALID" | "RATE_LIMITED" | "BUDGET_EXHAUSTED" | "DEPENDENCY_UNAVAILABLE";
+            /**
+             * Details
+             * @default []
+             */
+            readonly details: readonly string[];
+            /** Message */
+            readonly message: string;
+            /** Request Id */
+            readonly request_id: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** AuditApiErrorEnvelope */
+        readonly AuditApiErrorEnvelope: {
+            readonly error: components["schemas"]["AuditApiErrorDetail"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** AuditApiMeta */
+        readonly AuditApiMeta: {
+            /** Limit */
+            readonly limit: number | null;
+            /** Next Cursor */
+            readonly next_cursor: string | null;
+            /** Release Digest */
+            readonly release_digest: string;
+            /** Returned */
+            readonly returned: number;
+            /** Row Version */
+            readonly row_version: number | null;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Total */
+            readonly total: number | null;
+        };
+        /** AuditAttestationDocument */
+        readonly AuditAttestationDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default audit_attestation
+             * @constant
+             */
+            readonly kind?: "audit_attestation";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["AuditAttestationPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** AuditAttestationPayload */
+        readonly AuditAttestationPayload: {
+            readonly benchmark_ref: components["schemas"]["AuditDocumentRef"];
+            /** Claim Digests */
+            readonly claim_digests: readonly string[];
+            readonly coverage_ref: components["schemas"]["AuditDocumentRef"];
+            /** Expires At */
+            readonly expires_at: string;
+            /**
+             * Expires At Precision
+             * @enum {string}
+             */
+            readonly expires_at_precision: "second" | "millisecond" | "microsecond" | "nanosecond";
+            /** Issued At */
+            readonly issued_at: string;
+            /**
+             * Issued At Precision
+             * @enum {string}
+             */
+            readonly issued_at_precision: "second" | "millisecond" | "microsecond" | "nanosecond";
+            readonly key_ref: components["schemas"]["EntityRef"];
+            readonly model_context: components["schemas"]["AuditDocumentRef"] | null;
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            readonly review: components["schemas"]["AuditDocumentRef"];
+            /** Revocation Refs */
+            readonly revocation_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly scan_ref: components["schemas"]["AuditDocumentRef"];
+            /** Signature Algorithm */
+            readonly signature_algorithm: string;
+        };
+        /** AuditCatalogBundle */
+        readonly AuditCatalogBundle: {
+            readonly capabilities: components["schemas"]["CapabilityMatrix"];
+            readonly limits: components["schemas"]["ResourceLimits"];
+            readonly registry: components["schemas"]["BenchmarkRegistry"];
+            readonly source_policies: components["schemas"]["SourcePolicyRegistry"];
+        };
+        /** AuditDocumentPage */
+        readonly AuditDocumentPage: {
+            /** Data */
+            readonly data: readonly (components["schemas"]["BenchmarkSnapshotDocument"] | components["schemas"]["TaskFingerprintDocument"] | components["schemas"]["CorpusSnapshotDocument"] | components["schemas"]["AuditPlanDocument"] | components["schemas"]["QueryManifestDocument"] | components["schemas"]["CoverageManifestDocument"] | components["schemas"]["MatchEvidenceDocument"] | components["schemas"]["MatchEvidenceDocumentV2"] | components["schemas"]["RiskPolicyDocument"] | components["schemas"]["RiskPolicyDocumentV2"] | components["schemas"]["RiskAssessmentDocument"] | components["schemas"]["RiskAssessmentDocumentV2"] | components["schemas"]["ModelContextDocument"] | components["schemas"]["TemporalAssessmentDocument"] | components["schemas"]["TemporalAssessmentDocumentV2"] | components["schemas"]["SealedManifestDocument"] | components["schemas"]["SealedManifestDocumentV2"] | components["schemas"]["CanaryPolicyDocument"] | components["schemas"]["CanaryPolicyDocumentV2"] | components["schemas"]["SealAccessEventDocument"] | components["schemas"]["CanaryObservationDocument"] | components["schemas"]["BehavioralAuditPlanDocument"] | components["schemas"]["BehavioralAuditPlanDocumentV2"] | components["schemas"]["BehavioralMethodRegistryDocument"] | components["schemas"]["BehavioralTaskValidityDocument"] | components["schemas"]["BehavioralObservationDocument"] | components["schemas"]["BehavioralAssessmentDocument"] | components["schemas"]["FirewallDecisionDocument"] | components["schemas"]["FirewallDecisionDocumentV2"] | components["schemas"]["FirewallPolicyDocumentV2"] | components["schemas"]["FirewallScopeDocument"] | components["schemas"]["ReplacementSourceMetadataDocument"] | components["schemas"]["ReplacementPlanDocument"] | components["schemas"]["ReplacementPlanDocumentV2"] | components["schemas"]["ReplacementValidationDocument"] | components["schemas"]["DerivedBenchmarkManifestDocument"] | components["schemas"]["MonitorPolicyDocument"] | components["schemas"]["MonitorPolicyDocumentV2"] | components["schemas"]["MonitorAlertDocument"] | components["schemas"]["BenchmarkHealthDocument"] | components["schemas"]["BenchmarkHealthDocumentV2"] | components["schemas"]["AuditAttestationDocument"] | components["schemas"]["AuditRunView"])[];
+            readonly meta: components["schemas"]["AuditApiMeta"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** AuditDocumentRef */
+        readonly AuditDocumentRef: {
+            /** Digest */
+            readonly digest: string;
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            readonly document_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            readonly kind: "benchmark_snapshot" | "task_fingerprint" | "corpus_snapshot" | "audit_plan" | "query_manifest" | "coverage_manifest" | "match_evidence" | "model_context" | "risk_policy" | "risk_assessment" | "temporal_assessment" | "sealed_manifest" | "canary_policy" | "seal_access_event" | "canary_observation" | "behavioral_audit_plan" | "behavioral_method_registry" | "behavioral_task_validity" | "behavioral_observation" | "behavioral_assessment" | "firewall_policy" | "firewall_scope" | "firewall_decision" | "replacement_source_metadata" | "replacement_plan" | "replacement_validation" | "derived_benchmark_manifest" | "monitor_policy" | "monitor_alert" | "benchmark_health" | "audit_attestation";
+        };
+        /** AuditDocumentResult */
+        readonly AuditDocumentResult: {
+            /** Data */
+            readonly data: components["schemas"]["BenchmarkSnapshotDocument"] | components["schemas"]["TaskFingerprintDocument"] | components["schemas"]["CorpusSnapshotDocument"] | components["schemas"]["AuditPlanDocument"] | components["schemas"]["QueryManifestDocument"] | components["schemas"]["CoverageManifestDocument"] | components["schemas"]["MatchEvidenceDocument"] | components["schemas"]["MatchEvidenceDocumentV2"] | components["schemas"]["RiskPolicyDocument"] | components["schemas"]["RiskPolicyDocumentV2"] | components["schemas"]["RiskAssessmentDocument"] | components["schemas"]["RiskAssessmentDocumentV2"] | components["schemas"]["ModelContextDocument"] | components["schemas"]["TemporalAssessmentDocument"] | components["schemas"]["TemporalAssessmentDocumentV2"] | components["schemas"]["SealedManifestDocument"] | components["schemas"]["SealedManifestDocumentV2"] | components["schemas"]["CanaryPolicyDocument"] | components["schemas"]["CanaryPolicyDocumentV2"] | components["schemas"]["SealAccessEventDocument"] | components["schemas"]["CanaryObservationDocument"] | components["schemas"]["BehavioralAuditPlanDocument"] | components["schemas"]["BehavioralAuditPlanDocumentV2"] | components["schemas"]["BehavioralMethodRegistryDocument"] | components["schemas"]["BehavioralTaskValidityDocument"] | components["schemas"]["BehavioralObservationDocument"] | components["schemas"]["BehavioralAssessmentDocument"] | components["schemas"]["FirewallDecisionDocument"] | components["schemas"]["FirewallDecisionDocumentV2"] | components["schemas"]["FirewallPolicyDocumentV2"] | components["schemas"]["FirewallScopeDocument"] | components["schemas"]["ReplacementSourceMetadataDocument"] | components["schemas"]["ReplacementPlanDocument"] | components["schemas"]["ReplacementPlanDocumentV2"] | components["schemas"]["ReplacementValidationDocument"] | components["schemas"]["DerivedBenchmarkManifestDocument"] | components["schemas"]["MonitorPolicyDocument"] | components["schemas"]["MonitorPolicyDocumentV2"] | components["schemas"]["MonitorAlertDocument"] | components["schemas"]["BenchmarkHealthDocument"] | components["schemas"]["BenchmarkHealthDocumentV2"] | components["schemas"]["AuditAttestationDocument"] | components["schemas"]["AuditRunView"] | components["schemas"]["AuditCatalogBundle"] | components["schemas"]["PublicHealthView"];
+            readonly meta: components["schemas"]["AuditApiMeta"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** AuditMutationData */
+        readonly AuditMutationData: {
+            /** Created */
+            readonly created: boolean;
+            /** Digest */
+            readonly digest: string;
+            /**
+             * Dispatch Authorized
+             * @default false
+             * @constant
+             */
+            readonly dispatch_authorized: false;
+            /**
+             * Dry Run
+             * @default false
+             */
+            readonly dry_run: boolean;
+            /**
+             * Kind
+             * @default benchmark_audit_mutation
+             * @constant
+             */
+            readonly kind: "benchmark_audit_mutation";
+            /**
+             * Resource Id
+             * Format: uuid
+             */
+            readonly resource_id: string;
+            /** Row Version */
+            readonly row_version: number | null;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "validated" | "planned";
+        };
+        /** AuditMutationResult */
+        readonly AuditMutationResult: {
+            readonly data: components["schemas"]["AuditMutationData"];
+            readonly meta: components["schemas"]["AuditApiMeta"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** AuditPlanDocument */
+        readonly AuditPlanDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default audit_plan
+             * @constant
+             */
+            readonly kind?: "audit_plan";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["AuditPlanPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** AuditPlanPayload */
+        readonly AuditPlanPayload: {
+            readonly benchmark_ref: components["schemas"]["AuditDocumentRef"];
+            /** Limits */
+            readonly limits: {
+                readonly [key: string]: number;
+            };
+            /** Methods */
+            readonly methods: readonly string[];
+            readonly model_context: components["schemas"]["AuditDocumentRef"] | null;
+            readonly policy: components["schemas"]["AuditDocumentRef"];
+            /** Sample Design */
+            readonly sample_design: {
+                readonly [key: string]: unknown;
+            };
+            /** Seed */
+            readonly seed: string;
+            /** Source Plan */
+            readonly source_plan: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Task Refs */
+            readonly task_refs: readonly components["schemas"]["EntityRef"][];
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            readonly visibility: "private" | "restricted" | "public";
+        };
+        /**
+         * AuditRunView
+         * @description Safe, schema-derived audit-run projection; idempotency keys are never returned.
+         */
+        readonly AuditRunView: {
+            /** Campaign Id */
+            readonly campaign_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            readonly created_at: string;
+            /** Current Stage */
+            readonly current_stage: string | null;
+            /** Dispatch Authorized */
+            readonly dispatch_authorized: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default audit_run
+             * @constant
+             */
+            readonly kind: "audit_run";
+            /**
+             * Plan Document Id
+             * Format: uuid
+             */
+            readonly plan_document_id: string;
+            /** Reserved Query Units */
+            readonly reserved_query_units: number;
+            /** Reserved Storage Bytes */
+            readonly reserved_storage_bytes: number;
+            /** Row Version */
+            readonly row_version: number;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "draft" | "planned" | "queued" | "scanning" | "verifying" | "assessing" | "review_required" | "complete" | "partial" | "blocked" | "cancelled";
+        };
+        /** BehavioralAssessmentDocument */
+        readonly BehavioralAssessmentDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default behavioral_assessment
+             * @constant
+             */
+            readonly kind?: "behavioral_assessment";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BehavioralAssessmentPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BehavioralAssessmentPayload */
+        readonly BehavioralAssessmentPayload: {
+            /**
+             * Assessment State
+             * @enum {string}
+             */
+            readonly assessment_state: "complete" | "partial" | "blocked";
+            /** Blocked Units */
+            readonly blocked_units: number;
+            /**
+             * Budget State
+             * @enum {string}
+             */
+            readonly budget_state: "within_cap" | "over_cap" | "unknown";
+            /**
+             * Calibration State
+             * @enum {string}
+             */
+            readonly calibration_state: "blocked_no_ground_truth" | "pending_validation";
+            /** Completed Units */
+            readonly completed_units: number;
+            /** Dispatched Model Calls */
+            readonly dispatched_model_calls: number;
+            /** Expected Units */
+            readonly expected_units: number;
+            /** Failed Units */
+            readonly failed_units: number;
+            /**
+             * Inclusion Claim
+             * @constant
+             */
+            readonly inclusion_claim: "not_assessed";
+            /**
+             * Inference State
+             * @enum {string}
+             */
+            readonly inference_state: "unsupported" | "calibration_blocked" | "descriptive_only";
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly ("self_report_is_not_evidence" | "performance_gap_is_not_training_inclusion" | "no_universal_probability")[];
+            /** Method Id */
+            readonly method_id: string;
+            readonly method_registry_ref: components["schemas"]["AuditDocumentRef"];
+            /** Model Panels */
+            readonly model_panels: readonly components["schemas"]["BehavioralModelPerformance"][];
+            /** Not Run Units */
+            readonly not_run_units: number;
+            /** Observation Refs */
+            readonly observation_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            /** Power Limit Codes */
+            readonly power_limit_codes: readonly ("method_unsupported" | "capability_missing" | "task_validity_not_accepted" | "fewer_than_two_families_in_a_split" | "power_analysis_not_available")[];
+            /**
+             * Power State
+             * @enum {string}
+             */
+            readonly power_state: "unsupported" | "insufficient_families" | "not_estimated";
+            /** Total Cost Micro Usd */
+            readonly total_cost_micro_usd: number | null;
+            /**
+             * Total Cost State
+             * @enum {string}
+             */
+            readonly total_cost_state: "actual" | "estimated" | "unavailable" | "not_applicable";
+            /** Total Input Tokens */
+            readonly total_input_tokens: number | null;
+            /** Total Output Tokens */
+            readonly total_output_tokens: number | null;
+            /**
+             * Training Budget State
+             * @enum {string}
+             */
+            readonly training_budget_state: "unknown" | "not_applicable";
+            /** Training Cost Micro Usd */
+            readonly training_cost_micro_usd: number | null;
+            /**
+             * Training Cost State
+             * @enum {string}
+             */
+            readonly training_cost_state: "unavailable" | "not_applicable";
+        };
+        /** BehavioralAuditPlanDocument */
+        readonly BehavioralAuditPlanDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default behavioral_audit_plan
+             * @constant
+             */
+            readonly kind?: "behavioral_audit_plan";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BehavioralAuditPlanPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BehavioralAuditPlanDocumentV2 */
+        readonly BehavioralAuditPlanDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default behavioral_audit_plan
+             * @constant
+             */
+            readonly kind?: "behavioral_audit_plan";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BehavioralAuditPlanPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BehavioralAuditPlanPayload */
+        readonly BehavioralAuditPlanPayload: {
+            /** Budgets */
+            readonly budgets: {
+                readonly [key: string]: number;
+            };
+            /** Control Sets */
+            readonly control_sets: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Decision Rules */
+            readonly decision_rules: {
+                readonly [key: string]: string;
+            };
+            /** Method Applicability */
+            readonly method_applicability: {
+                readonly [key: string]: "applicable" | "unsupported" | "not_applicable";
+            };
+            /** Original Sets */
+            readonly original_sets: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Reference Models */
+            readonly reference_models: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Samples */
+            readonly samples: readonly components["schemas"]["EntityRef"][];
+            /** Seed */
+            readonly seed: string;
+            /** Target Models */
+            readonly target_models: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Tests */
+            readonly tests: readonly string[];
+        };
+        /** BehavioralAuditPlanPayloadV2 */
+        readonly BehavioralAuditPlanPayloadV2: {
+            /** Alpha */
+            readonly alpha: string;
+            readonly audit_run_ref: components["schemas"]["EntityRef"];
+            /** Bootstrap Replicates */
+            readonly bootstrap_replicates: number;
+            readonly budget: components["schemas"]["BehavioralBudget"];
+            /**
+             * Decision Rule
+             * @constant
+             */
+            readonly decision_rule: "adjusted_p_below_alpha_and_effect_at_least_minimum";
+            readonly decoding_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Exposed Family Refs */
+            readonly exposed_family_refs: readonly components["schemas"]["EntityRef"][];
+            readonly exposure_policy_ref: components["schemas"]["AuditDocumentRef"];
+            readonly grading_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Ground Truth State
+             * @enum {string}
+             */
+            readonly ground_truth_state: "owned_controlled" | "unavailable";
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly ("self_report_is_not_evidence" | "performance_gap_is_not_training_inclusion" | "no_universal_probability")[];
+            /** Method Id */
+            readonly method_id: string;
+            readonly method_registry_ref: components["schemas"]["AuditDocumentRef"];
+            /** Minimum Effect */
+            readonly minimum_effect: string;
+            /** Model Slots */
+            readonly model_slots: readonly components["schemas"]["BehavioralModelSlot"][];
+            /**
+             * Multiplicity
+             * @enum {string}
+             */
+            readonly multiplicity: "none" | "holm" | "bonferroni" | "benjamini_hochberg";
+            /** Planned Hypotheses */
+            readonly planned_hypotheses: number;
+            /** Preregistered At */
+            readonly preregistered_at: string;
+            readonly prompt_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Sample Pairs */
+            readonly sample_pairs: readonly components["schemas"]["BehavioralSamplePair"][];
+            /** Seed */
+            readonly seed: string;
+            /**
+             * Statistical Test
+             * @enum {string}
+             */
+            readonly statistical_test: "constat_reference_corrected_performance" | "paired_family_bootstrap" | "registered_custom";
+            /** Target Power */
+            readonly target_power: string;
+            readonly tool_policy_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            readonly training_manifest_ref: components["schemas"]["ImmutableArtifactRef"] | null;
+            /** Unexposed Family Refs */
+            readonly unexposed_family_refs: readonly components["schemas"]["EntityRef"][];
+        };
+        /** BehavioralBudget */
+        readonly BehavioralBudget: {
+            /** Max Cost Micro Usd */
+            readonly max_cost_micro_usd: number;
+            /** Max Input Tokens */
+            readonly max_input_tokens: number;
+            /** Max Model Calls */
+            readonly max_model_calls: number;
+            /** Max Output Tokens */
+            readonly max_output_tokens: number;
+            /** Max Samples */
+            readonly max_samples: number;
+            /** Max Training Cost Micro Usd */
+            readonly max_training_cost_micro_usd: number;
+        };
+        /** BehavioralMethodDefinition */
+        readonly BehavioralMethodDefinition: {
+            /** Assumptions */
+            readonly assumptions: readonly string[];
+            readonly implementation_ref: components["schemas"]["ImmutableArtifactRef"] | null;
+            /**
+             * Implementation State
+             * @enum {string}
+             */
+            readonly implementation_state: "available" | "unsupported" | "not_pinned";
+            /** Limitations */
+            readonly limitations: readonly string[];
+            /**
+             * Method Family
+             * @enum {string}
+             */
+            readonly method_family: "performance_generalization" | "likelihood_based" | "approved_custom";
+            /** Method Id */
+            readonly method_id: string;
+            /** Method Version */
+            readonly method_version: string;
+            /** Required Capabilities */
+            readonly required_capabilities: readonly ("per_sample_scores" | "reference_models" | "stable_model_revision" | "token_likelihoods" | "owned_training_manifest")[];
+            /** Source Url */
+            readonly source_url: string;
+            /** Statistical Tests */
+            readonly statistical_tests: readonly ("constat_reference_corrected_performance" | "paired_family_bootstrap" | "registered_custom")[];
+        };
+        /** BehavioralMethodRegistryDocument */
+        readonly BehavioralMethodRegistryDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default behavioral_method_registry
+             * @constant
+             */
+            readonly kind?: "behavioral_method_registry";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BehavioralMethodRegistryPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BehavioralMethodRegistryPayload */
+        readonly BehavioralMethodRegistryPayload: {
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly ("performance_gap_is_not_training_inclusion" | "no_universal_probability")[];
+            /** Methods */
+            readonly methods: readonly components["schemas"]["BehavioralMethodDefinition"][];
+            /** Registry Version */
+            readonly registry_version: string;
+        };
+        /** BehavioralModelPerformance */
+        readonly BehavioralModelPerformance: {
+            /** Completed Control */
+            readonly completed_control: number;
+            /** Completed Original */
+            readonly completed_original: number;
+            /** Mean Control Score */
+            readonly mean_control_score: string | null;
+            /** Mean Original Score */
+            readonly mean_original_score: string | null;
+            readonly model_context_ref: components["schemas"]["AuditDocumentRef"];
+            /** Planned Control */
+            readonly planned_control: number;
+            /** Planned Original */
+            readonly planned_original: number;
+            /**
+             * Role
+             * @enum {string}
+             */
+            readonly role: "target" | "reference";
+        };
+        /** BehavioralModelSlot */
+        readonly BehavioralModelSlot: {
+            /** Capabilities */
+            readonly capabilities: readonly ("per_sample_scores" | "reference_models" | "stable_model_revision" | "token_likelihoods" | "owned_training_manifest")[];
+            readonly model_context_ref: components["schemas"]["AuditDocumentRef"];
+            /** Recipient */
+            readonly recipient: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            readonly role: "target" | "reference";
+            /** Stable Revision Verified */
+            readonly stable_revision_verified: boolean;
+        };
+        /** BehavioralObservationDocument */
+        readonly BehavioralObservationDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default behavioral_observation
+             * @constant
+             */
+            readonly kind?: "behavioral_observation";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BehavioralObservationPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BehavioralObservationPayload */
+        readonly BehavioralObservationPayload: {
+            /** Access Event Refs */
+            readonly access_event_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly call_intent_ref: components["schemas"]["EntityRef"] | null;
+            /**
+             * Confidence State
+             * @enum {string}
+             */
+            readonly confidence_state: "available" | "unavailable" | "not_requested";
+            /** Confidence Value */
+            readonly confidence_value: string | null;
+            /** Cost Micro Usd */
+            readonly cost_micro_usd: number | null;
+            /**
+             * Cost State
+             * @enum {string}
+             */
+            readonly cost_state: "actual" | "estimated" | "unavailable" | "not_applicable";
+            /**
+             * Dispatch State
+             * @enum {string}
+             */
+            readonly dispatch_state: "not_dispatched" | "authorized_dispatched" | "ambiguous";
+            /** Input Tokens */
+            readonly input_tokens: number | null;
+            /**
+             * Likelihood State
+             * @enum {string}
+             */
+            readonly likelihood_state: "available" | "unavailable" | "not_requested";
+            /** Likelihood Value */
+            readonly likelihood_value: string | null;
+            /** Missing Reason */
+            readonly missing_reason: ("method_unsupported" | "capability_missing" | "budget_exhausted" | "model_error" | "infrastructure_failure" | "cancelled" | "not_scheduled" | "review_pending") | null;
+            readonly model_context_ref: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            readonly outcome: "completed" | "failed" | "blocked" | "not_run";
+            /** Output Tokens */
+            readonly output_tokens: number | null;
+            /**
+             * Pair Id
+             * Format: uuid
+             */
+            readonly pair_id: string;
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            /** Request Digest */
+            readonly request_digest: string | null;
+            readonly response_artifact_ref: components["schemas"]["ImmutableArtifactRef"] | null;
+            /**
+             * Sample Role
+             * @enum {string}
+             */
+            readonly sample_role: "original" | "control";
+            /** Score */
+            readonly score: string | null;
+            /** Score Source */
+            readonly score_source: ("grader" | "structured_metric" | "human_review") | null;
+            readonly task_ref: components["schemas"]["EntityRef"];
+            /**
+             * Usage State
+             * @enum {string}
+             */
+            readonly usage_state: "reported" | "partial" | "unavailable" | "not_applicable";
+        };
+        /** BehavioralSamplePair */
+        readonly BehavioralSamplePair: {
+            readonly control_task_ref: components["schemas"]["EntityRef"];
+            readonly family_ref: components["schemas"]["EntityRef"];
+            readonly original_task_ref: components["schemas"]["EntityRef"];
+            /**
+             * Pair Id
+             * Format: uuid
+             */
+            readonly pair_id: string;
+            /**
+             * Split
+             * @enum {string}
+             */
+            readonly split: "calibration" | "validation" | "held_out_test";
+            readonly validity_ref: components["schemas"]["AuditDocumentRef"];
+        };
+        /** BehavioralTaskValidityDocument */
+        readonly BehavioralTaskValidityDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default behavioral_task_validity
+             * @constant
+             */
+            readonly kind?: "behavioral_task_validity";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BehavioralTaskValidityPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BehavioralTaskValidityPayload */
+        readonly BehavioralTaskValidityPayload: {
+            readonly author_ref: components["schemas"]["EntityRef"];
+            readonly control_task_ref: components["schemas"]["EntityRef"];
+            /** Difficulty Gap */
+            readonly difficulty_gap: string;
+            /** Evidence Refs */
+            readonly evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly family_ref: components["schemas"]["EntityRef"];
+            readonly original_task_ref: components["schemas"]["EntityRef"];
+            /** Permitted Difficulty Gap */
+            readonly permitted_difficulty_gap: string;
+            readonly reviewer_ref: components["schemas"]["EntityRef"] | null;
+            /**
+             * Semantic Relation
+             * @enum {string}
+             */
+            readonly semantic_relation: "semantically_equivalent" | "same_distribution" | "invalid" | "unknown";
+            /** Validity Limits */
+            readonly validity_limits: readonly ("semantic_equivalence_is_reviewed" | "difficulty_match_is_measured")[];
+            /**
+             * Validity State
+             * @enum {string}
+             */
+            readonly validity_state: "accepted" | "pending" | "rejected";
+        };
+        /** BenchmarkCapability */
+        readonly BenchmarkCapability: {
+            /** Benchmark Slug */
+            readonly benchmark_slug: string;
+            /** Component Scope */
+            readonly component_scope: readonly string[];
+            /**
+             * Conformance State
+             * @enum {string}
+             */
+            readonly conformance_state: "not_run" | "fixture_only" | "live_verified" | "blocked";
+            /**
+             * Importer State
+             * @enum {string}
+             */
+            readonly importer_state: "not_implemented" | "metadata_only" | "importable" | "audit_conformant" | "blocked";
+            /** Limitations */
+            readonly limitations: readonly string[];
+            /** Original Evaluation Owner */
+            readonly original_evaluation_owner: string;
+            /** Required Modalities */
+            readonly required_modalities: readonly string[];
+            /**
+             * Runtime State
+             * @enum {string}
+             */
+            readonly runtime_state: "not_required_for_metadata" | "not_implemented" | "blocked" | "conformant";
+            /** Source Groups */
+            readonly source_groups: readonly string[];
+            /** Supported Components */
+            readonly supported_components: readonly string[];
+            /** Supported Modalities */
+            readonly supported_modalities: readonly string[];
+        };
+        /** BenchmarkCatalogEntry */
+        readonly BenchmarkCatalogEntry: {
+            /**
+             * Access State
+             * @enum {string}
+             */
+            readonly access_state: "public_metadata" | "public_data_review_required" | "gated" | "owner_supplied";
+            /** Audit Owner */
+            readonly audit_owner: string;
+            /**
+             * Audit Status
+             * @enum {string}
+             */
+            readonly audit_status: "catalogued" | "metadata_only" | "importable" | "audit_conformant" | "blocked" | "retired";
+            /** Component Schema */
+            readonly component_schema: readonly string[];
+            /**
+             * Family
+             * @enum {string}
+             */
+            readonly family: "code" | "knowledge" | "math" | "reasoning" | "agent" | "multimodal" | "private";
+            /**
+             * Importer Status
+             * @enum {string}
+             */
+            readonly importer_status: "not_implemented" | "metadata_only" | "importable" | "audit_conformant" | "blocked";
+            /** License Evidence Url */
+            readonly license_evidence_url: string | null;
+            /** Modalities */
+            readonly modalities: readonly ("text" | "code" | "repository" | "agent_environment" | "image" | "tool_call")[];
+            /** Name */
+            readonly name: string;
+            /**
+             * Native Evaluation Unchanged
+             * @constant
+             */
+            readonly native_evaluation_unchanged: true;
+            /** Notes */
+            readonly notes: string;
+            /** Official Url */
+            readonly official_url: string;
+            /** Owner */
+            readonly owner: string;
+            /**
+             * Rights State
+             * @enum {string}
+             */
+            readonly rights_state: "needs_item_review" | "license_review_required" | "gated_access_required" | "owner_contract_required" | "approved_for_declared_scope";
+            /** Slug */
+            readonly slug: string;
+            /** Source Pins */
+            readonly source_pins: readonly components["schemas"]["SourceRevisionPin"][];
+            /** Split Policy */
+            readonly split_policy: string;
+            /**
+             * Split State
+             * @enum {string}
+             */
+            readonly split_state: "pinned" | "partially_documented" | "unresolved";
+            /** Upstream Lineage */
+            readonly upstream_lineage: readonly string[];
+            /** Version */
+            readonly version: string | null;
+            /**
+             * Version State
+             * @enum {string}
+             */
+            readonly version_state: "dataset_version_pinned" | "repository_snapshot_pinned" | "metadata_only" | "unresolved";
+        };
+        /** BenchmarkHealthDocument */
+        readonly BenchmarkHealthDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default benchmark_health
+             * @constant
+             */
+            readonly kind?: "benchmark_health";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BenchmarkHealthPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BenchmarkHealthDocumentV2 */
+        readonly BenchmarkHealthDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default benchmark_health
+             * @constant
+             */
+            readonly kind?: "benchmark_health";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BenchmarkHealthPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BenchmarkHealthMetricsV2 */
+        readonly BenchmarkHealthMetricsV2: {
+            readonly assessment_states: components["schemas"]["HealthAssessmentCounts"];
+            /** Detector Quality */
+            readonly detector_quality: readonly components["schemas"]["HealthDetectorStratum"][];
+            readonly duplicate_union_prevalence: components["schemas"]["HealthRatioMetric"];
+            readonly exact_duplicate_prevalence: components["schemas"]["HealthRatioMetric"];
+            readonly families: components["schemas"]["HealthFamilyCounts"];
+            readonly freshness: components["schemas"]["HealthRatioMetric"];
+            readonly mandatory_coverage: components["schemas"]["HealthCoverageCounts"];
+            readonly mean_observed_risk: components["schemas"]["HealthMeanRisk"];
+            readonly pre_cutoff_exposure: components["schemas"]["HealthRatioMetric"];
+            readonly provenance_completeness: components["schemas"]["HealthRatioMetric"];
+            readonly risk_tiers: components["schemas"]["HealthRiskTierCounts"];
+            readonly semantic_duplicate_prevalence: components["schemas"]["HealthRatioMetric"];
+        };
+        /** BenchmarkHealthPayload */
+        readonly BenchmarkHealthPayload: {
+            /** Assessment Refs */
+            readonly assessment_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly context_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly coverage: components["schemas"]["DecimalMeasurement"];
+            /** Descriptive Metrics */
+            readonly descriptive_metrics: {
+                readonly [key: string]: components["schemas"]["DecimalMeasurement"];
+            };
+            readonly membership_ref: components["schemas"]["AuditDocumentRef"];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            /** Trend Refs */
+            readonly trend_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Unknown Denominators */
+            readonly unknown_denominators: {
+                readonly [key: string]: number;
+            };
+        };
+        /** BenchmarkHealthPayloadV2 */
+        readonly BenchmarkHealthPayloadV2: {
+            /** Assessment Refs */
+            readonly assessment_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Coverage Refs */
+            readonly coverage_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Discontinuity Reasons */
+            readonly discontinuity_reasons: readonly ("membership_changed" | "sampling_changed" | "source_window_changed" | "risk_policy_changed" | "model_context_changed" | "source_scope_changed" | "scan_method_changed" | "family_mapping_changed" | "provenance_definition_changed" | "freshness_definition_changed" | "metric_definition_changed")[];
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly ("descriptive_only" | "sampled_is_not_census" | "partial_coverage_is_not_clean" | "exposure_is_not_training_membership" | "no_binary_float_aggregation")[];
+            readonly metrics: components["schemas"]["BenchmarkHealthMetricsV2"];
+            readonly scope: components["schemas"]["BenchmarkHealthScopeV2"];
+            /** Temporal Refs */
+            readonly temporal_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Trend Refs */
+            readonly trend_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /**
+             * Trend State
+             * @enum {string}
+             */
+            readonly trend_state: "initial" | "comparable" | "discontinuity";
+        };
+        /** BenchmarkHealthScopeV2 */
+        readonly BenchmarkHealthScopeV2: {
+            /** Comparability Key */
+            readonly comparability_key: string;
+            readonly context_ref: components["schemas"]["AuditDocumentRef"] | null;
+            /** Family Mapping Digest */
+            readonly family_mapping_digest: string;
+            readonly family_mapping_ref: components["schemas"]["ImmutableArtifactRef"] | null;
+            /** Freshness Definition Version */
+            readonly freshness_definition_version: string;
+            /** Freshness Max Scan Age Hours */
+            readonly freshness_max_scan_age_hours: number;
+            /** Freshness Max Source Age Days */
+            readonly freshness_max_source_age_days: number;
+            readonly membership_ref: components["schemas"]["AuditDocumentRef"];
+            /** Method Digest */
+            readonly method_digest: string;
+            /**
+             * Metric Definition Version
+             * @default benchmark-health-v1
+             * @constant
+             */
+            readonly metric_definition_version?: "benchmark-health-v1";
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            /** Population Task Count */
+            readonly population_task_count: number;
+            /** Provenance Definition Version */
+            readonly provenance_definition_version: string;
+            /** Sample Digest */
+            readonly sample_digest: string;
+            /** Sampling Design Digest */
+            readonly sampling_design_digest: string;
+            /** Sampling Method */
+            readonly sampling_method: string;
+            /**
+             * Sampling Mode
+             * @enum {string}
+             */
+            readonly sampling_mode: "census" | "sampled";
+            /** Selected Task Count */
+            readonly selected_task_count: number;
+            /** Source Refs */
+            readonly source_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Source Window End */
+            readonly source_window_end: string;
+            /** Source Window Start */
+            readonly source_window_start: string;
+        };
+        /** BenchmarkRegistry */
+        readonly BenchmarkRegistry: {
+            /** Benchmarks */
+            readonly benchmarks: readonly components["schemas"]["BenchmarkCatalogEntry"][];
+            /** Catalog Version */
+            readonly catalog_version: string;
+            /** Observed On */
+            readonly observed_on: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** BenchmarkSnapshotDocument */
+        readonly BenchmarkSnapshotDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default benchmark_snapshot
+             * @constant
+             */
+            readonly kind?: "benchmark_snapshot";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["BenchmarkSnapshotPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** BenchmarkSnapshotPayload */
+        readonly BenchmarkSnapshotPayload: {
+            /** Components */
+            readonly components: readonly components["schemas"]["EntityRef"][];
+            /** Importer Refs */
+            readonly importer_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Membership */
+            readonly membership: readonly components["schemas"]["EntityRef"][];
+            readonly registry_ref: components["schemas"]["EntityRef"];
+            /** Split */
+            readonly split: string;
+            /** Upstream Rights */
+            readonly upstream_rights: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Version */
+            readonly version: string;
+        };
+        /** CanaryCollisionCheck */
+        readonly CanaryCollisionCheck: {
+            /** Checked Items */
+            readonly checked_items: number;
+            /**
+             * Method Version
+             * @constant
+             */
+            readonly method_version: "exact-bytes-v1";
+            /**
+             * Result
+             * @constant
+             */
+            readonly result: "no_collision";
+            readonly scope_ref: components["schemas"]["AuditDocumentRef"];
+        };
+        /** CanaryObservationDocument */
+        readonly CanaryObservationDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default canary_observation
+             * @constant
+             */
+            readonly kind?: "canary_observation";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["CanaryObservationPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** CanaryObservationPayload */
+        readonly CanaryObservationPayload: {
+            readonly access_event_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly coverage_ref: components["schemas"]["AuditDocumentRef"];
+            /** Exact Match */
+            readonly exact_match: boolean;
+            /** External Query */
+            readonly external_query: boolean;
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly ("absence_is_not_clean" | "observed_disclosure_is_not_training_proof")[];
+            readonly marker_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Observation
+             * @enum {string}
+             */
+            readonly observation: "observed_verified" | "observed_previously_published" | "not_observed_in_scope" | "unverified_observation";
+            /**
+             * Prior Publication
+             * @enum {string}
+             */
+            readonly prior_publication: "not_previously_published" | "previously_published" | "unknown";
+            /** Source Date Evidence */
+            readonly source_date_evidence: readonly components["schemas"]["TimestampEvidence"][];
+            readonly source_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly source_review_ref: components["schemas"]["AuditDocumentRef"] | null;
+        };
+        /** CanaryPolicyDocument */
+        readonly CanaryPolicyDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default canary_policy
+             * @constant
+             */
+            readonly kind?: "canary_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["CanaryPolicyPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** CanaryPolicyDocumentV2 */
+        readonly CanaryPolicyDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default canary_policy
+             * @constant
+             */
+            readonly kind?: "canary_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["CanaryPolicyPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** CanaryPolicyPayload */
+        readonly CanaryPolicyPayload: {
+            readonly access: components["schemas"]["AuditDocumentRef"];
+            /** Collision Checks */
+            readonly collision_checks: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly detection: components["schemas"]["AuditDocumentRef"];
+            /** Exposure Rules */
+            readonly exposure_rules: readonly string[];
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly string[];
+            readonly marker_generation: components["schemas"]["AuditDocumentRef"];
+        };
+        /** CanaryPolicyPayloadV2 */
+        readonly CanaryPolicyPayloadV2: {
+            readonly access: components["schemas"]["AuditDocumentRef"];
+            /** Collision Checks */
+            readonly collision_checks: readonly components["schemas"]["CanaryCollisionCheck"][];
+            readonly detection: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Detection Method
+             * @constant
+             */
+            readonly detection_method: "exact_bytes";
+            /** Exposure Rules */
+            readonly exposure_rules: readonly string[];
+            /** Interpretation Limits */
+            readonly interpretation_limits: readonly ("absence_is_not_clean" | "observed_disclosure_is_not_training_proof")[];
+            /**
+             * Local First
+             * @constant
+             */
+            readonly local_first: true;
+            /**
+             * Marker Entropy Bits
+             * @constant
+             */
+            readonly marker_entropy_bits: 256;
+            /** Marker Refs */
+            readonly marker_refs: readonly components["schemas"]["ImmutableArtifactRef"][];
+        };
+        /** CapabilityMatrix */
+        readonly CapabilityMatrix: {
+            /** Benchmarks */
+            readonly benchmarks: readonly components["schemas"]["BenchmarkCapability"][];
+            /** Matrix Version */
+            readonly matrix_version: string;
+            /** Observed On */
+            readonly observed_on: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** ChronologyInterval */
+        readonly ChronologyInterval: {
+            /**
+             * Basis
+             * @enum {string}
+             */
+            readonly basis: "owner_claim" | "git_commit_metadata" | "download_metadata" | "archive_capture" | "trusted_timestamp_receipt" | "local_signed_receipt" | "verified_upstream_record" | "provider_declared";
+            /**
+             * Derivation
+             * @enum {string}
+             */
+            readonly derivation: "direct_source_record" | "owner_assertion" | "commit_metadata" | "archive_capture_time" | "download_metadata" | "commitment_receipt_time" | "provider_declaration" | "derived";
+            readonly earliest: components["schemas"]["TimestampEvidence"] | null;
+            /**
+             * Event
+             * @enum {string}
+             */
+            readonly event: "artifact_creation" | "git_commit" | "archive_capture" | "upstream_public_exposure" | "corpus_inclusion" | "benchmark_publication" | "model_training_cutoff" | "model_update" | "task_disclosure" | "evaluation";
+            /** Evidence Ref */
+            readonly evidence_ref: components["schemas"]["AuditDocumentRef"] | components["schemas"]["ImmutableArtifactRef"] | null;
+            readonly latest: components["schemas"]["TimestampEvidence"] | null;
+            /** Unknown Reason */
+            readonly unknown_reason: string | null;
+            /**
+             * Verification State
+             * @enum {string}
+             */
+            readonly verification_state: "verified" | "unverified" | "unknown";
+        };
         /**
          * ComparisonFilters
          * @description Task filters applied only to common task references and per-task differences.
@@ -712,6 +2101,47 @@ export interface components {
             /** Value */
             readonly value: string | null;
         };
+        /** CorpusSnapshotDocument */
+        readonly CorpusSnapshotDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default corpus_snapshot
+             * @constant
+             */
+            readonly kind?: "corpus_snapshot";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["CorpusSnapshotPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** CorpusSnapshotPayload */
+        readonly CorpusSnapshotPayload: {
+            /** Acquisition Scope */
+            readonly acquisition_scope: {
+                readonly [key: string]: unknown;
+            };
+            /** Content Root */
+            readonly content_root: string;
+            /** Date Coverage */
+            readonly date_coverage: readonly components["schemas"]["TimestampEvidence"][];
+            /** Exclusions */
+            readonly exclusions: readonly string[];
+            readonly extraction_policy: components["schemas"]["AuditDocumentRef"];
+            /** Index Digest */
+            readonly index_digest: string;
+            /** Rights */
+            readonly rights: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly source_ref: components["schemas"]["AuditDocumentRef"];
+            /** Version */
+            readonly version: string;
+        };
         /**
          * Coverage
          * @description How much of a cohort an entry actually covers.
@@ -738,6 +2168,150 @@ export interface components {
             /** Tasks */
             readonly tasks: number;
         };
+        /** CoverageManifestDocument */
+        readonly CoverageManifestDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default coverage_manifest
+             * @constant
+             */
+            readonly kind?: "coverage_manifest";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["CoverageManifestPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** CoverageManifestPayload */
+        readonly CoverageManifestPayload: {
+            /** Counts */
+            readonly counts: {
+                readonly [key: string]: number;
+            };
+            /** Eligible Sources */
+            readonly eligible_sources: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Executed Queries */
+            readonly executed_queries: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly freshness: components["schemas"]["DecimalMeasurement"];
+            /** Outages */
+            readonly outages: readonly {
+                readonly [key: string]: unknown;
+            }[];
+            /** Planned Queries */
+            readonly planned_queries: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Time Windows */
+            readonly time_windows: readonly components["schemas"]["TimestampEvidence"][];
+            /** Truncation */
+            readonly truncation: readonly {
+                readonly [key: string]: unknown;
+            }[];
+            /** Unsupported Modalities */
+            readonly unsupported_modalities: readonly string[];
+        };
+        /** DecimalMeasurement */
+        readonly DecimalMeasurement: {
+            /** Null Reason */
+            readonly null_reason: ("not_run" | "unavailable" | "not_applicable" | "insufficient_coverage" | "withheld") | null;
+            /** Value */
+            readonly value: string | null;
+        };
+        /** DerivedBenchmarkEntry */
+        readonly DerivedBenchmarkEntry: {
+            /** Derived Competency */
+            readonly derived_competency: string | null;
+            /** Derived Difficulty */
+            readonly derived_difficulty: string | null;
+            readonly derived_item_ref: components["schemas"]["EntityRef"];
+            /** Derived Source Family Id */
+            readonly derived_source_family_id: string | null;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            readonly disposition: "retained" | "replaced" | "excluded";
+            readonly oracle_mapping_ref: components["schemas"]["ImmutableArtifactRef"] | null;
+            /** Original Competency */
+            readonly original_competency: string;
+            /** Original Difficulty */
+            readonly original_difficulty: string;
+            readonly original_item_ref: components["schemas"]["EntityRef"];
+            readonly original_task_ref: components["schemas"]["EntityRef"] | null;
+            /** Reason */
+            readonly reason: string | null;
+            readonly replacement_task_ref: components["schemas"]["EntityRef"] | null;
+            /** Source Family Id */
+            readonly source_family_id: string;
+            /** Split */
+            readonly split: string;
+            readonly validation_ref: components["schemas"]["AuditDocumentRef"] | null;
+        };
+        /** DerivedBenchmarkManifestDocument */
+        readonly DerivedBenchmarkManifestDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default derived_benchmark_manifest
+             * @constant
+             */
+            readonly kind?: "derived_benchmark_manifest";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["DerivedBenchmarkManifestPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** DerivedBenchmarkManifestPayload */
+        readonly DerivedBenchmarkManifestPayload: {
+            readonly change_summary_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Comparability
+             * @constant
+             */
+            readonly comparability: "separate_labels_no_automatic_comparison";
+            /** Created At */
+            readonly created_at: string;
+            /** Derived Membership Digest */
+            readonly derived_membership_digest: string;
+            /** Derived Metric Label */
+            readonly derived_metric_label: string;
+            /** Derived Version */
+            readonly derived_version: string;
+            /** Distribution */
+            readonly distribution: readonly components["schemas"]["DerivedDistributionCount"][];
+            /** Entries */
+            readonly entries: readonly components["schemas"]["DerivedBenchmarkEntry"][];
+            /** Official Membership Digest */
+            readonly official_membership_digest: string;
+            /** Official Metric Label */
+            readonly official_metric_label: string;
+            readonly official_snapshot_ref: components["schemas"]["AuditDocumentRef"];
+            readonly sampling_policy_ref: components["schemas"]["ImmutableArtifactRef"];
+        };
+        /** DerivedDistributionCount */
+        readonly DerivedDistributionCount: {
+            /** Derived Items */
+            readonly derived_items: number;
+            /**
+             * Dimension
+             * @enum {string}
+             */
+            readonly dimension: "source_family" | "split" | "competency" | "difficulty";
+            /** Label */
+            readonly label: string;
+            /** Official Items */
+            readonly official_items: number;
+        };
         /**
          * DimensionBreakdown
          * @description A language or model dimension's score and the coverage behind it.
@@ -762,6 +2336,22 @@ export interface components {
              * @constant
              */
             readonly schema_version: 1;
+        };
+        /** DocumentMetadata */
+        readonly DocumentMetadata: {
+            /** Actor */
+            readonly actor: string;
+            /** Created At */
+            readonly created_at: string;
+            /** Row Version */
+            readonly row_version: number;
+            /**
+             * Timestamp Precision
+             * @enum {string}
+             */
+            readonly timestamp_precision: "second" | "millisecond" | "microsecond" | "nanosecond";
+            /** Trace Id */
+            readonly trace_id: string | null;
         };
         /** EndpointDecisionInput */
         readonly EndpointDecisionInput: {
@@ -859,10 +2449,370 @@ export interface components {
              */
             readonly status: "pending";
         };
+        /** EntityRef */
+        readonly EntityRef: {
+            /** Digest */
+            readonly digest?: string | null;
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            readonly entity_id: string;
+            /** Entity Kind */
+            readonly entity_kind: string;
+        };
+        /** FirewallDecisionDocument */
+        readonly FirewallDecisionDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default firewall_decision
+             * @constant
+             */
+            readonly kind?: "firewall_decision";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["FirewallDecisionPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** FirewallDecisionDocumentV2 */
+        readonly FirewallDecisionDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default firewall_decision
+             * @constant
+             */
+            readonly kind?: "firewall_decision";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["FirewallDecisionPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** FirewallDecisionPayload */
+        readonly FirewallDecisionPayload: {
+            readonly audit_ref: components["schemas"]["AuditDocumentRef"];
+            /** Exposure Refs */
+            readonly exposure_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Lineage Refs */
+            readonly lineage_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            /** Reasons */
+            readonly reasons: readonly string[];
+            /**
+             * Result
+             * @enum {string}
+             */
+            readonly result: "admit" | "review" | "reject";
+            readonly reviewer: components["schemas"]["EntityRef"];
+            /** Rights Refs */
+            readonly rights_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly task_ref: components["schemas"]["EntityRef"];
+            /** Validity Refs */
+            readonly validity_refs: readonly components["schemas"]["AuditDocumentRef"][];
+        };
+        /** FirewallDecisionPayloadV2 */
+        readonly FirewallDecisionPayloadV2: {
+            /** Exposure Refs */
+            readonly exposure_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            /** Reasons */
+            readonly reasons: readonly ("scope_incomplete" | "prohibited_overlap" | "validity_rejected" | "validity_pending" | "rights_denied" | "rights_pending" | "high_risk_rejected" | "risk_scope_incomplete" | "high_risk_review" | "temporal_unresolved" | "temporal_exposure_detected" | "reviewer_not_independent")[];
+            /** Resolution Reason */
+            readonly resolution_reason: string | null;
+            /**
+             * Result
+             * @enum {string}
+             */
+            readonly result: "admit" | "review" | "reject";
+            readonly reviewer: components["schemas"]["EntityRef"];
+            readonly risk_assessment_ref: components["schemas"]["AuditDocumentRef"];
+            readonly scope_ref: components["schemas"]["AuditDocumentRef"];
+            readonly task_ref: components["schemas"]["EntityRef"];
+            readonly temporal_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly validity_ref: components["schemas"]["AuditDocumentRef"];
+        };
+        /** FirewallPolicyDocumentV2 */
+        readonly FirewallPolicyDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default firewall_policy
+             * @constant
+             */
+            readonly kind?: "firewall_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["FirewallPolicyPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** FirewallPolicyPayloadV2 */
+        readonly FirewallPolicyPayloadV2: {
+            readonly audit_plan_ref: components["schemas"]["AuditDocumentRef"];
+            readonly benchmark_ref: components["schemas"]["AuditDocumentRef"];
+            /**
+             * High Risk Action
+             * @enum {string}
+             */
+            readonly high_risk_action: "review" | "reject";
+            /** Policy Version */
+            readonly policy_version: string;
+            /** Prohibited Relations */
+            readonly prohibited_relations: readonly ("exact_component" | "near_exact_component" | "semantic_duplicate" | "shared_family" | "shared_concept" | "no_substantive_match" | "unresolved")[];
+            /** Require Temporal Review */
+            readonly require_temporal_review: boolean;
+            /** Required Scope */
+            readonly required_scope: readonly components["schemas"]["FirewallScopeUnit"][];
+        };
+        /** FirewallScopeDocument */
+        readonly FirewallScopeDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default firewall_scope
+             * @constant
+             */
+            readonly kind?: "firewall_scope";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["FirewallScopePayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** FirewallScopeOutcome */
+        readonly FirewallScopeOutcome: {
+            /** Evidence Refs */
+            readonly evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Relation */
+            readonly relation: ("exact_component" | "near_exact_component" | "semantic_duplicate" | "shared_family" | "shared_concept" | "no_substantive_match" | "unresolved") | null;
+            /** Scope Key */
+            readonly scope_key: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "no_match" | "match" | "unresolved" | "failed" | "truncated" | "unsupported";
+        };
+        /** FirewallScopePayload */
+        readonly FirewallScopePayload: {
+            readonly audit_ref: components["schemas"]["AuditDocumentRef"];
+            /** Outcomes */
+            readonly outcomes: readonly components["schemas"]["FirewallScopeOutcome"][];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            readonly task_ref: components["schemas"]["EntityRef"];
+        };
+        /** FirewallScopeUnit */
+        readonly FirewallScopeUnit: {
+            readonly component_ref: components["schemas"]["EntityRef"];
+            /**
+             * Modality
+             * @enum {string}
+             */
+            readonly modality: "text" | "code" | "image" | "audio" | "video" | "repository";
+            /** Scope Key */
+            readonly scope_key: string;
+            readonly source_ref: components["schemas"]["AuditDocumentRef"];
+        };
         /** HTTPValidationError */
         readonly HTTPValidationError: {
             /** Detail */
             readonly detail?: readonly components["schemas"]["ValidationError"][];
+        };
+        /** HealthAssessmentCounts */
+        readonly HealthAssessmentCounts: {
+            /** Blocked */
+            readonly blocked: number;
+            /** Complete */
+            readonly complete: number;
+            /** Partial */
+            readonly partial: number;
+            /** Selected Tasks */
+            readonly selected_tasks: number;
+            /** Unknown */
+            readonly unknown: number;
+            /** Unscanned */
+            readonly unscanned: number;
+        };
+        /** HealthConfidenceMetric */
+        readonly HealthConfidenceMetric: {
+            /** Denominator */
+            readonly denominator: number;
+            /**
+             * Interval Method
+             * @constant
+             */
+            readonly interval_method: "wilson_95_v1";
+            /** Lower 95 */
+            readonly lower_95: string | null;
+            /** Null Reason */
+            readonly null_reason: "empty_denominator" | null;
+            /** Numerator */
+            readonly numerator: number;
+            /** Unknown Count */
+            readonly unknown_count: number;
+            /** Upper 95 */
+            readonly upper_95: string | null;
+            /** Value */
+            readonly value: string | null;
+        };
+        /** HealthCoverageCounts */
+        readonly HealthCoverageCounts: {
+            /** Blocked Units */
+            readonly blocked_units: number;
+            /** Completed Units */
+            readonly completed_units: number;
+            /** Failed Units */
+            readonly failed_units: number;
+            /** Null Reason */
+            readonly null_reason: "empty_denominator" | null;
+            /** Planned Units */
+            readonly planned_units: number;
+            /** Truncated Units */
+            readonly truncated_units: number;
+            /** Unknown Units */
+            readonly unknown_units: number;
+            /** Value */
+            readonly value: string | null;
+        };
+        /** HealthDetectorStratum */
+        readonly HealthDetectorStratum: {
+            /** False Negative */
+            readonly false_negative: number;
+            readonly false_negative_rate: components["schemas"]["HealthConfidenceMetric"];
+            /** False Positive */
+            readonly false_positive: number;
+            readonly false_positive_rate: components["schemas"]["HealthConfidenceMetric"];
+            /** Labeled Negative */
+            readonly labeled_negative: number;
+            /** Labeled Positive */
+            readonly labeled_positive: number;
+            /** Language */
+            readonly language: string;
+            /**
+             * Modality
+             * @enum {string}
+             */
+            readonly modality: "text" | "code" | "image" | "audio" | "video" | "repository" | "other";
+            readonly precision: components["schemas"]["HealthConfidenceMetric"];
+            readonly recall: components["schemas"]["HealthConfidenceMetric"];
+            /**
+             * Relation
+             * @enum {string}
+             */
+            readonly relation: "exact_component" | "near_exact_component" | "semantic_duplicate" | "shared_family" | "shared_concept" | "no_substantive_match" | "unresolved";
+            readonly source_ref: components["schemas"]["AuditDocumentRef"] | null;
+            /** True Negative */
+            readonly true_negative: number;
+            /** True Positive */
+            readonly true_positive: number;
+            /** Unknown Labels */
+            readonly unknown_labels: number;
+        };
+        /** HealthFamilyCounts */
+        readonly HealthFamilyCounts: {
+            /** Independent Families */
+            readonly independent_families: number;
+            /** Selected Tasks */
+            readonly selected_tasks: number;
+            /** Tasks Without Family Evidence */
+            readonly tasks_without_family_evidence: number;
+        };
+        /** HealthMeanRisk */
+        readonly HealthMeanRisk: {
+            /** Eligible Tasks */
+            readonly eligible_tasks: number;
+            /** Missing Tasks */
+            readonly missing_tasks: number;
+            /** Null Reason */
+            readonly null_reason: "insufficient_coverage" | null;
+            /** Selected Tasks */
+            readonly selected_tasks: number;
+            /** Value */
+            readonly value: string | null;
+        };
+        /**
+         * HealthRatioMetric
+         * @description A denominator-first percentage; incomplete evidence is explicitly a lower bound.
+         */
+        readonly HealthRatioMetric: {
+            /** Denominator */
+            readonly denominator: number;
+            /** Lower Bound */
+            readonly lower_bound: boolean;
+            /** Null Reason */
+            readonly null_reason: ("empty_denominator" | "not_applicable") | null;
+            /** Numerator */
+            readonly numerator: number;
+            /** Unknown Count */
+            readonly unknown_count: number;
+            /** Value */
+            readonly value: string | null;
+        };
+        /** HealthRiskTierCounts */
+        readonly HealthRiskTierCounts: {
+            /** Assessed Tasks */
+            readonly assessed_tasks: number;
+            /** High */
+            readonly high: number;
+            /** Insufficient */
+            readonly insufficient: number;
+            /** Low */
+            readonly low: number;
+            /** Medium */
+            readonly medium: number;
+        };
+        /** HidingCommitmentPayload */
+        readonly HidingCommitmentPayload: {
+            /** Commitment */
+            readonly commitment: string;
+            readonly local_receipt: components["schemas"]["LocalTimestampReceipt"] | null;
+            readonly nonce_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Scheme
+             * @constant
+             */
+            readonly scheme: "sha256-salted-v1";
+            readonly trusted_proof: components["schemas"]["TrustedTimestampProof"] | null;
+        };
+        /** ImmutableArtifactRef */
+        readonly ImmutableArtifactRef: {
+            /**
+             * Artifact Id
+             * Format: uuid
+             */
+            readonly artifact_id: string;
+            /** Digest */
+            readonly digest: string;
+            /** Media Type */
+            readonly media_type: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            readonly visibility: "private" | "restricted" | "public";
         };
         /**
          * Incompatibility
@@ -1046,6 +2996,194 @@ export interface components {
              * @constant
              */
             readonly schema_version: 1;
+        };
+        /** LocalTimestampReceipt */
+        readonly LocalTimestampReceipt: {
+            /**
+             * Adapter Version
+             * @constant
+             */
+            readonly adapter_version: "local-ed25519-v1";
+            /**
+             * Algorithm
+             * @constant
+             */
+            readonly algorithm: "Ed25519";
+            /** Commitment */
+            readonly commitment: string;
+            readonly key_ref: components["schemas"]["EntityRef"];
+            /** Public Key B64 */
+            readonly public_key_b64: string;
+            readonly received_at: components["schemas"]["TimestampEvidence"];
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Signature B64 */
+            readonly signature_b64: string;
+            /**
+             * Trust Label
+             * @constant
+             */
+            readonly trust_label: "local_non_independent";
+        };
+        /** MatchEvidenceDocument */
+        readonly MatchEvidenceDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default match_evidence
+             * @constant
+             */
+            readonly kind?: "match_evidence";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["MatchEvidencePayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** MatchEvidenceDocumentV2 */
+        readonly MatchEvidenceDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default match_evidence
+             * @constant
+             */
+            readonly kind?: "match_evidence";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["MatchEvidencePayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** MatchEvidencePayload */
+        readonly MatchEvidencePayload: {
+            /**
+             * Component Relation
+             * @enum {string}
+             */
+            readonly component_relation: "exact_component" | "near_exact_component" | "semantic_duplicate" | "shared_family" | "shared_concept" | "no_substantive_match" | "unresolved";
+            readonly confidence: components["schemas"]["DecimalMeasurement"];
+            /** Features */
+            readonly features: readonly components["schemas"]["ImmutableArtifactRef"][];
+            /** Matching Spans */
+            readonly matching_spans: readonly components["schemas"]["ImmutableArtifactRef"][];
+            /**
+             * Review State
+             * @enum {string}
+             */
+            readonly review_state: "proposed" | "verified" | "review_required" | "accepted" | "rejected" | "disputed" | "superseded";
+            /** Source Date Evidence */
+            readonly source_date_evidence: readonly components["schemas"]["TimestampEvidence"][];
+            readonly source_ref: components["schemas"]["AuditDocumentRef"];
+            readonly task_ref: components["schemas"]["EntityRef"];
+            readonly verifier: components["schemas"]["EntityRef"] | null;
+        };
+        /**
+         * MatchEvidencePayloadV2
+         * @description Versioned evidence record; content integrity alone never establishes source trust.
+         */
+        readonly MatchEvidencePayloadV2: {
+            /**
+             * Answer Relationship
+             * @enum {string}
+             */
+            readonly answer_relationship: "same" | "equivalent" | "different" | "unknown" | "not_applicable";
+            /** Author Subject */
+            readonly author_subject: string | null;
+            /** Candidate Hit Digest */
+            readonly candidate_hit_digest: string;
+            /** Component Refs */
+            readonly component_refs: readonly components["schemas"]["EntityRef"][];
+            /** Counter Evidence Refs */
+            readonly counter_evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Matching Spans */
+            readonly matching_spans: readonly components["schemas"]["MatchSpanV2"][];
+            /** Normalizer Version */
+            readonly normalizer_version: string;
+            /** Parser Version */
+            readonly parser_version: string | null;
+            /**
+             * Relation
+             * @enum {string}
+             */
+            readonly relation: "exact_component" | "near_exact_component" | "semantic_duplicate" | "shared_family" | "shared_concept" | "no_substantive_match" | "unresolved";
+            readonly retrieval_plan_ref: components["schemas"]["AuditDocumentRef"];
+            /** Retrieval Result Digest */
+            readonly retrieval_result_digest: string;
+            readonly review_record_ref: components["schemas"]["ImmutableArtifactRef"] | null;
+            /**
+             * Review State
+             * @enum {string}
+             */
+            readonly review_state: "proposed" | "verified" | "review_required" | "accepted" | "rejected" | "disputed" | "superseded";
+            /** Reviewer Subjects */
+            readonly reviewer_subjects: readonly string[];
+            /** Rights Refs */
+            readonly rights_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Rubric Digest */
+            readonly rubric_digest: string;
+            readonly source_benchmark_ref: components["schemas"]["AuditDocumentRef"] | null;
+            /** Source Date Evidence */
+            readonly source_date_evidence: readonly components["schemas"]["TimestampEvidence"][];
+            /**
+             * Source Date State
+             * @enum {string}
+             */
+            readonly source_date_state: "verified" | "unverified" | "unknown" | "not_applicable";
+            readonly source_document_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Source Lineage
+             * @enum {string}
+             */
+            readonly source_lineage: "independent_copy" | "mirror_or_derived" | "official_self_import" | "unknown";
+            /** Source Revision */
+            readonly source_revision: string;
+            readonly source_snapshot_ref: components["schemas"]["AuditDocumentRef"];
+            readonly source_task_ref: components["schemas"]["EntityRef"] | null;
+            readonly target_benchmark_ref: components["schemas"]["AuditDocumentRef"];
+            readonly task_ref: components["schemas"]["EntityRef"];
+        };
+        /**
+         * MatchSpanV2
+         * @description Byte offsets bind one claimed source span to one immutable task component.
+         */
+        readonly MatchSpanV2: {
+            /**
+             * Comparison
+             * @enum {string}
+             */
+            readonly comparison: "exact_bytes" | "text_nfc_lf_preserve_v1";
+            readonly component_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            readonly component_ref: components["schemas"]["EntityRef"];
+            /**
+             * Content Class
+             * @enum {string}
+             */
+            readonly content_class: "substantive" | "boilerplate" | "mixed" | "unknown";
+            /**
+             * Field
+             * @enum {string}
+             */
+            readonly field: "question" | "answer" | "solution" | "constraint" | "context" | "other";
+            /** Source End Byte */
+            readonly source_end_byte: number;
+            /** Source Span Digest */
+            readonly source_span_digest: string;
+            /** Source Start Byte */
+            readonly source_start_byte: number;
         };
         /**
          * Methodology
@@ -1274,6 +3412,63 @@ export interface components {
              */
             readonly usage_counters?: readonly components["schemas"]["UsageCounter"][];
         };
+        /** ModelContextDocument */
+        readonly ModelContextDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default model_context
+             * @constant
+             */
+            readonly kind?: "model_context";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["ModelContextPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** ModelContextPayload */
+        readonly ModelContextPayload: {
+            /**
+             * Cutoff Confidence
+             * @enum {string}
+             */
+            readonly cutoff_confidence: "verified" | "provider_declared" | "unknown";
+            /** Model Alias */
+            readonly model_alias: string | null;
+            /** Model Revision */
+            readonly model_revision: string | null;
+            /**
+             * Pin Confidence
+             * @enum {string}
+             */
+            readonly pin_confidence: "verified_revision" | "verified_weight_digest" | "provider_declared" | "mutable_alias" | "unknown";
+            /** Pin Evidence Refs */
+            readonly pin_evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Prior Delivery Refs */
+            readonly prior_delivery_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Provider */
+            readonly provider: string;
+            /** Recorded At */
+            readonly recorded_at: string;
+            /**
+             * Retrieval Mode
+             * @enum {string}
+             */
+            readonly retrieval_mode: "none" | "provider_retrieval" | "tool_augmented" | "unknown";
+            readonly retrieval_policy_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly tool_policy_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly training_cutoff: components["schemas"]["ChronologyInterval"] | null;
+            /** Update History */
+            readonly update_history: readonly components["schemas"]["ChronologyInterval"][];
+            /** Weights Digest */
+            readonly weights_digest: string | null;
+        };
         /**
          * ModelProfile
          * @description ``GET /models/{id}``: a published configuration-specific profile.
@@ -1424,6 +3619,201 @@ export interface components {
             /** Source Url */
             readonly source_url: string;
         };
+        /** MonitorAlertDocument */
+        readonly MonitorAlertDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default monitor_alert
+             * @constant
+             */
+            readonly kind?: "monitor_alert";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["MonitorAlertPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /**
+         * MonitorAlertPayload
+         * @description Redacted, reference-only in-app notification with deterministic deduplication.
+         */
+        readonly MonitorAlertPayload: {
+            /**
+             * Alert Type
+             * @enum {string}
+             */
+            readonly alert_type: "new_exposure" | "risk_increase" | "stale_scan" | "source_outage" | "evidence_dispute" | "evidence_correction" | "policy_discontinuity" | "seal_compromise";
+            readonly assessment_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            readonly coverage_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            /** Dedupe Key */
+            readonly dedupe_key: string;
+            /**
+             * Discontinuity Reasons
+             * @default []
+             */
+            readonly discontinuity_reasons?: readonly ("policy_scope" | "corpus_snapshot" | "method_version")[];
+            readonly evidence_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            /** Occurred At */
+            readonly occurred_at: string;
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            readonly previous_assessment_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            readonly previous_policy_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            /** Recipient Subjects */
+            readonly recipient_subjects: readonly string[];
+            readonly sealed_manifest_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            readonly source_ref?: components["schemas"]["AuditDocumentRef"] | null;
+            readonly task_ref?: components["schemas"]["EntityRef"] | null;
+        };
+        /** MonitorPolicyDocument */
+        readonly MonitorPolicyDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default monitor_policy
+             * @constant
+             */
+            readonly kind?: "monitor_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["MonitorPolicyPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** MonitorPolicyDocumentV2 */
+        readonly MonitorPolicyDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default monitor_policy
+             * @constant
+             */
+            readonly kind?: "monitor_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["MonitorPolicyPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** MonitorPolicyPayload */
+        readonly MonitorPolicyPayload: {
+            /** Alert Routes */
+            readonly alert_routes: readonly string[];
+            /** Benchmarks */
+            readonly benchmarks: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Caps */
+            readonly caps: {
+                readonly [key: string]: number;
+            };
+            /** Credential Scope */
+            readonly credential_scope: readonly string[];
+            /** Retry Rules */
+            readonly retry_rules: {
+                readonly [key: string]: number;
+            };
+            /** Source Schedule */
+            readonly source_schedule: {
+                readonly [key: string]: string;
+            };
+            /** Staleness */
+            readonly staleness: {
+                readonly [key: string]: number;
+            };
+            /** Stop Rules */
+            readonly stop_rules: readonly string[];
+        };
+        /**
+         * MonitorPolicyPayloadV2
+         * @description Owner-approved finite monitoring contract; it cannot authorize external dispatch.
+         */
+        readonly MonitorPolicyPayloadV2: {
+            readonly approval_evidence_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Approver Subject */
+            readonly approver_subject: string;
+            readonly benchmark_ref: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Cadence
+             * @enum {string}
+             */
+            readonly cadence: "daily" | "weekly";
+            /**
+             * External Delivery
+             * @default disabled
+             * @constant
+             */
+            readonly external_delivery?: "disabled";
+            /** Full Refresh Every Days */
+            readonly full_refresh_every_days: number;
+            /** In App Recipients */
+            readonly in_app_recipients: readonly string[];
+            /** Local Time */
+            readonly local_time: string;
+            /** Max Catch Up Slots */
+            readonly max_catch_up_slots: number;
+            /** Max Cost Micro Usd Per Slot */
+            readonly max_cost_micro_usd_per_slot: number;
+            /**
+             * Max Diagnostic Cost Micro Usd
+             * @default 0
+             * @constant
+             */
+            readonly max_diagnostic_cost_micro_usd?: 0;
+            /**
+             * Max Diagnostic Model Calls
+             * @default 0
+             * @constant
+             */
+            readonly max_diagnostic_model_calls?: 0;
+            /** Max Query Units Per Slot */
+            readonly max_query_units_per_slot: number;
+            /** Max Retries */
+            readonly max_retries: number;
+            /** Max Storage Bytes Per Slot */
+            readonly max_storage_bytes_per_slot: number;
+            /** Owner Subject */
+            readonly owner_subject: string;
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            /** Policy Version */
+            readonly policy_version: number;
+            /** Query Units Per Task Source */
+            readonly query_units_per_task_source: number;
+            /** Source Rate Limits */
+            readonly source_rate_limits: readonly components["schemas"]["MonitorSourceRateLimit"][];
+            /** Stale After Hours */
+            readonly stale_after_hours: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "proposed" | "approved" | "paused" | "retired";
+            /** Task Refs */
+            readonly task_refs: readonly components["schemas"]["EntityRef"][];
+            /** Timezone */
+            readonly timezone: string;
+            /** Weekday */
+            readonly weekday?: number | null;
+        };
+        /** MonitorSourceRateLimit */
+        readonly MonitorSourceRateLimit: {
+            /** Max Query Units Per Local Day */
+            readonly max_query_units_per_local_day: number;
+            readonly source_ref: components["schemas"]["AuditDocumentRef"];
+        };
         /**
          * NetworkPolicyKind
          * @enum {string}
@@ -1567,6 +3957,64 @@ export interface components {
          * @enum {string}
          */
         readonly ProviderKind: "openai_compatible" | "anthropic" | "google" | "local";
+        /**
+         * PublicHealthView
+         * @description Allowlisted, reviewed summary; raw audit documents are never public responses.
+         */
+        readonly PublicHealthView: {
+            /** Assessed Tasks */
+            readonly assessed_tasks: number;
+            /** Benchmark Label */
+            readonly benchmark_label: string;
+            /** Benchmark Version */
+            readonly benchmark_version: string | null;
+            /** Blocked Tasks */
+            readonly blocked_tasks: number;
+            /** Complete Tasks */
+            readonly complete_tasks: number;
+            /** High Risk Tasks */
+            readonly high_risk_tasks: number;
+            /** Insufficient Risk Tasks */
+            readonly insufficient_risk_tasks: number;
+            /**
+             * Kind
+             * @constant
+             */
+            readonly kind: "public_benchmark_health";
+            /** Limitations */
+            readonly limitations: readonly string[];
+            /** Low Risk Tasks */
+            readonly low_risk_tasks: number;
+            /** Medium Risk Tasks */
+            readonly medium_risk_tasks: number;
+            /** Partial Tasks */
+            readonly partial_tasks: number;
+            /**
+             * Report Id
+             * Format: uuid
+             */
+            readonly report_id: string;
+            /**
+             * Review State
+             * @constant
+             */
+            readonly review_state: "published";
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Selected Tasks */
+            readonly selected_tasks: number;
+            /** Source Window End */
+            readonly source_window_end: string;
+            /** Source Window Start */
+            readonly source_window_start: string;
+            /** Unknown Tasks */
+            readonly unknown_tasks: number;
+            /** Unscanned Tasks */
+            readonly unscanned_tasks: number;
+        };
         /**
          * PublicMetric
          * @description One public metric value with its availability made explicit.
@@ -1799,6 +4247,42 @@ export interface components {
             /** Tool Id */
             readonly tool_id: string;
         };
+        /** QueryManifestDocument */
+        readonly QueryManifestDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default query_manifest
+             * @constant
+             */
+            readonly kind?: "query_manifest";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["QueryManifestPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** QueryManifestPayload */
+        readonly QueryManifestPayload: {
+            readonly audit_ref: components["schemas"]["AuditDocumentRef"];
+            /** Component Refs */
+            readonly component_refs: readonly components["schemas"]["EntityRef"][];
+            readonly connector_snapshot: components["schemas"]["AuditDocumentRef"];
+            readonly disclosure_authorization: components["schemas"]["AuditDocumentRef"] | null;
+            /** Limits */
+            readonly limits: {
+                readonly [key: string]: number;
+            };
+            readonly query_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Query Type */
+            readonly query_type: string;
+            readonly task_ref: components["schemas"]["EntityRef"];
+        };
         /**
          * ReleaseSummary
          * @description ``GET /releases``: a published release's public identity and its disclosed limits.
@@ -1852,6 +4336,271 @@ export interface components {
             /** Withdrawal Reason */
             readonly withdrawal_reason: string | null;
         };
+        /** ReplacementBudgets */
+        readonly ReplacementBudgets: {
+            /** Max Cost Micro Usd */
+            readonly max_cost_micro_usd: number;
+            /** Max Drafts */
+            readonly max_drafts: number;
+            /** Max Rounds */
+            readonly max_rounds: number;
+            /** Max Wall Seconds */
+            readonly max_wall_seconds: number;
+        };
+        /** ReplacementPlanDocument */
+        readonly ReplacementPlanDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default replacement_plan
+             * @constant
+             */
+            readonly kind?: "replacement_plan";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["ReplacementPlanPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** ReplacementPlanDocumentV2 */
+        readonly ReplacementPlanDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default replacement_plan
+             * @constant
+             */
+            readonly kind?: "replacement_plan";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["ReplacementPlanPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** ReplacementPlanPayload */
+        readonly ReplacementPlanPayload: {
+            /** Authors */
+            readonly authors: readonly components["schemas"]["EntityRef"][];
+            /** Budgets */
+            readonly budgets: {
+                readonly [key: string]: number;
+            };
+            /** Checkers */
+            readonly checkers: readonly components["schemas"]["EntityRef"][];
+            readonly competency_brief: components["schemas"]["ImmutableArtifactRef"];
+            readonly difficulty: components["schemas"]["DecimalMeasurement"];
+            readonly exposure: components["schemas"]["AuditDocumentRef"];
+            /** Seed Ancestry */
+            readonly seed_ancestry: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Source Quotas */
+            readonly source_quotas: {
+                readonly [key: string]: number;
+            };
+            readonly validity: components["schemas"]["AuditDocumentRef"];
+        };
+        /** ReplacementPlanPayloadV2 */
+        readonly ReplacementPlanPayloadV2: {
+            /** Authors */
+            readonly authors: readonly components["schemas"]["EntityRef"][];
+            readonly budgets: components["schemas"]["ReplacementBudgets"];
+            readonly checker_config_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Checkers */
+            readonly checkers: readonly components["schemas"]["EntityRef"][];
+            readonly competency_brief: components["schemas"]["ImmutableArtifactRef"];
+            readonly difficulty_policy_ref: components["schemas"]["ImmutableArtifactRef"];
+            readonly exposure_policy_ref: components["schemas"]["AuditDocumentRef"];
+            readonly generator_config_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Mode
+             * @enum {string}
+             */
+            readonly mode: "source_family_transformation" | "independent_prospective";
+            /** Preregistered At */
+            readonly preregistered_at: string;
+            /** Seed Ancestry Refs */
+            readonly seed_ancestry_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly source_metadata_ref: components["schemas"]["AuditDocumentRef"];
+            /** Source Quotas */
+            readonly source_quotas: readonly components["schemas"]["ReplacementSourceQuota"][];
+        };
+        /** ReplacementSourceMetadataDocument */
+        readonly ReplacementSourceMetadataDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default replacement_source_metadata
+             * @constant
+             */
+            readonly kind?: "replacement_source_metadata";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["ReplacementSourceMetadataPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** ReplacementSourceMetadataPayload */
+        readonly ReplacementSourceMetadataPayload: {
+            /** Approved Source Ids */
+            readonly approved_source_ids: readonly string[];
+            readonly curator_ref: components["schemas"]["EntityRef"];
+            /** Reviewed At */
+            readonly reviewed_at: string;
+            readonly reviewer_ref: components["schemas"]["EntityRef"];
+            /** Rights Evidence Refs */
+            readonly rights_evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Rights Record Id */
+            readonly rights_record_id: string;
+            /**
+             * Rights State
+             * @enum {string}
+             */
+            readonly rights_state: "approved" | "denied" | "pending";
+            /** Source Family Id */
+            readonly source_family_id: string;
+            /** Source Refs */
+            readonly source_refs: readonly components["schemas"]["AuditDocumentRef"][];
+        };
+        /** ReplacementSourceQuota */
+        readonly ReplacementSourceQuota: {
+            /** Maximum Drafts */
+            readonly maximum_drafts: number;
+            /** Source Id */
+            readonly source_id: string;
+        };
+        /** ReplacementValidationDocument */
+        readonly ReplacementValidationDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default replacement_validation
+             * @constant
+             */
+            readonly kind?: "replacement_validation";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["ReplacementValidationPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** ReplacementValidationPayload */
+        readonly ReplacementValidationPayload: {
+            readonly author_ref: components["schemas"]["EntityRef"];
+            /** Checker Refs */
+            readonly checker_refs: readonly components["schemas"]["EntityRef"][];
+            /**
+             * Correctness State
+             * @enum {string}
+             */
+            readonly correctness_state: "verified" | "invalid" | "pending";
+            readonly difficulty_policy_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Difficulty State
+             * @enum {string}
+             */
+            readonly difficulty_state: "calibrated" | "invalid" | "pending";
+            /** Draft Index */
+            readonly draft_index: number;
+            /** Evidence Refs */
+            readonly evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly exposure_scope_ref: components["schemas"]["AuditDocumentRef"] | null;
+            /**
+             * Exposure State
+             * @enum {string}
+             */
+            readonly exposure_state: "within_policy" | "prohibited" | "unknown";
+            /**
+             * Family Relation
+             * @enum {string}
+             */
+            readonly family_relation: "source_family" | "independent_prospective" | "unknown";
+            /**
+             * Fidelity State
+             * @enum {string}
+             */
+            readonly fidelity_state: "valid" | "invalid" | "pending";
+            /**
+             * Lineage State
+             * @enum {string}
+             */
+            readonly lineage_state: "verified_source_family" | "verified_independent" | "uncertain" | "prohibited";
+            readonly oracle_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Oracle State
+             * @enum {string}
+             */
+            readonly oracle_state: "independently_verified" | "failed" | "pending";
+            /** Parent Task Refs */
+            readonly parent_task_refs: readonly components["schemas"]["EntityRef"][];
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            /** Reason Codes */
+            readonly reason_codes: readonly ("correctness_invalid" | "rights_denied" | "fidelity_invalid" | "oracle_failed" | "difficulty_invalid" | "lineage_prohibited" | "template_review_rejected" | "exposure_prohibited" | "evidence_pending")[];
+            /**
+             * Review State
+             * @enum {string}
+             */
+            readonly review_state: "accepted" | "pending" | "rejected";
+            readonly reviewer_ref: components["schemas"]["EntityRef"];
+            /**
+             * Rights State
+             * @enum {string}
+             */
+            readonly rights_state: "approved" | "denied" | "pending";
+            /** Source Family Id */
+            readonly source_family_id: string;
+            /** Source Id */
+            readonly source_id: string;
+            readonly task_ref: components["schemas"]["EntityRef"];
+            /**
+             * Template Review State
+             * @enum {string}
+             */
+            readonly template_review_state: "accepted" | "rejected" | "pending" | "not_applicable";
+            readonly test_artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+        };
+        /** ResourceLimits */
+        readonly ResourceLimits: {
+            /** Max Candidates Per Source Per Task */
+            readonly max_candidates_per_source_per_task: number;
+            /** Max Candidates Per Task */
+            readonly max_candidates_per_task: number;
+            /** Max Query Units Per Plan */
+            readonly max_query_units_per_plan: number;
+            /** Max Source Groups Per Plan */
+            readonly max_source_groups_per_plan: number;
+            /** Max Stages Per Task */
+            readonly max_stages_per_task: number;
+            /** Max Storage Bytes Per Plan */
+            readonly max_storage_bytes_per_plan: number;
+            /** Max Tasks Per Plan */
+            readonly max_tasks_per_plan: number;
+            /** Policy Version */
+            readonly policy_version: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
         /**
          * ResponseMeta
          * @description The exact transport metadata object serialized in an API envelope.
@@ -1881,6 +4630,574 @@ export interface components {
             readonly sort: string | null;
             /** Total */
             readonly total: number | null;
+        };
+        /** RiskAssessmentDocument */
+        readonly RiskAssessmentDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default risk_assessment
+             * @constant
+             */
+            readonly kind?: "risk_assessment";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["RiskAssessmentPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** RiskAssessmentDocumentV2 */
+        readonly RiskAssessmentDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default risk_assessment
+             * @constant
+             */
+            readonly kind?: "risk_assessment";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["RiskAssessmentPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** RiskAssessmentPayload */
+        readonly RiskAssessmentPayload: {
+            /** Accepted Evidence */
+            readonly accepted_evidence: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly context_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly coverage: components["schemas"]["DecimalMeasurement"];
+            /** Explanation */
+            readonly explanation: string;
+            /** Lower Bound */
+            readonly lower_bound: string;
+            readonly observed_index: components["schemas"]["DecimalMeasurement"];
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "low_observed" | "medium_observed" | "high_observed" | "insufficient_evidence" | "not_applicable";
+            readonly task_ref: components["schemas"]["EntityRef"];
+            /** Upper Bound */
+            readonly upper_bound: string;
+        };
+        /** RiskAssessmentPayloadV2 */
+        readonly RiskAssessmentPayloadV2: {
+            /** Accepted Evidence */
+            readonly accepted_evidence: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Calculated Lower Bound */
+            readonly calculated_lower_bound: string;
+            /** Calculated Upper Bound */
+            readonly calculated_upper_bound: string;
+            /**
+             * Calibration State
+             * @enum {string}
+             */
+            readonly calibration_state: "proposed" | "validated";
+            /** Component Coverage */
+            readonly component_coverage: readonly components["schemas"]["RiskComponentCoverage"][];
+            /** Components */
+            readonly components: readonly components["schemas"]["RiskComponentAssessment"][];
+            readonly context_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly coverage: components["schemas"]["DecimalMeasurement"];
+            /** Explanation Codes */
+            readonly explanation_codes: readonly string[];
+            readonly observed_index: components["schemas"]["RiskIndexMeasurement"];
+            readonly plan_ref: components["schemas"]["AuditDocumentRef"];
+            readonly policy_ref: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Scope State
+             * @enum {string}
+             */
+            readonly scope_state: "complete" | "partial" | "blocked" | "not_run";
+            /** Signal Observations */
+            readonly signal_observations: readonly components["schemas"]["RiskSignalObservation"][];
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "low_observed" | "medium_observed" | "high_observed" | "insufficient_evidence" | "not_applicable";
+            readonly task_ref: components["schemas"]["EntityRef"];
+        };
+        /** RiskComponentAssessment */
+        readonly RiskComponentAssessment: {
+            /**
+             * Availability
+             * @enum {string}
+             */
+            readonly availability: "measured" | "unknown";
+            /**
+             * Component
+             * @enum {string}
+             */
+            readonly component: "M" | "C" | "E" | "L";
+            /** Coverage Refs */
+            readonly coverage_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /**
+             * Coverage State
+             * @enum {string}
+             */
+            readonly coverage_state: "complete" | "partial" | "unavailable";
+            /** Evidence Refs */
+            readonly evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Missing Weight */
+            readonly missing_weight: string;
+            /** Points */
+            readonly points: string;
+            /** Reason Codes */
+            readonly reason_codes: readonly string[];
+            /** Value */
+            readonly value: string | null;
+        };
+        /** RiskComponentCoverage */
+        readonly RiskComponentCoverage: {
+            /** Blocked Units */
+            readonly blocked_units: number;
+            /** Complete Units */
+            readonly complete_units: number;
+            /**
+             * Component
+             * @enum {string}
+             */
+            readonly component: "M" | "C" | "E" | "L";
+            /** Failed Units */
+            readonly failed_units: number;
+            /** Pending Reviews */
+            readonly pending_reviews: number;
+            /** Planned Units */
+            readonly planned_units: number;
+            /** Scope Refs */
+            readonly scope_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Truncated Units */
+            readonly truncated_units: number;
+        };
+        /** RiskIndexMeasurement */
+        readonly RiskIndexMeasurement: {
+            /** Null Reason */
+            readonly null_reason: ("scope_incomplete" | "policy_uncalibrated" | "not_run") | null;
+            /** Value */
+            readonly value: string | null;
+        };
+        /** RiskPolicyDocument */
+        readonly RiskPolicyDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default risk_policy
+             * @constant
+             */
+            readonly kind?: "risk_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["RiskPolicyPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** RiskPolicyDocumentV2 */
+        readonly RiskPolicyDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default risk_policy
+             * @constant
+             */
+            readonly kind?: "risk_policy";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["RiskPolicyPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** RiskPolicyPayload */
+        readonly RiskPolicyPayload: {
+            /** Applicability */
+            readonly applicability: {
+                readonly [key: string]: "required" | "optional" | "not_applicable";
+            };
+            /** Claim Wording */
+            readonly claim_wording: {
+                readonly [key: string]: string;
+            };
+            /** Component Mapping */
+            readonly component_mapping: {
+                readonly [key: string]: string;
+            };
+            /** Missingness */
+            readonly missingness: {
+                readonly [key: string]: string;
+            };
+            /** Required Scope */
+            readonly required_scope: readonly string[];
+            /** Thresholds */
+            readonly thresholds: {
+                readonly [key: string]: string;
+            };
+            /** Weights */
+            readonly weights: {
+                readonly [key: string]: string;
+            };
+        };
+        /** RiskPolicyPayloadV2 */
+        readonly RiskPolicyPayloadV2: {
+            /** Calibration Evidence Refs */
+            readonly calibration_evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /**
+             * Calibration State
+             * @enum {string}
+             */
+            readonly calibration_state: "proposed" | "validated";
+            /**
+             * Claim Policy
+             * @constant
+             */
+            readonly claim_policy: "heuristic_only_no_probability_or_cleanliness_claim";
+            /** Component Weights */
+            readonly component_weights: {
+                readonly [key: string]: string;
+            };
+            /**
+             * Formula
+             * @constant
+             */
+            readonly formula: "50*M+25*C+15*E+10*L";
+            /**
+             * Missingness Policy
+             * @constant
+             */
+            readonly missingness_policy: "unknown_components_null_bounds_include_unavailable_weight";
+            /**
+             * Policy Version
+             * @constant
+             */
+            readonly policy_version: "observed-risk-v1";
+            /** Required Components */
+            readonly required_components: readonly ("M" | "C" | "E" | "L")[];
+            /** Signal Definitions */
+            readonly signal_definitions: readonly components["schemas"]["RiskSignalDefinition"][];
+            /** Tier Thresholds */
+            readonly tier_thresholds: {
+                readonly [key: string]: string;
+            };
+        };
+        /** RiskSignalDefinition */
+        readonly RiskSignalDefinition: {
+            /**
+             * Applicability
+             * @enum {string}
+             */
+            readonly applicability: "required" | "optional";
+            /** Definition */
+            readonly definition: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            readonly role: "M" | "C" | "E" | "L" | "context" | "diagnostic";
+            /**
+             * Signal
+             * @enum {string}
+             */
+            readonly signal: "publication_age" | "web_exposure" | "duplication" | "corpus_overlap_evidence" | "popularity" | "synthetic_similarity" | "model_familiarity" | "leakage_history";
+        };
+        /**
+         * RiskSignalObservation
+         * @description A traceable signal observation; context and behavior never score by themselves.
+         */
+        readonly RiskSignalObservation: {
+            readonly author_ref: components["schemas"]["EntityRef"] | null;
+            /** Basis */
+            readonly basis: ("exact_or_semantic_duplicate" | "question_only_overlap" | "distinctive_solution_overlap" | "shared_family" | "concept_or_boilerplate" | "verified_corpus_overlap" | "verified_public_substantive" | "public_metadata_only" | "verified_private_scope" | "corroborated_task_model_report" | "completed_scope_no_match" | "context_only" | "behavioral_diagnostic_only") | null;
+            readonly configuration_ref: components["schemas"]["AuditDocumentRef"] | null;
+            /** Evidence Refs */
+            readonly evidence_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /**
+             * Evidence State
+             * @enum {string}
+             */
+            readonly evidence_state: "accepted" | "candidate_only" | "rejected" | "disputed" | "none";
+            /** Normalized Value */
+            readonly normalized_value: string | null;
+            /** Observed At */
+            readonly observed_at: string | null;
+            /** Raw Interval */
+            readonly raw_interval: readonly [
+                string,
+                string
+            ] | null;
+            /** Raw Unit */
+            readonly raw_unit: ("days" | "count") | null;
+            /** Raw Value */
+            readonly raw_value: string | null;
+            readonly review_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly reviewer_ref: components["schemas"]["EntityRef"] | null;
+            /**
+             * Rights State
+             * @enum {string}
+             */
+            readonly rights_state: "approved" | "unknown" | "not_applicable";
+            /**
+             * Signal
+             * @enum {string}
+             */
+            readonly signal: "publication_age" | "web_exposure" | "duplication" | "corpus_overlap_evidence" | "popularity" | "synthetic_similarity" | "model_familiarity" | "leakage_history";
+            /** Source Lineage Refs */
+            readonly source_lineage_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "observed" | "unknown" | "not_applicable";
+            /** Unknown Reason */
+            readonly unknown_reason: string | null;
+            /**
+             * Verification State
+             * @enum {string}
+             */
+            readonly verification_state: "verified" | "unverified" | "not_applicable";
+        };
+        /** SealAccessEventDocument */
+        readonly SealAccessEventDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default seal_access_event
+             * @constant
+             */
+            readonly kind?: "seal_access_event";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["SealAccessEventPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** SealAccessEventPayload */
+        readonly SealAccessEventPayload: {
+            readonly actor: components["schemas"]["EntityRef"];
+            readonly authorization_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly event_time: components["schemas"]["TimestampEvidence"];
+            /**
+             * Exposure
+             * @enum {string}
+             */
+            readonly exposure: "none" | "authorized_disclosure" | "public_exposed" | "compromised";
+            readonly manifest_ref: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Operation
+             * @enum {string}
+             */
+            readonly operation: "local_screening" | "candidate_delivery" | "remote_query" | "remote_delivery" | "public_publication" | "key_rotation";
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            readonly outcome: "authorized" | "denied" | "completed" | "failed";
+            /** Payload Digest */
+            readonly payload_digest: string | null;
+            /** Purpose */
+            readonly purpose: string;
+            /** Recipient */
+            readonly recipient: string | null;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            readonly tenant_id: string;
+        };
+        /** SealedManifestDocument */
+        readonly SealedManifestDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default sealed_manifest
+             * @constant
+             */
+            readonly kind?: "sealed_manifest";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["SealedManifestPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** SealedManifestDocumentV2 */
+        readonly SealedManifestDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default sealed_manifest
+             * @constant
+             */
+            readonly kind?: "sealed_manifest";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["SealedManifestPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** SealedManifestPayload */
+        readonly SealedManifestPayload: {
+            readonly access_policy: components["schemas"]["AuditDocumentRef"];
+            /** Commitment */
+            readonly commitment: string;
+            /**
+             * Disclosure State
+             * @enum {string}
+             */
+            readonly disclosure_state: "sealed" | "authorized_disclosure" | "public_exposed" | "compromised" | "retired";
+            /** Encrypted Artifact Refs */
+            readonly encrypted_artifact_refs: readonly components["schemas"]["ImmutableArtifactRef"][];
+            /** Key Version */
+            readonly key_version: string;
+            readonly retention_policy: components["schemas"]["AuditDocumentRef"];
+        };
+        /**
+         * SealedManifestPayloadV2
+         * @description Envelope metadata; key material and plaintext digests never belong here.
+         */
+        readonly SealedManifestPayloadV2: {
+            /** Access Event Refs */
+            readonly access_event_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly access_policy: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Disclosure State
+             * @enum {string}
+             */
+            readonly disclosure_state: "sealed" | "authorized_disclosure" | "public_exposed" | "compromised" | "retired";
+            /** Encrypted Artifact Refs */
+            readonly encrypted_artifact_refs: readonly components["schemas"]["ImmutableArtifactRef"][];
+            /**
+             * Encryption Algorithm
+             * @constant
+             */
+            readonly encryption_algorithm: "AES-256-GCM";
+            readonly hiding_commitment: components["schemas"]["HidingCommitmentPayload"];
+            /** Key Provider */
+            readonly key_provider: string;
+            /** Key Version */
+            readonly key_version: string;
+            /** Key Wrapping Algorithm */
+            readonly key_wrapping_algorithm: string;
+            /**
+             * Nonce Length Bytes
+             * @constant
+             */
+            readonly nonce_length_bytes: 12;
+            /** Recovery Ref */
+            readonly recovery_ref: string | null;
+            readonly retention_policy: components["schemas"]["AuditDocumentRef"];
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            readonly tenant_id: string;
+            readonly wrapped_key_ref: components["schemas"]["ImmutableArtifactRef"];
+        };
+        /** SourceGroupPolicy */
+        readonly SourceGroupPolicy: {
+            /**
+             * Access State
+             * @enum {string}
+             */
+            readonly access_state: "public_metadata_only" | "public_data_review_required" | "gated" | "owner_supplied";
+            /** Allowed Hosts */
+            readonly allowed_hosts: readonly string[];
+            /**
+             * Authorization State
+             * @enum {string}
+             */
+            readonly authorization_state: "not_approved" | "approved_scoped" | "gated";
+            /**
+             * Conformance State
+             * @enum {string}
+             */
+            readonly conformance_state: "not_run" | "fixture_only" | "live_verified" | "blocked";
+            /**
+             * Connector State
+             * @enum {string}
+             */
+            readonly connector_state: "not_implemented" | "metadata_only" | "importable" | "audit_conformant" | "blocked";
+            /** Extraction Policy */
+            readonly extraction_policy: string;
+            /** Max Requests Per Plan */
+            readonly max_requests_per_plan: number;
+            /** Max Response Bytes */
+            readonly max_response_bytes: number;
+            /** Name */
+            readonly name: string;
+            /** Official Url */
+            readonly official_url: string;
+            /**
+             * Private Query Policy
+             * @enum {string}
+             */
+            readonly private_query_policy: "local_only" | "explicit_disclosure_required" | "never";
+            /** Retention */
+            readonly retention: string;
+            /** Scope */
+            readonly scope: string;
+            /** Slug */
+            readonly slug: string;
+        };
+        /** SourcePolicyRegistry */
+        readonly SourcePolicyRegistry: {
+            /** Groups */
+            readonly groups: readonly components["schemas"]["SourceGroupPolicy"][];
+            /** Observed On */
+            readonly observed_on: string;
+            /** Policy Version */
+            readonly policy_version: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** SourceRevisionPin */
+        readonly SourceRevisionPin: {
+            /** Commit Sha */
+            readonly commit_sha: string;
+            /** Purpose */
+            readonly purpose: string;
+            /** Ref */
+            readonly ref: string;
+            /** Source Url */
+            readonly source_url: string;
         };
         /** SubmissionApprovalInput */
         readonly SubmissionApprovalInput: {
@@ -1995,6 +5312,58 @@ export interface components {
                 readonly [key: string]: number;
             };
         };
+        /** TaskFingerprintDocument */
+        readonly TaskFingerprintDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default task_fingerprint
+             * @constant
+             */
+            readonly kind?: "task_fingerprint";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["TaskFingerprintPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** TaskFingerprintPayload */
+        readonly TaskFingerprintPayload: {
+            /** Code Digests */
+            readonly code_digests: {
+                readonly [key: string]: string;
+            };
+            /** Code Parser Version */
+            readonly code_parser_version: string | null;
+            /** Component Refs */
+            readonly component_refs: readonly components["schemas"]["EntityRef"][];
+            /** Embedding Version */
+            readonly embedding_version: string | null;
+            /** Exact Digest */
+            readonly exact_digest: string;
+            /** Feature Versions */
+            readonly feature_versions: {
+                readonly [key: string]: string;
+            };
+            /** Normalization Version */
+            readonly normalization_version: string;
+            /** Normalized Digests */
+            readonly normalized_digests: {
+                readonly [key: string]: string;
+            };
+            /** Private Features */
+            readonly private_features: readonly components["schemas"]["ImmutableArtifactRef"][];
+            /** Private Vectors */
+            readonly private_vectors: readonly components["schemas"]["ImmutableArtifactRef"][];
+            readonly task_ref: components["schemas"]["EntityRef"];
+            /** Tokenizer Version */
+            readonly tokenizer_version: string;
+        };
         /**
          * TaskSummary
          * @description Bounded task-list/detail metadata; source payloads are fetched only on request.
@@ -2032,6 +5401,128 @@ export interface components {
             readonly task_id: string;
             /** Version */
             readonly version: number;
+        };
+        /** TemporalAssessmentDocument */
+        readonly TemporalAssessmentDocument: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default temporal_assessment
+             * @constant
+             */
+            readonly kind?: "temporal_assessment";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["TemporalAssessmentPayload"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** TemporalAssessmentDocumentV2 */
+        readonly TemporalAssessmentDocumentV2: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            readonly id: string;
+            /**
+             * Kind
+             * @default temporal_assessment
+             * @constant
+             */
+            readonly kind?: "temporal_assessment";
+            readonly metadata: components["schemas"]["DocumentMetadata"];
+            readonly payload: components["schemas"]["TemporalAssessmentPayloadV2"];
+            /** Schema Version */
+            readonly schema_version: number;
+            /** Supersedes Id */
+            readonly supersedes_id?: string | null;
+        };
+        /** TemporalAssessmentPayload */
+        readonly TemporalAssessmentPayload: {
+            readonly artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Cutoff Evidence */
+            readonly cutoff_evidence: readonly components["schemas"]["TimestampEvidence"][];
+            /** Exposure Paths */
+            readonly exposure_paths: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly model_revision_ref: components["schemas"]["AuditDocumentRef"] | null;
+            /** Source Chronology */
+            readonly source_chronology: readonly components["schemas"]["TimestampEvidence"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            readonly status: "post_declared_cutoff" | "pre_cutoff_exposure_detected" | "interval_overlap" | "unknown_cutoff" | "unknown_source_time" | "mutable_model_context";
+            /** Uncertainty */
+            readonly uncertainty: readonly string[];
+        };
+        /** TemporalAssessmentPayloadV2 */
+        readonly TemporalAssessmentPayloadV2: {
+            readonly artifact_ref: components["schemas"]["ImmutableArtifactRef"];
+            /** Chronology */
+            readonly chronology: readonly components["schemas"]["ChronologyInterval"][];
+            /** Claim Qualifier Codes */
+            readonly claim_qualifier_codes: readonly ("no_originality_claim" | "not_training_proof" | "provider_declared_cutoff" | "provider_declared_pin" | "insufficient_evidence")[];
+            /**
+             * Explanation Code
+             * @enum {string}
+             */
+            readonly explanation_code: "revision_not_pinned" | "model_update_not_proven_before_cutoff" | "cutoff_unknown" | "no_accepted_source_date" | "exposure_precedes_cutoff" | "exposure_follows_cutoff" | "source_cutoff_intervals_overlap" | "source_interval_incomplete" | "unverified_source_could_precede_cutoff";
+            /** Exposure Paths */
+            readonly exposure_paths: readonly components["schemas"]["AuditDocumentRef"][];
+            readonly hiding_commitment: components["schemas"]["HidingCommitmentPayload"] | null;
+            readonly model_context_ref: components["schemas"]["AuditDocumentRef"] | null;
+            readonly model_context_snapshot: components["schemas"]["ModelContextPayload"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            readonly status: "post_declared_cutoff" | "pre_cutoff_exposure_detected" | "interval_overlap" | "unknown_cutoff" | "unknown_source_time" | "mutable_model_context";
+        };
+        /**
+         * TimestampEvidence
+         * @description A source date with its real precision; date-only sources stay date-only.
+         */
+        readonly TimestampEvidence: {
+            /**
+             * Precision
+             * @enum {string}
+             */
+            readonly precision: "day" | "second" | "millisecond" | "microsecond" | "nanosecond";
+            /** Source Ref */
+            readonly source_ref: components["schemas"]["AuditDocumentRef"] | components["schemas"]["ImmutableArtifactRef"] | null;
+            /** Uncertainty */
+            readonly uncertainty: string | null;
+            /** Value */
+            readonly value: string;
+        };
+        /** TrustedTimestampProof */
+        readonly TrustedTimestampProof: {
+            /** Adapter Version */
+            readonly adapter_version: string;
+            /** Certificate Refs */
+            readonly certificate_refs: readonly components["schemas"]["AuditDocumentRef"][];
+            /** Commitment */
+            readonly commitment: string;
+            /**
+             * Protocol
+             * @enum {string}
+             */
+            readonly protocol: "rfc3161" | "provider_signed_v1";
+            /** Provider */
+            readonly provider: string;
+            readonly receipt_time: components["schemas"]["TimestampEvidence"] | null;
+            readonly token_ref: components["schemas"]["ImmutableArtifactRef"];
+            /**
+             * Verification State
+             * @enum {string}
+             */
+            readonly verification_state: "pending" | "verified" | "unavailable" | "invalid";
+            readonly verifier_ref: components["schemas"]["AuditDocumentRef"] | null;
         };
         /**
          * UsageCounter
@@ -2330,6 +5821,555 @@ export interface operations {
             };
         };
     };
+    readonly create_audit_plan_v1_benchmark_audit_plans_post: {
+        readonly parameters: {
+            readonly query?: {
+                readonly dry_run?: boolean;
+            };
+            readonly header?: {
+                readonly "Idempotency-Key"?: string | null;
+                readonly "If-None-Match"?: string | null;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["AuditPlanDocument"];
+            };
+        };
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditMutationResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    readonly get_registry_v1_benchmark_audit_registry_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditDocumentResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    readonly create_audit_run_v1_benchmark_audit_runs_post: {
+        readonly parameters: {
+            readonly query?: {
+                readonly dry_run?: boolean;
+            };
+            readonly header?: {
+                readonly "Idempotency-Key"?: string | null;
+                readonly "If-None-Match"?: string | null;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Campaign Id */
+                    readonly campaign_id?: string | null;
+                    /**
+                     * Plan Document Id
+                     * Format: uuid
+                     */
+                    readonly plan_document_id: string;
+                    /** Reserved Query Units */
+                    readonly reserved_query_units: number;
+                    /** Reserved Storage Bytes */
+                    readonly reserved_storage_bytes: number;
+                    /**
+                     * Schema Version
+                     * @default 1
+                     * @constant
+                     */
+                    readonly schema_version?: 1;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditMutationResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    readonly list_audit_documents_v1_benchmark_audit__resource__get: {
+        readonly parameters: {
+            readonly query?: {
+                readonly limit?: number;
+                readonly cursor?: string | null;
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly resource: "snapshots" | "corpora" | "plans" | "runs" | "queries" | "matches" | "assessments" | "temporal" | "sealed" | "firewall" | "replacements" | "monitors" | "health" | "attestations";
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditDocumentPage"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    readonly get_audit_document_v1_benchmark_audit__resource___document_id__get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly resource: "snapshots" | "corpora" | "plans" | "runs" | "queries" | "matches" | "assessments" | "temporal" | "sealed" | "firewall" | "replacements" | "monitors" | "health" | "attestations";
+                readonly document_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditDocumentResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     readonly get_compare_v1_compare_get: {
         readonly parameters: {
             readonly query?: {
@@ -2565,6 +6605,212 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readonly get_public_health_report_v1_public_audit_reports__report_id__get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly report_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditDocumentResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    readonly get_public_health_report_v1_public_benchmark_health__report_id__get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly report_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditDocumentResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
                 };
             };
         };

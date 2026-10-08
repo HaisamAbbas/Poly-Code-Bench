@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import time
+from uuid import UUID
 
 import pytest
 from polycodebench_api.auth import ApiPrincipal, TokenDirectory
@@ -140,4 +141,54 @@ def test_identity_directory_sources_are_exclusive(
     monkeypatch.setenv("PCB_API_IDENTITY_JSON", '{"schema_version":1,"principals":[]}')
 
     with pytest.raises(RuntimeError, match="configure only one"):
+        TokenDirectory.from_env()
+
+
+def test_identity_directory_accepts_and_validates_tenant_claims(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    token = "private-audit-test-bearer-token"
+    fingerprint = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    tenant_id = "22222222-2222-4222-8222-222222222222"
+    now = int(time.time())
+    principal = {
+        "subject_id": "operator-1",
+        "roles": ["operator"],
+        "mfa": False,
+        "email": None,
+        "email_verified": False,
+        "expires_at": now + 300,
+        "tenant_id": tenant_id,
+    }
+    monkeypatch.setenv("PCB_ENVIRONMENT", "development")
+    monkeypatch.delenv("PCB_API_IDENTITY_FILE", raising=False)
+    monkeypatch.setenv(
+        "PCB_API_IDENTITY_JSON",
+        json.dumps(
+            {
+                "schema_version": 1,
+                "principals": [{"token_sha256": fingerprint, "principal": principal}],
+            }
+        ),
+    )
+
+    directory = TokenDirectory.from_env()
+    assert directory.resolve(token) == ApiPrincipal(
+        subject_id="operator-1",
+        roles=frozenset({"operator"}),
+        expires_at=now + 300,
+        tenant_id=UUID(tenant_id),
+    )
+
+    principal["tenant_id"] = "not-a-uuid"
+    monkeypatch.setenv(
+        "PCB_API_IDENTITY_JSON",
+        json.dumps(
+            {
+                "schema_version": 1,
+                "principals": [{"token_sha256": fingerprint, "principal": principal}],
+            }
+        ),
+    )
+    with pytest.raises(RuntimeError, match="invalid or expired claims"):
         TokenDirectory.from_env()

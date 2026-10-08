@@ -310,7 +310,7 @@ def approve_model_submission(
     approval_document = {
         "endpoint_registration_id": str(approval.endpoint_registration_id),
         "permission_review": permission_review.model_dump(mode="json"),
-        "run_plan": run_request.model_dump(mode="json"),
+        "run_plan": run_request.model_dump(mode="json", exclude_none=True),
     }
     claim = services.submissions.begin_approval(
         submission_id=str(submission_id),

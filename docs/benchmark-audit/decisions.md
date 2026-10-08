@@ -187,3 +187,11 @@ The worst-case query reserve includes every allowed retry and counts against per
 ### ADDENDUM-DECISION-41 - Health reports preserve denominators and cohort identity
 
 Health v2 stores descriptive counts with explicit selected, assessed, unknown and eligible denominators. Percentages and risk means use precision-28 Decimal arithmetic with six-place half-even output; empty denominators carry null reasons. Exact and semantic positives are unioned by task identity, while unresolved/unscanned evidence remains visible. Sampling never implies a census estimate. Trend comparisons break when benchmark membership, policy, model context, source scope/window, sample, scan method, family mapping, or metric/freshness/provenance definition changes. Family mappings stay private, health points are immutable, and no health metric is a code-quality score or benchmark-clean verdict. The section 18 local goldens passed; live source and database evidence remain unavailable.
+
+### ADDENDUM-DECISION-42 - Private audit APIs require explicit tenant and owner scope
+
+New API audit documents require a tenant UUID. Historical rows with no tenant binding remain inaccessible to tenant APIs, and references must resolve inside the same tenant. The default object policy permits the document owner only; shared curator/reviewer access must be supplied by an installation-specific reviewed ACL. This avoids treating a public opaque ID or a broad role as sufficient object authorization.
+
+### ADDENDUM-DECISION-43 - Unsupported audit operations fail closed
+
+The API and CLI expose only operations backed by existing services: registry/document/run reads and plan/run creation. Review, temporal, sealing, firewall, replacement, monitor, health-generation and attestation-verification operations without an authorized adapter return an explicit blocked/incomplete result. Dry-run validates locally and performs no HTTP, source, model, guest, signing, publication or notification work. No fake result or alternate model gateway is provided.

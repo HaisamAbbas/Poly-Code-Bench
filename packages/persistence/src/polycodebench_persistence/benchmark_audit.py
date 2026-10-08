@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, localcontext
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from polycodebench_core.application_errors import (
+    IdempotencyConflict,
     InvalidReference,
     InvalidState,
     OptimisticVersionConflict,
     PersistenceConflict,
+    PersistenceUnavailable,
 )
 from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
@@ -71,7 +73,8 @@ from polycodebench_core.models import AdmissionExecutionReport
 from polycodebench_core.models import TaskVersion as TaskVersionContract
 from polycodebench_core.monitor_schedule import monitor_retry_at, monitor_slot_identity
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
@@ -91,6 +94,7 @@ from polycodebench_persistence.models import (
     call_intent,
     campaign,
     config_document,
+    idempotency_record,
     match_candidate,
     model_revision,
     monitor_alert_inbox,
@@ -161,17 +165,279 @@ class PostgresBenchmarkAuditRepository:
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
-    def save_document(self, document: AuditDocument) -> AuditDocumentWrite:
+    def save_document(
+        self, document: AuditDocument, *, tenant_id: UUID | None = None
+    ) -> AuditDocumentWrite:
         """Insert immutable semantic bytes, enforcing references and successor kind."""
         if isinstance(document, SealAccessEventDocument):
             raise InvalidState("sealed access events must be appended with a manifest successor")
         try:
             with self._engine.begin() as connection:
-                return self._save_document_in_connection(connection, document)
+                return self._save_document_in_connection(connection, document, tenant_id=tenant_id)
         except (InvalidReference, InvalidState, PersistenceConflict):
             raise
         except DBAPIError as error:
             raise map_database_error(error) from None
+
+    def save_document_idempotent(
+        self,
+        document: AuditDocument,
+        *,
+        subject: str,
+        route: str,
+        idempotency_key: str,
+        request_digest: str,
+        tenant_id: UUID,
+    ) -> AuditDocumentWrite:
+        """Save one immutable document and its exact replay record in the same transaction."""
+        if (
+            not subject
+            or not subject.isascii()
+            or len(subject) > 255
+            or not route
+            or not route.isascii()
+            or len(route) > 255
+            or not idempotency_key
+            or not idempotency_key.isascii()
+            or len(idempotency_key) > 255
+            or len(request_digest) != 71
+            or not request_digest.startswith("sha256:")
+            or any(character not in "0123456789abcdef" for character in request_digest[7:])
+            or not isinstance(tenant_id, UUID)
+        ):
+            raise InvalidState("audit document idempotency identity is invalid")
+        now = datetime.now(UTC)
+        try:
+            with self._engine.begin() as connection:
+                claim_id = uuid4()
+                claimed = connection.execute(
+                    pg_insert(idempotency_record)
+                    .values(
+                        id=claim_id,
+                        subject=subject,
+                        route=route,
+                        key=idempotency_key,
+                        request_digest=request_digest,
+                        state="in_progress",
+                        expires_at=now + timedelta(hours=24),
+                    )
+                    .on_conflict_do_nothing(
+                        index_elements=[
+                            idempotency_record.c.subject,
+                            idempotency_record.c.route,
+                            idempotency_record.c.key,
+                        ]
+                    )
+                    .returning(idempotency_record.c.id)
+                ).scalar_one_or_none()
+                if claimed is None:
+                    existing = (
+                        connection.execute(
+                            select(idempotency_record)
+                            .where(
+                                idempotency_record.c.subject == subject,
+                                idempotency_record.c.route == route,
+                                idempotency_record.c.key == idempotency_key,
+                            )
+                            .with_for_update()
+                        )
+                        .mappings()
+                        .one_or_none()
+                    )
+                    if existing is None:
+                        raise PersistenceUnavailable()
+                    if existing["expires_at"] <= now:
+                        connection.execute(
+                            delete(idempotency_record).where(
+                                idempotency_record.c.id == existing["id"]
+                            )
+                        )
+                        claimed = connection.execute(
+                            pg_insert(idempotency_record)
+                            .values(
+                                id=claim_id,
+                                subject=subject,
+                                route=route,
+                                key=idempotency_key,
+                                request_digest=request_digest,
+                                state="in_progress",
+                                expires_at=now + timedelta(hours=24),
+                            )
+                            .on_conflict_do_nothing()
+                            .returning(idempotency_record.c.id)
+                        ).scalar_one_or_none()
+                        if claimed is None:
+                            raise PersistenceUnavailable()
+                    else:
+                        if existing["request_digest"] != request_digest:
+                            raise IdempotencyConflict()
+                        if existing["state"] != "completed":
+                            raise PersistenceUnavailable()
+                        response = existing["response_payload"]
+                        if not isinstance(response, dict):
+                            raise PersistenceConflict("audit idempotency response is invalid")
+                        try:
+                            response_id = UUID(str(response["document_id"]))
+                            response_digest = str(response["digest"])
+                            response_created = response["created"]
+                        except (KeyError, ValueError):
+                            raise PersistenceConflict(
+                                "audit idempotency response is invalid"
+                            ) from None
+                        if (
+                            response_id != document.id
+                            or response_digest != audit_document_digest(document)
+                            or type(response_created) is not bool
+                        ):
+                            raise PersistenceConflict(
+                                "audit idempotency replay differs from its result"
+                            )
+                        return AuditDocumentWrite(response_id, response_digest, response_created)
+
+                result = self._save_document_in_connection(
+                    connection, document, tenant_id=tenant_id
+                )
+                response_payload = {
+                    "document_id": str(result.document_id),
+                    "digest": result.digest,
+                    "created": result.created,
+                }
+                connection.execute(
+                    update(idempotency_record)
+                    .where(idempotency_record.c.id == claim_id)
+                    .values(
+                        state="completed",
+                        response_code=201 if result.created else 200,
+                        response_payload=response_payload,
+                    )
+                )
+                return result
+        except (
+            IdempotencyConflict,
+            InvalidReference,
+            InvalidState,
+            PersistenceConflict,
+            PersistenceUnavailable,
+        ):
+            raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def get_document(self, document_id: UUID, *, tenant_id: UUID) -> AuditDocument | None:
+        """Read an immutable audit document by opaque identity."""
+        with self._engine.connect() as connection:
+            row = (
+                connection.execute(
+                    select(audit_document).where(
+                        audit_document.c.id == document_id,
+                        audit_document.c.tenant_id == tenant_id,
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+        return None if row is None else self._document_from_row(row)
+
+    def list_documents(
+        self,
+        *,
+        kind: str,
+        created_by: str,
+        tenant_id: UUID,
+        limit: int,
+        offset: int,
+    ) -> tuple[tuple[AuditDocument, ...], int]:
+        """Page only one owner's documents; cross-owner access requires an external ACL."""
+        if (
+            not kind
+            or not created_by
+            or not isinstance(tenant_id, UUID)
+            or type(limit) is not int
+            or not 1 <= limit <= 200
+            or type(offset) is not int
+            or not 0 <= offset <= 10_000_000
+        ):
+            raise InvalidState("audit document page is outside its finite bounds")
+        conditions = (
+            audit_document.c.kind == kind,
+            audit_document.c.created_by == created_by,
+            audit_document.c.tenant_id == tenant_id,
+        )
+        with self._engine.connect() as connection:
+            total = connection.execute(
+                select(func.count()).select_from(audit_document).where(*conditions)
+            ).scalar_one()
+            rows = (
+                connection.execute(
+                    select(audit_document)
+                    .where(*conditions)
+                    .order_by(audit_document.c.created_at, audit_document.c.id)
+                    .limit(limit)
+                    .offset(offset)
+                )
+                .mappings()
+                .all()
+            )
+        return tuple(self._document_from_row(row) for row in rows), int(total)
+
+    def list_audit_runs(
+        self, *, created_by: str, tenant_id: UUID, limit: int, offset: int
+    ) -> tuple[tuple[dict[str, Any], ...], int]:
+        """List run metadata only for plans authored by the caller."""
+        if (
+            not created_by
+            or not isinstance(tenant_id, UUID)
+            or type(limit) is not int
+            or not 1 <= limit <= 200
+            or type(offset) is not int
+            or not 0 <= offset <= 10_000_000
+        ):
+            raise InvalidState("audit run page is outside its finite bounds")
+        ownership = (
+            audit_document.c.created_by == created_by,
+            audit_document.c.tenant_id == tenant_id,
+        )
+        source = audit_run.join(audit_document, audit_document.c.id == audit_run.c.plan_document_id)
+        with self._engine.connect() as connection:
+            total = connection.execute(
+                select(func.count()).select_from(source).where(*ownership)
+            ).scalar_one()
+            rows = (
+                connection.execute(
+                    select(audit_run)
+                    .select_from(source)
+                    .where(*ownership)
+                    .order_by(audit_run.c.created_at, audit_run.c.id)
+                    .limit(limit)
+                    .offset(offset)
+                )
+                .mappings()
+                .all()
+            )
+        return tuple(dict(row) for row in rows), int(total)
+
+    def get_audit_run(
+        self, *, audit_run_id: UUID, created_by: str, tenant_id: UUID
+    ) -> dict[str, Any] | None:
+        """Read one run only through an owner-authored plan."""
+        if not isinstance(tenant_id, UUID):
+            raise InvalidState("audit run tenant scope is invalid")
+        source = audit_run.join(audit_document, audit_document.c.id == audit_run.c.plan_document_id)
+        with self._engine.connect() as connection:
+            row = (
+                connection.execute(
+                    select(audit_run)
+                    .select_from(source)
+                    .where(
+                        audit_run.c.id == audit_run_id,
+                        audit_document.c.created_by == created_by,
+                        audit_document.c.tenant_id == tenant_id,
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+        return None if row is None else dict(row)
 
     def append_access_event(
         self,
@@ -193,7 +459,11 @@ class PostgresBenchmarkAuditRepository:
             with self._engine.begin() as connection:
                 previous = (
                     connection.execute(
-                        select(audit_document.c.kind, audit_document.c.semantic_digest)
+                        select(
+                            audit_document.c.kind,
+                            audit_document.c.semantic_digest,
+                            audit_document.c.tenant_id,
+                        )
                         .where(audit_document.c.id == event.payload.manifest_ref.document_id)
                         .with_for_update()
                     )
@@ -214,8 +484,15 @@ class PostgresBenchmarkAuditRepository:
                 ).scalar_one_or_none()
                 if existing_successor is not None and existing_successor != successor.id:
                     raise PersistenceConflict("sealed manifest head already has a successor")
-                self._save_document_in_connection(connection, event, allow_access_event=True)
-                self._save_document_in_connection(connection, successor)
+                self._save_document_in_connection(
+                    connection,
+                    event,
+                    allow_access_event=True,
+                    tenant_id=previous["tenant_id"],
+                )
+                self._save_document_in_connection(
+                    connection, successor, tenant_id=previous["tenant_id"]
+                )
         except (InvalidReference, InvalidState, PersistenceConflict):
             raise
         except DBAPIError as error:
@@ -228,13 +505,14 @@ class PostgresBenchmarkAuditRepository:
         document: AuditDocument,
         *,
         allow_access_event: bool = False,
+        tenant_id: UUID | None = None,
     ) -> AuditDocumentWrite:
         if isinstance(document, SealAccessEventDocument) and not allow_access_event:
             raise InvalidState("sealed access event requires an atomic manifest successor")
         payload = document.payload.model_dump(mode="json")
         canonical_json_bytes(payload)
         digest = audit_document_digest(document)
-        cls._validate_references(connection, document.payload)
+        cls._validate_references(connection, document.payload, tenant_id=tenant_id)
         cls._validate_canary_observation(connection, document)
         cls._validate_sealed_manifest_document(connection, document)
         cls._validate_firewall_document(connection, document)
@@ -252,6 +530,7 @@ class PostgresBenchmarkAuditRepository:
             "payload": payload,
             "supersedes_id": document.supersedes_id,
             "created_by": document.metadata.actor,
+            "tenant_id": tenant_id,
             "document_created_at": document.metadata.created_at,
             "timestamp_precision": document.metadata.timestamp_precision,
             "trace_id": document.metadata.trace_id,
@@ -2207,6 +2486,7 @@ class PostgresBenchmarkAuditRepository:
         reserved_query_units: int,
         reserved_storage_bytes: int,
         actor: str,
+        tenant_id: UUID,
         campaign_id: UUID | None = None,
     ) -> AuditRunWrite:
         """Atomically create a blocked-by-default run and its zero-dollar budget account."""
@@ -2221,12 +2501,17 @@ class PostgresBenchmarkAuditRepository:
             raise InvalidState("audit run reservations must be nonnegative integers")
         if not actor or not actor.isascii() or len(actor) > 255:
             raise InvalidState("audit run actor is invalid")
+        if not isinstance(tenant_id, UUID):
+            raise InvalidState("audit run tenant scope is invalid")
         try:
             with self._engine.begin() as connection:
                 plan = (
                     connection.execute(
                         select(audit_document)
-                        .where(audit_document.c.id == plan_document_id)
+                        .where(
+                            audit_document.c.id == plan_document_id,
+                            audit_document.c.tenant_id == tenant_id,
+                        )
                         .with_for_update(read=True)
                     )
                     .mappings()
@@ -2921,14 +3206,18 @@ class PostgresBenchmarkAuditRepository:
             raise map_database_error(error) from None
 
     @staticmethod
-    def _validate_references(connection: Any, payload: BaseModel) -> None:
+    def _validate_references(
+        connection: Any, payload: BaseModel, *, tenant_id: UUID | None
+    ) -> None:
         def visit(value: Any) -> None:
             if isinstance(value, AuditDocumentRef):
                 row = (
                     connection.execute(
-                        select(audit_document.c.kind, audit_document.c.semantic_digest).where(
-                            audit_document.c.id == value.document_id
-                        )
+                        select(
+                            audit_document.c.kind,
+                            audit_document.c.semantic_digest,
+                            audit_document.c.tenant_id,
+                        ).where(audit_document.c.id == value.document_id)
                     )
                     .mappings()
                     .one_or_none()
@@ -2937,6 +3226,7 @@ class PostgresBenchmarkAuditRepository:
                     row is None
                     or row["kind"] != value.kind
                     or row["semantic_digest"] != value.digest
+                    or row["tenant_id"] != tenant_id
                 ):
                     raise InvalidReference("audit document reference is missing or has changed")
             elif isinstance(value, ImmutableArtifactRef):

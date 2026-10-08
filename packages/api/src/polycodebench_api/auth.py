@@ -17,6 +17,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
+from uuid import UUID
 
 from fastapi import Request
 from polycodebench_publication.releases import ReleasePrincipal
@@ -37,6 +39,7 @@ class ApiPrincipal:
     email: str | None = None
     email_verified: bool = False
     expires_at: int | None = None
+    tenant_id: UUID | None = None
 
 
 class TokenDirectory:
@@ -114,8 +117,23 @@ class TokenDirectory:
                 or any(char not in "0123456789abcdef" for char in fingerprint)
                 or fingerprint in fingerprints
                 or not isinstance(claims, dict)
-                or set(claims)
-                != {"subject_id", "roles", "mfa", "email", "email_verified", "expires_at"}
+                or frozenset(claims)
+                not in {
+                    frozenset(
+                        {"subject_id", "roles", "mfa", "email", "email_verified", "expires_at"}
+                    ),
+                    frozenset(
+                        {
+                            "subject_id",
+                            "roles",
+                            "mfa",
+                            "email",
+                            "email_verified",
+                            "expires_at",
+                            "tenant_id",
+                        }
+                    ),
+                }
                 or not isinstance(claims["subject_id"], str)
                 or not claims["subject_id"].strip()
                 or claims["subject_id"].strip() != claims["subject_id"]
@@ -128,6 +146,13 @@ class TokenDirectory:
                 or not isinstance(claims["expires_at"], int)
                 or isinstance(claims["expires_at"], bool)
                 or claims["expires_at"] <= int(datetime.now(UTC).timestamp())
+                or (
+                    "tenant_id" in claims
+                    and (
+                        not isinstance(claims["tenant_id"], str)
+                        or not _is_uuid(claims["tenant_id"])
+                    )
+                )
             ):
                 raise RuntimeError(f"{source} contains invalid or expired claims")
             fingerprints[fingerprint] = ApiPrincipal(
@@ -137,6 +162,7 @@ class TokenDirectory:
                 email=claims["email"],
                 email_verified=claims["email_verified"],
                 expires_at=claims["expires_at"],
+                tenant_id=UUID(cast(str, claims["tenant_id"])) if "tenant_id" in claims else None,
             )
         directory = cls({}, web_auth_signing_key=web_auth_signing_key)
         directory._fingerprints = fingerprints
@@ -227,6 +253,14 @@ def _decode_jwt_part(value: str) -> dict[str, object]:
     if not isinstance(decoded, dict):
         raise ValueError("JWT part is not an object")
     return decoded
+
+
+def _is_uuid(value: str) -> bool:
+    try:
+        UUID(value)
+    except ValueError:
+        return False
+    return True
 
 
 def bearer_principal(request: Request, tokens: TokenDirectory) -> ApiPrincipal:

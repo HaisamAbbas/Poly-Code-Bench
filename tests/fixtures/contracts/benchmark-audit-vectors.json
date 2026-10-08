@@ -490,6 +490,52 @@
       },
       "expected_canonical_utf8": "{\"kind\":\"audit_attestation\",\"payload\":{\"benchmark_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"benchmark_snapshot\"},\"claim_digests\":[],\"coverage_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"coverage_manifest\"},\"expires_at\":\"2026-10-09T12:00:00Z\",\"expires_at_precision\":\"second\",\"issued_at\":\"2026-10-08T12:00:00Z\",\"issued_at_precision\":\"second\",\"key_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"signing_key\"},\"model_context\":null,\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"risk_policy\"},\"review\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"firewall_decision\"},\"revocation_refs\":[],\"scan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"signature_algorithm\":\"ed25519\"},\"schema_version\":1}",
       "expected_digest": "sha256:c9d5dad533079783195a2d56da19dc224f0b395e3fa72541fd2883641cdfe9bd"
+    },
+    {
+      "name": "model_context-v1",
+      "kind": "model_context",
+      "schema_version": 1,
+      "payload": {
+        "provider": "example-provider",
+        "model_alias": "latest",
+        "model_revision": null,
+        "weights_digest": null,
+        "pin_confidence": "mutable_alias",
+        "pin_evidence_refs": [],
+        "training_cutoff": null,
+        "cutoff_confidence": "unknown",
+        "update_history": [],
+        "retrieval_mode": "unknown",
+        "retrieval_policy_ref": null,
+        "tool_policy_ref": null,
+        "prior_delivery_refs": [],
+        "recorded_at": "2026-10-08T12:00:00Z"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"model_context\",\"payload\":{\"cutoff_confidence\":\"unknown\",\"model_alias\":\"latest\",\"model_revision\":null,\"pin_confidence\":\"mutable_alias\",\"pin_evidence_refs\":[],\"prior_delivery_refs\":[],\"provider\":\"example-provider\",\"recorded_at\":\"2026-10-08T12:00:00Z\",\"retrieval_mode\":\"unknown\",\"retrieval_policy_ref\":null,\"tool_policy_ref\":null,\"training_cutoff\":null,\"update_history\":[],\"weights_digest\":null},\"schema_version\":1}",
+      "expected_digest": "sha256:fce3ce58da1f7fa88bdc1d700546a6c471810aa3108c5deade63cbd03c5717ce"
+    },
+    {
+      "name": "temporal_assessment-v2",
+      "kind": "temporal_assessment",
+      "schema_version": 2,
+      "payload": {
+        "artifact_ref": {
+          "artifact_id": "44444444-4444-4444-8444-444444444444",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "visibility": "private",
+          "media_type": "application/json"
+        },
+        "model_context_ref": null,
+        "model_context_snapshot": null,
+        "chronology": [],
+        "exposure_paths": [],
+        "hiding_commitment": null,
+        "status": "mutable_model_context",
+        "explanation_code": "revision_not_pinned",
+        "claim_qualifier_codes": ["insufficient_evidence"]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"temporal_assessment\",\"payload\":{\"artifact_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/json\",\"visibility\":\"private\"},\"chronology\":[],\"claim_qualifier_codes\":[\"insufficient_evidence\"],\"explanation_code\":\"revision_not_pinned\",\"exposure_paths\":[],\"hiding_commitment\":null,\"model_context_ref\":null,\"model_context_snapshot\":null,\"status\":\"mutable_model_context\"},\"schema_version\":2}",
+      "expected_digest": "sha256:82dcbda024b47390cb0bea5f084b510ef0c37ff1c7618dff3ad7e7303b8b0f99"
     }
   ]
 }

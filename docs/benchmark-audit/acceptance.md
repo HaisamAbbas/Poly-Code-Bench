@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt91, BWP-01 and BWP-02 are complete; BWP-03 through BWP-09 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt92, BWP-01 and BWP-02 are complete; BWP-03 through BWP-10 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -16,8 +16,8 @@ At Prompt91, BWP-01 and BWP-02 are complete; BWP-03 through BWP-09 are partial p
 | BREQ-06 | 90 | BX-18–21 | partial | reports/prompt-90.md; source/component/span verification, relation rubric and review/correction contracts exist; trusted artifact/rights verification and durable review history remain absent |
 | BREQ-07 | 91 | BX-22–23 | partial | reports/prompt-91.md; exact decimal observed-risk formula, bounds, tiers and missingness gates are implemented and golden-tested; independent score-policy calibration and actual accepted source evidence remain absent |
 | BREQ-08 | 91,94 | BX-24,31–33 | partial | reports/prompt-91.md; all eight signals are typed, while behavior is kept diagnostic and age/popularity contextual; controlled behavior evidence and live exposure/corpus evidence remain absent |
-| BREQ-09 | 92 | BX-25–26 | pending | see prompt 92 report |
-| BREQ-10 | 92–93 | BX-27–28 | pending | see prompt 92 report |
+| BREQ-09 | 92 | BX-25–26 | partial | reports/prompt-92.md; chronology intervals, immutable model contexts and interval evaluation are tested; no accepted live source/cutoff evidence exists |
+| BREQ-10 | 92–93 | BX-27–28 | partial | reports/prompt-92.md; salted commitments and local Ed25519 receipt binding are tested; no approved external timestamp authority is configured |
 | BREQ-11 | 93,102 | BX-28–29,54 | pending | see prompt 93 report |
 | BREQ-12 | 93,102 | BX-30,54 | pending | see prompt 93 report |
 | BREQ-13 | 94,101 | BX-31–33,53 | pending | see prompt 94 report |
@@ -54,7 +54,7 @@ At Prompt91, BWP-01 and BWP-02 are complete; BWP-03 through BWP-09 are partial p
 | BWP-07 | 89 | partial | reports/prompt-89.md; deterministic selection, cap/truncation, coverage, scoped cache identity and stored-hit replay contracts are tested; approved indexes and durable query recovery are absent |
 | BWP-08 | 90 | partial | reports/prompt-90.md; versioned evidence/content verification, relation rubric, independent review/adjudication and successor correction contracts are tested; trusted source/rights resolution and persistent review history are absent |
 | BWP-09 | 91 | partial | reports/prompt-91.md; versioned score/assessment contracts, eight signal descriptors, exact decimal aggregation and missingness bounds are tested; calibration, accepted live evidence, database execution and public projection remain pending |
-| BWP-10 | 92 | pending | prompt report |
+| BWP-10 | 92 | partial | reports/prompt-92.md; model-context snapshots, chronology precedence, interval outcomes and commitment verification are implemented; live source/model/TSA evidence remains unavailable |
 | BWP-11 | 93 | pending | prompt report |
 | BWP-12 | 94 | pending | prompt report |
 | BWP-13 | 95 | pending | prompt report |
@@ -112,10 +112,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-09-B | 91 | partial | reports/prompt-91.md; frozen 50M+25C+15E+10L aggregation, six-place Decimal arithmetic, max/correlation caps and §12 score/threshold goldens pass; independent validation data are unavailable |
 | BAT-09-C | 91 | partial | reports/prompt-91.md; unknown groups remain null/bounded, incomplete scope cannot produce low/medium and high lower-bound wording retains bounds; no approved finite source scope was executed |
 | BAT-09-D | 91 | partial | reports/prompt-91.md; immutable v2 policy/assessment payloads and constrained claim projection are implemented; PostgreSQL migration was rendered offline only, with no persistence writer/API/public projection integration |
-| BAT-10-A | 92 | pending | prompt report |
-| BAT-10-B | 92 | pending | prompt report |
-| BAT-10-C | 92 | pending | prompt report |
-| BAT-10-D | 92 | pending | prompt report |
+| BAT-10-A | 92 | partial | reports/prompt-92.md; provenance classes and upper-bound-only capture/receipt dates preserve earlier verified upstream dates; no live upstream records are available |
+| BAT-10-B | 92 | partial | reports/prompt-92.md; strict context records pin confidence, cutoff source, updates, retrieval and prior deliveries; no provider context was supplied |
+| BAT-10-C | 92 | partial | reports/prompt-92.md; pure evaluator and assessment validator cover pre/after/overlap/unknown/mutable states; only synthetic date fixtures ran |
+| BAT-10-D | 92 | partial | reports/prompt-92.md; high-entropy commitments and local Ed25519 receipts verify byte binding; no approved external timestamp adapter/trust roots are configured |
 | BAT-11-A | 93 | pending | prompt report |
 | BAT-11-B | 93 | pending | prompt report |
 | BAT-11-C | 93 | pending | prompt report |
@@ -201,9 +201,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-22 | 91 | partial | reports/prompt-91.md; formula, thresholds, score vectors, concept/family values and correlated-signal caps pass synthetic goldens; detector/reviewer calibration remains blocked |
 | BX-23 | 91 | partial | reports/prompt-91.md; unavailable components are bounded, complete-scope no-match is distinct from failure, and low/medium require validated calibration plus complete scope; no real scope was scanned |
 | BX-24 | 91 | partial | reports/prompt-91.md; eight descriptors preserve separate corpus overlap, public exposure, contextual popularity/age and behavioral diagnostics; no approved source or controlled behavior data are available |
-| BX-25 | 92 | pending | criterion in addendum §26; prompt report |
-| BX-26 | 92 | pending | criterion in addendum §26; prompt report |
-| BX-27 | 92 | pending | criterion in addendum §26; prompt report |
+| BX-25 | 92 | partial | reports/prompt-92.md; earlier verified source dates outrank later release dates in interval evaluation; no live source evidence |
+| BX-26 | 92 | partial | reports/prompt-92.md; unknown cutoff, mutable alias, interval overlap, post-cutoff model updates and incomplete source bounds cannot yield an unqualified post-cutoff result |
+| BX-27 | 92 | partial | reports/prompt-92.md; signature and token artifact digest bind receipts to commitment bytes, and local receipts stay non-independent; external trusted TSA validation unavailable |
 | BX-28 | 93 | pending | criterion in addendum §26; prompt report |
 | BX-29 | 93 | pending | criterion in addendum §26; prompt report |
 | BX-30 | 93 | pending | criterion in addendum §26; prompt report |

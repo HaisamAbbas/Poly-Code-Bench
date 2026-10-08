@@ -12,21 +12,21 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 88 — source connector contracts and coverage. Commit `dbe840b`.
 - [x] Prompt 89 — bounded retrieval, coverage and replay. Commit `f6f752c`.
 - [x] Prompt 90 — match verification, review and disputes. Commit `187d4e2`.
-- [x] Prompt 91 — explainable risk index, eight signals and missingness gates.
-- [ ] Prompt 92 — temporal holdouts, model contexts and timestamp commitments.
-- [ ] Prompt 93 — behavioral audit and controlled comparisons.
-- [ ] Prompt 94 — firewall decisions and diagnostic separation.
-- [ ] Prompt 95 — adversarial replacements and contamination-resistant variants.
-- [ ] Prompt 96 — prior exposure and correction workflow.
-- [ ] Prompt 97 — sealed evaluations and canaries.
-- [ ] Prompt 98 — monitoring and new-copy alerts.
-- [ ] Prompt 99 — health metrics and trends.
-- [ ] Prompt 100 — attestations and report certificates.
-- [ ] Prompt 101 — audit operations and lifecycle integration.
-- [ ] Prompt 102 — privacy, authorization and export controls.
-- [ ] Prompt 103 — API and execution boundaries.
+- [x] Prompt 91 — explainable risk index, eight signals and missingness gates. Commit `a9b599e`.
+- [x] Prompt 92 — temporal holdouts, model contexts and timestamp commitments.
+- [ ] Prompt 93 — sealed evaluations, encryption, access and canaries.
+- [ ] Prompt 94 — optional behavioral diagnostic protocols and applicability.
+- [ ] Prompt 95 — firewall admission and independently validated replacements.
+- [ ] Prompt 96 — continuous monitoring, risk changes and owner alerts.
+- [ ] Prompt 97 — benchmark health aggregation and comparable trends.
+- [ ] Prompt 98 — private API, CLI, SDK and permission contracts.
+- [ ] Prompt 99 — benchmark health dashboard and evidence journeys.
+- [ ] Prompt 100 — signed audit attestations and public verification.
+- [ ] Prompt 101 — actual benchmark pilot and detector calibration.
+- [ ] Prompt 102 — live replacements, sealed workflow and monitoring evidence.
+- [ ] Prompt 103 — operations, malicious-input defenses and recovery/load.
 - [ ] Prompt 104 — broader benchmark adapters and scope conformance.
-- [ ] Prompt 105 — integrated lifecycle demonstration and reviewed projections.
+- [ ] Prompt 105 — integrated end-to-end demonstration and reviewed projections.
 - [ ] Prompt 106 — final traceability audit, fixes and operator handoff.
 
 ## Persistent blockers

@@ -97,7 +97,7 @@ audit_document = Table(
     ),
     CheckConstraint(
         "kind IN ('benchmark_snapshot','task_fingerprint','corpus_snapshot','audit_plan',"
-        "'query_manifest','coverage_manifest','match_evidence','risk_policy','risk_assessment',"
+        "'query_manifest','coverage_manifest','match_evidence','model_context','risk_policy','risk_assessment',"
         "'temporal_assessment','sealed_manifest','canary_policy','behavioral_audit_plan',"
         "'firewall_decision','replacement_plan','monitor_policy','benchmark_health',"
         "'audit_attestation')",

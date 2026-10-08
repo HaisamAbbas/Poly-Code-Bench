@@ -118,6 +118,13 @@ def test_schema_keeps_direct_audit_scope_exclusive_and_diagnostic_attempt_metada
         and getattr(constraint, "name", "").endswith("successor_same_kind")
     )
     assert tuple(column.name for column in successor.columns) == ("supersedes_id", "kind")
+    audit_document_kind = next(
+        constraint
+        for constraint in audit_document.constraints
+        if isinstance(constraint, CheckConstraint)
+        and getattr(constraint, "name", "").endswith("kind")
+    )
+    assert "model_context" in str(audit_document_kind.sqltext)
 
     registry_status = next(
         constraint

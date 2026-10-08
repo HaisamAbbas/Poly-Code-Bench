@@ -1363,12 +1363,14 @@ name = "polycodebench-services"
 version = "0.1.0"
 source = { editable = "packages/services" }
 dependencies = [
+    { name = "cryptography" },
     { name = "polycodebench-core" },
     { name = "pyyaml" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = "==46.0.5" },
     { name = "polycodebench-core", editable = "packages/core" },
     { name = "pyyaml", specifier = "==6.0.3" },
 ]

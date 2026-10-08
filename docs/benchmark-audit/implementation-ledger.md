@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–91 are partial foundations; Prompt92 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–92 are partial foundations; Prompt93 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -124,3 +124,13 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added a pure Decimal aggregator. Complete reviewed finite scope can produce observed zero; unknown, failed, blocked, truncated or unresolved review remains missing. Bounds add the full weight of each incomplete component. Low/medium tiers require both complete scope and a policy marked calibrated; a known lower bound at least 60 can display high observed risk with bounds. Fixed claim wording cannot describe the index as probability or a cleanliness guarantee.
 - Partial, not complete: every score fixture is synthetic, no independent calibration sample or approved corpus/source scope exists, accepted evidence references are not resolved by a trusted repository, and the assessment has no persistent writer/API/report integration. The migration only rendered offline; PostgreSQL was not available. It is not verified that live `audit_document` rows satisfy the new check.
 - Exact next prompt: Prompt92 / BWP-10. Implement temporal holdouts/model-context contracts while retaining unknown cutoff and source chronology as explicit missingness; no live model/source claim is available.
+
+## Prompt92 / BWP-10
+
+- Added strict `model_context` v1 and temporal-assessment v2 contracts while preserving temporal-assessment v1 and all existing canonical vectors. Contexts record provider, alias/revision/weight digest and pin confidence, cutoff interval/source/confidence, model updates, retrieval/tool policies, prior delivery references and audit time. Temporal assessments freeze and digest-bind the exact context snapshot they evaluate.
+- Added chronology interval evidence with precision, derivation and distinct owner/git/download/archive/trusted-receipt/local-receipt/provider/upstream bases. Archive and timestamp receipts provide upper bounds only; they cannot be recorded as public exposure. Earlier verified upstream exposure remains effective even when a later benchmark release is present.
+- Added a pure interval evaluator and assessment validator for pre-cutoff exposure, post-declared-cutoff, overlap, unknown source/cutoff and mutable context. Unknown or mutable model identity/cutoff, incomplete source intervals, unverified potentially earlier claims and model updates not proven before cutoff cannot receive a post-cutoff result. All classifications carry explicit claim qualifiers and never prove training or originality.
+- Added canonical salted SHA-256 hiding commitments using a 32-byte cryptographic nonce, private nonce artifact binding, local Ed25519 signed receipts with a fixed non-independent label, token-artifact digest checks and an explicit provider/version/protocol allowlist for replaceable trusted timestamp adapters. A verified receipt binds the commitment and provider token bytes to a recorded time only; there is no provider implementation configured in this environment.
+- Added audit-document kind migration with guarded downgrade, service dependency metadata, model-context canonical vector, temporal evaluator/crypto tests and acceptance traceability. The migration rendered offline in both directions; no database connection was made.
+- Partial, not complete: all chronology/model/cryptographic tests use local fixtures; there is no approved upstream source, provider model identity/cutoff evidence, external TSA adapter/trust root, audit persistence writer or public projection. No claim about real model training, source originality or actual exposure is supported.
+- Exact next prompt: Prompt93 / BWP-11. Implement sealed evaluations, encryption, access and canaries in order, using the private commitment primitives but preserving the existing no-live-evidence boundary.

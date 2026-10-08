@@ -11,7 +11,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from polycodebench_core.canonical import canonical_envelope, canonical_json_bytes, parse_json_strict
+from polycodebench_core.canonical import (
+    canonical_envelope,
+    canonical_envelope_bytes,
+    canonical_json_bytes,
+    parse_json_strict,
+    sha256_bytes,
+)
 from polycodebench_core.models import Decimal6, Digest, Seed64, UtcTimestamp
 
 AuditKind = Literal[
@@ -22,6 +28,7 @@ AuditKind = Literal[
     "query_manifest",
     "coverage_manifest",
     "match_evidence",
+    "model_context",
     "risk_policy",
     "risk_assessment",
     "temporal_assessment",
@@ -73,6 +80,17 @@ TemporalState = Literal[
     "unknown_cutoff",
     "unknown_source_time",
     "mutable_model_context",
+]
+TemporalExplanationCode = Literal[
+    "revision_not_pinned",
+    "model_update_not_proven_before_cutoff",
+    "cutoff_unknown",
+    "no_accepted_source_date",
+    "exposure_precedes_cutoff",
+    "exposure_follows_cutoff",
+    "source_cutoff_intervals_overlap",
+    "source_interval_incomplete",
+    "unverified_source_could_precede_cutoff",
 ]
 FirewallState = Literal["admit", "review", "reject"]
 SealState = Literal["sealed", "authorized_disclosure", "public_exposed", "compromised", "retired"]
@@ -139,6 +157,27 @@ class TimestampEvidence(StrictAuditModel):
         except ValueError as error:
             raise ValueError("timestamp is not a valid UTC calendar time") from error
         return self
+
+
+def timestamp_evidence_bounds_ns(evidence: TimestampEvidence) -> tuple[int, int]:
+    """Return inclusive nanosecond bounds without promoting date-only values to midnight."""
+    if evidence.precision == "day":
+        value = date.fromisoformat(evidence.value)
+        seconds = (value - date(1970, 1, 1)).days * 86_400
+        start = seconds * 1_000_000_000
+        return start, start + 86_400 * 1_000_000_000 - 1
+    whole_text, _, fractional = evidence.value.partition(".")
+    whole_text = whole_text.removesuffix("Z")
+    whole = datetime.fromisoformat(whole_text)
+    seconds = (
+        (whole.date() - date(1970, 1, 1)).days * 86_400
+        + whole.hour * 3_600
+        + whole.minute * 60
+        + whole.second
+    )
+    nanoseconds = int(fractional.removesuffix("Z").ljust(9, "0")) if fractional else 0
+    point = seconds * 1_000_000_000 + nanoseconds
+    return point, point
 
 
 class DocumentMetadata(StrictAuditModel):
@@ -911,6 +950,319 @@ class TemporalAssessmentPayload(StrictAuditModel):
     status: TemporalState
 
 
+ChronologyEvent = Literal[
+    "artifact_creation",
+    "git_commit",
+    "archive_capture",
+    "upstream_public_exposure",
+    "corpus_inclusion",
+    "benchmark_publication",
+    "model_training_cutoff",
+    "model_update",
+    "task_disclosure",
+    "evaluation",
+]
+ChronologyBasis = Literal[
+    "owner_claim",
+    "git_commit_metadata",
+    "download_metadata",
+    "archive_capture",
+    "trusted_timestamp_receipt",
+    "local_signed_receipt",
+    "verified_upstream_record",
+    "provider_declared",
+]
+
+
+class ChronologyInterval(StrictAuditModel):
+    event: ChronologyEvent
+    earliest: TimestampEvidence | None
+    latest: TimestampEvidence | None
+    basis: ChronologyBasis
+    derivation: Literal[
+        "direct_source_record",
+        "owner_assertion",
+        "commit_metadata",
+        "archive_capture_time",
+        "download_metadata",
+        "commitment_receipt_time",
+        "provider_declaration",
+        "derived",
+    ]
+    verification_state: Literal["verified", "unverified", "unknown"]
+    evidence_ref: AuditDocumentRef | ImmutableArtifactRef | None
+    unknown_reason: ShortText | None
+
+    @model_validator(mode="after")
+    def interval_preserves_provenance_and_uncertainty(self) -> ChronologyInterval:
+        if self.verification_state == "unknown":
+            if self.earliest is not None or self.latest is not None or self.unknown_reason is None:
+                raise ValueError("unknown chronology requires a reason and no fabricated dates")
+            return self
+        if self.earliest is None and self.latest is None:
+            raise ValueError("known chronology requires at least one interval boundary")
+        if self.evidence_ref is None or self.unknown_reason is not None:
+            raise ValueError(
+                "dated chronology requires an evidence reference and no unknown reason"
+            )
+        if self.earliest is not None and self.latest is not None:
+            earliest_bounds = timestamp_evidence_bounds_ns(self.earliest)
+            latest_bounds = timestamp_evidence_bounds_ns(self.latest)
+            if earliest_bounds[0] > latest_bounds[1]:
+                raise ValueError("chronology earliest boundary is later than its latest boundary")
+        if (
+            self.basis
+            in {
+                "owner_claim",
+                "git_commit_metadata",
+                "download_metadata",
+                "local_signed_receipt",
+                "provider_declared",
+            }
+            and self.verification_state == "verified"
+        ):
+            raise ValueError("self-reported or local chronology cannot be independently verified")
+        if self.basis in {
+            "archive_capture",
+            "trusted_timestamp_receipt",
+            "local_signed_receipt",
+        } and (self.earliest is not None or self.latest is None):
+            raise ValueError("capture and timestamp receipts provide an upper bound only")
+        if self.event == "upstream_public_exposure" and self.basis in {
+            "local_signed_receipt",
+            "trusted_timestamp_receipt",
+        }:
+            raise ValueError("a commitment receipt does not prove public exposure")
+        expected_derivation = {
+            "owner_claim": "owner_assertion",
+            "git_commit_metadata": "commit_metadata",
+            "download_metadata": "download_metadata",
+            "archive_capture": "archive_capture_time",
+            "trusted_timestamp_receipt": "commitment_receipt_time",
+            "local_signed_receipt": "commitment_receipt_time",
+            "provider_declared": "provider_declaration",
+        }.get(self.basis)
+        if expected_derivation is not None and self.derivation != expected_derivation:
+            raise ValueError("chronology derivation must preserve its source semantics")
+        return self
+
+
+class ModelContextPayload(StrictAuditModel):
+    provider: ShortText
+    model_alias: ShortText | None
+    model_revision: ShortText | None
+    weights_digest: Digest | None
+    pin_confidence: Literal[
+        "verified_revision",
+        "verified_weight_digest",
+        "provider_declared",
+        "mutable_alias",
+        "unknown",
+    ]
+    pin_evidence_refs: tuple[AuditDocumentRef, ...] = Field(max_length=32)
+    training_cutoff: ChronologyInterval | None
+    cutoff_confidence: Literal["verified", "provider_declared", "unknown"]
+    update_history: tuple[ChronologyInterval, ...] = Field(max_length=64)
+    retrieval_mode: Literal[
+        "none",
+        "provider_retrieval",
+        "tool_augmented",
+        "unknown",
+    ]
+    retrieval_policy_ref: AuditDocumentRef | None
+    tool_policy_ref: AuditDocumentRef | None
+    prior_delivery_refs: tuple[AuditDocumentRef, ...] = Field(max_length=64)
+    recorded_at: UtcTimestamp
+
+    @model_validator(mode="after")
+    def model_identity_and_cutoff_are_consistent(self) -> ModelContextPayload:
+        if self.pin_confidence == "verified_revision":
+            if self.model_revision is None or not self.pin_evidence_refs:
+                raise ValueError("verified model revisions require a revision and pin evidence")
+        elif self.pin_confidence == "verified_weight_digest":
+            if self.weights_digest is None or not self.pin_evidence_refs:
+                raise ValueError("verified weight pins require a digest and pin evidence")
+        elif self.pin_confidence == "provider_declared":
+            if self.model_revision is None or not self.pin_evidence_refs:
+                raise ValueError(
+                    "provider-declared pins require a revision and declaration evidence"
+                )
+        elif self.pin_confidence == "mutable_alias":
+            if (
+                self.model_alias is None
+                or self.model_revision is not None
+                or self.weights_digest is not None
+            ):
+                raise ValueError(
+                    "mutable aliases cannot claim an immutable revision or weight digest"
+                )
+        elif self.model_revision is not None or self.weights_digest is not None:
+            raise ValueError("unknown model pins cannot carry an immutable revision or digest")
+        if self.cutoff_confidence == "unknown":
+            if self.training_cutoff is not None:
+                raise ValueError("unknown training cutoff cannot carry a date interval")
+        elif self.training_cutoff is None or self.training_cutoff.event != "model_training_cutoff":
+            raise ValueError("declared training cutoffs require a model cutoff interval")
+        elif self.training_cutoff.earliest is None or self.training_cutoff.latest is None:
+            raise ValueError("model cutoff intervals require both uncertainty boundaries")
+        elif self.cutoff_confidence == "verified" and (
+            self.training_cutoff.verification_state != "verified"
+            or self.training_cutoff.basis != "verified_upstream_record"
+        ):
+            raise ValueError(
+                "verified cutoff confidence requires an independently verified provider record"
+            )
+        elif self.cutoff_confidence == "provider_declared" and (
+            self.training_cutoff.basis != "provider_declared"
+            or self.training_cutoff.verification_state != "unverified"
+        ):
+            raise ValueError("provider-declared cutoffs must retain their unverified source class")
+        if any(item.event != "model_update" for item in self.update_history):
+            raise ValueError("model update history can contain only model-update chronology")
+        if self.retrieval_mode == "unknown" and self.retrieval_policy_ref is not None:
+            raise ValueError("unknown retrieval policy cannot claim a policy reference")
+        if self.retrieval_mode != "unknown" and self.retrieval_policy_ref is None:
+            raise ValueError("known retrieval modes require their policy evidence")
+        if self.retrieval_mode == "tool_augmented" and self.tool_policy_ref is None:
+            raise ValueError("tool-augmented model contexts require a tool policy reference")
+        return self
+
+
+class LocalTimestampReceipt(StrictAuditModel):
+    schema_version: Literal[1]
+    adapter_version: Literal["local-ed25519-v1"]
+    commitment: Digest
+    received_at: TimestampEvidence
+    algorithm: Literal["Ed25519"]
+    key_ref: EntityRef
+    public_key_b64: ShortText
+    trust_label: Literal["local_non_independent"]
+    signature_b64: ShortText
+
+    @model_validator(mode="after")
+    def receipt_has_local_signing_identity(self) -> LocalTimestampReceipt:
+        if self.key_ref.entity_kind != "signing_key":
+            raise ValueError("timestamp receipts require a signing-key identity reference")
+        return self
+
+
+class TrustedTimestampProof(StrictAuditModel):
+    provider: ShortText
+    adapter_version: ShortText
+    protocol: Literal["rfc3161", "provider_signed_v1"]
+    commitment: Digest
+    token_ref: ImmutableArtifactRef
+    receipt_time: TimestampEvidence | None
+    certificate_refs: tuple[AuditDocumentRef, ...] = Field(max_length=16)
+    verifier_ref: AuditDocumentRef | None
+    verification_state: Literal["pending", "verified", "unavailable", "invalid"]
+
+    @model_validator(mode="after")
+    def verified_timestamp_requires_verification_evidence(self) -> TrustedTimestampProof:
+        if self.token_ref.visibility != "private":
+            raise ValueError("timestamp authority tokens must remain private artifacts")
+        if self.verification_state == "verified" and (
+            self.receipt_time is None or not self.certificate_refs or self.verifier_ref is None
+        ):
+            raise ValueError(
+                "verified authority receipts require time, certificates and verifier evidence"
+            )
+        return self
+
+
+class HidingCommitmentPayload(StrictAuditModel):
+    scheme: Literal["sha256-salted-v1"]
+    commitment: Digest
+    nonce_ref: ImmutableArtifactRef
+    local_receipt: LocalTimestampReceipt | None
+    trusted_proof: TrustedTimestampProof | None
+
+    @model_validator(mode="after")
+    def hiding_nonce_is_private_and_receipts_are_bound(self) -> HidingCommitmentPayload:
+        if self.nonce_ref.visibility != "private":
+            raise ValueError("timestamp commitment nonce artifacts must remain private")
+        if self.local_receipt is not None and self.local_receipt.commitment != self.commitment:
+            raise ValueError("local timestamp receipt is bound to a different commitment")
+        if self.trusted_proof is not None and self.trusted_proof.commitment != self.commitment:
+            raise ValueError("trusted timestamp proof is bound to a different commitment")
+        return self
+
+
+class TemporalAssessmentPayloadV2(StrictAuditModel):
+    artifact_ref: ImmutableArtifactRef
+    model_context_ref: AuditDocumentRef | None
+    model_context_snapshot: ModelContextPayload | None
+    chronology: tuple[ChronologyInterval, ...] = Field(max_length=128)
+    exposure_paths: tuple[AuditDocumentRef, ...] = Field(max_length=64)
+    hiding_commitment: HidingCommitmentPayload | None
+    status: TemporalState
+    explanation_code: TemporalExplanationCode
+    claim_qualifier_codes: tuple[
+        Literal[
+            "no_originality_claim",
+            "not_training_proof",
+            "provider_declared_cutoff",
+            "provider_declared_pin",
+            "insufficient_evidence",
+        ],
+        ...,
+    ] = Field(min_length=1, max_length=4)
+
+    @model_validator(mode="after")
+    def status_has_supporting_evidence_and_qualifiers(self) -> TemporalAssessmentPayloadV2:
+        if self.model_context_ref is not None and self.model_context_ref.kind != "model_context":
+            raise ValueError("temporal assessment must bind a model_context document")
+        if (self.model_context_ref is None) != (self.model_context_snapshot is None):
+            raise ValueError(
+                "model context reference and immutable context snapshot must appear together"
+            )
+        if self.model_context_ref is not None and self.model_context_snapshot is not None:
+            expected_digest = sha256_bytes(
+                canonical_envelope_bytes(
+                    "model_context", self.model_context_snapshot.model_dump(mode="json")
+                )
+            )
+            if self.model_context_ref.digest != expected_digest:
+                raise ValueError("model context reference digest does not match its snapshot")
+        accepted_exposure = any(
+            item.event == "upstream_public_exposure" and item.verification_state == "verified"
+            for item in self.chronology
+        )
+        if self.status in {
+            "pre_cutoff_exposure_detected",
+            "post_declared_cutoff",
+            "interval_overlap",
+        } and (self.model_context_ref is None or not accepted_exposure):
+            raise ValueError(
+                "classified temporal states require a model context and verified exposure"
+            )
+        classified_statuses = {
+            "pre_cutoff_exposure_detected",
+            "post_declared_cutoff",
+            "interval_overlap",
+        }
+        if self.status in classified_statuses and (
+            "no_originality_claim" not in self.claim_qualifier_codes
+        ):
+            raise ValueError("temporal classifications cannot imply originality")
+        if self.status in classified_statuses and (
+            "not_training_proof" not in self.claim_qualifier_codes
+        ):
+            raise ValueError("temporal evidence cannot claim model training")
+        from polycodebench_core.audit_temporal import evaluate_temporal_eligibility
+
+        result = evaluate_temporal_eligibility(self.chronology, self.model_context_snapshot)
+        if (
+            self.status != result.status
+            or self.explanation_code != result.explanation_code
+            or self.claim_qualifier_codes != result.claim_qualifier_codes
+        ):
+            raise ValueError(
+                "temporal status, explanation and qualifiers must match the interval evaluator"
+            )
+        return self
+
+
 class SealedManifestPayload(StrictAuditModel):
     encrypted_artifact_refs: tuple[ImmutableArtifactRef, ...]
     commitment: Digest
@@ -1138,10 +1490,23 @@ class RiskAssessmentDocumentV2(_PayloadDocument):
     expected_schema_version: ClassVar[int] = 2
 
 
+class ModelContextDocument(_PayloadDocument):
+    kind: Literal["model_context"] = "model_context"
+    payload: ModelContextPayload
+    payload_model = ModelContextPayload
+
+
 class TemporalAssessmentDocument(_PayloadDocument):
     kind: Literal["temporal_assessment"] = "temporal_assessment"
     payload: TemporalAssessmentPayload
     payload_model = TemporalAssessmentPayload
+
+
+class TemporalAssessmentDocumentV2(_PayloadDocument):
+    kind: Literal["temporal_assessment"] = "temporal_assessment"
+    payload: TemporalAssessmentPayloadV2
+    payload_model = TemporalAssessmentPayloadV2
+    expected_schema_version: ClassVar[int] = 2
 
 
 class SealedManifestDocument(_PayloadDocument):
@@ -1205,7 +1570,9 @@ AuditDocument = (
     | RiskPolicyDocumentV2
     | RiskAssessmentDocument
     | RiskAssessmentDocumentV2
+    | ModelContextDocument
     | TemporalAssessmentDocument
+    | TemporalAssessmentDocumentV2
     | SealedManifestDocument
     | CanaryPolicyDocument
     | BehavioralAuditPlanDocument
@@ -1228,6 +1595,7 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
         MatchEvidenceDocument,
         RiskPolicyDocument,
         RiskAssessmentDocument,
+        ModelContextDocument,
         TemporalAssessmentDocument,
         SealedManifestDocument,
         CanaryPolicyDocument,
@@ -1243,6 +1611,7 @@ _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("match_evidence", 2): MatchEvidenceDocumentV2,
     ("risk_policy", 2): RiskPolicyDocumentV2,
     ("risk_assessment", 2): RiskAssessmentDocumentV2,
+    ("temporal_assessment", 2): TemporalAssessmentDocumentV2,
 }
 
 

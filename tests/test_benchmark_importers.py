@@ -23,6 +23,13 @@ _REVISIONS = {
     "humaneval": "6d43fb980f9fee3c892a914eda09951f772ad10d",
     "mbpp": "a1e7371c5e006f4e8b314bd23d99220d2fe44c51",
     "swe-bench-verified": "78f471bf655a3137b2e8a75af1501690ec009ec3",
+    "gsm8k": "3101c7d5072418e28b9008a6636bde82a006892c",
+}
+_VARIANTS = {
+    "humaneval": "official",
+    "mbpp": "sanitized",
+    "swe-bench-verified": "verified",
+    "gsm8k": "official",
 }
 _RIGHTS_DIGEST = "sha256:" + "b" * 64
 
@@ -45,16 +52,15 @@ def _plan(
             candidates = tuple(f"test/{index}" for index in range(100))
         elif slug == "mbpp":
             candidates = tuple(str(index) for index in range(11, 111))
+        elif slug == "gsm8k":
+            candidates = tuple(f"test/{index}" for index in range(100))
         else:
             candidates = tuple(f"owner/project__{index}" for index in range(100))
         ids, membership_digest = freeze_sample(
             benchmark_slug=slug,  # type: ignore[arg-type]
             revision=revision,
             split=split,
-            variant=variant
-            or {"humaneval": "official", "mbpp": "sanitized", "swe-bench-verified": "verified"}[
-                slug
-            ],
+            variant=variant or _VARIANTS[slug],
             seed="7",
             eligible_item_ids=candidates,
         )
@@ -63,10 +69,7 @@ def _plan(
             benchmark_slug=slug,  # type: ignore[arg-type]
             revision=revision,
             split=split,
-            variant=variant
-            or {"humaneval": "official", "mbpp": "sanitized", "swe-bench-verified": "verified"}[
-                slug
-            ],
+            variant=variant or _VARIANTS[slug],
             seed="7",
             eligible_item_ids=ids,
         )
@@ -77,12 +80,16 @@ def _plan(
             "humaneval": "https://github.com/openai/human-eval",
             "mbpp": "https://github.com/google-research/google-research",
             "swe-bench-verified": "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified",
+            "gsm8k": "https://github.com/openai/grade-school-math",
         }[slug],
         revision=revision,
         split=split,
-        variant=variant
-        or {"humaneval": "official", "mbpp": "sanitized", "swe-bench-verified": "verified"}[slug],
-        source_member=source_member,
+        variant=variant or _VARIANTS[slug],
+        source_member=(
+            "grade_school_math/data/test.jsonl"
+            if slug == "gsm8k" and source_member == "data/HumanEval.jsonl"
+            else source_member
+        ),
         source_digest="sha256:" + hashlib.sha256(source).hexdigest(),
         source_visibility="public",
         storage_visibility="private",
@@ -116,6 +123,20 @@ def _human_source(ids: tuple[str, ...], *, omit: str | None = None) -> bytes:
         if item_id != omit
     ]
     return ("\r\n".join(rows) + "\r\n").encode("utf-8")
+
+
+def _gsm8k_source(count: int = 100, *, missing_answer_marker: int | None = None) -> bytes:
+    rows = []
+    for index in range(count):
+        answer = "Compute 1 + 1.\n#### 2" if index != missing_answer_marker else "Compute 1 + 1."
+        rows.append(
+            json.dumps(
+                {"question": f"Synthetic question {index}?", "answer": answer},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+        )
+    return ("\n".join(rows) + "\n").encode("utf-8")
 
 
 def _zip_bytes(files: tuple[tuple[str, bytes, int | None], ...]) -> bytes:
@@ -161,6 +182,53 @@ def test_sample_freezes_stable_100_ids_before_search() -> None:
             seed="7",
             eligible_item_ids=eligible[:99],
         )
+
+
+def test_gsm8k_fixture_adapter_preserves_question_solution_and_final_answer() -> None:
+    ids = tuple(f"test/{index}" for index in range(100))
+    source = _gsm8k_source()
+    plan = _plan(slug="gsm8k", source=source, ids=ids)
+
+    result = parse_benchmark_snapshot(plan, source)
+
+    assert result.state == "complete"
+    assert len(result.items) == 100
+    first = next(item for item in result.items if item.item_id == "test/0")
+    components = {component.component_key: component for component in first.components}
+    assert components["question"].content == b"Synthetic question 0?"
+    assert components["solution"].content == b"Compute 1 + 1.\n#### 2"
+    assert components["answer"].content == b"2"
+    assert components["split"].content == b"test"
+    provenance = json.loads(components["source_provenance"].content)
+    assert provenance == {
+        "revision": _REVISIONS["gsm8k"],
+        "source_member": "grade_school_math/data/test.jsonl",
+        "source_uri": "https://github.com/openai/grade-school-math",
+        "split": "test",
+    }
+    assert first.independent_duplicate_eligible is False
+
+
+def test_gsm8k_incomplete_solution_and_invalid_sequence_do_not_shift_membership() -> None:
+    ids = tuple(f"test/{index}" for index in range(100))
+    incomplete_source = _gsm8k_source(missing_answer_marker=8)
+    incomplete = parse_benchmark_snapshot(
+        _plan(slug="gsm8k", source=incomplete_source, ids=ids), incomplete_source
+    )
+    incomplete_item = next(item for item in incomplete.items if item.item_id == "test/8")
+    assert incomplete.state == "partial"
+    assert incomplete_item.state == "incomplete"
+    assert "component_missing_or_invalid:answer" in incomplete_item.error_codes
+
+    rows = _gsm8k_source().splitlines()
+    rows[3] = b"{malformed"
+    malformed_source = b"\n".join(rows) + b"\n"
+    malformed = parse_benchmark_snapshot(
+        _plan(slug="gsm8k", source=malformed_source, ids=ids), malformed_source
+    )
+    assert malformed.state == "blocked"
+    assert malformed.source_error_codes == ("source_record_sequence_invalid",)
+    assert all(item.state == "blocked" for item in malformed.items)
 
 
 def test_humaneval_keeps_exact_records_and_separate_components() -> None:

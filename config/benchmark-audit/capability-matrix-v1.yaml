@@ -1,6 +1,6 @@
 schema_version: 1
 matrix_version: "v1"
-observed_on: "2026-10-08"
+observed_on: "2026-10-09"
 benchmarks:
   - benchmark_slug: "humaneval"
     importer_state: "blocked"
@@ -124,16 +124,16 @@ benchmarks:
     original_evaluation_owner: "existing-native-evaluation-path"
     limitations: ["No benchmark item bytes have been imported into this catalog.","Access is gated; no grant or dataset payload is available.","Importer and source conformance checks have not run."]
   - benchmark_slug: "gsm8k"
-    importer_state: "not_implemented"
+    importer_state: "blocked"
     component_scope: ["question","solution","answer","split","source_provenance"]
-    supported_components: []
+    supported_components: ["question","solution","answer","split","source_provenance"]
     source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
     required_modalities: ["text"]
     supported_modalities: []
     runtime_state: "not_implemented"
-    conformance_state: "not_run"
+    conformance_state: "fixture_only"
     original_evaluation_owner: "existing-native-evaluation-path"
-    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+    limitations: ["Synthetic JSONL fixtures exercise the local question/solution/final-answer adapter only.","Repository and test-member metadata are pinned; no task payload or item-rights evidence is approved.","Native scoring, corpus import and live conformance were not run."]
   - benchmark_slug: "math"
     importer_state: "not_implemented"
     component_scope: ["problem","solution","subject","source_provenance"]
@@ -190,16 +190,16 @@ benchmarks:
     original_evaluation_owner: "existing-native-evaluation-path"
     limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
   - benchmark_slug: "hellaswag"
-    importer_state: "not_implemented"
+    importer_state: "blocked"
     component_scope: ["context","continuations","answer","source_provenance"]
     supported_components: []
     source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
     required_modalities: ["text"]
     supported_modalities: []
-    runtime_state: "not_implemented"
-    conformance_state: "not_run"
+    runtime_state: "blocked"
+    conformance_state: "blocked"
     original_evaluation_owner: "existing-native-evaluation-path"
-    limitations: ["No benchmark item bytes have been imported into this catalog.","Importer and source conformance checks have not run."]
+    limitations: ["Upstream repository is included in GitHub's 2026-09-14 wikiHow DMCA notice; no source bytes or mirrors were accessed.","Rights review is required before any importer or fixture can use upstream benchmark content."]
   - benchmark_slug: "truthfulqa"
     importer_state: "not_implemented"
     component_scope: ["question","answers","category","source_provenance"]
@@ -234,16 +234,16 @@ benchmarks:
     original_evaluation_owner: "existing-native-evaluation-path"
     limitations: ["No benchmark item bytes have been imported into this catalog.","Task environment and hidden artifacts are not acquired or executed."]
   - benchmark_slug: "gaia"
-    importer_state: "not_implemented"
+    importer_state: "blocked"
     component_scope: ["question","attachment","answer","tool_trace","source_provenance"]
     supported_components: []
     source_groups: ["common-crawl","github","hugging-face","arxiv","stack-exchange","wikipedia","benchmark-repositories","other-public-datasets"]
     required_modalities: ["text","agent_environment","image"]
     supported_modalities: []
     runtime_state: "blocked"
-    conformance_state: "not_run"
+    conformance_state: "blocked"
     original_evaluation_owner: "existing-native-evaluation-path"
-    limitations: ["No benchmark item bytes have been imported into this catalog.","Image/OCR/perceptual audit is unsupported; metadata cannot satisfy image coverage.","Task environment and hidden artifacts are not acquired or executed."]
+    limitations: ["Official dataset access requires a contact-information approval and prohibits resharing outside gated/private storage; no access was requested.","Image/OCR/perceptual audit is unsupported; metadata cannot satisfy image coverage.","Task environment, attachments and restricted answers were not acquired or executed."]
   - benchmark_slug: "bfcl"
     importer_state: "not_implemented"
     component_scope: ["function_schema","dialogue","state","expected_call"]

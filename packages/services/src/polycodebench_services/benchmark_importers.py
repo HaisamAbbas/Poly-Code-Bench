@@ -72,6 +72,14 @@ def parse_benchmark_snapshot(
     except _SourceRejected as error:
         return _blocked_result(plan, error.code, observed_digest=actual_source_digest)
 
+    # GSM8K has no upstream item ID in its JSONL rows. Its stable ID is the ordinal
+    # among non-empty records, so any malformed or oversized row invalidates the
+    # complete sequence and must not shift selected membership silently.
+    if plan.benchmark_slug == "gsm8k" and source_errors:
+        return _blocked_result(
+            plan, "source_record_sequence_invalid", observed_digest=actual_source_digest
+        )
+
     grouped: dict[str, list[_SourceRecord]] = {}
     for record in records:
         grouped.setdefault(record.item_id, []).append(record)
@@ -316,13 +324,13 @@ def _read_records(
 
     records: list[_SourceRecord] = []
     source_errors = list(errors)
-    for raw in raw_records:
+    for ordinal, raw in enumerate(raw_records):
         try:
             value = _parse_record(raw.rstrip(b"\r\n"))
         except _SourceRejected as error:
             source_errors.append(error.code)
             continue
-        item_id = _source_item_id(plan, value)
+        item_id = _source_item_id(plan, value, ordinal)
         if item_id is None:
             source_errors.append("source_item_id_invalid")
             continue
@@ -392,7 +400,7 @@ def _json_array_records(text: str) -> tuple[tuple[bytes, ...], tuple[str, ...]]:
     return tuple(raw_records), ()
 
 
-def _source_item_id(plan: BenchmarkImportPlan, value: dict[str, Any]) -> str | None:
+def _source_item_id(plan: BenchmarkImportPlan, value: dict[str, Any], ordinal: int) -> str | None:
     if plan.benchmark_slug in {"humaneval", "mbpp"}:
         raw_id = value.get("task_id")
         if type(raw_id) is int and raw_id >= 0:
@@ -402,6 +410,8 @@ def _source_item_id(plan: BenchmarkImportPlan, value: dict[str, Any]) -> str | N
         if plan.benchmark_slug == "mbpp" and isinstance(raw_id, str) and raw_id.isdecimal():
             return str(int(raw_id))
         return None
+    if plan.benchmark_slug == "gsm8k":
+        return f"test/{ordinal}"
     raw_id = value.get("instance_id")
     return raw_id if isinstance(raw_id, str) and raw_id else None
 
@@ -413,6 +423,9 @@ def _adapt_record(plan: BenchmarkImportPlan, index: int, record: _SourceRecord) 
         urls = (plan.source_uri,)
     elif plan.benchmark_slug == "mbpp":
         components, errors = _adapt_mbpp(record.value)
+        urls = (plan.source_uri,)
+    elif plan.benchmark_slug == "gsm8k":
+        components, errors = _adapt_gsm8k(plan, record.value)
         urls = (plan.source_uri,)
     else:
         components, errors, urls = _adapt_swe_bench(plan, record)
@@ -469,6 +482,56 @@ def _adapt_mbpp(value: dict[str, Any]) -> tuple[list[ImportComponent], list[str]
                 errors.append(f"component_invalid:{key}")
             else:
                 components.append(component)
+    return components, errors
+
+
+def _adapt_gsm8k(
+    plan: BenchmarkImportPlan, value: dict[str, Any]
+) -> tuple[list[ImportComponent], list[str]]:
+    """Retain GSM8K question/solution and derive only its explicit final-answer field."""
+    components: list[ImportComponent] = []
+    errors: list[str] = []
+    question = value.get("question")
+    solution = value.get("answer")
+    for key, raw_value in (("question", question), ("solution", solution)):
+        component = _component(key, raw_value, required=True)
+        if component is None:
+            errors.append(f"component_missing_or_invalid:{key}")
+        else:
+            components.append(component)
+
+    final_answer: str | None = None
+    if isinstance(solution, str):
+        final_lines = [
+            line[4:].strip() for line in solution.splitlines() if line.startswith("#### ")
+        ]
+        if len(final_lines) == 1 and final_lines[0]:
+            final_answer = final_lines[0]
+    answer_component = _component("answer", final_answer, required=True)
+    if answer_component is None:
+        errors.append("component_missing_or_invalid:answer")
+    else:
+        components.append(answer_component)
+
+    for key, content in (
+        ("split", plan.split),
+        (
+            "source_provenance",
+            canonical_json_bytes(
+                {
+                    "source_uri": plan.source_uri,
+                    "revision": plan.revision,
+                    "source_member": plan.source_member,
+                    "split": plan.split,
+                }
+            ).decode("utf-8"),
+        ),
+    ):
+        component = _component(key, content, required=True)
+        if component is None:
+            errors.append(f"component_missing_or_invalid:{key}")
+        else:
+            components.append(component)
     return components, errors
 
 

@@ -239,3 +239,19 @@ An isolated restore must validate the current benchmark-audit schema before it c
 ### ADDENDUM-DECISION-54 - Audit document recovery does not establish index readiness
 
 The current checkout stores no durable retrieval-index configuration and has no index-rebuild adapter. Restored source documents, corpus references and their digests cannot establish that candidate search is usable. BX-56 and the measured search/monitor capacity portion of BX-58 remain partial/blocked until an approved versioned index manifest and rebuild path exist; no production promotion or clean-search claim follows from database/object recovery alone.
+
+### ADDENDUM-DECISION-55 - Repository metadata pins do not imply dataset snapshots
+
+A Git repository HEAD can pin evaluation code, a README or a dataset card without pinning the benchmark payload, split membership, rights, checker, or native runtime. Keep repository metadata pins distinct from exact dataset revision pins in the registry and scope report. Only source bytes and a rights-approved import manifest can establish imported membership.
+
+### ADDENDUM-DECISION-56 - Gated or takedown sources do not fall back to mirrors
+
+An upstream access gate or platform takedown is a hard source boundary. GAIA remains gated until an approved grant and private-storage terms exist. HellaSwag remains blocked while its official repository is unavailable under the recorded GitHub notice; do not retrieve mirrors or cached copies to bypass that state. Reassess only from owner/platform updates and an approved rights review.
+
+### ADDENDUM-DECISION-57 - Benchmark variants retain their own templates and checkers
+
+Changed task, prompt, answer-choice, or checker policies define separate version identities even when a family slug is unchanged. In particular, TruthfulQA's newer two-choice multiple-choice form is not interchangeable with its earlier MC1/MC2 forms; IFEval's prompt constraints and checker version must be pinned together. No score comparability or inherited clean status follows from a shared family name.
+
+### ADDENDUM-GAP-06 - The source bridge lists three historical MDs, not five
+
+The implementation specification says five current source MDs were read but its §1 table names only three; the workspace contains those same three historical documents and no two additional source MDs. Prompt104 records the discrepancy and does not reconstruct or substitute missing sources. The specification owner must supply or enumerate the remaining documents before final historical-source traceability can close.

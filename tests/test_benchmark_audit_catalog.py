@@ -3,10 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from polycodebench_core.benchmark_audit_registry import AuditResourceRequest
+from polycodebench_core.benchmark_audit_registry import AuditCatalogBundle, AuditResourceRequest
 from polycodebench_services.benchmark_audit_catalog import (
     BenchmarkAuditCatalogError,
     _read_yaml,
+    build_scope_conformance_report,
     load_audit_catalog,
     plan_audit_resources,
 )
@@ -47,7 +48,7 @@ def test_catalog_has_every_spec_family_and_all_eight_source_policies() -> None:
     pilot_slugs = {"humaneval", "mbpp", "swe-bench-verified"}
     assert {
         row.slug for row in bundle.registry.benchmarks if row.importer_status == "blocked"
-    } == pilot_slugs | {"gpqa"}
+    } == pilot_slugs | {"gpqa", "gsm8k", "hellaswag", "gaia"}
     benchmark_by_slug = {row.slug: row for row in bundle.registry.benchmarks}
     for capability in bundle.capabilities.benchmarks:
         benchmark = benchmark_by_slug[capability.benchmark_slug]
@@ -82,12 +83,90 @@ def test_catalog_has_every_spec_family_and_all_eight_source_policies() -> None:
                 "source_metadata",
             )
             assert capability.conformance_state == "fixture_only"
+        elif capability.benchmark_slug == "gsm8k":
+            assert capability.supported_components == capability.component_scope
+            assert capability.conformance_state == "fixture_only"
+        elif capability.benchmark_slug in {"hellaswag", "gaia"}:
+            assert capability.supported_components == ()
+            assert capability.conformance_state == "blocked"
         else:
             assert capability.supported_components == ()
             assert capability.conformance_state == "not_run"
         assert capability.supported_modalities == ()
     assert all(row.connector_state == "not_implemented" for row in bundle.source_policies.groups)
     assert all(row.conformance_state == "not_run" for row in bundle.source_policies.groups)
+
+
+def test_scope_report_maps_every_family_without_promoting_fixture_or_metadata() -> None:
+    bundle = _bundle()
+    report = build_scope_conformance_report(bundle)
+    rows = {row.benchmark_slug: row for row in report.benchmarks}
+
+    assert len(rows) == 25
+    assert set(rows) == {entry.slug for entry in bundle.registry.benchmarks}
+    assert all(row.official_url.startswith("https://") for row in rows.values())
+    assert all(row.component_scope for row in rows.values())
+    assert all(row.source_groups for row in rows.values())
+    assert all(row.test_references for row in rows.values())
+    assert all(row.live_state != "live_verified" for row in rows.values())
+
+    assert rows["gsm8k"].fixture_evidence_state == "synthetic_source_fixture"
+    assert rows["gsm8k"].supported_components == rows["gsm8k"].component_scope
+    assert rows["gsm8k"].live_state == "pending"
+    assert "benchmark_rights_not_approved" in rows["gsm8k"].live_blockers
+    assert rows["mmlu-pro"].version_state == "dataset_version_pinned"
+    assert rows["arc"].version_state == "dataset_version_pinned"
+    assert rows["mgsm"].upstream_lineage == ("gsm8k",)
+
+    for slug in ("gpqa", "hellaswag", "gaia"):
+        assert rows[slug].live_state == "blocked"
+    for slug in ("terminal-bench", "gaia", "bfcl", "mmmu", "custom-private"):
+        assert rows[slug].unsupported_modalities
+        assert rows[slug].live_state == "blocked"
+    assert rows["gaia"].access_state == "gated"
+    assert rows["hellaswag"].importer_state == "blocked"
+
+
+def test_catalog_rejects_registry_claims_without_live_conformance() -> None:
+    bundle = _bundle()
+    registry_rows = tuple(
+        row.model_copy(
+            update={"audit_status": "audit_conformant", "importer_status": "audit_conformant"}
+        )
+        if row.slug == "gsm8k"
+        else row
+        for row in bundle.registry.benchmarks
+    )
+    capability_rows = tuple(
+        row.model_copy(update={"importer_state": "audit_conformant"})
+        if row.benchmark_slug == "gsm8k"
+        else row
+        for row in bundle.capabilities.benchmarks
+    )
+
+    with pytest.raises(ValueError, match="requires live scope evidence"):
+        AuditCatalogBundle(
+            registry=bundle.registry.model_copy(update={"benchmarks": registry_rows}),
+            source_policies=bundle.source_policies,
+            capabilities=bundle.capabilities.model_copy(update={"benchmarks": capability_rows}),
+            limits=bundle.limits,
+        )
+
+
+def test_catalog_rejects_cyclic_benchmark_lineage() -> None:
+    bundle = _bundle()
+    registry_rows = tuple(
+        row.model_copy(update={"upstream_lineage": ("mmlu-pro",)}) if row.slug == "mmlu" else row
+        for row in bundle.registry.benchmarks
+    )
+
+    with pytest.raises(ValueError, match="lineage contains a cycle"):
+        AuditCatalogBundle(
+            registry=bundle.registry.model_copy(update={"benchmarks": registry_rows}),
+            source_policies=bundle.source_policies,
+            capabilities=bundle.capabilities,
+            limits=bundle.limits,
+        )
 
 
 def test_pilot_plan_returns_capacity_ceilings_and_never_dispatches() -> None:
@@ -134,7 +213,7 @@ def test_gated_benchmark_is_explicitly_blocked() -> None:
     assert gpqa.access_state == "gated"
     assert gpqa.state == "blocked"
     assert any("owner grant" in blocker for blocker in gpqa.blockers)
-    assert any("adapter" in blocker for blocker in gpqa.blockers)
+    assert any("explicitly blocked" in blocker for blocker in gpqa.blockers)
 
 
 @pytest.mark.parametrize(

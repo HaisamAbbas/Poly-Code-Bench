@@ -1,6 +1,6 @@
 schema_version: 1
 catalog_version: "v1"
-observed_on: "2026-10-08"
+observed_on: "2026-10-09"
 benchmarks:
   - slug: "humaneval"
     name: "HumanEval"
@@ -103,7 +103,7 @@ benchmarks:
     modalities: ["text","code"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/LiveCodeBench/LiveCodeBench","ref":"HEAD","commit_sha":"28fef95ea8c9f7a547c8329f2cd3d32b92c1fa24","purpose":"repository metadata only; release/date window and task bytes remain unpinned"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Version, window, upstream contest rights and solution exposure must be frozen before import."
@@ -176,7 +176,7 @@ benchmarks:
     owner: "Hendrycks et al."
     official_url: "https://github.com/hendrycks/test"
     version: null
-    version_state: "unresolved"
+    version_state: "repository_snapshot_pinned"
     split_policy: "Subject/config/split and upstream exam sources not pinned"
     split_state: "unresolved"
     component_schema: ["question","subject","choices","answer","source_provenance"]
@@ -187,7 +187,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/hendrycks/test","ref":"HEAD","commit_sha":"4450500f923c49f1fb1dd3d99108a0bd9717b660","purpose":"evaluation repository metadata only; exam-source membership remains unpinned"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Common facts and exam sources need component-level provenance review."
@@ -196,8 +196,8 @@ benchmarks:
     family: "knowledge"
     owner: "TIGER-AI-Lab"
     official_url: "https://github.com/TIGER-AI-Lab/MMLU-Pro"
-    version: null
-    version_state: "unresolved"
+    version: "b189ec765aa7ed75c8acfea42df31fdae71f97be"
+    version_state: "dataset_version_pinned"
     split_policy: "Variant revision and source provenance not pinned"
     split_state: "unresolved"
     component_schema: ["question","subject","choices","answer","source_provenance"]
@@ -208,7 +208,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/TIGER-AI-Lab/MMLU-Pro","ref":"HEAD","commit_sha":"f418b116db00b065c2aea046518d8fcf74d39872","purpose":"evaluation repository metadata only"},{"source_url":"https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro","ref":"b189ec765aa7ed75c8acfea42df31fdae71f97be","commit_sha":"b189ec765aa7ed75c8acfea42df31fdae71f97be","purpose":"dataset repository revision metadata only; no payload fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "No inherited clean or rights status from MMLU; variant/source lineage must be recorded."
@@ -229,7 +229,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "blocked"
     importer_status: "blocked"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/idavidrein/gpqa","ref":"HEAD","commit_sha":"56686c06f5e19865c153de0fdb11be3890014df7","purpose":"public repository metadata only; gated dataset content not accessed"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Gated access must not be bypassed; no task bytes are available to this audit catalog."
@@ -239,9 +239,9 @@ benchmarks:
     owner: "OpenAI"
     official_url: "https://github.com/openai/grade-school-math"
     version: null
-    version_state: "unresolved"
-    split_policy: "Train/test membership and revision not pinned"
-    split_state: "unresolved"
+    version_state: "repository_snapshot_pinned"
+    split_policy: "Official train.jsonl and test.jsonl members; exact selected membership is frozen against the approved source bytes"
+    split_state: "pinned"
     component_schema: ["question","solution","answer","split","source_provenance"]
     upstream_lineage: []
     access_state: "public_data_review_required"
@@ -249,11 +249,11 @@ benchmarks:
     license_evidence_url: null
     modalities: ["text"]
     audit_status: "metadata_only"
-    importer_status: "not_implemented"
-    source_pins: []
+    importer_status: "blocked"
+    source_pins: [{"source_url":"https://github.com/openai/grade-school-math","ref":"HEAD","commit_sha":"3101c7d5072418e28b9008a6636bde82a006892c","purpose":"official repository and JSONL schema metadata; no task payload fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "Preserve train/test boundaries and derivation lineage."
+    notes: "A bounded local JSONL adapter preserves the question and full solution and extracts only the explicit final #### answer. This repository commit is metadata-only; task bytes and item rights are not approved."
   - slug: "math"
     name: "MATH"
     family: "math"
@@ -271,7 +271,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/hendrycks/math","ref":"HEAD","commit_sha":"985bdc1696e88e8643f081a0ff4719da39f2ae2a","purpose":"evaluation repository metadata only; dataset archive not fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Competition source/date and solution copies need separate provenance."
@@ -292,7 +292,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/google-research/url-nlp","ref":"HEAD","commit_sha":"452a21ad3dae5668c06ceeac21ff073e1e40f9be","purpose":"MGSM repository metadata only; translated task payload not fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Link translated tasks to source-family ancestry; language versions are not independent questions."
@@ -334,7 +334,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/suzgunmirac/BIG-Bench-Hard","ref":"HEAD","commit_sha":"9ee07bd481feebf959a6b59d61ea57bdcf30964d","purpose":"official task/template repository metadata only; task payload not fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Template lineage must be separated from independent task instances."
@@ -343,8 +343,8 @@ benchmarks:
     family: "reasoning"
     owner: "AI2"
     official_url: "https://allenai.org/data/arc"
-    version: null
-    version_state: "unresolved"
+    version: "210d026faf9955653af8916fad021475a3f00453"
+    version_state: "dataset_version_pinned"
     split_policy: "Easy/Challenge split and exact source revision not pinned"
     split_state: "unresolved"
     component_schema: ["question","choices","answer","source_provenance"]
@@ -355,7 +355,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://huggingface.co/datasets/allenai/ai2_arc","ref":"210d026faf9955653af8916fad021475a3f00453","commit_sha":"210d026faf9955653af8916fad021475a3f00453","purpose":"official AI2 dataset repository revision metadata only; no payload fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Disambiguate ARC from ARC-AGI and preserve source-question lineage."
@@ -374,12 +374,12 @@ benchmarks:
     rights_state: "needs_item_review"
     license_evidence_url: null
     modalities: ["text"]
-    audit_status: "metadata_only"
-    importer_status: "not_implemented"
+    audit_status: "blocked"
+    importer_status: "blocked"
     source_pins: []
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "Source contexts and completion choices need component-aware review."
+    notes: "Upstream repository access is unavailable after its inclusion in GitHub's 2026-09-14 wikiHow DMCA notice; do not fetch or substitute mirrors until rights review resolves the notice."
   - slug: "truthfulqa"
     name: "TruthfulQA"
     family: "reasoning"
@@ -397,7 +397,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/sylinrl/TruthfulQA","ref":"HEAD","commit_sha":"d71c110897f5d31c5d7f309e7bc316c152f6f031","purpose":"official repository metadata only; original and 2025 multiple-choice components need separate version policy"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Common factual answers alone are not task duplicates."
@@ -418,7 +418,7 @@ benchmarks:
     modalities: ["text"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/google-research/google-research","ref":"HEAD","commit_sha":"72ffe35f5a24a312980e6bb811713b24f31e11f9","purpose":"Google Research repository metadata only; prompt/checker/data revision not pinned"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Prompt constraints and checker version both belong to the audit item."
@@ -427,10 +427,10 @@ benchmarks:
     family: "agent"
     owner: "Terminal-Bench"
     official_url: "https://www.tbench.ai/"
-    version: null
-    version_state: "unresolved"
-    split_policy: "Task/environment/reference version and authorized split not pinned"
-    split_state: "unresolved"
+    version: "terminal-bench-core@0.1.1"
+    version_state: "dataset_version_pinned"
+    split_policy: "Official Core 0.1.1 release; exact task membership/assets and authorized split not imported"
+    split_state: "partially_documented"
     component_schema: ["task","environment","reference","hidden_assets"]
     upstream_lineage: []
     access_state: "public_data_review_required"
@@ -439,10 +439,10 @@ benchmarks:
     modalities: ["text","code","agent_environment"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/harbor-framework/terminal-bench-1","ref":"HEAD","commit_sha":"d28711d0da2675d0bb1d56de45ae5df6082438a3","purpose":"current official task/harness repository metadata only; environment execution and task snapshot not validated"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "No task VM or hidden artifacts are fetched or executed by this catalog."
+    notes: "The official repository identifies Terminal-Bench-Core 0.1.1 for its beta leaderboard; the task/environment snapshot is not fetched or executed. This release does not establish rights to hidden assets."
   - slug: "gaia"
     name: "GAIA"
     family: "agent"
@@ -454,16 +454,16 @@ benchmarks:
     split_state: "unresolved"
     component_schema: ["question","attachment","answer","tool_trace","source_provenance"]
     upstream_lineage: []
-    access_state: "public_data_review_required"
-    rights_state: "needs_item_review"
+    access_state: "gated"
+    rights_state: "gated_access_required"
     license_evidence_url: null
     modalities: ["text","agent_environment","image"]
-    audit_status: "metadata_only"
-    importer_status: "not_implemented"
+    audit_status: "blocked"
+    importer_status: "blocked"
     source_pins: []
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
-    notes: "Attachments and restricted answers require separate authorization and modality-specific coverage."
+    notes: "The official dataset requires contact-information access approval and prohibits resharing outside gated/private storage. No unauthenticated repository revision, answers, attachments or task bytes were accessed; image/OCR and environment coverage remain unsupported."
   - slug: "bfcl"
     name: "Berkeley Function-Calling Leaderboard"
     family: "agent"
@@ -481,7 +481,7 @@ benchmarks:
     modalities: ["text","tool_call"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/ShishirPatil/gorilla","ref":"HEAD","commit_sha":"6ea57973c7a6097fd7c5915698c54c17c5b1b6c8","purpose":"official BFCL repository metadata only; dataset release/schema and execution remain unverified"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Function schema and dialogue/state are separate components; no tool runtime conformance is claimed."
@@ -502,7 +502,7 @@ benchmarks:
     modalities: ["text","image"]
     audit_status: "metadata_only"
     importer_status: "not_implemented"
-    source_pins: []
+    source_pins: [{"source_url":"https://github.com/MMMU-Benchmark/MMMU","ref":"HEAD","commit_sha":"268471d0d488258990025331c7528359c324aa25","purpose":"official evaluation repository metadata only; image assets and rights not fetched"}]
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Text-only metadata is not an image audit; OCR/perceptual checks are absent."

@@ -9,9 +9,9 @@ Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are par
 | ID | Primary prompts | Acceptance gates | Status | Evidence owner |
 |---|---|---|---|
 | BREQ-01 | 84–86 | BX-02,06–08 | partial | reports/prompt-86.md; exact adapters and membership are implemented, but live imports and PostgreSQL retry checks are pending |
-| BREQ-02 | 84,86,104 | BX-02,59 | partial | config/benchmark-audit/registry-v1.yaml; broader support in Prompt104 |
+| BREQ-02 | 84,86,104 | BX-02,59 | partial | reports/prompt-104.md and source-observations-2026-10-09.md; all §5 rows now carry pinned/unresolved revision, split, access, rights, scope, runtime and live-state evidence; only GSM8K adds a synthetic parser fixture |
 | BREQ-03 | 87 | BX-09–11 | partial | reports/prompt-87.md; deterministic exact/lexical views implemented, parser/semantic/entity features remain blocked |
-| BREQ-04 | 84,88 | BX-12–14 | partial | reports/prompt-88.md; eight contract-only profiles and bounded plans exist, while source conformance and approved live connectors remain absent |
+| BREQ-04 | 84,88,104 | BX-12–14,59 | partial | reports/prompt-88.md and reports/prompt-104.md; eight bounded source policies and a 25-family scope report exist, while approved live connectors and source conformance remain absent |
 | BREQ-05 | 88–89 | BX-13,15–17 | partial | reports/prompt-88.md and reports/prompt-89.md; bounded selection and coverage/replay contracts exist, but no approved corpus snapshots, derived indexes or durable query-result store are available |
 | BREQ-06 | 90 | BX-18–21 | partial | reports/prompt-90.md; source/component/span verification, relation rubric and review/correction contracts exist; trusted artifact/rights verification and durable review history remain absent |
 | BREQ-07 | 91 | BX-22–23 | partial | reports/prompt-91.md; exact decimal observed-risk formula, bounds, tiers and missingness gates are implemented and golden-tested; independent score-policy calibration and actual accepted source evidence remain absent |
@@ -36,7 +36,7 @@ Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are par
 | BREQ-26 | 94,101 | BX-31–33,52–53 | partial | reports/prompt-94.md and reports/prompt-101.md; owned-training manifests and separate compute caps are represented, but no authorized trained/untrained manifests or behavioral ground truth exist |
 | BREQ-27 | 101–102 | BX-51–55 | partial | reports/prompt-101.md and reports/prompt-102.md; exact-scope calibration and reference-only replacement/seal/monitor accounting contracts exist, while source scans, independent labels, 12 reviewed replacements, six production seals and live rescan are unavailable |
 | BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
-| BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | catalog, connector, bounded retrieval, coverage, local replay and exact-source pilot preflight contracts exist; approved snapshots/indexes, actual scan evidence and durable retrieval replay remain pending; see reports/prompt-88.md, reports/prompt-89.md and reports/prompt-101.md |
+| BREQ-29 | 84,88–89,101,104 | BX-12–17,51,59 | partial | catalog, connectors, bounded retrieval, coverage, local replay, exact-source pilot preflight and all-family scope coverage exist; approved snapshots/indexes, actual scans and durable replay remain pending; see reports/prompt-88.md through reports/prompt-89.md, reports/prompt-101.md and reports/prompt-104.md |
 | BREQ-30 | 103,106 | BX-56–58,60 | partial | reports/prompt-103.md; fail-closed restore checks, local malicious-input/privacy regressions and recovery/key/outage runbooks exist; current-schema restore, provider recovery and representative search/monitor capacity evidence remain blocked |
 | BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
 | BREQ-32 | 83 and every prompt,106 | BX-01,60 plus all96 ticket DoDs | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
@@ -66,7 +66,7 @@ Through Prompt102, BWP-01 and BWP-02 are complete; BWP-03 through BWP-20 are par
 | BWP-19 | 101 | partial | reports/prompt-101.md; frozen 300-item preflight, trusted population/plan/source/label resolver boundaries, family-cluster calibration and bounded resampling work exist; no approved source bytes/rights, independent labels, live scan or behavioral ground truth are available |
 | BWP-20 | 102 | partial | reports/prompt-102.md; fixed-scope replacement/sealed/monitor evidence contracts and separate reported/verified usage counts exist; no authorized live campaign, production key/timestamp authority or source rescan is available |
 | BWP-21 | 103 | pending | prompt report |
-| BWP-22 | 104 | pending | prompt report |
+| BWP-22 | 104 | partial | reports/prompt-104.md; all §5 families reconcile metadata, scope, modality, access, runtime and blockers; only GSM8K adds a new synthetic-fixture parser; live rights/source conformance remain blocked |
 | BWP-23 | 105 | pending | prompt report |
 | BWP-24 | 106 | pending | prompt report |
 
@@ -160,10 +160,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-21-B | 103 | partial | reports/prompt-103.md; bounded worker cancellation/fence and monitor retry regressions pass; provider response replay tests cannot run because the dedicated PostgreSQL test database has no Alembic schema; no live source outage or object-store failure was injected |
 | BAT-21-C | 103 | partial | reports/prompt-103.md; malicious archive/path, SSRF/source boundary, sandbox, telemetry and restore diagnostic-redaction regressions pass locally; live tenant ACL, KMS and production canary-log review remain absent |
 | BAT-21-D | 103 | blocked | reports/prompt-103.md and operations recovery runbooks; isolated restore step times and cleanup were recorded, but the legacy backup cannot pass current audit-schema checks and no approved representative search/monitor load corpus or index rebuild adapter exists |
-| BAT-22-A | 104 | pending | prompt report |
-| BAT-22-B | 104 | pending | prompt report |
-| BAT-22-C | 104 | pending | prompt report |
-| BAT-22-D | 104 | pending | prompt report |
+| BAT-22-A | 104 | partial | reports/prompt-104.md; GSM8K has bounded JSONL component extraction and fixture coverage; exact versions/rights/import adapters for the other code/math rows remain incomplete |
+| BAT-22-B | 104 | partial | reports/prompt-104.md; BBH, ARC, TruthfulQA and IFEval metadata/lineage/template/checker blockers are explicit; only catalog contracts ran, IFEval checker and live source components remain unpinned |
+| BAT-22-C | 104 | blocked | reports/prompt-104.md; GAIA is officially gated; Terminal-Bench, BFCL, image/OCR, environment and custom-private runtime/access remain unsupported or unverified |
+| BAT-22-D | 104 | partial | reports/prompt-104.md; all 25 §5 rows map version, access, components, sources, tests, runtime and live blockers; native scoring paths are unchanged; live source conformance is unavailable |
 | BAT-23-A | 105 | pending | prompt report |
 | BAT-23-B | 105 | pending | prompt report |
 | BAT-23-C | 105 | pending | prompt report |
@@ -235,7 +235,7 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-56 | 103 | partial | reports/prompt-103.md; verified bundle parsing, document digests/references, sealed transitions and lifecycle checks are implemented; the available snapshot lacks the benchmark-audit schema, key-provider restore is unverified and no retrieval-index config/rebuild adapter exists |
 | BX-57 | 103 | partial | reports/prompt-103.md; worker fence/cancel and bounded retry regressions pass; persisted provider response replay, current-schema reservation reconciliation and live source/object-store failure injection remain blocked on a migrated approved local test environment |
 | BX-58 | 103 | partial | reports/prompt-103.md; malicious archive, connector, sandbox, telemetry-redaction and bounded restore-bundle checks pass; no representative search/monitor latency, storage or cost load was measured |
-| BX-59 | 104, 105 | pending | criterion in addendum §26; prompt report |
+| BX-59 | 104, 105 | partial | reports/prompt-104.md; complete 25-row catalog reconciliation and strict no-overclaim checks pass locally; source/import rights, runtime, multimodal and live fixture evidence remain pending or blocked |
 | BX-60 | 106 | pending | criterion in addendum §26; prompt report |
 
 ## Phase ownership
@@ -249,6 +249,6 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BA4 | 95-97 | partial | `reports/phase-BA4.md` |
 | BA5 | 98–100 | partial | `reports/phase-BA5.md`; Prompts98–100 foundations implemented; shared curator authorization, approved signer/reviewer authority, trusted timestamps, live PostgreSQL/revocation and reviewed source evidence remain unavailable |
 | BA6 | 101–103 | partial | `reports/phase-BA6.md`; Prompts101–103 local foundations and failure checks exist, but live pilot inputs, compatible audit backup, key/index recovery, provider replay DB and representative search/monitor load remain unavailable |
-| BA7 | 104–106 | pending | `reports/phase-BA7.md` |
+| BA7 | 104–106 | partial | `reports/phase-BA7.md`; Prompt104 scope foundation is implemented; integrated lifecycle, reviewed projections and final traceability remain |
 
 Update each status only when its evidence exists. A phase is partial if mandatory live, source, human or modality evidence remains unavailable.

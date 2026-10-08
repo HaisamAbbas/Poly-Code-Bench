@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from polycodebench_core.canonical import canonical_digest
 from polycodebench_core.models import Digest, Seed64
 
-BenchmarkSlug = Literal["humaneval", "mbpp", "swe-bench-verified"]
+BenchmarkSlug = Literal["humaneval", "mbpp", "swe-bench-verified", "gsm8k"]
 SourceVisibility = Literal["public", "restricted", "private"]
 ImportStorageVisibility = Literal["private", "restricted"]
 ImportState = Literal["imported", "incomplete", "missing", "blocked"]
@@ -27,11 +27,25 @@ _SOURCE_HOSTS = {
         "huggingface.co",
         "/datasets/SWE-bench/SWE-bench_Verified",
     ),
+    "gsm8k": ("github.com", "/openai/grade-school-math"),
 }
 _SOURCE_REVISIONS = {
     "humaneval": "6d43fb980f9fee3c892a914eda09951f772ad10d",
     "mbpp": "a1e7371c5e006f4e8b314bd23d99220d2fe44c51",
     "swe-bench-verified": "78f471bf655a3137b2e8a75af1501690ec009ec3",
+    "gsm8k": "3101c7d5072418e28b9008a6636bde82a006892c",
+}
+_SOURCE_SPLITS: dict[BenchmarkSlug, str] = {
+    "humaneval": "all",
+    "mbpp": "test",
+    "swe-bench-verified": "test",
+    "gsm8k": "test",
+}
+_SOURCE_VARIANTS: dict[BenchmarkSlug, frozenset[str]] = {
+    "humaneval": frozenset({"official"}),
+    "mbpp": frozenset({"original", "sanitized"}),
+    "swe-bench-verified": frozenset({"verified"}),
+    "gsm8k": frozenset({"official"}),
 }
 _ALLOWED_PUBLIC_SOURCE_HOSTS = frozenset({"github.com", "huggingface.co"})
 _SEED_TEXT = re.compile(r"^(?:0|[1-9][0-9]{0,19})$", re.ASCII)
@@ -145,11 +159,7 @@ def freeze_sample(
     if not isinstance(seed, str) or not _SEED_TEXT.fullmatch(seed) or int(seed) > 2**64 - 1:
         raise ValueError("sample seed must be a canonical unsigned 64-bit integer string")
     _validate_variant(benchmark_slug, variant)
-    expected_split = {
-        "humaneval": "all",
-        "mbpp": "test",
-        "swe-bench-verified": "test",
-    }[benchmark_slug]
+    expected_split = _SOURCE_SPLITS[benchmark_slug]
     if split != expected_split:
         raise ValueError(
             f"{benchmark_slug} audit sampling requires the pinned {expected_split!r} split"
@@ -210,11 +220,7 @@ class BenchmarkImportPlan(_StrictFrozenModel):
         validate_benchmark_source_uri(self.source_uri, self.benchmark_slug)
         if self.revision != _SOURCE_REVISIONS[self.benchmark_slug]:
             raise ValueError("revision must match the repository's frozen source pin")
-        expected_split = {
-            "humaneval": "all",
-            "mbpp": "test",
-            "swe-bench-verified": "test",
-        }[self.benchmark_slug]
+        expected_split = _SOURCE_SPLITS[self.benchmark_slug]
         if self.split != expected_split:
             raise ValueError(
                 f"{self.benchmark_slug} audit imports require the pinned {expected_split!r} split"
@@ -288,6 +294,8 @@ def _id_belongs_to_split(slug: BenchmarkSlug, item_id: str) -> bool:
         if not item_id.isdecimal():
             return False
         return 11 <= int(item_id) <= 510
+    if slug == "gsm8k":
+        return re.fullmatch(r"test/[0-9]+", item_id, re.ASCII) is not None
     return (
         re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}__[0-9]+",
@@ -299,12 +307,7 @@ def _id_belongs_to_split(slug: BenchmarkSlug, item_id: str) -> bool:
 
 
 def _validate_variant(slug: BenchmarkSlug, variant: str) -> None:
-    allowed = {
-        "humaneval": {"official"},
-        "mbpp": {"original", "sanitized"},
-        "swe-bench-verified": {"verified"},
-    }[slug]
-    if variant not in allowed:
+    if variant not in _SOURCE_VARIANTS[slug]:
         raise ValueError(f"{slug} requires an explicitly supported variant")
 
 

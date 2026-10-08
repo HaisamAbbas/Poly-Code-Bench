@@ -201,6 +201,66 @@ class CapabilityMatrix(AuditRegistryModel):
         return self
 
 
+class BenchmarkScopeEvidence(AuditRegistryModel):
+    """Normalized scope and readiness evidence for one §5 registry family."""
+
+    benchmark_slug: str
+    name: str
+    family: Literal["code", "knowledge", "math", "reasoning", "agent", "multimodal", "private"]
+    official_url: str
+    version: str | None
+    version_state: Literal[
+        "dataset_version_pinned",
+        "repository_snapshot_pinned",
+        "metadata_only",
+        "unresolved",
+    ]
+    source_pins: tuple[SourceRevisionPin, ...]
+    split_policy: str
+    split_state: Literal["pinned", "partially_documented", "unresolved"]
+    upstream_lineage: tuple[str, ...]
+    access_state: Literal[
+        "public_metadata", "public_data_review_required", "gated", "owner_supplied"
+    ]
+    rights_state: Literal[
+        "needs_item_review",
+        "license_review_required",
+        "gated_access_required",
+        "owner_contract_required",
+        "approved_for_declared_scope",
+    ]
+    component_scope: tuple[str, ...]
+    supported_components: tuple[str, ...]
+    unsupported_components: tuple[str, ...]
+    source_groups: tuple[str, ...]
+    required_modalities: tuple[str, ...]
+    supported_modalities: tuple[str, ...]
+    unsupported_modalities: tuple[str, ...]
+    importer_state: Literal[
+        "not_implemented", "metadata_only", "importable", "audit_conformant", "blocked"
+    ]
+    runtime_state: Literal["not_required_for_metadata", "not_implemented", "blocked", "conformant"]
+    conformance_state: Literal["not_run", "fixture_only", "live_verified", "blocked"]
+    fixture_evidence_state: Literal["synthetic_source_fixture", "catalog_contract_only"]
+    test_references: tuple[str, ...]
+    live_state: Literal["pending", "blocked", "live_verified"]
+    live_blockers: tuple[str, ...]
+
+
+class BenchmarkScopeConformanceReport(AuditRegistryModel):
+    schema_version: Literal[1]
+    catalog_version: str
+    observed_on: str
+    benchmarks: tuple[BenchmarkScopeEvidence, ...] = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def benchmark_slugs_are_unique(self) -> BenchmarkScopeConformanceReport:
+        slugs = [entry.benchmark_slug for entry in self.benchmarks]
+        if len(slugs) != len(set(slugs)):
+            raise ValueError("scope conformance report benchmark slugs must be unique")
+        return self
+
+
 class ResourceLimits(AuditRegistryModel):
     schema_version: Literal[1]
     policy_version: str = Field(min_length=1, max_length=32)
@@ -229,6 +289,7 @@ class AuditCatalogBundle(AuditRegistryModel):
                 "capability matrix must contain exactly one row per catalogued benchmark"
             )
         benchmark_by_slug = {entry.slug: entry for entry in self.registry.benchmarks}
+        lineage_graph: dict[str, set[str]] = {}
         for capability in self.capabilities.benchmarks:
             unknown_sources = set(capability.source_groups) - source_slugs
             if unknown_sources:
@@ -238,6 +299,8 @@ class AuditCatalogBundle(AuditRegistryModel):
             if set(capability.source_groups) != source_slugs:
                 raise ValueError("capability matrix must declare every registered source group")
             benchmark = benchmark_by_slug[capability.benchmark_slug]
+            if capability.importer_state != benchmark.importer_status:
+                raise ValueError("capability importer state must match the benchmark registry")
             if set(capability.component_scope) != set(benchmark.component_schema):
                 raise ValueError("capability component scope must match the registry schema")
             if set(capability.required_modalities) != set(benchmark.modalities):
@@ -248,6 +311,51 @@ class AuditCatalogBundle(AuditRegistryModel):
                 raise ValueError("supported modalities must be a subset of the declared scope")
             if capability.importer_state == "not_implemented" and capability.supported_components:
                 raise ValueError("unimplemented importers cannot declare supported components")
+            if (
+                capability.runtime_state == "conformant"
+                or capability.conformance_state == "live_verified"
+            ):
+                if (
+                    benchmark.version_state != "dataset_version_pinned"
+                    or benchmark.split_state != "pinned"
+                    or benchmark.rights_state != "approved_for_declared_scope"
+                    or capability.importer_state != "audit_conformant"
+                    or set(capability.supported_components) != set(capability.component_scope)
+                    or set(capability.supported_modalities) != set(capability.required_modalities)
+                    or capability.runtime_state != "conformant"
+                    or capability.conformance_state != "live_verified"
+                ):
+                    raise ValueError(
+                        "live conformance requires a pinned dataset/split, approved rights, "
+                        "complete component and modality scope, and live runtime evidence"
+                    )
+            if benchmark.audit_status == "audit_conformant" and (
+                capability.importer_state != "audit_conformant"
+                or capability.conformance_state != "live_verified"
+            ):
+                raise ValueError("audit-conformant registry status requires live scope evidence")
+            parents = benchmark.upstream_lineage
+            if len(parents) != len(set(parents)) or benchmark.slug in parents:
+                raise ValueError("benchmark lineage must not repeat or reference itself")
+            if any(not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", parent) for parent in parents):
+                raise ValueError("benchmark lineage references must use stable slugs")
+            lineage_graph[benchmark.slug] = set(parents) & benchmark_slugs
+        visiting: set[str] = set()
+        visited: set[str] = set()
+
+        def visit_lineage(slug: str) -> None:
+            if slug in visiting:
+                raise ValueError("benchmark upstream lineage contains a cycle")
+            if slug in visited:
+                return
+            visiting.add(slug)
+            for parent in lineage_graph[slug]:
+                visit_lineage(parent)
+            visiting.remove(slug)
+            visited.add(slug)
+
+        for slug in benchmark_by_slug:
+            visit_lineage(slug)
         if self.limits.max_source_groups_per_plan > len(source_slugs):
             raise ValueError("resource policy permits more source groups than are registered")
         return self

@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial pending live database/source/resource evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt90, BWP-01 and BWP-02 are complete; BWP-03 through BWP-08 are partial pending live database/source/resource/reviewer evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -13,7 +13,7 @@ At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial p
 | BREQ-03 | 87 | BX-09–11 | partial | reports/prompt-87.md; deterministic exact/lexical views implemented, parser/semantic/entity features remain blocked |
 | BREQ-04 | 84,88 | BX-12–14 | partial | reports/prompt-88.md; eight contract-only profiles and bounded plans exist, while source conformance and approved live connectors remain absent |
 | BREQ-05 | 88–89 | BX-13,15–17 | partial | reports/prompt-88.md and reports/prompt-89.md; bounded selection and coverage/replay contracts exist, but no approved corpus snapshots, derived indexes or durable query-result store are available |
-| BREQ-06 | 90 | BX-18–21 | pending | see prompt 90 report |
+| BREQ-06 | 90 | BX-18–21 | partial | reports/prompt-90.md; source/component/span verification, relation rubric and review/correction contracts exist; trusted artifact/rights verification and durable review history remain absent |
 | BREQ-07 | 91 | BX-22–23 | pending | see prompt 91 report |
 | BREQ-08 | 91,94 | BX-24,31–33 | pending | see prompt 91 report |
 | BREQ-09 | 92 | BX-25–26 | pending | see prompt 92 report |
@@ -27,11 +27,11 @@ At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial p
 | BREQ-17 | 95,102 | BX-36,54 | pending | see prompt 95 report |
 | BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md; source versions stay immutable, derived-version semantics and score comparability remain later work |
 | BREQ-19 | 96,102 | BX-38–40,55 | pending | see prompt 96 report |
-| BREQ-20 | 90,96,100 | BX-21,39–40,49 | pending | see prompt 90 report |
+| BREQ-20 | 90,96,100 | BX-21,39–40,49 | partial | reports/prompt-90.md; immutable correction successors and review-event contracts exist; source dispute storage and later monitor/key correction workflows remain pending |
 | BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
-| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-88.md; private remote query remains blocked without a persisted verifier/exposure event; worker isolation and tenant controls remain pending |
+| BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-90.md; source text is explicitly untrusted and judge packets have no tools, while no audit-specific model dispatch/exposure writer or live authorization verifier exists |
 | BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | partial | six exclusive queue FKs, CAS enqueue and fencing reuse are implemented; Prompt89 has no fenced query-result/checkpoint writer; live migration/claim/recovery verification is pending; see reports/prompt-85.md and reports/prompt-89.md |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | pending | see prompt 94 report |
 | BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
@@ -52,7 +52,7 @@ At Prompt88, BWP-01 and BWP-02 are complete; BWP-03 through BWP-06 are partial p
 | BWP-05 | 87 | partial | reports/prompt-87.md; exact/lexical fingerprints implemented; approved parser/model config, live persistence and semantic coverage pending |
 | BWP-06 | 88 | partial | reports/prompt-88.md; bounded plan/coverage and optional-index metadata contracts exist; live connectors, immutable snapshot writes and index rebuild remain pending |
 | BWP-07 | 89 | partial | reports/prompt-89.md; deterministic selection, cap/truncation, coverage, scoped cache identity and stored-hit replay contracts are tested; approved indexes and durable query recovery are absent |
-| BWP-08 | 90 | pending | prompt report |
+| BWP-08 | 90 | partial | reports/prompt-90.md; versioned evidence/content verification, relation rubric, independent review/adjudication and successor correction contracts are tested; trusted source/rights resolution and persistent review history are absent |
 | BWP-09 | 91 | pending | prompt report |
 | BWP-10 | 92 | pending | prompt report |
 | BWP-11 | 93 | pending | prompt report |
@@ -104,10 +104,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-07-B | 89 | partial | reports/prompt-89.md; complete component/source/stage denominator and strict outcome reconciliation are implemented; no runtime outcome writer or source query was exercised |
 | BAT-07-C | 89 | partial | reports/prompt-89.md; cache identity binds tenant, permission, corpus, method, query, seed and limits; fenced persistence/checkpoint/result storage is absent |
 | BAT-07-D | 89 | partial | reports/prompt-89.md; replay deterministically recomputes selection from supplied stored hits or reports missing/mismatch; snapshot/index artifact lookup is absent |
-| BAT-08-A | 90 | pending | prompt report |
-| BAT-08-B | 90 | pending | prompt report |
-| BAT-08-C | 90 | pending | prompt report |
-| BAT-08-D | 90 | pending | prompt report |
+| BAT-08-A | 90 | partial | reports/prompt-90.md; source artifact/component digests, retrieval candidate binding, byte offsets, answer relation and date context are validated; approved artifact/rights and source revision resolver are absent |
+| BAT-08-B | 90 | partial | reports/prompt-90.md; versioned exact/near/semantic/family/concept/unresolved rubric disables auto-accept and requires semantic review; actual human calibration is unavailable |
+| BAT-08-C | 90 | partial | reports/prompt-90.md; source excerpts are untrusted data and audit judge packets expose no tools or decision authority; no audit-specific fresh-session dispatcher, approved model context or exposure writer exists |
+| BAT-08-D | 90 | partial | reports/prompt-90.md; append-only opinions, independent adjudication and immutable successor corrections are tested; no persistent match/review repository or database integration exists |
 | BAT-09-A | 91 | pending | prompt report |
 | BAT-09-B | 91 | pending | prompt report |
 | BAT-09-C | 91 | pending | prompt report |
@@ -194,10 +194,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-15 | 89 | partial | reports/prompt-89.md; deterministic 20/source and 100/task selection records discarded counts, but index execution and controlled recall validation are unavailable |
 | BX-16 | 89 | partial | reports/prompt-89.md; failed/truncated/unsupported cannot become no-match, cache identity is scoped; durable fenced resume/cache behavior is absent |
 | BX-17 | 89 | partial | reports/prompt-89.md; stored candidate hits replay by digest or report missing/mismatch without refetch; approved snapshot/index artifact verification is absent |
-| BX-18 | 90 | pending | criterion in addendum §26; prompt report |
-| BX-19 | 90 | pending | criterion in addendum §26; prompt report |
-| BX-20 | 90 | pending | criterion in addendum §26; prompt report |
-| BX-21 | 90 | pending | criterion in addendum §26; prompt report |
+| BX-18 | 90 | partial | reports/prompt-90.md; v2 evidence binds retrieval candidate, source revision/content digest, component bytes, matching offsets, answer and date context; live trusted source/rights verification is absent |
+| BX-19 | 90 | partial | reports/prompt-90.md; frozen relation definitions keep concept-only at zero and semantic/ambiguous relations in human review; no labeled semantic calibration set or actual reviewers were available |
+| BX-20 | 90 | partial | reports/prompt-90.md; untrusted source spans cannot become policy/tools and match judge packet authority is proposal-only; no audit model delivery or exposure record was exercised |
+| BX-21 | 90 | partial | reports/prompt-90.md; conflicting opinions and third-party adjudication remain in the ledger; corrections create new evidence successors; persistence and live dispute history remain absent |
 | BX-22 | 91 | pending | criterion in addendum §26; prompt report |
 | BX-23 | 91 | pending | criterion in addendum §26; prompt report |
 | BX-24 | 91 | pending | criterion in addendum §26; prompt report |

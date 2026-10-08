@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–89 are partial foundations; Prompt90 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–90 are partial foundations; Prompt91 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -105,3 +105,13 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Replay recomputes selection only from supplied stored candidate hits. Missing or changed input reports missing/mismatch; no web fetch is possible. Cache/replay are pure contracts and helpers, not a persisted cache or artifact store.
 - Partial, not complete: every production plan remains blocked because approved snapshots/rights/indexes, source artifact verification and an index runtime are unavailable. No fenced query reservation/checkpoint/result writer or durable replay artifact lookup was implemented; no live retrieval, source I/O or database operation occurred. Synthetic provided pins are confined to pure selection tests and are not approval evidence.
 - Exact next prompt: Prompt90 / BWP-08. Implement evidence-verification and review contracts only where they can be tested without substituting synthetic candidates for approved source evidence; otherwise record the specific blocked gate and continue independent authorized work.
+
+## Prompt90 / BWP-08
+
+- Added a second `match_evidence` schema version while preserving and testing the existing v1 canonical vectors. Canonical envelopes now support schema versions 1 and 2 in Python and TypeScript with the same canonical JSON ordering rules.
+- V2 match evidence binds its task/component refs, target benchmark, Prompt89 retrieval plan/result/candidate digests, source snapshot/revision/content artifact, source lineage, byte-offset spans, answer relationship, date evidence, rights refs, normalizer/rubric versions, reviewers and counterevidence. V1 match evidence remains parseable and byte-stable.
+- Added a content verifier that checks the frozen plan/candidate/result binding, source and component artifact hashes, byte-span offsets/digests and exact or pinned NFC/LF equality. It always returns `source_trust=unverified`, `rights_trust=unverified` and `accepted_evidence=false`; no caller-supplied authorization flag can upgrade its result. Self-imports are excluded and boilerplate/mixed labels remain review-gated.
+- Added a frozen relation rubric with separate exact, near, semantic, family, concept, no-match and unresolved meanings. Semantic and ambiguous matches require human review; concept-only evidence contributes zero; exact auto-accept is disabled without a calibrated policy. Judge packet contracts label source spans untrusted, expose no tools and grant proposal-only authority.
+- Added immutable human opinion/adjudication ledgers. Author self-review is rejected, conflicting accepted/rejected opinions remain present in disputed state, and adjudication requires an independent third subject. Corrections create a newer evidence document with `supersedes_id` plus an immutable correction record; the prior document remains unchanged.
+- Partial, not complete: source artifact reading is supplied as bytes to a digest/span verifier, but no approved source snapshot/rights resolver, trusted artifact-store adapter, persistent candidate/review/adjudication writer, audit API, database integration, approved match judge/model context or model exposure writer exists. Pure fixture candidates and opinions do not close live source or human-review gates.
+- Exact next prompt: Prompt91 / BWP-09. Implement the pure observed-risk policy and missingness gates over these candidate evidence contracts; do not treat content integrity as verified source provenance or accepted human evidence.

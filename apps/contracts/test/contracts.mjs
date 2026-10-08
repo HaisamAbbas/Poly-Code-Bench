@@ -50,6 +50,12 @@ for (const vector of auditGolden.vectors) {
   assert.equal(sha256Bytes(bytes), vector.expected_digest, `${vector.name}: digest`);
 }
 
+assert.equal(
+  new TextDecoder().decode(canonicalEnvelopeBytes("match_evidence", { payload_version: 2 }, 2)),
+  '{"kind":"match_evidence","payload":{"payload_version":2},"schema_version":2}',
+  "version 2 canonical envelopes retain the shared ordering rules",
+);
+
 for (const vector of invalid.json) {
   assert.throws(
     () => parseJsonStrict(vector.raw),
@@ -136,5 +142,5 @@ const timer = MonotonicTimer.start();
 assert.ok(timer.elapsedNs() >= 0n);
 assert.throws(() => timer.elapsedNs(timer.startNs - 1n), RangeError);
 
-console.log("PASS: TypeScript pcb-json-v1 golden, invalid-input and 256 property cases");
+console.log("PASS: TypeScript canonical v1/v2 envelope, invalid-input and 256 property cases");
 console.log("PASS: shared seed/bundle digests, paths, UTF-8, UUID and monotonic time");

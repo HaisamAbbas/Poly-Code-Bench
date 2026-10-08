@@ -161,9 +161,10 @@ class DocumentMetadata(StrictAuditModel):
 
 class DecimalMeasurement(StrictAuditModel):
     value: Decimal6 | None
-    null_reason: Literal[
-        "not_run", "unavailable", "not_applicable", "insufficient_coverage", "withheld"
-    ] | None
+    null_reason: (
+        Literal["not_run", "unavailable", "not_applicable", "insufficient_coverage", "withheld"]
+        | None
+    )
 
     @model_validator(mode="after")
     def null_value_has_reason(self) -> DecimalMeasurement:
@@ -257,6 +258,151 @@ class MatchEvidencePayload(StrictAuditModel):
     verifier: EntityRef | None
     confidence: DecimalMeasurement
     review_state: EvidenceState
+
+
+class MatchSpanV2(StrictAuditModel):
+    """Byte offsets bind one claimed source span to one immutable task component."""
+
+    component_ref: EntityRef
+    component_artifact_ref: ImmutableArtifactRef
+    source_start_byte: int = Field(ge=0, le=2**53 - 1)
+    source_end_byte: int = Field(ge=1, le=2**53 - 1)
+    source_span_digest: Digest
+    field: Literal["question", "answer", "solution", "constraint", "context", "other"]
+    content_class: Literal["substantive", "boilerplate", "mixed", "unknown"]
+    comparison: Literal["exact_bytes", "text_nfc_lf_preserve_v1"]
+
+    @model_validator(mode="after")
+    def span_is_bound(self) -> MatchSpanV2:
+        if self.source_end_byte <= self.source_start_byte:
+            raise ValueError("match evidence spans must have positive byte length")
+        if (
+            self.component_ref.digest is None
+            or self.component_ref.digest != self.component_artifact_ref.digest
+        ):
+            raise ValueError("match span component digest must bind its immutable artifact")
+        return self
+
+
+class MatchEvidencePayloadV2(StrictAuditModel):
+    """Versioned evidence record; content integrity alone never establishes source trust."""
+
+    task_ref: EntityRef
+    target_benchmark_ref: AuditDocumentRef
+    retrieval_plan_ref: AuditDocumentRef
+    retrieval_result_digest: Digest
+    candidate_hit_digest: Digest
+    source_snapshot_ref: AuditDocumentRef
+    source_document_ref: ImmutableArtifactRef
+    source_revision: ShortText
+    source_task_ref: EntityRef | None
+    source_benchmark_ref: AuditDocumentRef | None
+    source_lineage: Literal[
+        "independent_copy", "mirror_or_derived", "official_self_import", "unknown"
+    ]
+    component_refs: tuple[EntityRef, ...] = Field(min_length=1, max_length=16)
+    matching_spans: tuple[MatchSpanV2, ...] = Field(min_length=1, max_length=64)
+    relation: MatchRelation
+    answer_relationship: Literal["same", "equivalent", "different", "unknown", "not_applicable"]
+    source_date_state: Literal["verified", "unverified", "unknown", "not_applicable"]
+    source_date_evidence: tuple[TimestampEvidence, ...] = Field(max_length=32)
+    rights_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=16)
+    normalizer_version: ShortText
+    parser_version: ShortText | None
+    rubric_digest: Digest
+    review_state: EvidenceState
+    author_subject: ShortText | None
+    reviewer_subjects: tuple[ShortText, ...] = Field(max_length=16)
+    review_record_ref: ImmutableArtifactRef | None
+    counter_evidence_refs: tuple[AuditDocumentRef, ...] = Field(max_length=32)
+
+    @model_validator(mode="after")
+    def evidence_scope_is_consistent(self) -> MatchEvidencePayloadV2:
+        if self.task_ref.entity_kind != "task_version":
+            raise ValueError("match evidence must bind a task version")
+        if self.target_benchmark_ref.kind != "benchmark_snapshot":
+            raise ValueError("match evidence requires the target benchmark snapshot")
+        if self.retrieval_plan_ref.kind != "audit_plan":
+            raise ValueError("match evidence must bind its frozen retrieval plan")
+        if self.source_snapshot_ref.kind != "corpus_snapshot":
+            raise ValueError("match evidence requires the source corpus snapshot")
+        if any(item.kind != "corpus_snapshot" for item in self.rights_refs):
+            raise ValueError("source rights references must bind corpus snapshot documents")
+        component_ids = [item.entity_id for item in self.component_refs]
+        if len(set(component_ids)) != len(component_ids):
+            raise ValueError("match evidence component references must be unique")
+        if any(
+            item.entity_kind != "audit_component" or item.digest is None
+            for item in self.component_refs
+        ):
+            raise ValueError("match evidence components require immutable audit-component digests")
+        if any(span.component_ref not in self.component_refs for span in self.matching_spans):
+            raise ValueError("match spans must bind a declared task component")
+        span_keys = [
+            (span.component_ref.entity_id, span.source_start_byte, span.source_end_byte)
+            for span in self.matching_spans
+        ]
+        if len(set(span_keys)) != len(span_keys):
+            raise ValueError("match spans must not repeat component/source offsets")
+        if self.source_task_ref is not None and (
+            self.source_task_ref.entity_kind != "task_version"
+        ):
+            raise ValueError("source task provenance must identify a task version")
+        if self.source_task_ref is not None and (
+            self.source_task_ref.entity_id == self.task_ref.entity_id
+            and self.source_lineage != "official_self_import"
+        ):
+            raise ValueError("same-task source evidence must be classified as official self-import")
+        if self.source_benchmark_ref == self.target_benchmark_ref and (
+            self.source_lineage != "official_self_import"
+        ):
+            raise ValueError(
+                "same-benchmark source evidence must be classified as official self-import"
+            )
+        if self.source_lineage == "official_self_import" and (
+            self.source_task_ref is None and self.source_benchmark_ref is None
+        ):
+            raise ValueError("self-import classification requires benchmark/task provenance")
+        if self.source_date_state == "verified" and not self.source_date_evidence:
+            raise ValueError("verified source dates require timestamp evidence")
+        for evidence in self.source_date_evidence:
+            if evidence.source_ref not in {self.source_document_ref, self.source_snapshot_ref}:
+                raise ValueError(
+                    "source date evidence must cite the bound source artifact or snapshot"
+                )
+        if self.answer_relationship == "unknown" and self.review_state == "accepted":
+            raise ValueError("accepted match evidence requires a resolved answer relationship")
+        if self.review_state == "accepted" and self.source_date_state == "unverified":
+            raise ValueError("accepted match evidence cannot rely on an unverified source date")
+        if self.source_lineage in {"official_self_import", "unknown"} and (
+            self.review_state == "accepted"
+        ):
+            raise ValueError(
+                "self-import or unknown lineage cannot be accepted as an independent match"
+            )
+        if any(span.content_class != "substantive" for span in self.matching_spans) and (
+            self.review_state == "accepted"
+        ):
+            raise ValueError(
+                "boilerplate, mixed or unknown spans cannot be accepted as substantive"
+            )
+        if self.relation in {"unresolved", "no_substantive_match"} and (
+            self.review_state == "accepted"
+        ):
+            raise ValueError("unresolved or no-match relations cannot be accepted as duplicates")
+        if self.review_state == "accepted" and (
+            self.author_subject is None
+            or self.review_record_ref is None
+            or not self.reviewer_subjects
+        ):
+            raise ValueError(
+                "accepted match evidence requires an author and immutable review record"
+            )
+        if len(set(self.reviewer_subjects)) != len(self.reviewer_subjects):
+            raise ValueError("match evidence reviewer identities must be unique")
+        if self.author_subject is not None and self.author_subject in self.reviewer_subjects:
+            raise ValueError("a match author cannot review or approve their own evidence")
+        return self
 
 
 class RiskPolicyPayload(StrictAuditModel):
@@ -424,12 +570,13 @@ class AuditAttestationPayload(StrictAuditModel):
 class _PayloadDocument(StrictAuditModel):
     id: UUID
     kind: AuditKind
-    schema_version: Literal[1]
+    schema_version: int = Field(ge=1, le=2)
     payload: Any
     metadata: DocumentMetadata
     supersedes_id: UUID | None = None
 
     payload_model: ClassVar[type[StrictAuditModel]]
+    expected_schema_version: ClassVar[int] = 1
 
     @model_validator(mode="before")
     @classmethod
@@ -444,6 +591,8 @@ class _PayloadDocument(StrictAuditModel):
 
     @model_validator(mode="after")
     def kind_and_payload_match(self) -> _PayloadDocument:
+        if self.schema_version != type(self).expected_schema_version:
+            raise ValueError("document schema version does not match its payload contract")
         if self.kind != type(self).model_fields["kind"].default:
             raise ValueError("document kind does not match its payload contract")
         if not isinstance(self.payload, self.payload_model):
@@ -494,6 +643,13 @@ class MatchEvidenceDocument(_PayloadDocument):
     kind: Literal["match_evidence"] = "match_evidence"
     payload: MatchEvidencePayload
     payload_model = MatchEvidencePayload
+
+
+class MatchEvidenceDocumentV2(_PayloadDocument):
+    kind: Literal["match_evidence"] = "match_evidence"
+    payload: MatchEvidencePayloadV2
+    payload_model = MatchEvidencePayloadV2
+    expected_schema_version: ClassVar[int] = 2
 
 
 class RiskPolicyDocument(_PayloadDocument):
@@ -570,6 +726,7 @@ AuditDocument = (
     | QueryManifestDocument
     | CoverageManifestDocument
     | MatchEvidenceDocument
+    | MatchEvidenceDocumentV2
     | RiskPolicyDocument
     | RiskAssessmentDocument
     | TemporalAssessmentDocument
@@ -606,6 +763,9 @@ _DOCUMENT_MODELS: dict[str, type[_PayloadDocument]] = {
         AuditAttestationDocument,
     )
 }
+_VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
+    ("match_evidence", 2): MatchEvidenceDocumentV2,
+}
 
 
 def _validate_nested_json(value: Any) -> None:
@@ -619,9 +779,16 @@ def parse_audit_document(data: bytes | str) -> AuditDocument:
     if not isinstance(raw, dict):
         raise ValueError("audit document must be a JSON object")
     kind = raw.get("kind")
-    if not isinstance(kind, str) or kind not in _DOCUMENT_MODELS:
+    schema_version = raw.get("schema_version")
+    if not isinstance(kind, str) or type(schema_version) is not int:
         raise ValueError("unknown or missing audit document kind")
-    model = _DOCUMENT_MODELS[kind]
+    model = (
+        _DOCUMENT_MODELS.get(kind)
+        if schema_version == 1
+        else _VERSIONED_DOCUMENT_MODELS.get((kind, schema_version))
+    )
+    if model is None:
+        raise ValueError("unknown audit document kind/schema version")
     try:
         return cast(AuditDocument, model.model_validate_json(data))
     except ValidationError as error:

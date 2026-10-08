@@ -110,3 +110,19 @@ Coverage binds every frozen component/source/stage query unit to one explicit ou
 ### ADDENDUM-DECISION-22 — Cache identity includes selection and privacy scope
 
 The Prompt89 cache identity includes tenant and permission-scope digests, task/component/source/corpus/index/method/query identity, stage, seed, caps and selection-rule version. The helper only computes a digest; without a persisted permission verifier, fenced cache store and result writer it cannot authorize access or assert prior query coverage.
+
+### ADDENDUM-DECISION-23 — Match evidence v2 preserves the canonical v1 history
+
+Prompt90 adds a second `match_evidence` payload schema with an explicit document schema version2. Existing v1 payloads and canonical vectors stay unchanged. Canonical JSON key ordering is identical for envelope versions1 and2; the version selects the strict document payload contract. No prior evidence document is rewritten.
+
+### ADDENDUM-DECISION-24 — Content integrity does not establish trusted source evidence
+
+The Prompt90 verifier binds the stored retrieval plan/selection/candidate, source revision/content digest, component artifact digest and source byte offsets/spans. It can report content integrity only. Source authorization, rights, snapshot provenance and source-date authenticity remain `unverified`; the result hard-codes `accepted_evidence=false`. Self-imports are excluded. Boilerplate/mixed classifications require review, and no uncalibrated exact or semantic auto-accept is enabled.
+
+### ADDENDUM-DECISION-25 — Human opinions and corrections append without erasure
+
+Review opinions are distinct immutable records. Conflicting accept/reject opinions remain in disputed state until a third independent adjudicator cites all conflicting opinions. Corrected evidence is a newer document linked by `supersedes_id` with a separate correction record; the prior evidence and exposure history are retained. These are pure contracts/reducers until a persistent writer is implemented.
+
+### ADDENDUM-DECISION-26 — Source instructions remain data and model output remains a proposal
+
+Match judge packets label source spans `untrusted_source_data`, reject tools and fix verdict authority to `proposal_only`. Existing generic judge packets also isolate untrusted comments from evidence scope. No audit-specific model-context, fresh-session dispatch or exposure-event writer is available, so no judge call is made and no AI output can create an accepted finding here.

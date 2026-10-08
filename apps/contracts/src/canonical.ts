@@ -120,7 +120,7 @@ export function canonicalJson(value: unknown): string {
 export function canonicalEnvelopeBytes(
   kind: string,
   payload: CanonicalValue,
-  schemaVersion: 1 = 1,
+  schemaVersion: 1 | 2 = 1,
 ): Uint8Array {
   if (!kind || !/^[\x00-\x7f]+$/.test(kind)) fail("document kind must be non-empty ASCII", "$.kind");
   return new TextEncoder().encode(canonicalJson({ kind, schema_version: schemaVersion, payload }));

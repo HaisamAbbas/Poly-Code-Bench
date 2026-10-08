@@ -131,8 +131,8 @@ def parse_json_strict(data: str | bytes) -> Any:
 def canonical_envelope(kind: str, payload: Any, schema_version: int = 1) -> dict[str, Any]:
     if not kind or not kind.isascii():
         raise InvalidCanonicalValueError("document kind must be non-empty ASCII")
-    if type(schema_version) is not int or schema_version != 1:
-        raise InvalidCanonicalValueError("pcb-json-v1 requires integer schema_version 1")
+    if type(schema_version) is not int or schema_version not in {1, 2}:
+        raise InvalidCanonicalValueError("canonical envelopes support schema versions 1 and 2")
     return {"kind": kind, "schema_version": schema_version, "payload": payload}
 
 

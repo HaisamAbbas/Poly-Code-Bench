@@ -1,7 +1,7 @@
 # Application container builds
 
 The repository builds pinned, multi-stage images for the public API, Next.js web app, the
-scheduler lease reaper, and the solve supervisor. All final images run as UID/GID `10001`, contain no local `.cache`,
+scheduler lease reaper, the solve supervisor, and the evaluator supervisor. All final images run as UID/GID `10001`, contain no local `.cache`,
 `.local`, `.protected`, `.env`, task-pack, or test-fixture data, and are suitable for read-only
 root filesystems with `/tmp` mounted writable. API and scheduler images include `pcb-ops` and the
 migration/configuration files their guarded commands need.
@@ -19,6 +19,8 @@ docker build --platform linux/amd64 --file Dockerfile.scheduler `
 docker build --platform linux/amd64 --file Dockerfile.ops --tag pcb-ops:local .
 docker build --platform linux/amd64 --file Dockerfile.solve-worker `
   --tag pcb-solve-worker:local .
+docker build --platform linux/amd64 --file Dockerfile.eval-worker `
+  --tag pcb-eval-worker:local .
 ```
 
 `PCB_PUBLIC_API_URL` is captured by the Next build for its same-origin rewrites and read at
@@ -35,9 +37,9 @@ identity guard. Never build or publish a production image with the development m
 
 The scheduler image's default command is `pcb-scheduler reap --watch`. It recovers expired leases
 and emits metrics; it is **not** a job worker and does not execute queued model, judge, solve, score,
-or publication work. The solve image runs the dedicated `pcb-worker ec2-run` command; it is not
-combined with the lease reaper. The startup identity guard exports the STS principal it verified as
-`PCB_SERVICE_IDENTITY`, which the scheduler uses for audit attribution.
+or publication work. The solve image runs `pcb-worker ec2-run`, and the evaluation image runs
+`pcb-worker ec2-grading-run`; neither is combined with the lease reaper. The startup identity guard
+exports the STS principal it verified as `PCB_SERVICE_IDENTITY` for audit attribution.
 
 The API process requires `PCB_DATABASE_URL`, `PCB_CURSOR_SIGNING_KEY`,
 `PCB_WEB_AUTH_SIGNING_KEY`, and `PCB_API_IDENTITY_JSON` in staging/production. The stack injects
@@ -76,8 +78,10 @@ override `PCB_ENV_MANIFEST_SOURCE`, `PCB_CANDIDATE_IMAGE_ALLOWLIST_SOURCE` and
 `PCB_GUEST_KNOWN_HOSTS_SOURCE` with the reviewed deployed manifest, approved digest allowlist and
 pinned AMI guest host keys. The OpenSSH client package is version-pinned in the Dockerfile.
 
-The migrator's `ops` image is built from `Dockerfile.ops`; it contains both `pcb-ops` and the
-guarded `pcb-worker ec2-register` command. Its default development manifest and empty image
+The migrator's `ops` image is built from `Dockerfile.ops`; it contains `pcb-ops` and the guarded
+`pcb-worker ec2-register` and `pcb-worker ec2-grading-register` commands. It also includes the
+grading plugin allowlist, frozen scoring policy and versioned language image identities. Its
+default development manifest and empty candidate image
 allowlist cannot register a production worker. A staging/production build must override
 `PCB_ENV_MANIFEST_SOURCE`, `PCB_WORKER_RESOURCE_SPEC_SOURCE` and
 `PCB_CANDIDATE_IMAGE_ALLOWLIST_SOURCE` with the reviewed deployed manifest, bounded resource
@@ -90,6 +94,20 @@ an idempotent solve registration only. Terraform supplies endpoint and bucket na
 the migrator to the worker-config/provisional prefixes, and registration enforces the manifest's
 aggregate capacity cap. The migrator has no EC2 launch permission. This setup command is separate
 from solve dispatch.
+
+The evaluator image installs the seven language plugins and copies the versioned plugin allowlist,
+language evaluator image identities, deployed-manifest input and pinned guest known-hosts input.
+Build it with the reconciled manifest and host-key file using `PCB_ENV_MANIFEST_SOURCE` and
+`PCB_GUEST_KNOWN_HOSTS_SOURCE`. A reviewed one-off migrator task can register bounded grading
+capacity with `pcb-worker ec2-grading-register`; setup must be explicitly enabled and queue dispatch
+must remain false for that task. Registration binds the plugin allowlist and evaluator image
+digests, plus the resource class, to a verified internal artifact. It records an idempotent
+`grading` registration and enforces the manifest's aggregate slot cap. It does not launch a guest.
+Before enabling `eval-supervisor`, set the
+returned worker ID on its task, provision the eval-supervisor-only guest-control key, and explicitly
+set `PCB_WORKER_DISPATCH_ENABLED=true`. That worker rechecks the eval-supervisor STS principal,
+requires matching EC2 grading capacity, uses only the `grading` subnet/security group/template, and
+executes one version-pinned language guest at a time. Its evidence tier is `production_worker`.
 
 The guest AMI must be built with the public half of the matching role-specific SSH key installed
 for the manifest's `sandbox.control_user` using `infra/sandbox/aws/guest/bootstrap-control.sh`;
@@ -107,8 +125,9 @@ guest isolation checks. Local ops and solve images built and smoke-checked on 20
 10001; their default manifests/allowlists refuse production actions. No production image build,
 worker registration, queue dispatch, guest launch, ECR push or model call has been performed. The
 AWS account, approved AMI, host-key bundle, production candidate allowlist and spend authorization
-remain unavailable. The evaluation, judging, scoring and publication processors still need their
-own long-running modes and validated images.
+remain unavailable. The evaluator command and image are now defined but have not been built or
+exercised against AWS. Scoring and publication still lack complete long-running processing modes,
+as do the model and judge gateways.
 
 ## Current web image rebuild (2026-10-07)
 

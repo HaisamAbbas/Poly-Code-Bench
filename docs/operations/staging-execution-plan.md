@@ -36,10 +36,12 @@ The control-services module advertises API through the environment-scoped ECS Se
 name `api`, which is the URL baked into the web image. The web task health path is `/`.
 
 Production-shaped API, web, and scheduler lease-reaper image builds exist. The scheduler image is
-not a job worker. The model/judge gateways, solve/evaluation supervisors, scorer, and publisher do
-not yet have complete long-running work-processing modes and validated runtime images. These image
-builds do not make E2E-42/E2E-43 deployable; do not scale roles without an implemented mode and a
-passing runtime check. Build details and the evidence scope are recorded in
+not a job worker. The solve supervisor has an identity-gated runner, and the evaluator now has an
+identity-gated grading runner plus a separate migrator registration command. Neither supervisor
+has a reviewed staging image, registration, or dispatch verification. The model/judge gateways,
+scorer, and publisher still lack complete long-running processing modes. These image builds do not
+make E2E-42/E2E-43 deployable; do not scale roles without a passing runtime check. Build details
+and the evidence scope are recorded in
 [`container-images.md`](container-images.md).
 
 E2E-42 and E2E-43 need **no model or judge provider spend**. Provider outage is exercised against the gateway with egress denied, not against a live provider. Live pilot spend remains a separate authorization (Prompt 17).
@@ -89,10 +91,17 @@ docker build --platform linux/amd64 --file Dockerfile.web --build-arg `
   PCB_PUBLIC_API_URL=http://api:8000/v1 --tag pcb-web:staging .
 docker build --platform linux/amd64 --file Dockerfile.scheduler --build-arg `
   PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --tag pcb-scheduler:staging .
-#    Push API to the api and ops ECR repositories, web to web, and scheduler to scheduler.
+docker build --platform linux/amd64 --file Dockerfile.eval-worker --build-arg `
+  PCB_ENV_MANIFEST_SOURCE=config/environments/staging.yaml --build-arg `
+  PCB_GUEST_KNOWN_HOSTS_SOURCE=<reviewed-guest-host-keys-file> --tag pcb-eval-worker:staging .
+#    Push API to the api and ops ECR repositories, web to web, scheduler to scheduler,
+#    and the evaluator image to eval-supervisor. Its registered image identities must match
+#    the config/images documents embedded in this immutable image.
 #    Resolve immutable ECR digests and update only the matching task image references.
 #    Keep the scheduler count at 0 until its staged PostgreSQL connection/reaper behavior is
-#    verified. Other worker/gateway roles remain at 0 until their processing daemons are built.
+#    verified. Keep eval-supervisor at 0 until a migrator registers its resource plan and the
+#    owner explicitly enables dispatch. Other worker/gateway roles remain at 0 until their
+#    processing daemons and images are verified.
 
 # 5. Schema (migrator task; refuses non-expand migrations)
 # Bootstrap PostgreSQL roles with provision_roles.sql before migration and apply
@@ -111,10 +120,11 @@ aws logs filter-log-events --log-group-name /pcb/staging/api --filter-pattern '"
 
 This bootstrap is infrastructure preparation, not the full staging acceptance run. Although a
 scheduler image exists, it only reaps expired leases and has not been exercised against staging
-PostgreSQL. Model/judge gateways, solve/evaluation supervisors, scorer and publisher do not yet
-have complete long-running work-processing images. Their Terraform example counts remain zero;
-these API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise worker/gateway counts or
-point them at the API image.
+PostgreSQL. The solve/evaluation supervisors have guarded source commands, but neither has a
+reviewed, built staging image, registered capacity, or verified runtime. The model/judge gateways,
+scorer and publisher still lack complete long-running processing modes. Their Terraform example
+counts remain zero; the API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise
+worker/gateway counts or point them at the API image.
 
 ## 3. Staging acceptance runs (E2E-42, E2E-43)
 

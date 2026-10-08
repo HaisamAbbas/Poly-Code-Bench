@@ -31,3 +31,17 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --offline --locked pytest -q tests/test_benchmark_audit_catalog.py` | Passed: 10 passed | Local behavior tests; no source/model dispatch. |
 | `uv run --offline --locked mypy packages/core/src/polycodebench_core/benchmark_audit_registry.py packages/services/src/polycodebench_services/benchmark_audit_catalog.py` | Passed: no issues in 2 files | Strict type check for new modules. |
 | `uv run --offline --locked python scripts/check_boundaries.py` | Failed: 14 prohibited imports/dependencies | All reported paths are under existing evaluation/orchestration modules and their package metadata; no new audit module is listed. These unrelated paths were not changed by Prompt84. |
+
+## Prompt85 contract, persistence and queue checks
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run --offline --locked --all-packages pytest -q tests/test_benchmark_audit_documents.py tests/test_benchmark_audit_controls.py tests/test_benchmark_audit_catalog.py` | Passed: 33 passed | Local schema, safety and catalog tests. No PostgreSQL/source/model/human evidence. |
+| Ruff check over the 12 changed Prompt85 Python/test paths | Passed: All checks passed | Prompt85 code and focused tests. |
+| Mypy over the 12 changed Prompt85 Python/test paths | Passed: no issues in 12 source files | Strict type check for Prompt85 implementation. |
+| `corepack pnpm --filter @polycodebench/contracts build` | Passed | TypeScript contract package compiled. |
+| `corepack pnpm --filter @polycodebench/contracts test:contracts` | Passed: shared audit vectors plus existing canonical/invalid/property cases | TypeScript byte/digest agreement for all 18 shared audit vectors; kind-specific payload validation remains Python-owned. |
+| `$env:PCB_MIGRATION_DATABASE_URL='postgresql+psycopg://pcb:pcb@localhost/polycodebench'; uv run --offline --locked --all-packages alembic -c packages/persistence/alembic.ini upgrade 2a62b6001aa1:c3a4e14f8b29 --sql` | Passed: targeted Prompt85 PostgreSQL DDL rendered | Offline syntax/render only; no connection or old-row migration execution. |
+| `uv run --offline --locked --all-packages alembic -c packages/persistence/alembic.ini upgrade head --sql` | Blocked by existing revision `b9e04c7a1f38` calling an online `SELECT` during offline rendering | The pre-existing revision must be adapted or an actual PostgreSQL migration database supplied to render/execute the full chain. |
+| `uv run --offline --locked --all-packages pytest -q tests/test_persistence_postgres.py` | 4 skipped | Each opt-in integration case skipped because `PCB_TEST_DATABASE_URL` is unset. |
+| PostgreSQL environment check | `PCB_TEST_DATABASE_URL` and `PCB_MIGRATION_DATABASE_URL` are not configured | PostgreSQL upgrade, downgrade, old-worker drain, CAS/fence and duplicate-dispatch integration checks were not run. |

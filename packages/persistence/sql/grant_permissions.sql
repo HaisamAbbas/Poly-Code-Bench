@@ -68,6 +68,12 @@ GRANT SELECT, INSERT, UPDATE ON task_set TO pcb_curator, pcb_administrator;
 GRANT SELECT ON task_set, task_set_member, task_version, config_document, model_revision, campaign TO pcb_operator;
 GRANT INSERT, SELECT ON run, attempt, idempotency_record TO pcb_operator;
 GRANT UPDATE, DELETE ON idempotency_record TO pcb_operator;
+GRANT SELECT, INSERT ON audit_document, benchmark_registry, benchmark_snapshot,
+    benchmark_item, audit_component, fingerprint, corpus_source, corpus_snapshot,
+    corpus_document, audit_run, audit_query, audit_checkpoint, match_candidate,
+    match_review, risk_assessment, temporal_assessment TO pcb_operator, pcb_administrator;
+GRANT UPDATE (state, row_version) ON audit_run TO pcb_operator;
+GRANT SELECT ON artifact TO pcb_operator;
 GRANT INSERT ON audit_event TO pcb_operator;
 
 GRANT SELECT, INSERT, UPDATE ON stage_job, capacity_slot, worker_registration TO pcb_scheduler;
@@ -80,6 +86,9 @@ GRANT UPDATE (status, row_version) ON run TO pcb_scheduler;
 GRANT UPDATE (state, failure_class, row_version) ON attempt TO pcb_scheduler;
 GRANT UPDATE (state, failure_class, gate, evidence_manifest_id, row_version)
     ON evaluation TO pcb_scheduler;
+GRANT SELECT ON audit_run, curation_round, discovery_search TO pcb_scheduler;
+GRANT UPDATE (state, current_stage, row_version) ON audit_run TO pcb_scheduler;
+GRANT UPDATE (state, row_version) ON curation_round, discovery_search TO pcb_scheduler;
 GRANT INSERT ON audit_event TO pcb_scheduler;
 
 GRANT SELECT ON run, task_version, task_set, task_set_member, config_document, model_revision TO pcb_solve_supervisor;
@@ -144,9 +153,11 @@ GRANT UPDATE (status, responded_at, provider_request_id, failure_code, raw_respo
 GRANT UPDATE (state) ON budget_reservation TO pcb_model_gateway;
 GRANT SELECT ON budget_account, budget_resource TO pcb_model_gateway;
 GRANT UPDATE (spent_confirmed, reserved_open, uncertain_committed, row_version) ON budget_account, budget_resource TO pcb_model_gateway;
+GRANT SELECT ON audit_run TO pcb_model_gateway;
 GRANT INSERT ON audit_event TO pcb_model_gateway;
 GRANT SELECT, INSERT ON budget_account, budget_resource TO pcb_operator, pcb_administrator;
 GRANT SELECT ON call_intent, call_delivery, usage_record, budget_reservation, accounting_entry TO pcb_operator, pcb_reviewer;
+GRANT SELECT ON audit_run, budget_account TO pcb_submission_approver;
 
 -- Future objects created by the migration identity remain private by default.
 ALTER DEFAULT PRIVILEGES FOR ROLE pcb_migrator IN SCHEMA public

@@ -30,9 +30,12 @@ from polycodebench_persistence.models import (
     artifact,
     attempt,
     audit_event,
+    audit_run,
     campaign,
     capacity_slot,
     config_document,
+    curation_round,
+    discovery_search,
     evaluation,
     release,
     run,
@@ -84,7 +87,14 @@ class PostgresJobRepository:
         jobs: tuple[JobDefinition, ...],
         actor: str,
     ) -> dict[str, UUID]:
-        if scope_type not in {"attempt", "evaluation", "release"} or not jobs:
+        if scope_type not in {
+            "attempt",
+            "evaluation",
+            "release",
+            "curation_round",
+            "discovery_search",
+            "audit_run",
+        } or not jobs:
             raise InvalidState("job DAG scope or contents are invalid")
         by_key = {item.key: item for item in jobs}
         if len(by_key) != len(jobs):
@@ -524,6 +534,7 @@ class PostgresJobRepository:
                         hardware_class=spec.hardware_class,
                         allowed_queue_classes=list(spec.allowed_queue_classes),
                         allowed_resource_classes=list(spec.allowed_resource_classes),
+                        audit_capable=spec.audit_capable,
                         status="active",
                         last_heartbeat_at=func.now(),
                         driver_identity=spec.driver_identity,
@@ -745,6 +756,16 @@ class PostgresJobRepository:
                     .where(capacity_slot.c.job_id == stage_job.c.id)
                     .exists(),
                 ]
+                if not worker["audit_capable"]:
+                    # Migrated registrations default to false, so old workers cannot claim any
+                    # of the three newly introduced scope kinds.
+                    eligibility.extend(
+                        (
+                            stage_job.c.curation_round_id.is_(None),
+                            stage_job.c.discovery_search_id.is_(None),
+                            stage_job.c.audit_run_id.is_(None),
+                        )
+                    )
                 if job_id is not None:
                     eligibility.append(stage_job.c.id == job_id)
                 if run_id is not None:
@@ -858,6 +879,19 @@ class PostgresJobRepository:
                             evaluation.c.state == "queued",
                         )
                         .values(state="running", row_version=evaluation.c.row_version + 1)
+                    )
+                elif scope_kind == "audit_run":
+                    connection.execute(
+                        update(audit_run)
+                        .where(
+                            audit_run.c.id == changed["audit_run_id"],
+                            audit_run.c.state == "queued",
+                        )
+                        .values(
+                            state="scanning",
+                            current_stage=changed["stage"],
+                            row_version=audit_run.c.row_version + 1,
+                        )
                     )
                 self._event(
                     connection,
@@ -1445,7 +1479,9 @@ class PostgresJobRepository:
                 )
 
     def cancel_scope(self, scope_type: str, scope_id: UUID, *, actor: str, reason: str) -> int:
-        if scope_type not in {"attempt", "evaluation"} or not reason.strip():
+        if scope_type not in {
+            "attempt", "evaluation", "curation_round", "discovery_search", "audit_run"
+        } or not reason.strip():
             raise InvalidState("cancellation scope and reason are required")
         with self._engine.begin() as connection:
             return self._cancel_scope(connection, scope_type, scope_id, actor=actor, reason=reason)
@@ -1455,7 +1491,9 @@ class PostgresJobRepository:
     ) -> int:
         self._lock_scope(connection, scope_type, scope_id)
         scope = self._scope(connection, scope_type, scope_id, lock=True)
-        if scope["state"] in {"completed", "ready", "failed", "cancelled", "superseded"}:
+        if scope["state"] in {
+            "complete", "completed", "ready", "failed", "cancelled", "superseded"
+        }:
             return 0
         # The scope state changes in the same transaction as revoking dispatch.
         # No intermediate state is visible to a concurrent claimer.
@@ -1668,7 +1706,16 @@ class PostgresJobRepository:
                 )
             )
             return {"state": state, "campaign_id": row["campaign_id"]}
-        table = evaluation if scope_type == "evaluation" else release
+        scope_tables = {
+            "evaluation": evaluation,
+            "release": release,
+            "curation_round": curation_round,
+            "discovery_search": discovery_search,
+            "audit_run": audit_run,
+        }
+        table = scope_tables.get(scope_type)
+        if table is None:
+            raise InvalidState("unknown queue scope type")
         row = (
             connection.execute(
                 select(table).where(table.c.id == scope_id).with_for_update()
@@ -1691,6 +1738,8 @@ class PostgresJobRepository:
                 )
                 .where(evaluation.c.id == scope_id)
             ).scalar_one()
+        elif scope_type == "audit_run":
+            campaign_id = row["campaign_id"]
         return {"state": row["state"], "campaign_id": campaign_id}
 
     def _scope_active(self, connection: Connection, scope_type: str, scope_id: UUID) -> bool:
@@ -1734,7 +1783,36 @@ class PostgresJobRepository:
             releases = select(release.c.id).where(
                 release.c.id == stage_job.c.release_id, release.c.state.notin_(("withdrawn",))
             )
-            return or_(attempts.exists(), evaluations.exists(), releases.exists())
+            curation_rounds = select(curation_round.c.id).where(
+                curation_round.c.id == stage_job.c.curation_round_id,
+                curation_round.c.state.in_(("queued", "running")),
+            )
+            discovery_searches = select(discovery_search.c.id).where(
+                discovery_search.c.id == stage_job.c.discovery_search_id,
+                discovery_search.c.state.in_(("queued", "running")),
+            )
+            audits = select(audit_run.c.id).where(
+                audit_run.c.id == stage_job.c.audit_run_id,
+                audit_run.c.state.in_(("queued", "scanning", "verifying", "assessing")),
+                audit_run.c.dispatch_authorized.is_(True),
+                or_(
+                    audit_run.c.campaign_id.is_(None),
+                    select(campaign.c.id)
+                    .where(
+                        campaign.c.id == audit_run.c.campaign_id,
+                        campaign.c.status.notin_(("cancelled", "cancelling", "failed")),
+                    )
+                    .exists(),
+                ),
+            )
+            return or_(
+                attempts.exists(),
+                evaluations.exists(),
+                releases.exists(),
+                curation_rounds.exists(),
+                discovery_searches.exists(),
+                audits.exists(),
+            )
         if scope_type == "attempt":
             query = (
                 select(attempt.c.id)
@@ -1766,9 +1844,34 @@ class PostgresJobRepository:
                     campaign.c.status.notin_(("cancelled", "cancelling", "failed")),
                 )
             )
-        else:
+        elif scope_type == "release":
             query = select(release.c.id).where(
                 release.c.id == scope_id, release.c.state != "withdrawn"
+            )
+        elif scope_type == "curation_round":
+            query = select(curation_round.c.id).where(
+                curation_round.c.id == scope_id,
+                curation_round.c.state.in_(("queued", "running")),
+            )
+        elif scope_type == "discovery_search":
+            query = select(discovery_search.c.id).where(
+                discovery_search.c.id == scope_id,
+                discovery_search.c.state.in_(("queued", "running")),
+            )
+        else:
+            query = select(audit_run.c.id).where(
+                audit_run.c.id == scope_id,
+                audit_run.c.state.in_(("queued", "scanning", "verifying", "assessing")),
+                audit_run.c.dispatch_authorized.is_(True),
+                or_(
+                    audit_run.c.campaign_id.is_(None),
+                    select(campaign.c.id)
+                    .where(
+                        campaign.c.id == audit_run.c.campaign_id,
+                        campaign.c.status.notin_(("cancelled", "cancelling", "failed")),
+                    )
+                    .exists(),
+                ),
             )
         return query.exists()
 
@@ -1935,6 +2038,32 @@ class PostgresJobRepository:
                         row_version=evaluation.c.row_version + 1,
                     )
                 )
+            elif scope_type == "audit_run":
+                state = (
+                    "blocked"
+                    if any(row.required and row.state == "dead" for row in jobs)
+                    else "verifying"
+                )
+                connection.execute(
+                    update(audit_run)
+                    .where(
+                        audit_run.c.id == scope_id,
+                        audit_run.c.state.in_(("queued", "scanning")),
+                    )
+                    .values(state=state, row_version=audit_run.c.row_version + 1)
+                )
+            elif scope_type in {"curation_round", "discovery_search"}:
+                table = curation_round if scope_type == "curation_round" else discovery_search
+                state = (
+                    "blocked"
+                    if any(row.required and row.state == "dead" for row in jobs)
+                    else "complete"
+                )
+                connection.execute(
+                    update(table)
+                    .where(table.c.id == scope_id, table.c.state.in_(("queued", "running")))
+                    .values(state=state, row_version=table.c.row_version + 1)
+                )
 
     @staticmethod
     def _mark_run_running(connection: Connection, attempt_id: UUID) -> None:
@@ -1995,7 +2124,14 @@ class PostgresJobRepository:
     def _set_scope_state(
         self, connection: Connection, scope_type: str, scope_id: UUID, state: str
     ) -> None:
-        table = {"attempt": attempt, "evaluation": evaluation, "release": release}[scope_type]
+        table = {
+            "attempt": attempt,
+            "evaluation": evaluation,
+            "release": release,
+            "curation_round": curation_round,
+            "discovery_search": discovery_search,
+            "audit_run": audit_run,
+        }[scope_type]
         connection.execute(
             update(table)
             .where(table.c.id == scope_id)
@@ -2113,11 +2249,26 @@ def _logical_key(scope_type: str, scope_id: UUID, key: str) -> str:
     return f"sha256:{digest}"
 
 
-def _scope_type(job: Any) -> Literal["attempt", "evaluation", "release"]:
+def _scope_type(
+    job: Any,
+) -> Literal[
+    "attempt", "evaluation", "release", "curation_round", "discovery_search", "audit_run"
+]:
     return cast(
-        Literal["attempt", "evaluation", "release"],
+        Literal[
+            "attempt", "evaluation", "release", "curation_round", "discovery_search", "audit_run"
+        ],
         next(
-            kind for kind in ("attempt", "evaluation", "release") if job[f"{kind}_id"] is not None
+            kind
+            for kind in (
+                "attempt",
+                "evaluation",
+                "release",
+                "curation_round",
+                "discovery_search",
+                "audit_run",
+            )
+            if job[f"{kind}_id"] is not None
         ),
     )
 

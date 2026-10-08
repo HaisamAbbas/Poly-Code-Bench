@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompt85 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompt85 is implemented as a partial foundation; Prompt86 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -61,4 +61,15 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Complete: 25 §5 benchmark records with explicit version/split/access/rights/modality/status fields; eight finite source policies; 25 component/source/modality/runtime capability rows; strict catalog cross-reference validation; safe duplicate-key YAML loading; and a pure bounded planner.
 - The planner computes the proposed 300-task/8-source/5-stage ceiling (12,000 planned query units and 30,000 candidate slots) while returning `dispatch_allowed=false`, zero model calls, unknown prices and per-benchmark/source blockers.
 - Current source checks pin metadata only: HumanEval, MBPP, SWE-bench repository, SWE-bench Verified dataset revision, EvalPlus v0.3.1 and its two data version labels. No task payloads were downloaded. All source connectors remain unimplemented and corpus scopes unapproved.
-- Next: Prompt85 / BWP-03. The migration must address the tracked three-scope queue, not the five-scope baseline assumed in §8.
+- Prompt85 reconciled the tracked three-scope queue with the six-scope requirement through a staged migration; details and remaining live checks follow.
+
+## Prompt85 / BWP-03
+
+- Added strict, immutable Python payload contracts for all 18 §7 document kinds, explicit enum/state transitions, typed document/artifact refs, fixed-string decimal/null-reason rules, UTC precision checks, strict duplicate/float/unsafe-integer rejection and semantic digests that exclude row identity/operational metadata.
+- Added 18 shared canonical document vectors consumed by Python and TypeScript tests. These prove byte/digest agreement; TypeScript does not independently implement the kind-specific Pydantic payload schemas.
+- Added immutable audit-document persistence with same-kind successor FK enforcement, relational registry/item/corpus/run/query/checkpoint/match/risk/temporal tables, logical uniqueness, scope reservations and a guarded Alembic migration. Historical `run.purpose` stays `NULL`; rollback refuses to discard audit data, new scope rows, populated curation anchors, assigned diagnostic purposes or audit-capable worker registrations.
+- Extended `stage_job` to exclusive attempt/evaluation/release/curation_round/discovery_search/audit_run FKs. The checkout had only the first three scopes. The migration creates minimal curation/discovery parent anchors; their workflows remain outside this prompt. Audit queue claims require `dispatch_authorized=true`; migrated worker registrations default to `audit_capable=false`.
+- Added `run.purpose` / `run.audit_run_id`, bounded diagnostic run validation, audit-run budget parenting and explicit diagnostic audit metadata on ordinary attempt-scoped call intents. The audit reference is separate from the call’s authoritative attempt FK. The audit budget comes only from a frozen plan diagnostic cap and defaults to zero.
+- Four Prompt84 catalog YAML files contained a literal `\\n` line at EOF. Prompt85 regression checks exposed and removed these invalid lines.
+- Partial, not complete: no PostgreSQL migration/integration database is configured; the repository has no language recommendation query to verify diagnostic exclusion; no API/role currently grants dispatch authorization, so audit execution remains closed by default; old-worker drain and six-scope runtime/fence recovery are not verified against a live queue. No source/model calls were made.
+- Exact next prompt: Prompt86 / BWP-04.

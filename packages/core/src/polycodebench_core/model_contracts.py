@@ -295,7 +295,7 @@ class TransportFailure(Strict):
 
 
 class CallScope(Strict):
-    kind: Literal["attempt", "evaluation"]
+    kind: Literal["attempt", "evaluation", "audit_run"]
     scope_id: UUID
 
 

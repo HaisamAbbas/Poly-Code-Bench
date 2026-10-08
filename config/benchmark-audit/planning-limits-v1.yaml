@@ -7,5 +7,3 @@ max_candidates_per_task: 100
 max_stages_per_task: 5
 max_query_units_per_plan: 12000
 max_storage_bytes_per_plan: 536870912
-
-\n

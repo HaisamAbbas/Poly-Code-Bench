@@ -112,6 +112,7 @@ class WorkerRegistrationSpec(BaseModel):
     lane: Literal["solve", "grading", "admission"]
     hardware_class: str = Field(min_length=1, max_length=128)
     driver_identity: str = Field(min_length=1, max_length=255)
+    audit_capable: bool = False
     allowed_queue_classes: tuple[str, ...] = Field(min_length=1)
     allowed_resource_classes: tuple[str, ...] = Field(min_length=1)
     resource_spec_config_id: UUID
@@ -141,7 +142,9 @@ class JobClaim(BaseModel):
     worker_id: str
     slot_key: str
     stage: str
-    scope_type: Literal["attempt", "evaluation", "release"]
+    scope_type: Literal[
+        "attempt", "evaluation", "release", "curation_round", "discovery_search", "audit_run"
+    ]
     scope_id: UUID
     input_artifact_id: UUID | None
     input_digest: str

@@ -114,5 +114,3 @@ groups:
     extraction_policy: "No general web crawler or arbitrary remote dataset code."
     max_requests_per_plan: 2000
     max_response_bytes: 5242880
-
-\n

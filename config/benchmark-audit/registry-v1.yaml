@@ -527,5 +527,3 @@ benchmarks:
     audit_owner: "benchmark-audit"
     native_evaluation_unchanged: true
     notes: "Placeholder reference is not a live service. Require an owner-authorized manifest and rights declaration."
-
-\n

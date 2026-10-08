@@ -277,5 +277,3 @@ benchmarks:
     conformance_state: "not_run"
     original_evaluation_owner: "existing-native-evaluation-path"
     limitations: ["No benchmark item bytes have been imported into this catalog.","Image/OCR/perceptual audit is unsupported; metadata cannot satisfy image coverage.","Task environment and hidden artifacts are not acquired or executed.","Owner-supplied rights manifest and private task access are missing."]
-
-\n

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import UUID
 
 from polycodebench_core.application_errors import PersistenceUnavailable
@@ -27,6 +27,8 @@ class RunCreateRequest(BaseModel):
     max_input_tokens: int | None = Field(default=None, ge=0, le=2**53 - 1)
     max_output_tokens: int | None = Field(default=None, ge=0, le=2**53 - 1)
     endpoint_registration_id: UUID | None = None
+    purpose: Literal["representative", "challenge", "audit_diagnostic"] | None = None
+    audit_run_id: UUID | None = None
 
     @field_validator("master_seed")
     @classmethod
@@ -54,6 +56,13 @@ class RunCreateRequest(BaseModel):
                 raise ValueError("bounded run fields must be supplied together")
         elif any(value is None for value in bounded_fields[1:]):
             raise ValueError("a capped run requires token and endpoint limits")
+        if self.purpose == "audit_diagnostic":
+            if self.audit_run_id is None:
+                raise ValueError("audit diagnostic runs require approved audit metadata")
+            if self.max_cost_micro_usd is None:
+                raise ValueError("audit diagnostic runs require explicit cost and token caps")
+        elif self.audit_run_id is not None:
+            raise ValueError("only audit diagnostic runs may reference an audit run")
         return self
 
 
@@ -93,6 +102,11 @@ class RunCreationService:
         if not idempotency_key or len(idempotency_key) > 255 or not idempotency_key.isascii():
             raise ValueError("Idempotency-Key must be non-empty ASCII and at most 255 characters")
         request_document = request.model_dump(mode="json")
+        # Keep byte identity for historical callers that omitted the new optional audit fields.
+        if request.purpose is None:
+            request_document.pop("purpose")
+        if request.audit_run_id is None:
+            request_document.pop("audit_run_id")
         request_digest = sha256_bytes(canonical_json_bytes(request_document))
         stored = self._repository.create_idempotently(
             subject_id=principal.subject_id,

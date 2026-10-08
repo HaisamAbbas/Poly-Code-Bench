@@ -22,6 +22,9 @@ import {
 
 const root = new URL("../../../tests/fixtures/contracts/", import.meta.url);
 const golden = JSON.parse(readFileSync(new URL("canonical-vectors.json", root), "utf8"));
+const auditGolden = JSON.parse(
+  readFileSync(new URL("benchmark-audit-vectors.json", root), "utf8"),
+);
 const invalid = JSON.parse(readFileSync(new URL("invalid-vectors.json", root), "utf8"));
 
 for (const vector of golden.vectors) {
@@ -39,6 +42,12 @@ for (const vector of golden.vectors) {
     actual,
     `${vector.name}: semantic change must affect bytes`,
   );
+}
+
+for (const vector of auditGolden.vectors) {
+  const bytes = canonicalEnvelopeBytes(vector.kind, vector.payload, vector.schema_version);
+  assert.equal(new TextDecoder().decode(bytes), vector.expected_canonical_utf8, vector.name);
+  assert.equal(sha256Bytes(bytes), vector.expected_digest, `${vector.name}: digest`);
 }
 
 for (const vector of invalid.json) {

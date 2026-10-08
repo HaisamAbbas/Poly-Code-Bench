@@ -26,6 +26,8 @@ The addendum's BADR identifiers are preserved below. Source documents remain rea
 | BADR-18 | Health exposes denominators, unknowns, sample design and policy breaks. | No sampled-census estimate or hidden missingness. |
 | BADR-19 | Attestations bind reviewed scope and support expiry/revocation/successors. | Signature authenticates bytes, not a universal unseen-data guarantee. |
 | BADR-20 | CPU/text-first rollout with qualified claims. | Missing live, human, calibration and modality evidence stays blocked. |
+| BADR-21 | Audit document successors are same-kind, immutable rows. | Composite FK and immutable triggers preserve typed history; edits require successors. |
+| BADR-22 | Diagnostic calls retain their attempt accounting identity and a separate audit reference. | `call_intent.attempt_id` stays authoritative for budget settlement; diagnostic audit metadata is append-only and plan-capped. |
 
 ## Recorded discrepancies
 
@@ -33,7 +35,7 @@ The addendum's BADR identifiers are preserved below. Source documents remain rea
 Section §1.1 claims five source documents but lists three hashed files and one blank row. The prompts repeat “five source MDs” without resolving the identities. I read the three pinned documents and inspected the repository's requirements matrix and ticket ledger as supplemental sources to preserve prior contracts. Their exact hashes are recorded in `implementation-ledger.md`. The addendum is unchanged.
 
 ### ADDENDUM-GAP-02 — Queue scopes differ from the tracked schema
-Section §8 assumes five prior scopes and asks to add a sixth. The tracked `stage_job` has only attempt, evaluation and release FKs; no curation/discovery scope columns were found. Prompt85 must add the missing direct scopes using a compatible migration and validate historical rows before enforcing six-way exclusivity.
+Section §8 assumes five prior scopes and asks to add a sixth. The tracked `stage_job` had only attempt, evaluation and release FKs; no curation/discovery scope columns were found. Prompt85 added the missing direct scope columns and minimal parent anchors. The real curation/discovery workflows and old-row PostgreSQL migration checks remain pending.
 
 ### ADDENDUM-GAP-03 — Live evidence prerequisites are absent
 No approved source snapshots/rights, independent audit reviewer, controlled model ground truth or audit key custody were found. Fixture evidence can test contracts but cannot satisfy live pilot/calibration gates. Continue local implementation and prepare exact bounded dry-runs.
@@ -49,3 +51,18 @@ The planner computes bounded query/candidate/storage ceilings but reports moneta
 
 ### ADDENDUM-DECISION-07 — Local planner storage ceiling is provisional
 The 512 MiB cap prevents a dry-run plan from claiming unbounded local storage, but it is not based on a measured corpus workload. It cannot authorize a scan; a real plan needs an approved, workload-specific cap and measured bytes.
+
+### ADDENDUM-DECISION-08 — Missing queue parents use minimal scope anchors
+The checkout had no curation-round or discovery-search tables despite the six-scope contract. Prompt85 creates minimal state/version parent rows to make the database FKs enforceable. Those rows do not imply that curation or discovery workflows exist; later prompts own those workflows.
+
+### ADDENDUM-DECISION-09 — Audit dispatch authorization remains closed by default
+New audit runs start with `dispatch_authorized=false`; no operator API or ordinary worker can flip that bit. Audit claims and diagnostic model calls require an authorized scanning run. The DB migration defaults old worker registrations to `audit_capable=false`; operational drain and enablement are pending live queue deployment procedures.
+
+### ADDENDUM-DECISION-10 — Diagnostic spend requires a frozen plan cap
+An audit-run budget account uses `max_diagnostic_cost_micro_usd` from the immutable audit plan and defaults to zero. A diagnostic child run must provide explicit cost/token/endpoint caps and cannot exceed that frozen account limit. No model dispatch occurred.
+
+### ADDENDUM-DECISION-11 — Recommendation exclusion cannot be verified in this checkout
+Repository search found no default language recommendation query/surface. Diagnostic runs retain `purpose` and audit references, while old run purposes remain `NULL`; Prompt85 records BREQ-28/BX-05 as partial until an actual recommendation surface can exclude them and be tested.
+
+### ADDENDUM-DECISION-12 — Prompt85 downgrade refuses any non-empty audit history
+The downgrade checks audit documents, new-scope queue rows, curation/discovery anchor rows, non-null new run purposes and audit-capable workers before dropping the extension. It is intentionally online-only and refuses destructive rollback when new data exists.

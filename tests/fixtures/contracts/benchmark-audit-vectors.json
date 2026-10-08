@@ -1,0 +1,495 @@
+{
+  "vectors": [
+    {
+      "name": "benchmark_snapshot-v1",
+      "kind": "benchmark_snapshot",
+      "schema_version": 1,
+      "payload": {
+        "registry_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "benchmark_registry",
+          "digest": null
+        },
+        "version": "v1",
+        "split": "test",
+        "membership": [],
+        "components": [],
+        "upstream_rights": [],
+        "importer_refs": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"benchmark_snapshot\",\"payload\":{\"components\":[],\"importer_refs\":[],\"membership\":[],\"registry_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"benchmark_registry\"},\"split\":\"test\",\"upstream_rights\":[],\"version\":\"v1\"},\"schema_version\":1}",
+      "expected_digest": "sha256:1d3ff57fa473d628e647ee291eea8c27eb7a923947afdba632288ab2418cd759"
+    },
+    {
+      "name": "task_fingerprint-v1",
+      "kind": "task_fingerprint",
+      "schema_version": 1,
+      "payload": {
+        "task_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "component_refs": [],
+        "normalization_version": "norm-v1",
+        "tokenizer_version": "tok-v1",
+        "code_parser_version": null,
+        "embedding_version": null,
+        "feature_versions": {},
+        "exact_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "normalized_digests": {},
+        "code_digests": {},
+        "private_vectors": [],
+        "private_features": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"task_fingerprint\",\"payload\":{\"code_digests\":{},\"code_parser_version\":null,\"component_refs\":[],\"embedding_version\":null,\"exact_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"feature_versions\":{},\"normalization_version\":\"norm-v1\",\"normalized_digests\":{},\"private_features\":[],\"private_vectors\":[],\"task_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"tokenizer_version\":\"tok-v1\"},\"schema_version\":1}",
+      "expected_digest": "sha256:1fae44daad19ab3577ace3a971d52898ef747cd0cf253c98ff673a92c49b5005"
+    },
+    {
+      "name": "corpus_snapshot-v1",
+      "kind": "corpus_snapshot",
+      "schema_version": 1,
+      "payload": {
+        "source_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "corpus_snapshot"
+        },
+        "version": "v1",
+        "acquisition_scope": {},
+        "content_root": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "index_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "date_coverage": [],
+        "rights": [],
+        "exclusions": [],
+        "extraction_policy": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        }
+      },
+      "expected_canonical_utf8": "{\"kind\":\"corpus_snapshot\",\"payload\":{\"acquisition_scope\":{},\"content_root\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"date_coverage\":[],\"exclusions\":[],\"extraction_policy\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"index_digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"rights\":[],\"source_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"corpus_snapshot\"},\"version\":\"v1\"},\"schema_version\":1}",
+      "expected_digest": "sha256:34f2d5fc641b6b14427c75130e2efb24f6c05850d6462a98938bc66bdae005ab"
+    },
+    {
+      "name": "audit_plan-v1",
+      "kind": "audit_plan",
+      "schema_version": 1,
+      "payload": {
+        "benchmark_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "benchmark_snapshot"
+        },
+        "task_refs": [],
+        "sample_design": {},
+        "model_context": null,
+        "source_plan": [],
+        "methods": [
+          "exact_match"
+        ],
+        "policy": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "risk_policy"
+        },
+        "limits": {},
+        "visibility": "private",
+        "seed": "7"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"audit_plan\",\"payload\":{\"benchmark_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"benchmark_snapshot\"},\"limits\":{},\"methods\":[\"exact_match\"],\"model_context\":null,\"policy\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"risk_policy\"},\"sample_design\":{},\"seed\":\"7\",\"source_plan\":[],\"task_refs\":[],\"visibility\":\"private\"},\"schema_version\":1}",
+      "expected_digest": "sha256:29ac03e03af94ee82f05585abcc3f0890d7700ab28b91981a5a0421f7ec14f2a"
+    },
+    {
+      "name": "query_manifest-v1",
+      "kind": "query_manifest",
+      "schema_version": 1,
+      "payload": {
+        "audit_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "task_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "component_refs": [],
+        "query_type": "exact",
+        "query_artifact_ref": {
+          "artifact_id": "44444444-4444-4444-8444-444444444444",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "visibility": "private",
+          "media_type": "application/octet-stream"
+        },
+        "connector_snapshot": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "corpus_snapshot"
+        },
+        "limits": {},
+        "disclosure_authorization": null
+      },
+      "expected_canonical_utf8": "{\"kind\":\"query_manifest\",\"payload\":{\"audit_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"component_refs\":[],\"connector_snapshot\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"corpus_snapshot\"},\"disclosure_authorization\":null,\"limits\":{},\"query_artifact_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/octet-stream\",\"visibility\":\"private\"},\"query_type\":\"exact\",\"task_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:8f09b0c0a881a4b03ec9b7cbcc8cddee5171b17e039ffe5e98e22d51762c4723"
+    },
+    {
+      "name": "coverage_manifest-v1",
+      "kind": "coverage_manifest",
+      "schema_version": 1,
+      "payload": {
+        "planned_queries": [],
+        "executed_queries": [],
+        "eligible_sources": [],
+        "counts": {},
+        "time_windows": [],
+        "outages": [],
+        "unsupported_modalities": [],
+        "truncation": [],
+        "freshness": {
+          "value": "0.000000",
+          "null_reason": null
+        }
+      },
+      "expected_canonical_utf8": "{\"kind\":\"coverage_manifest\",\"payload\":{\"counts\":{},\"eligible_sources\":[],\"executed_queries\":[],\"freshness\":{\"null_reason\":null,\"value\":\"0.000000\"},\"outages\":[],\"planned_queries\":[],\"time_windows\":[],\"truncation\":[],\"unsupported_modalities\":[]},\"schema_version\":1}",
+      "expected_digest": "sha256:ef1602ebca2d7004bf5dbfffd66f70632c5a154a89fddbfc847da29e2cb5b9e8"
+    },
+    {
+      "name": "match_evidence-v1",
+      "kind": "match_evidence",
+      "schema_version": 1,
+      "payload": {
+        "task_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "source_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "corpus_snapshot"
+        },
+        "matching_spans": [],
+        "features": [],
+        "component_relation": "unresolved",
+        "source_date_evidence": [],
+        "verifier": null,
+        "confidence": {
+          "value": "0.000000",
+          "null_reason": null
+        },
+        "review_state": "proposed"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"match_evidence\",\"payload\":{\"component_relation\":\"unresolved\",\"confidence\":{\"null_reason\":null,\"value\":\"0.000000\"},\"features\":[],\"matching_spans\":[],\"review_state\":\"proposed\",\"source_date_evidence\":[],\"source_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"corpus_snapshot\"},\"task_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"verifier\":null},\"schema_version\":1}",
+      "expected_digest": "sha256:4567362ddc3a5e63896174f91ca1bb2b8b6b09b40204ec978048a73c96adf498"
+    },
+    {
+      "name": "risk_policy-v1",
+      "kind": "risk_policy",
+      "schema_version": 1,
+      "payload": {
+        "component_mapping": {},
+        "weights": {
+          "overlap": "1.000000"
+        },
+        "thresholds": {},
+        "required_scope": [],
+        "applicability": {},
+        "missingness": {},
+        "claim_wording": {}
+      },
+      "expected_canonical_utf8": "{\"kind\":\"risk_policy\",\"payload\":{\"applicability\":{},\"claim_wording\":{},\"component_mapping\":{},\"missingness\":{},\"required_scope\":[],\"thresholds\":{},\"weights\":{\"overlap\":\"1.000000\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:b531afdc91a40139512c2116db9a2432ffa49d23c21bceba5ddb89770063fde0"
+    },
+    {
+      "name": "risk_assessment-v1",
+      "kind": "risk_assessment",
+      "schema_version": 1,
+      "payload": {
+        "plan_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "task_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "context_ref": null,
+        "accepted_evidence": [],
+        "policy_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "risk_policy"
+        },
+        "observed_index": {
+          "value": null,
+          "null_reason": "not_run"
+        },
+        "lower_bound": "0.000000",
+        "upper_bound": "100.000000",
+        "coverage": {
+          "value": "0.000000",
+          "null_reason": null
+        },
+        "state": "insufficient_evidence",
+        "explanation": "No evidence yet."
+      },
+      "expected_canonical_utf8": "{\"kind\":\"risk_assessment\",\"payload\":{\"accepted_evidence\":[],\"context_ref\":null,\"coverage\":{\"null_reason\":null,\"value\":\"0.000000\"},\"explanation\":\"No evidence yet.\",\"lower_bound\":\"0.000000\",\"observed_index\":{\"null_reason\":\"not_run\",\"value\":null},\"plan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"risk_policy\"},\"state\":\"insufficient_evidence\",\"task_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"upper_bound\":\"100.000000\"},\"schema_version\":1}",
+      "expected_digest": "sha256:daae68e355cb1ed5ca180f57842dca3844e7a6c556ac92f6c20ce96b6fc3f167"
+    },
+    {
+      "name": "temporal_assessment-v1",
+      "kind": "temporal_assessment",
+      "schema_version": 1,
+      "payload": {
+        "artifact_ref": {
+          "artifact_id": "44444444-4444-4444-8444-444444444444",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "visibility": "private",
+          "media_type": "application/octet-stream"
+        },
+        "source_chronology": [],
+        "model_revision_ref": null,
+        "cutoff_evidence": [],
+        "uncertainty": [],
+        "exposure_paths": [],
+        "status": "unknown_cutoff"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"temporal_assessment\",\"payload\":{\"artifact_ref\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/octet-stream\",\"visibility\":\"private\"},\"cutoff_evidence\":[],\"exposure_paths\":[],\"model_revision_ref\":null,\"source_chronology\":[],\"status\":\"unknown_cutoff\",\"uncertainty\":[]},\"schema_version\":1}",
+      "expected_digest": "sha256:ca1ffa5634d09aebcaa62008a620dfc153643fd323153c9a74f0223da64e9089"
+    },
+    {
+      "name": "sealed_manifest-v1",
+      "kind": "sealed_manifest",
+      "schema_version": 1,
+      "payload": {
+        "encrypted_artifact_refs": [],
+        "commitment": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "key_version": "kms-v1",
+        "access_policy": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "retention_policy": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "disclosure_state": "sealed"
+      },
+      "expected_canonical_utf8": "{\"kind\":\"sealed_manifest\",\"payload\":{\"access_policy\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"commitment\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"disclosure_state\":\"sealed\",\"encrypted_artifact_refs\":[],\"key_version\":\"kms-v1\",\"retention_policy\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:e2d9c41644cff8311532d4b101429d7904a3fcce44ead852df48522fc3495a11"
+    },
+    {
+      "name": "canary_policy-v1",
+      "kind": "canary_policy",
+      "schema_version": 1,
+      "payload": {
+        "marker_generation": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "detection": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "access": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "monitor_policy"
+        },
+        "exposure_rules": [],
+        "collision_checks": [],
+        "interpretation_limits": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"canary_policy\",\"payload\":{\"access\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"monitor_policy\"},\"collision_checks\":[],\"detection\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"exposure_rules\":[],\"interpretation_limits\":[],\"marker_generation\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:5654d009ab09202d47c803d46ff4db08a6e96ac641c17cf3a22b002a5608d00d"
+    },
+    {
+      "name": "behavioral_audit_plan-v1",
+      "kind": "behavioral_audit_plan",
+      "schema_version": 1,
+      "payload": {
+        "method_applicability": {},
+        "original_sets": [],
+        "control_sets": [],
+        "reference_models": [],
+        "target_models": [],
+        "samples": [],
+        "seed": "7",
+        "budgets": {},
+        "tests": [],
+        "decision_rules": {}
+      },
+      "expected_canonical_utf8": "{\"kind\":\"behavioral_audit_plan\",\"payload\":{\"budgets\":{},\"control_sets\":[],\"decision_rules\":{},\"method_applicability\":{},\"original_sets\":[],\"reference_models\":[],\"samples\":[],\"seed\":\"7\",\"target_models\":[],\"tests\":[]},\"schema_version\":1}",
+      "expected_digest": "sha256:75ef06dbe215f0f82dfa73288ae9343a899eca2fcdf4928df16f7e7812f47202"
+    },
+    {
+      "name": "firewall_decision-v1",
+      "kind": "firewall_decision",
+      "schema_version": 1,
+      "payload": {
+        "task_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "task_version",
+          "digest": null
+        },
+        "audit_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "validity_refs": [],
+        "rights_refs": [],
+        "lineage_refs": [],
+        "exposure_refs": [],
+        "policy_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "risk_policy"
+        },
+        "result": "review",
+        "reasons": [],
+        "reviewer": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "reviewer",
+          "digest": null
+        }
+      },
+      "expected_canonical_utf8": "{\"kind\":\"firewall_decision\",\"payload\":{\"audit_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"exposure_refs\":[],\"lineage_refs\":[],\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"risk_policy\"},\"reasons\":[],\"result\":\"review\",\"reviewer\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"reviewer\"},\"rights_refs\":[],\"task_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"task_version\"},\"validity_refs\":[]},\"schema_version\":1}",
+      "expected_digest": "sha256:b9ac6d60af6215054662d6307796a21e431e23dc50dc8d1d89d5a58b0eb59f0a"
+    },
+    {
+      "name": "replacement_plan-v1",
+      "kind": "replacement_plan",
+      "schema_version": 1,
+      "payload": {
+        "seed_ancestry": [],
+        "competency_brief": {
+          "artifact_id": "44444444-4444-4444-8444-444444444444",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "visibility": "private",
+          "media_type": "application/octet-stream"
+        },
+        "authors": [],
+        "checkers": [],
+        "validity": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "difficulty": {
+          "value": null,
+          "null_reason": "not_applicable"
+        },
+        "exposure": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "firewall_decision"
+        },
+        "source_quotas": {},
+        "budgets": {}
+      },
+      "expected_canonical_utf8": "{\"kind\":\"replacement_plan\",\"payload\":{\"authors\":[],\"budgets\":{},\"checkers\":[],\"competency_brief\":{\"artifact_id\":\"44444444-4444-4444-8444-444444444444\",\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"media_type\":\"application/octet-stream\",\"visibility\":\"private\"},\"difficulty\":{\"null_reason\":\"not_applicable\",\"value\":null},\"exposure\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"firewall_decision\"},\"seed_ancestry\":[],\"source_quotas\":{},\"validity\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"}},\"schema_version\":1}",
+      "expected_digest": "sha256:85f5a491d8d951e512c0ec7c0dcec5fcb5dc37f3b15d594b32fd6d46797488f4"
+    },
+    {
+      "name": "monitor_policy-v1",
+      "kind": "monitor_policy",
+      "schema_version": 1,
+      "payload": {
+        "benchmarks": [],
+        "source_schedule": {},
+        "caps": {},
+        "credential_scope": [],
+        "alert_routes": [],
+        "staleness": {},
+        "retry_rules": {},
+        "stop_rules": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"monitor_policy\",\"payload\":{\"alert_routes\":[],\"benchmarks\":[],\"caps\":{},\"credential_scope\":[],\"retry_rules\":{},\"source_schedule\":{},\"staleness\":{},\"stop_rules\":[]},\"schema_version\":1}",
+      "expected_digest": "sha256:43fbe822d42fd002d7cb68be03e0f0488c14f5594187c0825b75975f253ac412"
+    },
+    {
+      "name": "benchmark_health-v1",
+      "kind": "benchmark_health",
+      "schema_version": 1,
+      "payload": {
+        "membership_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "benchmark_snapshot"
+        },
+        "assessment_refs": [],
+        "policy_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "risk_policy"
+        },
+        "context_ref": null,
+        "coverage": {
+          "value": null,
+          "null_reason": "insufficient_coverage"
+        },
+        "unknown_denominators": {},
+        "trend_refs": [],
+        "descriptive_metrics": {}
+      },
+      "expected_canonical_utf8": "{\"kind\":\"benchmark_health\",\"payload\":{\"assessment_refs\":[],\"context_ref\":null,\"coverage\":{\"null_reason\":\"insufficient_coverage\",\"value\":null},\"descriptive_metrics\":{},\"membership_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"benchmark_snapshot\"},\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"risk_policy\"},\"trend_refs\":[],\"unknown_denominators\":{}},\"schema_version\":1}",
+      "expected_digest": "sha256:627e054cc2690f65e065de04c13ba139751f49820989e78fee07feceaeb55992"
+    },
+    {
+      "name": "audit_attestation-v1",
+      "kind": "audit_attestation",
+      "schema_version": 1,
+      "payload": {
+        "benchmark_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "benchmark_snapshot"
+        },
+        "scan_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "audit_plan"
+        },
+        "policy_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "risk_policy"
+        },
+        "coverage_ref": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "coverage_manifest"
+        },
+        "claim_digests": [],
+        "model_context": null,
+        "issued_at": "2026-10-08T12:00:00Z",
+        "issued_at_precision": "second",
+        "expires_at": "2026-10-09T12:00:00Z",
+        "expires_at_precision": "second",
+        "review": {
+          "document_id": "33333333-3333-4333-8333-333333333333",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "firewall_decision"
+        },
+        "signature_algorithm": "ed25519",
+        "key_ref": {
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "entity_kind": "signing_key",
+          "digest": null
+        },
+        "revocation_refs": []
+      },
+      "expected_canonical_utf8": "{\"kind\":\"audit_attestation\",\"payload\":{\"benchmark_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"benchmark_snapshot\"},\"claim_digests\":[],\"coverage_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"coverage_manifest\"},\"expires_at\":\"2026-10-09T12:00:00Z\",\"expires_at_precision\":\"second\",\"issued_at\":\"2026-10-08T12:00:00Z\",\"issued_at_precision\":\"second\",\"key_ref\":{\"digest\":null,\"entity_id\":\"22222222-2222-4222-8222-222222222222\",\"entity_kind\":\"signing_key\"},\"model_context\":null,\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"risk_policy\"},\"review\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"firewall_decision\"},\"revocation_refs\":[],\"scan_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"33333333-3333-4333-8333-333333333333\",\"kind\":\"audit_plan\"},\"signature_algorithm\":\"ed25519\"},\"schema_version\":1}",
+      "expected_digest": "sha256:c9d5dad533079783195a2d56da19dc224f0b395e3fa72541fd2883641cdfe9bd"
+    }
+  ]
+}

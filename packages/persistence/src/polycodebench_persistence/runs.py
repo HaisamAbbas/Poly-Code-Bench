@@ -30,6 +30,7 @@ from polycodebench_persistence.errors import map_database_error
 from polycodebench_persistence.models import (
     attempt,
     audit_event,
+    audit_run,
     budget_account,
     budget_resource,
     campaign,
@@ -267,6 +268,17 @@ class PostgresRunRepository:
         config_id = UUID(str(request["config_document_id"]))
         task_set_id = UUID(str(request["task_set_id"]))
         model_revision_id = UUID(str(request["model_revision_id"]))
+        requested_purpose = request.get("purpose")
+        purpose = "representative" if requested_purpose is None else requested_purpose
+        max_cost = request.get("max_cost_micro_usd")
+        if not isinstance(purpose, str) or purpose not in {
+            "representative",
+            "challenge",
+            "audit_diagnostic",
+        }:
+            raise InvalidState("run purpose is invalid")
+        raw_audit_run_id = request.get("audit_run_id")
+        audit_run_id = UUID(str(raw_audit_run_id)) if raw_audit_run_id is not None else None
         raw_samples_per_task = request["samples_per_task"]
         master_seed = request["master_seed"]
         if (
@@ -287,6 +299,52 @@ class PostgresRunRepository:
             raise InvalidReference("campaign does not exist")
         if campaign_row["status"] not in {"draft", "planned"}:
             raise InvalidState("campaign cannot accept a run in its current state")
+        audit_budget_account_id: UUID | None = None
+        if purpose == "audit_diagnostic":
+            if audit_run_id is None:
+                raise InvalidState("audit diagnostic runs require approved audit metadata")
+            approved_audit = (
+                connection.execute(
+                    select(audit_run)
+                    .where(audit_run.c.id == audit_run_id)
+                    .with_for_update()
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if (
+                approved_audit is None
+                or not approved_audit["dispatch_authorized"]
+                or approved_audit["state"] not in {"planned", "queued"}
+                or approved_audit["campaign_id"] != campaign_id
+            ):
+                raise InvalidState(
+                    "audit diagnostic run lacks approved campaign-bound audit metadata"
+                )
+            account = (
+                connection.execute(
+                    select(
+                        budget_account.c.id,
+                        budget_account.c.parent_account_id,
+                        budget_account.c.hard_limit_micro_usd,
+                    ).where(
+                        budget_account.c.scope_kind == "audit_run",
+                        budget_account.c.scope_id == str(audit_run_id),
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if (
+                account is None
+                or account["parent_account_id"] != campaign_row["budget_account_id"]
+            ):
+                raise InvalidState("audit diagnostic run requires a campaign-parented audit budget")
+            if max_cost is not None and max_cost > account["hard_limit_micro_usd"]:
+                raise InvalidState("diagnostic run cap exceeds the frozen audit budget")
+            audit_budget_account_id = cast(UUID, account["id"])
+        elif audit_run_id is not None:
+            raise InvalidState("only audit diagnostic runs may reference an audit run")
         config_row = (
             connection.execute(select(config_document).where(config_document.c.id == config_id))
             .mappings()
@@ -346,7 +404,8 @@ class PostgresRunRepository:
         ):
             raise InvalidState("requested run exceeds the configured attempt creation limit")
 
-        max_cost = request.get("max_cost_micro_usd")
+        if purpose == "audit_diagnostic" and max_cost is None:
+            raise InvalidState("audit diagnostic runs require explicit cost and token caps")
         if max_cost is not None:
             PostgresRunRepository._validate_approved_submission_plan(
                 connection,
@@ -367,6 +426,8 @@ class PostgresRunRepository:
                 config_document_id=config_id,
                 task_set_id=task_set_id,
                 model_revision_id=model_revision_id,
+                audit_run_id=audit_run_id,
+                purpose=purpose,
                 status="queued",
                 created_by=subject_id,
             )
@@ -378,7 +439,7 @@ class PostgresRunRepository:
                     id=uuid4(),
                     scope_kind="run",
                     scope_id=str(run_id),
-                    parent_account_id=campaign_budget_id,
+                    parent_account_id=audit_budget_account_id or campaign_budget_id,
                     hard_limit_micro_usd=max_cost,
                 )
             )

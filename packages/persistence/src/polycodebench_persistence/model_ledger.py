@@ -5,8 +5,8 @@ Every balance change is a row in ``accounting_entry`` moving an amount between b
 are updated in the same transaction and can be re-derived with ``verify_balances``.
 
 Lock order, everywhere: advisory key lock -> call_intent row -> call_delivery row -> account
-rows root-first (campaign, run, attempt). One order means no deadlocks between a caller
-starting a retry and the worker settling the previous delivery.
+rows root-first (campaign, optional audit-run ancestor, run, attempt). One order means no
+deadlocks between a caller starting a retry and the worker settling the previous delivery.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 
 from polycodebench_core.application_errors import (
@@ -40,12 +40,15 @@ from polycodebench_persistence.errors import map_database_error
 from polycodebench_persistence.models import (
     accounting_entry,
     attempt,
+    audit_run,
     budget_account,
     budget_reservation,
     budget_resource,
     call_delivery,
     call_intent,
+    campaign,
     evaluation,
+    run,
     usage_record,
 )
 
@@ -95,7 +98,7 @@ class PostgresModelLedger:
     def ensure_account(
         self,
         *,
-        scope_kind: Literal["campaign", "run", "attempt", "evaluation"],
+        scope_kind: Literal["campaign", "run", "attempt", "evaluation", "audit_run"],
         scope_id: str,
         hard_limit_micro_usd: int,
         parent_account_id: UUID | None = None,
@@ -214,6 +217,7 @@ class PostgresModelLedger:
         try:
             self._retire_stale_in_flight(scope, logical_call_key, in_flight_grace)
             with self._engine.begin() as connection:
+                diagnostic_audit_run_id = self._diagnostic_audit_context(connection, scope)
                 intent = self._lock_intent(connection, scope, logical_call_key)
                 if intent is None:
                     self._chain(connection, scope)  # no budget account: refuse before any insert
@@ -221,8 +225,8 @@ class PostgresModelLedger:
                     connection.execute(
                         insert(call_intent).values(
                             id=intent_id,
-                            attempt_id=scope.scope_id if scope.kind == "attempt" else None,
-                            evaluation_id=scope.scope_id if scope.kind == "evaluation" else None,
+                            **{f"{scope.kind}_id": scope.scope_id},
+                            diagnostic_audit_run_id=diagnostic_audit_run_id,
                             logical_call_key=logical_call_key,
                             request_digest=request_digest,
                             model_config_id=model_config_id,
@@ -232,6 +236,10 @@ class PostgresModelLedger:
                         )
                     )
                     return self._new_delivery(connection, scope, intent_id, 0, plan, 0)
+                if intent["diagnostic_audit_run_id"] != diagnostic_audit_run_id:
+                    raise PersistenceConflict(
+                        "model call replay changed its diagnostic audit metadata"
+                    )
                 self._require_same_call(intent, request_digest, model_config_id)
                 deliveries = self._deliveries(connection, intent["id"])
                 recorded = self._recorded(intent, deliveries)
@@ -276,9 +284,7 @@ class PostgresModelLedger:
     ) -> CallHandle | None:
         """Read-only: the stored response or definitive failure for a logical call, if any."""
         with self._engine.connect() as connection:
-            column = (
-                call_intent.c.attempt_id if scope.kind == "attempt" else call_intent.c.evaluation_id
-            )
+            column = self._scope_column(scope)
             intent = (
                 connection.execute(
                     select(call_intent).where(
@@ -347,9 +353,7 @@ class PostgresModelLedger:
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
             {"key": f"pcb.call:{scope.kind}:{scope.scope_id}:{key}"},
         )
-        column = (
-            call_intent.c.attempt_id if scope.kind == "attempt" else call_intent.c.evaluation_id
-        )
+        column = self._scope_column(scope)
         return (
             connection.execute(
                 select(call_intent)
@@ -359,6 +363,14 @@ class PostgresModelLedger:
             .mappings()
             .one_or_none()
         )
+
+    @staticmethod
+    def _scope_column(scope: CallScope) -> Any:
+        return {
+            "attempt": call_intent.c.attempt_id,
+            "evaluation": call_intent.c.evaluation_id,
+            "audit_run": call_intent.c.audit_run_id,
+        }[scope.kind]
 
     def _new_delivery(
         self,
@@ -449,12 +461,92 @@ class PostgresModelLedger:
     def _require_active_scope(connection: Connection, scope: CallScope) -> None:
         """Spec 8.3 step 1: a cancelled or finished scope cannot spend. The share lock orders
         this check against a concurrent cancellation."""
-        table = attempt if scope.kind == "attempt" else evaluation
+        if scope.kind == "audit_run":
+            if not PostgresModelLedger._audit_run_dispatchable(connection, scope.scope_id):
+                raise ScopeNotActive("audit run is not authorized for model-call dispatch")
+            return
+        if scope.kind == "attempt":
+            row = (
+                connection.execute(
+                    select(run.c.purpose, run.c.audit_run_id)
+                    .select_from(attempt.join(run, attempt.c.run_id == run.c.id))
+                    .where(attempt.c.id == scope.scope_id)
+                    .with_for_update(read=True, of=run)
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if row is None:
+                raise ScopeNotActive("the attempt is not active")
+            if row["purpose"] == "audit_diagnostic":
+                if not PostgresModelLedger._audit_run_dispatchable(
+                    connection, row["audit_run_id"]
+                ):
+                    raise ScopeNotActive(
+                        "diagnostic calls require an authorized scanning audit run"
+                    )
+            state = connection.execute(
+                select(attempt.c.state)
+                .where(attempt.c.id == scope.scope_id)
+                .with_for_update(read=True)
+            ).scalar_one_or_none()
+            if state not in {"queued", "running"}:
+                raise ScopeNotActive("the attempt is not active")
+            return
+        table = evaluation
         state = connection.execute(
             select(table.c.state).where(table.c.id == scope.scope_id).with_for_update(read=True)
         ).scalar_one_or_none()
         if state not in {"queued", "running"}:
             raise ScopeNotActive("the attempt or evaluation is not active")
+
+    @staticmethod
+    def _audit_run_dispatchable(connection: Connection, audit_run_id: UUID) -> bool:
+        row = (
+            connection.execute(
+                select(
+                    audit_run.c.state,
+                    audit_run.c.dispatch_authorized,
+                    audit_run.c.campaign_id,
+                )
+                .where(audit_run.c.id == audit_run_id)
+                .with_for_update(read=True)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if row is None or row["state"] != "scanning" or not row["dispatch_authorized"]:
+            return False
+        if row["campaign_id"] is None:
+            return True
+        status = connection.execute(
+            select(campaign.c.status)
+            .where(campaign.c.id == row["campaign_id"])
+            .with_for_update(read=True)
+        ).scalar_one_or_none()
+        return status not in {"cancelled", "cancelling", "failed"}
+
+    @staticmethod
+    def _diagnostic_audit_context(connection: Connection, scope: CallScope) -> UUID | None:
+        if scope.kind != "attempt":
+            return None
+        row = (
+            connection.execute(
+                select(run.c.purpose, run.c.audit_run_id)
+                .select_from(attempt.join(run, attempt.c.run_id == run.c.id))
+                .where(attempt.c.id == scope.scope_id)
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if row is None:
+            raise ScopeNotActive("the attempt is not active")
+        if row["purpose"] == "audit_diagnostic":
+            audit_run_id = row["audit_run_id"]
+            if audit_run_id is None:
+                raise ScopeNotActive("diagnostic attempt is missing its audit reference")
+            return cast(UUID, audit_run_id)
+        return None
 
     def _retire_stale_in_flight(self, scope: CallScope, key: str, grace: timedelta) -> None:
         """A delivery still 'dispatching' after a crash is ambiguous: it may have been sent."""
@@ -872,7 +964,9 @@ class PostgresModelLedger:
         """The authoritative scope is the intent's own; callers cannot redirect a charge."""
         if intent["attempt_id"] is not None:
             return CallScope(kind="attempt", scope_id=intent["attempt_id"])
-        return CallScope(kind="evaluation", scope_id=intent["evaluation_id"])
+        if intent["evaluation_id"] is not None:
+            return CallScope(kind="evaluation", scope_id=intent["evaluation_id"])
+        return CallScope(kind="audit_run", scope_id=intent["audit_run_id"])
 
     @staticmethod
     def _next_revision(connection: Connection, delivery_id: UUID) -> int:

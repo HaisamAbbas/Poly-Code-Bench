@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt84, BWP-01 and BWP-02 are complete. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt85, BWP-01 and BWP-02 are complete. BWP-03 is partial pending database-backed migration/queue checks and diagnostic recommendation exclusion. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -21,7 +21,7 @@ At Prompt84, BWP-01 and BWP-02 are complete. Capability requirements remain part
 | BREQ-11 | 93,102 | BX-28–29,54 | pending | see prompt 93 report |
 | BREQ-12 | 93,102 | BX-30,54 | pending | see prompt 93 report |
 | BREQ-13 | 94,101 | BX-31–33,53 | pending | see prompt 94 report |
-| BREQ-14 | 85,94 | BX-05,32–33 | pending | see prompt 85 report |
+| BREQ-14 | 85,94 | BX-05,32–33 | partial | `run.purpose`, audit metadata and caps are implemented; dispatch authorization and frozen diagnostic protocols remain gated; see prompt 85 report |
 | BREQ-15 | 95 | BX-34 | pending | see prompt 95 report |
 | BREQ-16 | 95,102 | BX-35,54 | pending | see prompt 95 report |
 | BREQ-17 | 95,102 | BX-36,54 | pending | see prompt 95 report |
@@ -32,10 +32,10 @@ At Prompt84, BWP-01 and BWP-02 are complete. Capability requirements remain part
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
 | BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | pending | see prompt 86 report |
-| BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | pending | see prompt 85 report |
+| BREQ-25 | 85,89,96,103 | BX-04–05,16–17,38,56–57 | partial | six exclusive queue FKs, CAS enqueue and fencing reuse are implemented; live migration/claim/recovery verification is pending; see prompt 85 report |
 | BREQ-26 | 94,101 | BX-31–33,52–53 | pending | see prompt 94 report |
 | BREQ-27 | 101–102 | BX-51–55 | pending | see prompt 101 report |
-| BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | pending | see prompt 85 report |
+| BREQ-28 | 85,97,103,105 | BX-05,42,58–59 | partial | native scoring paths were not changed; diagnostic exclusion from recommendation surfaces is unverified because no such query exists in this checkout; see prompt 85 report |
 | BREQ-29 | 84,88–89,101 | BX-12–17,51 | partial | packages/services/.../benchmark_audit_catalog.py; corpus indexing pending |
 | BREQ-30 | 103,106 | BX-56–58,60 | pending | see prompt 103 report |
 | BREQ-31 | 83,104–106 | BX-01,59–60 | partial | acceptance.md and reports/prompt-83.md; remaining prompts pending |
@@ -47,7 +47,7 @@ At Prompt84, BWP-01 and BWP-02 are complete. Capability requirements remain part
 |---|---|---|---|
 | BWP-01 | 83 | complete | reports/prompt-83.md |
 | BWP-02 | 84 | complete | reports/prompt-84.md |
-| BWP-03 | 85 | pending | prompt report |
+| BWP-03 | 85 | partial | reports/prompt-85.md; relational migration/queue and diagnostics surfaces need live integration |
 | BWP-04 | 86 | pending | prompt report |
 | BWP-05 | 87 | pending | prompt report |
 | BWP-06 | 88 | pending | prompt report |
@@ -84,10 +84,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-02-B | 84 | complete | reports/prompt-84.md |
 | BAT-02-C | 84 | complete | reports/prompt-84.md |
 | BAT-02-D | 84 | complete | reports/prompt-84.md |
-| BAT-03-A | 85 | pending | prompt report |
-| BAT-03-B | 85 | pending | prompt report |
-| BAT-03-C | 85 | pending | prompt report |
-| BAT-03-D | 85 | pending | prompt report |
+| BAT-03-A | 85 | complete | reports/prompt-85.md; 18 Python schemas and shared Python/TypeScript canonical vectors |
+| BAT-03-B | 85 | partial | reports/prompt-85.md; migration renders, but no old-row PostgreSQL upgrade/rollback run |
+| BAT-03-C | 85 | partial | reports/prompt-85.md; atomic enqueue and authorization gates implemented, live queue/fence/drain checks pending |
+| BAT-03-D | 85 | partial | reports/prompt-85.md; attempt-scoped diagnostic metadata/caps implemented, dispatch approval and recommendation surface absent |
 | BAT-04-A | 86 | pending | prompt report |
 | BAT-04-B | 86 | pending | prompt report |
 | BAT-04-C | 86 | pending | prompt report |
@@ -179,9 +179,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 |---|---|---|---|
 | BX-01 | 83 | complete | prompt-83.md |
 | BX-02 | 84 | complete | config/benchmark-audit/ and reports/prompt-84.md |
-| BX-03 | 85 | pending | criterion in addendum §26; prompt report |
-| BX-04 | 85 | pending | criterion in addendum §26; prompt report |
-| BX-05 | 85 | pending | criterion in addendum §26; prompt report |
+| BX-03 | 85 | complete | reports/prompt-85.md; 18 shared canonical vectors, strict Python validation and TS byte/digest agreement |
+| BX-04 | 85 | partial | reports/prompt-85.md; six scopes and atomic/fenced queue code added, but old-row migration and recovery need PostgreSQL verification |
+| BX-05 | 85 | partial | reports/prompt-85.md; old purposes remain NULL and diagnostic metadata is explicit, but recommendation exclusion and dispatch approval are not available to verify |
 | BX-06 | 86 | pending | criterion in addendum §26; prompt report |
 | BX-07 | 86 | pending | criterion in addendum §26; prompt report |
 | BX-08 | 86 | pending | criterion in addendum §26; prompt report |

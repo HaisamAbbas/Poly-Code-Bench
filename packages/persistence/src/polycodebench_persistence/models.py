@@ -72,6 +72,51 @@ def fk(
     )
 
 
+audit_document = Table(
+    "audit_document",
+    metadata,
+    pk(),
+    Column("kind", String(48), nullable=False),
+    Column("schema_version", Integer, nullable=False),
+    Column("semantic_digest", String(71), nullable=False),
+    Column("payload", JSONB, nullable=False),
+    Column("supersedes_id", Uuid(as_uuid=True), nullable=True),
+    Column("created_by", String(255), nullable=False),
+    Column("document_created_at", String(35), nullable=False),
+    Column("timestamp_precision", String(16), nullable=False),
+    Column("trace_id", Uuid(as_uuid=True), nullable=True),
+    Column("document_row_version", BigInteger, nullable=False),
+    created_at(),
+    UniqueConstraint("kind", "semantic_digest"),
+    UniqueConstraint("id", "kind"),
+    ForeignKeyConstraint(
+        ["supersedes_id", "kind"],
+        ["audit_document.id", "audit_document.kind"],
+        name="fk_audit_document_successor_same_kind",
+        ondelete="RESTRICT",
+    ),
+    CheckConstraint(
+        "kind IN ('benchmark_snapshot','task_fingerprint','corpus_snapshot','audit_plan',"
+        "'query_manifest','coverage_manifest','match_evidence','risk_policy','risk_assessment',"
+        "'temporal_assessment','sealed_manifest','canary_policy','behavioral_audit_plan',"
+        "'firewall_decision','replacement_plan','monitor_policy','benchmark_health',"
+        "'audit_attestation')",
+        name="kind",
+    ),
+    CheckConstraint("schema_version = 1", name="schema_version_v1"),
+    CheckConstraint("semantic_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+    CheckConstraint("jsonb_typeof(payload) = 'object'", name="payload_object"),
+    CheckConstraint(
+        "timestamp_precision IN ('second','millisecond','microsecond','nanosecond')",
+        name="timestamp_precision",
+    ),
+    CheckConstraint("document_row_version >= 0", name="document_row_version_nonnegative"),
+    CheckConstraint("supersedes_id IS NULL OR supersedes_id <> id", name="not_self_successor"),
+    Index("ix_audit_document_kind_created", "kind", "created_at"),
+    Index("ix_audit_document_supersedes", "supersedes_id"),
+)
+
+
 artifact = Table(
     "artifact",
     metadata,
@@ -243,6 +288,152 @@ task_version = Table(
     Index("ix_task_version_family", "family"),
 )
 
+benchmark_registry = Table(
+    "benchmark_registry",
+    metadata,
+    pk(),
+    Column("slug", String(96), nullable=False),
+    Column("original_evaluation_owner", String(255), nullable=False),
+    fk("metadata_document_id", "audit_document.id", nullable=True),
+    Column("status", String(24), nullable=False),
+    created_at(),
+    UniqueConstraint("slug"),
+    CheckConstraint(
+        "status IN ('catalogued','metadata_only','importable','audit_conformant',"
+        "'blocked','retired')",
+        name="status",
+    ),
+)
+
+benchmark_snapshot = Table(
+    "benchmark_snapshot",
+    metadata,
+    pk(),
+    fk("registry_id", "benchmark_registry.id"),
+    fk("document_id", "audit_document.id"),
+    Column("version", String(255), nullable=False),
+    Column("split", String(128), nullable=False),
+    Column("membership_digest", String(71), nullable=False),
+    Column("rights_state", String(32), nullable=False),
+    created_at(),
+    UniqueConstraint("registry_id", "version", "split"),
+    UniqueConstraint("id", "registry_id"),
+    CheckConstraint("membership_digest ~ '^sha256:[0-9a-f]{64}$'", name="membership_digest"),
+    CheckConstraint(
+        "rights_state IN ('unreviewed','needs_item_review','approved','blocked','gated')",
+        name="rights_state",
+    ),
+    Index("ix_benchmark_snapshot_version_split", "version", "split"),
+)
+
+benchmark_item = Table(
+    "benchmark_item",
+    metadata,
+    pk(),
+    fk("snapshot_id", "benchmark_snapshot.id"),
+    fk("task_version_id", "task_version.id"),
+    Column("item_key", String(255), nullable=False),
+    Column("source_digest", String(71), nullable=False),
+    fk("original_artifact_id", "artifact.id", nullable=True),
+    Column("membership_index", Integer, nullable=False),
+    created_at(),
+    UniqueConstraint("snapshot_id", "item_key"),
+    UniqueConstraint("snapshot_id", "task_version_id"),
+    CheckConstraint("source_digest ~ '^sha256:[0-9a-f]{64}$'", name="source_digest"),
+    CheckConstraint("membership_index >= 0", name="membership_index"),
+    Index("ix_benchmark_item_task", "task_version_id"),
+)
+
+audit_component = Table(
+    "audit_component",
+    metadata,
+    pk(),
+    fk("item_id", "benchmark_item.id"),
+    Column("component_key", String(128), nullable=False),
+    Column("component_digest", String(71), nullable=False),
+    fk("content_artifact_id", "artifact.id", nullable=True),
+    Column("visibility", String(16), nullable=False),
+    created_at(),
+    UniqueConstraint("item_id", "component_key"),
+    CheckConstraint("component_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+    CheckConstraint("visibility IN ('private','restricted','public')", name="visibility"),
+    Index("ix_audit_component_digest", "component_digest"),
+)
+
+fingerprint = Table(
+    "fingerprint",
+    metadata,
+    pk(),
+    fk("component_id", "audit_component.id"),
+    Column("feature_kind", String(48), nullable=False),
+    Column("method_version", String(255), nullable=False),
+    Column("feature_digest", String(71), nullable=False),
+    fk("private_artifact_id", "artifact.id", nullable=True),
+    created_at(),
+    UniqueConstraint("component_id", "feature_kind", "method_version"),
+    CheckConstraint("feature_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),
+    Index("ix_fingerprint_method_digest", "method_version", "feature_digest"),
+)
+
+corpus_source = Table(
+    "corpus_source",
+    metadata,
+    pk(),
+    Column("slug", String(96), nullable=False),
+    Column("official_url", Text, nullable=False),
+    fk("policy_document_id", "audit_document.id"),
+    Column("rights_state", String(32), nullable=False),
+    created_at(),
+    UniqueConstraint("slug"),
+    CheckConstraint(
+        "rights_state IN ('unreviewed','needs_item_review','approved','blocked','gated')",
+        name="rights_state",
+    ),
+    Index("ix_corpus_source_rights", "rights_state"),
+)
+
+corpus_snapshot = Table(
+    "corpus_snapshot",
+    metadata,
+    pk(),
+    fk("source_id", "corpus_source.id"),
+    fk("document_id", "audit_document.id"),
+    Column("version", String(255), nullable=False),
+    Column("content_root", String(71), nullable=False),
+    Column("index_digest", String(71), nullable=False),
+    Column("coverage", JSONB, nullable=False),
+    fk("rights_document_id", "audit_document.id"),
+    created_at(),
+    UniqueConstraint("source_id", "version"),
+    CheckConstraint("content_root ~ '^sha256:[0-9a-f]{64}$'", name="content_root"),
+    CheckConstraint("index_digest ~ '^sha256:[0-9a-f]{64}$'", name="index_digest"),
+    CheckConstraint("jsonb_typeof(coverage) = 'object'", name="coverage_object"),
+    Index("ix_corpus_snapshot_source_version", "source_id", "version"),
+)
+
+corpus_document = Table(
+    "corpus_document",
+    metadata,
+    pk(),
+    fk("snapshot_id", "corpus_snapshot.id"),
+    Column("source_identity_digest", String(71), nullable=False),
+    Column("content_digest", String(71), nullable=False),
+    fk("content_artifact_id", "artifact.id", nullable=True),
+    Column("source_date", DateTime(timezone=True), nullable=True),
+    Column("date_precision", String(16), nullable=False),
+    Column("lineage", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("snapshot_id", "source_identity_digest"),
+    CheckConstraint("source_identity_digest ~ '^sha256:[0-9a-f]{64}$'", name="identity_digest"),
+    CheckConstraint("content_digest ~ '^sha256:[0-9a-f]{64}$'", name="content_digest"),
+    CheckConstraint(
+        "date_precision IN ('unknown','day','second','millisecond','microsecond')",
+        name="date_precision",
+    ),
+    CheckConstraint("jsonb_typeof(lineage) = 'array'", name="lineage_array"),
+    Index("ix_corpus_document_content", "content_digest"),
+)
+
 task_set = Table(
     "task_set",
     metadata,
@@ -368,7 +559,9 @@ budget_account = Table(
         name="balance_nonnegative",
     ),
     CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
-    CheckConstraint("scope_kind IN ('campaign','run','attempt','evaluation')", name="scope_kind"),
+    CheckConstraint(
+        "scope_kind IN ('campaign','run','attempt','evaluation','audit_run')", name="scope_kind"
+    ),
 )
 
 budget_resource = Table(
@@ -418,6 +611,8 @@ run = Table(
     fk("config_document_id", "config_document.id"),
     fk("task_set_id", "task_set.id"),
     fk("model_revision_id", "model_revision.id"),
+    fk("audit_run_id", "audit_run.id", nullable=True),
+    Column("purpose", String(32), nullable=True),
     Column("status", String(24), nullable=False),
     Column("created_by", String(255), nullable=False),
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
@@ -426,6 +621,12 @@ run = Table(
     CheckConstraint(
         "status IN ('planned','queued','running','cancelling','completed','failed','cancelled')",
         name="status",
+    ),
+    CheckConstraint(
+        "(purpose IS NULL AND audit_run_id IS NULL) OR "
+        "(purpose = 'audit_diagnostic' AND audit_run_id IS NOT NULL) OR "
+        "(purpose IN ('representative','challenge') AND audit_run_id IS NULL)",
+        name="purpose_audit_scope",
     ),
     CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
     Index("ix_run_task_set", "task_set_id"),
@@ -580,6 +781,208 @@ evaluation = Table(
     Index("ix_evaluation_attempt", "attempt_id"),
 )
 
+curation_round = Table(
+    "curation_round",
+    metadata,
+    pk(),
+    Column("state", String(24), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    CheckConstraint(
+        "state IN ('planned','queued','running','complete','blocked','cancelled')", name="state"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+discovery_search = Table(
+    "discovery_search",
+    metadata,
+    pk(),
+    Column("state", String(24), nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    CheckConstraint(
+        "state IN ('planned','queued','running','complete','blocked','cancelled')", name="state"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+)
+
+audit_run = Table(
+    "audit_run",
+    metadata,
+    pk(),
+    fk("plan_document_id", "audit_document.id"),
+    fk("campaign_id", "campaign.id", nullable=True),
+    Column("idempotency_key", String(255), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("current_stage", String(32), nullable=True),
+    Column("dispatch_authorized", Boolean, nullable=False, server_default=text("false")),
+    Column("reserved_query_units", Integer, nullable=False, server_default=text("0")),
+    Column("reserved_storage_bytes", BigInteger, nullable=False, server_default=text("0")),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("plan_document_id", "idempotency_key"),
+    CheckConstraint(
+        "state IN ('draft','planned','queued','scanning','verifying','assessing',"
+        "'review_required','complete','partial','blocked','cancelled')",
+        name="state",
+    ),
+    CheckConstraint("length(idempotency_key) BETWEEN 1 AND 255", name="idempotency_key"),
+    CheckConstraint(
+        "reserved_query_units >= 0 AND reserved_storage_bytes >= 0", name="reservations"
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_audit_run_state_created", "state", "created_at"),
+)
+
+audit_query = Table(
+    "audit_query",
+    metadata,
+    pk(),
+    fk("audit_run_id", "audit_run.id"),
+    fk("query_document_id", "audit_document.id"),
+    Column("query_index", Integer, nullable=False),
+    Column("logical_call_key", String(255), nullable=False),
+    Column("state", String(24), nullable=False),
+    Column("reserved_units", Integer, nullable=False),
+    Column("row_version", BigInteger, nullable=False, server_default=text("0")),
+    created_at(),
+    UniqueConstraint("audit_run_id", "query_index"),
+    UniqueConstraint("audit_run_id", "logical_call_key"),
+    CheckConstraint("query_index >= 0", name="query_index_nonnegative"),
+    CheckConstraint("reserved_units >= 1", name="reserved_units_positive"),
+    CheckConstraint(
+        "state IN ('planned','queued','running','complete','truncated','failed','blocked',"
+        "'cancelled')",
+        name="state",
+    ),
+    CheckConstraint("row_version >= 0", name="row_version_nonnegative"),
+    Index("ix_audit_query_run_state", "audit_run_id", "state"),
+)
+
+audit_checkpoint = Table(
+    "audit_checkpoint",
+    metadata,
+    pk(),
+    fk("audit_run_id", "audit_run.id"),
+    Column("checkpoint_seq", BigInteger, nullable=False),
+    Column("fence", BigInteger, nullable=False),
+    Column("scope_digest", String(71), nullable=False),
+    Column("checkpoint", JSONB, nullable=False),
+    created_at(),
+    UniqueConstraint("audit_run_id", "checkpoint_seq"),
+    CheckConstraint("checkpoint_seq >= 1 AND fence >= 1", name="sequence_fence_positive"),
+    CheckConstraint("scope_digest ~ '^sha256:[0-9a-f]{64}$'", name="scope_digest_format"),
+    CheckConstraint("jsonb_typeof(checkpoint) = 'object'", name="checkpoint_object"),
+    Index("ix_audit_checkpoint_run", "audit_run_id", "checkpoint_seq"),
+)
+
+match_candidate = Table(
+    "match_candidate",
+    metadata,
+    pk(),
+    fk("audit_run_id", "audit_run.id"),
+    fk("task_version_id", "task_version.id"),
+    fk("source_document_id", "audit_document.id"),
+    fk("evidence_document_id", "audit_document.id"),
+    Column("relation", String(32), nullable=False),
+    Column("confidence", String(16), nullable=True),
+    Column("confidence_null_reason", String(32), nullable=True),
+    Column("state", String(24), nullable=False),
+    created_at(),
+    UniqueConstraint(
+        "audit_run_id", "task_version_id", "source_document_id", "evidence_document_id"
+    ),
+    CheckConstraint(
+        "relation IN ('exact_component','near_exact_component','semantic_duplicate',"
+        "'shared_family','shared_concept','no_substantive_match','unresolved')",
+        name="relation",
+    ),
+    CheckConstraint(
+        "confidence IS NULL OR confidence ~ '^(0|[1-9][0-9]?|100)\\.[0-9]{6}$'",
+        name="confidence_decimal",
+    ),
+    CheckConstraint(
+        "(confidence IS NULL AND confidence_null_reason IN "
+        "('not_run','unavailable','not_applicable','insufficient_coverage','withheld')) OR "
+        "(confidence IS NOT NULL AND confidence_null_reason IS NULL)",
+        name="confidence_null_reason",
+    ),
+    CheckConstraint(
+        "state IN ('proposed','verified','review_required','accepted','rejected','disputed',"
+        "'superseded')",
+        name="state",
+    ),
+    Index("ix_match_candidate_task_state", "task_version_id", "state"),
+)
+
+match_review = Table(
+    "match_review",
+    metadata,
+    pk(),
+    fk("candidate_id", "match_candidate.id"),
+    Column("review_seq", Integer, nullable=False),
+    Column("reviewer_subject", String(255), nullable=False),
+    Column("decision", String(24), nullable=False),
+    fk("review_document_id", "audit_document.id"),
+    created_at(),
+    UniqueConstraint("candidate_id", "review_seq"),
+    CheckConstraint("review_seq >= 1", name="review_seq_positive"),
+    CheckConstraint("decision IN ('accepted','rejected','disputed','superseded')", name="decision"),
+    Index("ix_match_review_candidate", "candidate_id", "review_seq"),
+)
+
+risk_assessment = Table(
+    "risk_assessment",
+    metadata,
+    pk(),
+    fk("task_version_id", "task_version.id"),
+    fk("plan_document_id", "audit_document.id"),
+    fk("policy_document_id", "audit_document.id"),
+    fk("context_document_id", "audit_document.id", nullable=True),
+    fk("document_id", "audit_document.id"),
+    fk("supersedes_id", "risk_assessment.id", nullable=True),
+    Column("observed_index", Numeric(9, 6), nullable=True),
+    Column("lower_bound", Numeric(9, 6), nullable=False),
+    Column("upper_bound", Numeric(9, 6), nullable=False),
+    Column("state", String(32), nullable=False),
+    created_at(),
+    UniqueConstraint("task_version_id", "policy_document_id", "document_id"),
+    CheckConstraint(
+        "observed_index IS NULL OR observed_index BETWEEN 0 AND 100", name="observed_range"
+    ),
+    CheckConstraint(
+        "lower_bound >= 0 AND lower_bound <= upper_bound AND upper_bound <= 100", name="bounds"
+    ),
+    CheckConstraint(
+        "state IN ('low_observed','medium_observed','high_observed','insufficient_evidence',"
+        "'not_applicable')",
+        name="state",
+    ),
+    CheckConstraint("supersedes_id IS NULL OR supersedes_id <> id", name="not_self_successor"),
+    Index("ix_risk_assessment_task_policy", "task_version_id", "policy_document_id"),
+)
+
+temporal_assessment = Table(
+    "temporal_assessment",
+    metadata,
+    pk(),
+    fk("task_version_id", "task_version.id"),
+    fk("context_document_id", "audit_document.id", nullable=True),
+    fk("document_id", "audit_document.id"),
+    fk("supersedes_id", "temporal_assessment.id", nullable=True),
+    Column("state", String(40), nullable=False),
+    created_at(),
+    UniqueConstraint("task_version_id", "document_id"),
+    CheckConstraint(
+        "state IN ('post_declared_cutoff','pre_cutoff_exposure_detected','interval_overlap',"
+        "'unknown_cutoff','unknown_source_time','mutable_model_context')",
+        name="state",
+    ),
+    CheckConstraint("supersedes_id IS NULL OR supersedes_id <> id", name="not_self_successor"),
+    Index("ix_temporal_assessment_task", "task_version_id"),
+)
+
 stage_job = Table(
     "stage_job",
     metadata,
@@ -587,6 +990,9 @@ stage_job = Table(
     fk("attempt_id", "attempt.id", nullable=True),
     fk("evaluation_id", "evaluation.id", nullable=True),
     fk("release_id", "release.id", nullable=True),
+    fk("curation_round_id", "curation_round.id", nullable=True),
+    fk("discovery_search_id", "discovery_search.id", nullable=True),
+    fk("audit_run_id", "audit_run.id", nullable=True),
     fk("input_artifact_id", "artifact.id", nullable=True),
     Column("stage", String(48), nullable=False),
     Column("shard_key", String(255), nullable=False, server_default=text("''")),
@@ -613,7 +1019,11 @@ stage_job = Table(
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
     created_at(),
     UniqueConstraint("logical_key"),
-    CheckConstraint("num_nonnulls(attempt_id,evaluation_id,release_id) = 1", name="one_scope"),
+    CheckConstraint(
+        "num_nonnulls(attempt_id,evaluation_id,release_id,curation_round_id,"
+        "discovery_search_id,audit_run_id) = 1",
+        name="one_scope",
+    ),
     CheckConstraint(
         "state IN ('blocked','queued','leased','succeeded','retry_wait','dead','cancelled',"
         "'skipped')",
@@ -684,6 +1094,7 @@ worker_registration = Table(
     Column("status", String(24), nullable=False),
     Column("last_heartbeat_at", DateTime(timezone=True), nullable=True),
     Column("driver_identity", String(255), nullable=False),
+    Column("audit_capable", Boolean, nullable=False, server_default=text("false")),
     Column("row_version", BigInteger, nullable=False, server_default=text("0")),
     created_at(),
     UniqueConstraint("workload_identity"),
@@ -804,6 +1215,8 @@ call_intent = Table(
     pk(),
     fk("attempt_id", "attempt.id", nullable=True),
     fk("evaluation_id", "evaluation.id", nullable=True),
+    fk("audit_run_id", "audit_run.id", nullable=True),
+    fk("diagnostic_audit_run_id", "audit_run.id", nullable=True),
     Column("logical_call_key", String(255), nullable=False),
     Column("request_digest", String(71), nullable=False),
     fk("model_config_id", "config_document.id"),
@@ -811,7 +1224,12 @@ call_intent = Table(
     fk("request_artifact_id", "artifact.id", nullable=True),
     Column("state", String(24), nullable=False),
     created_at(),
-    CheckConstraint("num_nonnulls(attempt_id,evaluation_id) = 1", name="one_scope"),
+    CheckConstraint("num_nonnulls(attempt_id,evaluation_id,audit_run_id) = 1", name="one_scope"),
+    CheckConstraint(
+        "diagnostic_audit_run_id IS NULL OR "
+        "(attempt_id IS NOT NULL AND audit_run_id IS NULL)",
+        name="diagnostic_audit_context_scope",
+    ),
     CheckConstraint("request_digest ~ '^sha256:[0-9a-f]{64}$'", name="request_digest_format"),
     CheckConstraint(
         "state IN ('reserved','dispatching','settled','uncertain','failed')", name="state"
@@ -830,6 +1248,18 @@ Index(
     call_intent.c.logical_call_key,
     unique=True,
     postgresql_where=call_intent.c.evaluation_id.is_not(None),
+)
+Index(
+    "uq_call_intent_audit_run_key",
+    call_intent.c.audit_run_id,
+    call_intent.c.logical_call_key,
+    unique=True,
+    postgresql_where=call_intent.c.audit_run_id.is_not(None),
+)
+Index(
+    "ix_call_intent_diagnostic_audit_run",
+    call_intent.c.diagnostic_audit_run_id,
+    postgresql_where=call_intent.c.diagnostic_audit_run_id.is_not(None),
 )
 
 call_delivery = Table(

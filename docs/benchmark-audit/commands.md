@@ -58,3 +58,15 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `d52a7e11b30f` is the only head | Migration graph has one head. |
 | `git diff --check` on Prompt86 paths | Passed | No whitespace errors; Git reported expected LF-to-CRLF normalization warnings for YAML/Markdown files. |
 | PostgreSQL integration/source approval check | Blocked: no DB URLs, approved rights artifact or exact local benchmark snapshot | No import was attempted. Registry rows remain blocked. |
+
+## Prompt87 fingerprint and privacy checks
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| `uv run pytest -q tests/test_task_fingerprints.py` | Passed: 16 passed | Synthetic local text/binary fixtures test exact, normalized, shingle, privacy, bounds and explicit unsupported/config-blocked states. |
+| Ruff check on the six changed Prompt87 Python paths | Passed: All checks passed | Core contract, local feature service, persistence, model/migration and tests. |
+| `uv run ruff format --check` on the six changed Prompt87 Python paths | Passed: 6 files already formatted | Formatting verified after fixes. |
+| `uv run mypy packages/core/src/polycodebench_core/task_fingerprints.py packages/services/src/polycodebench_services/task_fingerprinting.py packages/persistence/src/polycodebench_persistence/task_fingerprints.py packages/persistence/src/polycodebench_persistence/models.py packages/persistence/src/polycodebench_persistence/migrations/versions/e9b30a7c1f42_private_fingerprint_artifacts.py` | Passed: no issues in 5 source files | Strict type check for fingerprint implementation and migration. |
+| `$env:PCB_MIGRATION_DATABASE_URL='postgresql+psycopg://offline:offline@localhost/polycodebench'; uv run alembic -c packages/persistence/alembic.ini upgrade d52a7e11b30f:e9b30a7c1f42 --sql` | Passed: targeted PostgreSQL DDL rendered | Offline SQL render only; migration execution, artifact upload and rollback were not run. |
+| `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `e9b30a7c1f42` is the only head | Migration graph has one head. |
+| PostgreSQL/model/crypto configuration check | Blocked: no DB URL, approved parser/model config or key custody | No AST, embeddings, sealed commitments or live index rebuild were attempted. |

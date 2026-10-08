@@ -495,7 +495,7 @@ fingerprint = Table(
     Column("feature_kind", String(48), nullable=False),
     Column("method_version", String(255), nullable=False),
     Column("feature_digest", String(71), nullable=False),
-    fk("private_artifact_id", "artifact.id", nullable=True),
+    fk("private_artifact_id", "artifact.id"),
     created_at(),
     UniqueConstraint("component_id", "feature_kind", "method_version"),
     CheckConstraint("feature_digest ~ '^sha256:[0-9a-f]{64}$'", name="digest_format"),

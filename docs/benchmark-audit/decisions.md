@@ -74,3 +74,11 @@ Upstream source visibility is evidence metadata and does not determine storage A
 ### ADDENDUM-GAP-05 — SWE-bench Verified local export format
 
 The initial adapter accepts a pre-approved local JSONL export for the pinned SWE-bench Verified revision. It does not read the repository's native Parquet payload or execute dataset scripts. Before using transformed data, bind an approved, versioned conversion manifest and its input/output digests to the import evidence. No conversion or source payload is present in this checkout.
+
+### ADDENDUM-DECISION-14 — Conservative fingerprint normalization
+
+The initial exact/lexical fingerprint config normalizes only CRLF/CR newlines and Unicode NFC. It preserves other whitespace, comments, case, identifiers, operators, numeric values, types and constraints. Normalized and shingle matches remain separate candidate features; they are not byte-exact or duplicate decisions.
+
+### ADDENDUM-DECISION-15 — Parser, semantic and commitment methods require approved configuration
+
+No local embedding/model/tokenizer configuration, Python/Java parser approval or crypto key custody is present. AST, embedding, entity/reasoning extraction and sealed hiding commitments stay blocked or unsupported. Exact/lexical private artifacts carry their complete local configuration and digest; no substitute model or commitment scheme is introduced.

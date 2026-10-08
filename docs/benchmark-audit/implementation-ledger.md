@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83–84 are complete; Prompts85–86 are partial foundations; Prompt87 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83–84 are complete; Prompts85–87 are partial foundations; Prompt88 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -81,3 +81,10 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Added atomic immutable external import persistence with verified artifact bindings and private/restricted storage, membership/lineage schema, guarded migration and import-specific grants. External benchmark tasks do not receive native task-version IDs.
 - Partial, not complete: no approved source bytes or item-rights artifacts exist; registry states remain blocked; no PostgreSQL migration/integration run occurred; the SWE Verified adapter consumes only a locally provided JSONL export (not native Parquet); and parsers are not isolated in resource-constrained workers. No official harness, external data or network fetch was used.
 - Exact next prompt: Prompt87 / BWP-05, starting with local exact/lexical fingerprints; semantic embeddings remain blocked pending approved pinned configuration.
+
+## Prompt87 / BWP-05
+
+- Added a versioned local configuration and deterministic exact-byte, conservative normalized-text and literal-preserving token-shingle fingerprints per component. Configuration and feature digests are included in private artifact payloads; payload contracts reject source text or token strings.
+- Added persistence over the existing append-only `fingerprint` rows. A guarded migration requires every row to reference a verified hidden/internal artifact and refuses downgrade while fingerprint history exists.
+- Partial, not complete: there is no approved embedding/model/tokenizer config, Python/Java parser config, semantic/entity extractor or sealed-commitment key custody. No embedding, AST, entity, reasoning, vector or commitment feature is claimed. PostgreSQL integration, private artifact upload and index rebuild are unverified.
+- Exact next prompt: Prompt88 / BWP-06. Implement local connector contracts/planning while keeping live fetch/query blocked until rights, access and budgets are approved.

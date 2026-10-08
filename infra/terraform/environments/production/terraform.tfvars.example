@@ -110,6 +110,10 @@ services = {
     cpu           = 512
     memory        = 1024
     desired_count = 0
+    command = [
+      "pcb-worker", "score-pending", "--watch", "--limit", "25", "--poll-seconds", "15"
+    ]
+    environment = { PCB_SCORING_DISPATCH_ENABLED = "false" }
   }
   "publisher" = {
     role          = "publisher"

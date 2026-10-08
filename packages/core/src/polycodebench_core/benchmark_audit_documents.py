@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 from datetime import date, datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, localcontext
 from typing import Annotated, Any, ClassVar, Literal, cast
 from uuid import UUID
 
@@ -2937,6 +2937,548 @@ class BenchmarkHealthPayload(StrictAuditModel):
     descriptive_metrics: dict[str, DecimalMeasurement]
 
 
+def health_percent(numerator: int, denominator: int) -> str:
+    """Compute a canonical six-place percentage under the §18 decimal profile."""
+    if type(numerator) is not int or type(denominator) is not int or denominator <= 0:
+        raise ValueError("health percentages require nonnegative integer counts and a denominator")
+    if not 0 <= numerator <= denominator:
+        raise ValueError("health percentage numerator exceeds its denominator")
+    with localcontext() as context:
+        context.prec = 28
+        value = (Decimal(numerator) * Decimal(100) / Decimal(denominator)).quantize(
+            Decimal("0.000001"), rounding=ROUND_HALF_EVEN
+        )
+    return f"{value:.6f}"
+
+
+def health_wilson_95(numerator: int, denominator: int) -> tuple[str, str, str]:
+    """Return a two-sided Wilson 95% interval using Decimal-only arithmetic."""
+    if type(numerator) is not int or type(denominator) is not int or denominator <= 0:
+        raise ValueError("Wilson intervals require nonnegative integer counts and a denominator")
+    if not 0 <= numerator <= denominator:
+        raise ValueError("Wilson numerator exceeds its denominator")
+    with localcontext() as context:
+        context.prec = 28
+        z = Decimal("1.959963984540054")
+        n = Decimal(denominator)
+        proportion = Decimal(numerator) / n
+        z_squared = z * z
+        divisor = Decimal(1) + z_squared / n
+        center = (proportion + z_squared / (Decimal(2) * n)) / divisor
+        margin = (
+            z
+            * (proportion * (Decimal(1) - proportion) / n + z_squared / (Decimal(4) * n * n)).sqrt()
+            / divisor
+        )
+        point = (proportion * Decimal(100)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_EVEN)
+        lower = (max(Decimal(0), center - margin) * Decimal(100)).quantize(
+            Decimal("0.000001"), rounding=ROUND_HALF_EVEN
+        )
+        upper = (min(Decimal(1), center + margin) * Decimal(100)).quantize(
+            Decimal("0.000001"), rounding=ROUND_HALF_EVEN
+        )
+    return f"{point:.6f}", f"{lower:.6f}", f"{upper:.6f}"
+
+
+class HealthRatioMetric(StrictAuditModel):
+    """A denominator-first percentage; incomplete evidence is explicitly a lower bound."""
+
+    numerator: UnsignedInteger
+    denominator: UnsignedInteger
+    unknown_count: UnsignedInteger
+    value: Decimal6 | None
+    null_reason: Literal["empty_denominator", "not_applicable"] | None
+    lower_bound: bool
+
+    @model_validator(mode="after")
+    def percentage_reconciles(self) -> HealthRatioMetric:
+        if (
+            self.numerator > self.denominator
+            or self.unknown_count > self.denominator
+            or self.numerator + self.unknown_count > self.denominator
+        ):
+            raise ValueError("health percentage counts exceed their fixed denominator")
+        if self.value is None:
+            if self.null_reason is None or self.lower_bound:
+                raise ValueError("null health percentages require one reason and cannot be bounds")
+            if (self.null_reason == "empty_denominator") != (self.denominator == 0):
+                raise ValueError("health percentage null reason disagrees with its denominator")
+            return self
+        if self.null_reason is not None or self.denominator == 0:
+            raise ValueError("measured health percentages require a nonempty denominator")
+        if self.lower_bound != (self.unknown_count > 0):
+            raise ValueError("health percentage lower-bound state must expose unknown items")
+        if self.value != health_percent(self.numerator, self.denominator):
+            raise ValueError("health percentage must use six-place Decimal half-even rounding")
+        return self
+
+
+class HealthAssessmentCounts(StrictAuditModel):
+    selected_tasks: UnsignedInteger
+    complete: UnsignedInteger
+    partial: UnsignedInteger
+    unknown: UnsignedInteger
+    unscanned: UnsignedInteger
+    blocked: UnsignedInteger
+
+    @model_validator(mode="after")
+    def all_selected_tasks_are_accounted_for(self) -> HealthAssessmentCounts:
+        if (
+            self.complete + self.partial + self.unknown + self.unscanned + self.blocked
+            != self.selected_tasks
+        ):
+            raise ValueError("health assessment states must reconcile to selected membership")
+        return self
+
+
+class HealthRiskTierCounts(StrictAuditModel):
+    assessed_tasks: UnsignedInteger
+    low: UnsignedInteger
+    medium: UnsignedInteger
+    high: UnsignedInteger
+    insufficient: UnsignedInteger
+
+    @model_validator(mode="after")
+    def risk_tiers_reconcile(self) -> HealthRiskTierCounts:
+        if self.low + self.medium + self.high + self.insufficient != self.assessed_tasks:
+            raise ValueError("health risk tiers must account for every assessed task exactly once")
+        return self
+
+
+class HealthFamilyCounts(StrictAuditModel):
+    selected_tasks: UnsignedInteger
+    independent_families: UnsignedInteger
+    tasks_without_family_evidence: UnsignedInteger
+
+    @model_validator(mode="after")
+    def family_count_is_bounded(self) -> HealthFamilyCounts:
+        if (
+            self.independent_families > self.selected_tasks
+            or self.tasks_without_family_evidence > self.selected_tasks
+            or self.independent_families + self.tasks_without_family_evidence > self.selected_tasks
+        ):
+            raise ValueError("health family counts exceed the selected task cohort")
+        return self
+
+
+class HealthCoverageCounts(StrictAuditModel):
+    completed_units: UnsignedInteger
+    planned_units: UnsignedInteger
+    failed_units: UnsignedInteger
+    truncated_units: UnsignedInteger
+    blocked_units: UnsignedInteger
+    unknown_units: UnsignedInteger
+    value: Decimal6 | None
+    null_reason: Literal["empty_denominator"] | None
+
+    @model_validator(mode="after")
+    def coverage_reconciles_to_all_planned_units(self) -> HealthCoverageCounts:
+        accounted = (
+            self.completed_units
+            + self.failed_units
+            + self.truncated_units
+            + self.blocked_units
+            + self.unknown_units
+        )
+        if accounted != self.planned_units:
+            raise ValueError("health coverage must account for every planned unit exactly once")
+        if self.planned_units == 0:
+            if self.value is not None or self.null_reason != "empty_denominator":
+                raise ValueError("zero planned units require a null coverage percentage")
+            return self
+        if self.value is None or self.null_reason is not None:
+            raise ValueError("planned health coverage units require a measured percentage")
+        if self.value != health_percent(self.completed_units, self.planned_units):
+            raise ValueError("health coverage must use six-place Decimal half-even rounding")
+        return self
+
+
+class HealthMeanRisk(StrictAuditModel):
+    selected_tasks: UnsignedInteger
+    eligible_tasks: UnsignedInteger
+    missing_tasks: UnsignedInteger
+    value: Decimal6 | None
+    null_reason: Literal["insufficient_coverage"] | None
+
+    @model_validator(mode="after")
+    def mean_denominator_is_explicit(self) -> HealthMeanRisk:
+        if self.eligible_tasks + self.missing_tasks != self.selected_tasks:
+            raise ValueError("mean observed risk must disclose every ineligible selected task")
+        if self.value is None:
+            if self.null_reason != "insufficient_coverage" or self.eligible_tasks != 0:
+                raise ValueError("missing risk means require an explicit eligibility reason")
+        elif self.null_reason is not None or self.eligible_tasks == 0:
+            raise ValueError("measured risk means require at least one eligible task")
+        return self
+
+
+class HealthConfidenceMetric(StrictAuditModel):
+    numerator: UnsignedInteger
+    denominator: UnsignedInteger
+    unknown_count: UnsignedInteger
+    value: Decimal6 | None
+    lower_95: Decimal6 | None
+    upper_95: Decimal6 | None
+    null_reason: Literal["empty_denominator"] | None
+    interval_method: Literal["wilson_95_v1"]
+
+    @model_validator(mode="after")
+    def interval_is_ordered(self) -> HealthConfidenceMetric:
+        if self.numerator > self.denominator:
+            raise ValueError("detector quality counts are invalid")
+        if self.denominator == 0:
+            if any(value is not None for value in (self.value, self.lower_95, self.upper_95)):
+                raise ValueError("empty detector denominators require null estimates and bounds")
+            if self.null_reason != "empty_denominator":
+                raise ValueError("empty detector denominators require an explicit null reason")
+            return self
+        if (
+            self.value is None
+            or self.lower_95 is None
+            or self.upper_95 is None
+            or self.null_reason is not None
+            or Decimal(self.lower_95) > Decimal(self.value)
+            or Decimal(self.value) > Decimal(self.upper_95)
+        ):
+            raise ValueError("detector quality requires an ordered Wilson interval")
+        expected = health_wilson_95(self.numerator, self.denominator)
+        if (self.value, self.lower_95, self.upper_95) != expected:
+            raise ValueError("detector quality estimate must match the Decimal Wilson 95% interval")
+        return self
+
+
+class HealthDetectorStratum(StrictAuditModel):
+    relation: MatchRelation
+    language: ShortText
+    modality: Literal["text", "code", "image", "audio", "video", "repository", "other"]
+    source_ref: AuditDocumentRef | None
+    labeled_positive: UnsignedInteger
+    labeled_negative: UnsignedInteger
+    true_positive: UnsignedInteger
+    false_positive: UnsignedInteger
+    true_negative: UnsignedInteger
+    false_negative: UnsignedInteger
+    unknown_labels: UnsignedInteger
+    precision: HealthConfidenceMetric
+    recall: HealthConfidenceMetric
+    false_positive_rate: HealthConfidenceMetric
+    false_negative_rate: HealthConfidenceMetric
+
+    @model_validator(mode="after")
+    def confusion_counts_and_metrics_reconcile(self) -> HealthDetectorStratum:
+        if self.source_ref is not None and self.source_ref.kind != "corpus_snapshot":
+            raise ValueError("detector strata source references must be corpus snapshots")
+        if self.true_positive + self.false_negative != self.labeled_positive:
+            raise ValueError("positive detector labels must reconcile to the confusion matrix")
+        if self.true_negative + self.false_positive != self.labeled_negative:
+            raise ValueError("negative detector labels must reconcile to the confusion matrix")
+        if (
+            (self.precision.numerator, self.precision.denominator)
+            != (self.true_positive, self.true_positive + self.false_positive)
+            or (self.recall.numerator, self.recall.denominator)
+            != (self.true_positive, self.labeled_positive)
+            or (self.false_positive_rate.numerator, self.false_positive_rate.denominator)
+            != (self.false_positive, self.labeled_negative)
+            or (self.false_negative_rate.numerator, self.false_negative_rate.denominator)
+            != (self.false_negative, self.labeled_positive)
+        ):
+            raise ValueError(
+                "detector quality metrics disagree with their labeled confusion counts"
+            )
+        if any(
+            metric.unknown_count != self.unknown_labels
+            for metric in (
+                self.precision,
+                self.recall,
+                self.false_positive_rate,
+                self.false_negative_rate,
+            )
+        ):
+            raise ValueError("detector quality metrics must expose every unknown label")
+        return self
+
+
+class BenchmarkHealthScopeV2(StrictAuditModel):
+    membership_ref: AuditDocumentRef
+    plan_ref: AuditDocumentRef
+    policy_ref: AuditDocumentRef
+    context_ref: AuditDocumentRef | None
+    source_refs: tuple[AuditDocumentRef, ...] = Field(max_length=256)
+    source_window_start: UtcTimestamp
+    source_window_end: UtcTimestamp
+    population_task_count: UnsignedInteger
+    selected_task_count: UnsignedInteger
+    sampling_mode: Literal["census", "sampled"]
+    sampling_method: ShortText
+    sample_digest: Digest
+    sampling_design_digest: Digest
+    method_digest: Digest
+    family_mapping_digest: Digest
+    family_mapping_ref: ImmutableArtifactRef | None
+    provenance_definition_version: ShortText
+    freshness_definition_version: ShortText
+    freshness_max_scan_age_hours: int = Field(ge=1, le=8760)
+    freshness_max_source_age_days: int = Field(ge=0, le=36500)
+    metric_definition_version: Literal["benchmark-health-v1"] = "benchmark-health-v1"
+    comparability_key: Digest
+
+    @model_validator(mode="after")
+    def scope_is_finite_and_versioned(self) -> BenchmarkHealthScopeV2:
+        if (
+            self.membership_ref.kind != "benchmark_snapshot"
+            or self.plan_ref.kind != "audit_plan"
+            or self.policy_ref.kind != "risk_policy"
+            or (self.context_ref is not None and self.context_ref.kind != "model_context")
+        ):
+            raise ValueError(
+                "health scope must bind a snapshot, plan, risk policy and model context"
+            )
+        if any(ref.kind != "corpus_snapshot" for ref in self.source_refs):
+            raise ValueError("health source scope must contain only corpus snapshots")
+        if len({ref.document_id for ref in self.source_refs}) != len(self.source_refs):
+            raise ValueError("health source scope cannot repeat a corpus snapshot")
+        if self.source_refs != tuple(sorted(self.source_refs, key=lambda ref: ref.document_id.hex)):
+            raise ValueError("health source scope must use canonical reference order")
+        if self.family_mapping_ref is not None and self.family_mapping_ref.visibility != "private":
+            raise ValueError("task-family mapping evidence must remain private")
+        if (
+            self.family_mapping_ref is not None
+            and self.family_mapping_ref.digest != self.family_mapping_digest
+        ):
+            raise ValueError("family mapping digest must bind its exact private canonical artifact")
+        if (
+            self.population_task_count < 1
+            or self.selected_task_count < 1
+            or self.selected_task_count > self.population_task_count
+        ):
+            raise ValueError("health cohort counts must be positive and fit the benchmark snapshot")
+        if self.sampling_mode == "census":
+            if (
+                self.selected_task_count != self.population_task_count
+                or self.sampling_method != "census_v1"
+            ):
+                raise ValueError("census health scope must cover the full membership")
+        elif (
+            self.selected_task_count >= self.population_task_count
+            or self.sampling_method == "census_v1"
+        ):
+            raise ValueError("sampled health scope must be explicitly smaller than the census")
+        if datetime.fromisoformat(
+            self.source_window_start[:-1] + "+00:00"
+        ) >= datetime.fromisoformat(self.source_window_end[:-1] + "+00:00"):
+            raise ValueError("health source window must have a positive duration")
+        if self.comparability_key != benchmark_health_comparability_key(self):
+            raise ValueError("health comparability key does not match its frozen cohort scope")
+        return self
+
+
+BenchmarkHealthDiscontinuity = Literal[
+    "membership_changed",
+    "sampling_changed",
+    "source_window_changed",
+    "risk_policy_changed",
+    "model_context_changed",
+    "source_scope_changed",
+    "scan_method_changed",
+    "family_mapping_changed",
+    "provenance_definition_changed",
+    "freshness_definition_changed",
+    "metric_definition_changed",
+]
+
+
+class BenchmarkHealthMetricsV2(StrictAuditModel):
+    assessment_states: HealthAssessmentCounts
+    risk_tiers: HealthRiskTierCounts
+    families: HealthFamilyCounts
+    exact_duplicate_prevalence: HealthRatioMetric
+    semantic_duplicate_prevalence: HealthRatioMetric
+    duplicate_union_prevalence: HealthRatioMetric
+    pre_cutoff_exposure: HealthRatioMetric
+    mandatory_coverage: HealthCoverageCounts
+    provenance_completeness: HealthRatioMetric
+    freshness: HealthRatioMetric
+    mean_observed_risk: HealthMeanRisk
+    detector_quality: tuple[HealthDetectorStratum, ...] = Field(max_length=1024)
+
+    @model_validator(mode="after")
+    def denominators_share_the_selected_cohort(self) -> BenchmarkHealthMetricsV2:
+        selected = self.assessment_states.selected_tasks
+        if self.risk_tiers.assessed_tasks != selected - self.assessment_states.unscanned:
+            raise ValueError("health risk distribution must separate unscanned tasks")
+        if self.families.selected_tasks != selected:
+            raise ValueError("family counts must use the selected task denominator")
+        for metric in (
+            self.exact_duplicate_prevalence,
+            self.semantic_duplicate_prevalence,
+            self.duplicate_union_prevalence,
+            self.pre_cutoff_exposure,
+            self.provenance_completeness,
+            self.freshness,
+        ):
+            if metric.denominator != selected:
+                raise ValueError("health prevalence metrics must use selected membership")
+        if self.mean_observed_risk.selected_tasks != selected:
+            raise ValueError("mean observed risk must disclose the selected task denominator")
+        return self
+
+
+class BenchmarkHealthPayloadV2(StrictAuditModel):
+    scope: BenchmarkHealthScopeV2
+    assessment_refs: tuple[AuditDocumentRef, ...] = Field(max_length=100_000)
+    temporal_refs: tuple[AuditDocumentRef, ...] = Field(max_length=100_000)
+    coverage_refs: tuple[AuditDocumentRef, ...] = Field(max_length=100_000)
+    metrics: BenchmarkHealthMetricsV2
+    trend_refs: tuple[AuditDocumentRef, ...] = Field(max_length=10_000)
+    trend_state: Literal["initial", "comparable", "discontinuity"]
+    discontinuity_reasons: tuple[BenchmarkHealthDiscontinuity, ...] = Field(max_length=10)
+    interpretation_limits: tuple[
+        Literal[
+            "descriptive_only",
+            "sampled_is_not_census",
+            "partial_coverage_is_not_clean",
+            "exposure_is_not_training_membership",
+            "no_binary_float_aggregation",
+        ],
+        ...,
+    ] = Field(min_length=5, max_length=5)
+
+    @model_validator(mode="after")
+    def health_references_and_trend_are_explicit(self) -> BenchmarkHealthPayloadV2:
+        for refs, kind, label in (
+            (self.assessment_refs, "risk_assessment", "risk assessments"),
+            (self.temporal_refs, "temporal_assessment", "temporal assessments"),
+            (self.coverage_refs, "coverage_manifest", "coverage manifests"),
+            (self.trend_refs, "benchmark_health", "health trend points"),
+        ):
+            if any(ref.kind != kind for ref in refs) or len(
+                {ref.document_id for ref in refs}
+            ) != len(refs):
+                raise ValueError(f"health {label} must be unique, typed references")
+        expected_limits = {
+            "descriptive_only",
+            "sampled_is_not_census",
+            "partial_coverage_is_not_clean",
+            "exposure_is_not_training_membership",
+            "no_binary_float_aggregation",
+        }
+        if (
+            len(set(self.interpretation_limits)) != len(self.interpretation_limits)
+            or set(self.interpretation_limits) != expected_limits
+        ):
+            raise ValueError("health documents must retain every interpretation limit")
+        if self.scope.context_ref is None:
+            if self.metrics.pre_cutoff_exposure.null_reason != "not_applicable":
+                raise ValueError("pre-cutoff exposure requires an explicit model context")
+        elif self.metrics.pre_cutoff_exposure.null_reason == "not_applicable":
+            raise ValueError("model-specific pre-cutoff exposure cannot be marked not applicable")
+        if self.metrics.families.independent_families > 0 and self.scope.family_mapping_ref is None:
+            raise ValueError("known task families require private family-mapping evidence")
+        reasons = self.discontinuity_reasons
+        if len(set(reasons)) != len(reasons) or reasons != tuple(sorted(reasons)):
+            raise ValueError("health discontinuity reasons must be unique and sorted")
+        if self.trend_state == "initial":
+            if self.trend_refs or reasons:
+                raise ValueError("initial health points cannot claim a trend comparison")
+        elif not self.trend_refs:
+            raise ValueError("health trend state requires at least one prior point")
+        elif (self.trend_state == "discontinuity") != bool(reasons):
+            raise ValueError("health trend discontinuity state and reason codes disagree")
+        return self
+
+
+def benchmark_health_sample_digest(task_refs: tuple[EntityRef, ...]) -> str:
+    """Hash the selected task-version set without depending on incidental plan order."""
+    material = [
+        item.model_dump(mode="json")
+        for item in sorted(task_refs, key=lambda ref: (ref.entity_id.hex, ref.digest or ""))
+    ]
+    return sha256_bytes(canonical_json_bytes(material))
+
+
+def benchmark_health_comparability_key(scope: BenchmarkHealthScopeV2) -> str:
+    """Return the stable cohort/definition identity for comparable report points."""
+    material = {
+        "membership_ref": scope.membership_ref.model_dump(mode="json"),
+        "context_ref": scope.context_ref.model_dump(mode="json") if scope.context_ref else None,
+        "policy_ref": scope.policy_ref.model_dump(mode="json"),
+        "source_refs": [
+            ref.model_dump(mode="json")
+            for ref in sorted(scope.source_refs, key=lambda item: item.document_id.hex)
+        ],
+        "source_window_start": scope.source_window_start,
+        "source_window_end": scope.source_window_end,
+        "sampling_mode": scope.sampling_mode,
+        "sampling_method": scope.sampling_method,
+        "sample_digest": scope.sample_digest,
+        "sampling_design_digest": scope.sampling_design_digest,
+        "method_digest": scope.method_digest,
+        "family_mapping_digest": scope.family_mapping_digest,
+        "family_mapping_ref": (
+            scope.family_mapping_ref.model_dump(mode="json")
+            if scope.family_mapping_ref is not None
+            else None
+        ),
+        "provenance_definition_version": scope.provenance_definition_version,
+        "freshness_definition_version": scope.freshness_definition_version,
+        "freshness_max_scan_age_hours": scope.freshness_max_scan_age_hours,
+        "freshness_max_source_age_days": scope.freshness_max_source_age_days,
+        "metric_definition_version": scope.metric_definition_version,
+    }
+    return sha256_bytes(canonical_json_bytes(material))
+
+
+def benchmark_health_discontinuities(
+    current: BenchmarkHealthScopeV2,
+    previous: BenchmarkHealthScopeV2,
+) -> tuple[BenchmarkHealthDiscontinuity, ...]:
+    """List scope changes that break direct health comparisons, excluding the time axis."""
+    reasons: set[BenchmarkHealthDiscontinuity] = set()
+    if current.membership_ref != previous.membership_ref:
+        reasons.add("membership_changed")
+    if (
+        current.sampling_mode != previous.sampling_mode
+        or current.sampling_method != previous.sampling_method
+        or current.sample_digest != previous.sample_digest
+        or current.sampling_design_digest != previous.sampling_design_digest
+    ):
+        reasons.add("sampling_changed")
+    if current.policy_ref != previous.policy_ref:
+        reasons.add("risk_policy_changed")
+    if current.context_ref != previous.context_ref:
+        reasons.add("model_context_changed")
+    if (
+        current.source_window_start != previous.source_window_start
+        or current.source_window_end != previous.source_window_end
+    ):
+        reasons.add("source_window_changed")
+    if set(current.source_refs) != set(previous.source_refs):
+        reasons.add("source_scope_changed")
+    if current.method_digest != previous.method_digest:
+        reasons.add("scan_method_changed")
+    sample_changed = (
+        current.sampling_mode != previous.sampling_mode
+        or current.sampling_method != previous.sampling_method
+        or current.sample_digest != previous.sample_digest
+        or current.sampling_design_digest != previous.sampling_design_digest
+    )
+    if current.family_mapping_ref != previous.family_mapping_ref or (
+        not sample_changed and current.family_mapping_digest != previous.family_mapping_digest
+    ):
+        reasons.add("family_mapping_changed")
+    if current.provenance_definition_version != previous.provenance_definition_version:
+        reasons.add("provenance_definition_changed")
+    if (
+        current.freshness_definition_version != previous.freshness_definition_version
+        or current.freshness_max_scan_age_hours != previous.freshness_max_scan_age_hours
+        or current.freshness_max_source_age_days != previous.freshness_max_source_age_days
+    ):
+        reasons.add("freshness_definition_changed")
+    if current.metric_definition_version != previous.metric_definition_version:
+        reasons.add("metric_definition_changed")
+    return tuple(sorted(reasons))
+
+
 class AuditAttestationPayload(StrictAuditModel):
     benchmark_ref: AuditDocumentRef
     scan_ref: AuditDocumentRef
@@ -3262,6 +3804,13 @@ class BenchmarkHealthDocument(_PayloadDocument):
     payload_model = BenchmarkHealthPayload
 
 
+class BenchmarkHealthDocumentV2(_PayloadDocument):
+    kind: Literal["benchmark_health"] = "benchmark_health"
+    payload: BenchmarkHealthPayloadV2
+    payload_model = BenchmarkHealthPayloadV2
+    expected_schema_version: ClassVar[int] = 2
+
+
 class AuditAttestationDocument(_PayloadDocument):
     kind: Literal["audit_attestation"] = "audit_attestation"
     payload: AuditAttestationPayload
@@ -3309,6 +3858,7 @@ AuditDocument = (
     | MonitorPolicyDocumentV2
     | MonitorAlertDocument
     | BenchmarkHealthDocument
+    | BenchmarkHealthDocumentV2
     | AuditAttestationDocument
 )
 
@@ -3360,6 +3910,7 @@ _VERSIONED_DOCUMENT_MODELS: dict[tuple[str, int], type[_PayloadDocument]] = {
     ("firewall_policy", 2): FirewallPolicyDocumentV2,
     ("replacement_plan", 2): ReplacementPlanDocumentV2,
     ("monitor_policy", 2): MonitorPolicyDocumentV2,
+    ("benchmark_health", 2): BenchmarkHealthDocumentV2,
 }
 
 

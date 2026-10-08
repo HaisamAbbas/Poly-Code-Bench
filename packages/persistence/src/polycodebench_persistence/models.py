@@ -129,6 +129,10 @@ audit_document = Table(
         "kind <> 'monitor_policy' OR schema_version = 2 OR supersedes_id IS NULL",
         name="monitor_policy_successors",
     ),
+    CheckConstraint(
+        "kind <> 'benchmark_health' OR supersedes_id IS NULL",
+        name="benchmark_health_append_only",
+    ),
     Index("ix_audit_document_kind_created", "kind", "created_at"),
     Index("ix_audit_document_supersedes", "supersedes_id"),
     Index(

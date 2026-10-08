@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, localcontext
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
@@ -26,6 +26,7 @@ from polycodebench_core.benchmark_audit_documents import (
     BehavioralMethodRegistryDocument,
     BehavioralObservationDocument,
     BehavioralTaskValidityDocument,
+    BenchmarkHealthDocumentV2,
     BenchmarkSnapshotDocument,
     CanaryObservationDocument,
     CoverageManifestDocument,
@@ -45,10 +46,14 @@ from polycodebench_core.benchmark_audit_documents import (
     ReplacementSourceMetadataDocument,
     ReplacementValidationDocument,
     RiskAssessmentDocumentV2,
+    RiskPolicyDocument,
+    RiskPolicyDocumentV2,
     SealAccessEventDocument,
     SealedManifestDocumentV2,
     TemporalAssessmentDocumentV2,
     audit_document_digest,
+    benchmark_health_discontinuities,
+    benchmark_health_sample_digest,
     parse_audit_document,
     validate_audit_transition,
     validate_sealed_manifest_transition,
@@ -234,6 +239,7 @@ class PostgresBenchmarkAuditRepository:
         cls._validate_sealed_manifest_document(connection, document)
         cls._validate_firewall_document(connection, document)
         cls._validate_monitor_document(connection, document)
+        cls._validate_benchmark_health_document(connection, document)
         existing = (
             connection.execute(select(audit_document).where(audit_document.c.id == document.id))
             .mappings()
@@ -957,6 +963,233 @@ class PostgresBenchmarkAuditRepository:
                         "derived source-family mapping differs from the admitted task lineage"
                     )
             return
+
+    @classmethod
+    def _validate_benchmark_health_document(cls, connection: Any, document: AuditDocument) -> None:
+        if document.kind == "benchmark_health" and not isinstance(
+            document, BenchmarkHealthDocumentV2
+        ):
+            raise InvalidState("legacy health documents are historical and cannot be written")
+        if not isinstance(document, BenchmarkHealthDocumentV2):
+            return
+        if document.supersedes_id is not None:
+            raise InvalidState("benchmark-health points are immutable snapshots, not successors")
+
+        payload = document.payload
+        scope = payload.scope
+        membership = cls._document_by_ref(connection, scope.membership_ref)
+        plan = cls._document_by_ref(connection, scope.plan_ref)
+        policy = cls._document_by_ref(connection, scope.policy_ref)
+        if (
+            not isinstance(membership, BenchmarkSnapshotDocument)
+            or not isinstance(plan, AuditPlanDocument)
+            or not isinstance(policy, (RiskPolicyDocument, RiskPolicyDocumentV2))
+        ):
+            raise InvalidReference(
+                "health scope requires its benchmark snapshot, plan and risk policy"
+            )
+        if (
+            plan.payload.benchmark_ref != scope.membership_ref
+            or plan.payload.policy != scope.policy_ref
+            or plan.payload.model_context != scope.context_ref
+        ):
+            raise InvalidState("health snapshot differs from its frozen plan, policy or context")
+        if scope.context_ref is not None and not isinstance(
+            cls._document_by_ref(connection, scope.context_ref), ModelContextDocument
+        ):
+            raise InvalidReference("health model context reference is unavailable")
+
+        population_by_id = {item.entity_id: item for item in membership.payload.membership}
+        tasks_by_id = {item.entity_id: item for item in plan.payload.task_refs}
+        if (
+            len(population_by_id) != len(membership.payload.membership)
+            or len(tasks_by_id) != len(plan.payload.task_refs)
+            or any(population_by_id.get(task_id) != task for task_id, task in tasks_by_id.items())
+            or scope.population_task_count != len(population_by_id)
+            or scope.selected_task_count != len(tasks_by_id)
+            or not tasks_by_id
+        ):
+            raise InvalidState(
+                "health counts or selected task versions differ from frozen membership"
+            )
+        is_census = set(tasks_by_id) == set(population_by_id)
+        expected_mode = "census" if is_census else "sampled"
+        if (
+            scope.sampling_mode != expected_mode
+            or scope.sample_digest != benchmark_health_sample_digest(plan.payload.task_refs)
+        ):
+            raise InvalidState("health sampling label or digest differs from its frozen task set")
+        if not is_census and plan.payload.sample_design.get("method") != scope.sampling_method:
+            raise InvalidState("sampled health scope must use its frozen plan sampling method")
+        expected_sampling_digest = (
+            "sha256:" + hashlib.sha256(canonical_json_bytes(plan.payload.sample_design)).hexdigest()
+        )
+        expected_method_digest = (
+            "sha256:"
+            + hashlib.sha256(canonical_json_bytes(sorted(plan.payload.methods))).hexdigest()
+        )
+        if (
+            scope.sampling_design_digest != expected_sampling_digest
+            or scope.method_digest != expected_method_digest
+        ):
+            raise InvalidState("health sampling or scan-method definition differs from its plan")
+        allowed_sources = set(plan.payload.source_plan)
+        if set(scope.source_refs) != allowed_sources:
+            raise InvalidState("health source window differs from the frozen audit plan")
+
+        assessments: list[RiskAssessmentDocumentV2] = []
+        assessed_tasks: set[UUID] = set()
+        accepted_exact_tasks: set[UUID] = set()
+        accepted_semantic_tasks: set[UUID] = set()
+        status_counts = {name: 0 for name in ("complete", "partial", "unknown", "blocked")}
+        tier_counts = {name: 0 for name in ("low", "medium", "high", "insufficient")}
+        tier_map = {
+            "low_observed": "low",
+            "medium_observed": "medium",
+            "high_observed": "high",
+            "insufficient_evidence": "insufficient",
+        }
+        observed_values: list[Decimal] = []
+        for assessment_ref in payload.assessment_refs:
+            assessment = cls._document_by_ref(connection, assessment_ref)
+            if not isinstance(assessment, RiskAssessmentDocumentV2):
+                raise InvalidReference("health assessments must use risk schema v2")
+            result = assessment.payload
+            if (
+                result.plan_ref != scope.plan_ref
+                or result.policy_ref != scope.policy_ref
+                or result.context_ref != scope.context_ref
+                or result.task_ref.entity_id not in tasks_by_id
+                or tasks_by_id[result.task_ref.entity_id] != result.task_ref
+                or result.task_ref.entity_id in assessed_tasks
+            ):
+                raise InvalidState("health assessment is duplicated or outside its frozen cohort")
+            assessed_tasks.add(result.task_ref.entity_id)
+            assessments.append(assessment)
+            if result.scope_state == "blocked":
+                status_counts["blocked"] += 1
+            elif result.scope_state == "partial":
+                status_counts["partial"] += 1
+            elif result.scope_state == "not_run" or result.state == "insufficient_evidence":
+                status_counts["unknown"] += 1
+            else:
+                status_counts["complete"] += 1
+            if result.state not in tier_map:
+                raise InvalidState("health risk assessment contains a non-reportable tier")
+            tier_counts[tier_map[result.state]] += 1
+            if result.observed_index.value is not None:
+                observed_values.append(Decimal(result.observed_index.value))
+
+            for evidence_ref in result.accepted_evidence:
+                evidence = cls._document_by_ref(connection, evidence_ref)
+                if evidence_ref.kind != "match_evidence":
+                    continue
+                if not isinstance(evidence, MatchEvidenceDocumentV2):
+                    raise InvalidReference("health match evidence must use reviewed schema v2")
+                evidence_payload = evidence.payload
+                if (
+                    evidence_payload.review_state != "accepted"
+                    or evidence_payload.task_ref != result.task_ref
+                    or evidence_payload.target_benchmark_ref != scope.membership_ref
+                    or evidence_payload.retrieval_plan_ref != scope.plan_ref
+                    or evidence_payload.source_snapshot_ref not in allowed_sources
+                ):
+                    raise InvalidState("health risk evidence falls outside its reviewed cohort")
+                if evidence_payload.source_lineage == "official_self_import":
+                    continue
+                if evidence_payload.relation == "exact_component":
+                    accepted_exact_tasks.add(result.task_ref.entity_id)
+                elif evidence_payload.relation == "semantic_duplicate":
+                    accepted_semantic_tasks.add(result.task_ref.entity_id)
+
+        expected_unscanned = len(tasks_by_id) - len(assessed_tasks)
+        expected_statuses = {
+            "selected_tasks": len(tasks_by_id),
+            **status_counts,
+            "unscanned": expected_unscanned,
+        }
+        if payload.metrics.assessment_states.model_dump() != expected_statuses:
+            raise InvalidState("health assessment-state totals do not reconcile to persisted rows")
+        expected_tiers = {"assessed_tasks": len(assessed_tasks), **tier_counts}
+        if payload.metrics.risk_tiers.model_dump() != expected_tiers:
+            raise InvalidState("health risk-tier totals do not reconcile to persisted assessments")
+        if payload.metrics.exact_duplicate_prevalence.numerator != len(accepted_exact_tasks):
+            raise InvalidState("health exact-duplicate total differs from accepted evidence")
+        if payload.metrics.semantic_duplicate_prevalence.numerator != len(accepted_semantic_tasks):
+            raise InvalidState("health semantic-duplicate total differs from accepted evidence")
+        if payload.metrics.duplicate_union_prevalence.numerator != len(
+            accepted_exact_tasks | accepted_semantic_tasks
+        ):
+            raise InvalidState("health duplicate union must count overlapping tasks only once")
+
+        if observed_values:
+            with localcontext() as context:
+                context.prec = 28
+                mean_value = (
+                    sum(observed_values, Decimal(0)) / Decimal(len(observed_values))
+                ).quantize(Decimal("0.000001"), rounding=ROUND_HALF_EVEN)
+            expected_mean = f"{mean_value:.6f}"
+        else:
+            expected_mean = None
+        mean = payload.metrics.mean_observed_risk
+        if (
+            mean.eligible_tasks != len(observed_values)
+            or mean.missing_tasks != len(tasks_by_id) - len(observed_values)
+            or mean.value != expected_mean
+        ):
+            raise InvalidState("health mean risk does not reconcile to eligible persisted scores")
+
+        if scope.context_ref is None and payload.temporal_refs:
+            raise InvalidState(
+                "model-agnostic health snapshots cannot include temporal assessments"
+            )
+        for temporal_ref in payload.temporal_refs:
+            temporal = cls._document_by_ref(connection, temporal_ref)
+            if not isinstance(temporal, TemporalAssessmentDocumentV2) or (
+                temporal.payload.model_context_ref != scope.context_ref
+            ):
+                raise InvalidReference("health temporal evidence is outside the frozen context")
+
+        for coverage_ref in payload.coverage_refs:
+            coverage = cls._document_by_ref(connection, coverage_ref)
+            if not isinstance(coverage, CoverageManifestDocument):
+                raise InvalidReference("health coverage references must bind coverage manifests")
+            coverage_payload = coverage.payload
+            if not set(coverage_payload.eligible_sources) <= allowed_sources or not set(
+                coverage_payload.executed_queries
+            ) <= set(coverage_payload.planned_queries):
+                raise InvalidState("health coverage exceeds its planned source/query scope")
+            for query_ref in coverage_payload.planned_queries:
+                query = cls._document_by_ref(connection, query_ref)
+                if not isinstance(query, QueryManifestDocument) or (
+                    query.payload.audit_ref != scope.plan_ref
+                    or query.payload.task_ref not in plan.payload.task_refs
+                    or query.payload.connector_snapshot not in allowed_sources
+                ):
+                    raise InvalidState("health coverage query is outside its frozen plan")
+
+        trend_points: list[BenchmarkHealthDocumentV2] = []
+        for trend_ref in payload.trend_refs:
+            point = cls._document_by_ref(connection, trend_ref)
+            if not isinstance(point, BenchmarkHealthDocumentV2):
+                raise InvalidReference("health trends require versioned prior health points")
+            trend_points.append(point)
+        expected_breaks = tuple(
+            sorted(
+                {
+                    reason
+                    for point in trend_points
+                    for reason in benchmark_health_discontinuities(scope, point.payload.scope)
+                }
+            )
+        )
+        if payload.discontinuity_reasons != expected_breaks:
+            raise InvalidState("health trend discontinuity reasons do not match linked scopes")
+        expected_trend_state = (
+            "initial" if not trend_points else "discontinuity" if expected_breaks else "comparable"
+        )
+        if payload.trend_state != expected_trend_state:
+            raise InvalidState("health trend label differs from the linked cohort scopes")
 
     @classmethod
     def _validate_monitor_document(cls, connection: Any, document: AuditDocument) -> None:

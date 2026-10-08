@@ -195,3 +195,17 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | Offline Alembic upgrade `d4f7b2a196c3:head` and guarded downgrade `e5c7b2a94d10:d4f7b2a196c3` with a placeholder PostgreSQL URL | Passed: SQL rendered both ways | Downgrade refuses to remove monitor policy v2, alert, slot, source-reservation or inbox evidence. No database was contacted. |
 | `git diff --check` | Passed | No whitespace errors. |
 | Trusted owner roles, live scheduler/connectors, authenticated inbox and PostgreSQL integration | Blocked | No live monitoring, source/model request or database write occurred. |
+
+## Prompt97 benchmark health and comparable trends
+
+| Command/check | Result | Interpretation |
+|---|---|---|
+| Focused `tests/test_benchmark_health.py` | Passed: 10 passed | Decimal goldens, unknown/unscanned reconciliation, family grouping, detector intervals, scope discontinuities and persistence-scope checks use synthetic data. |
+| Combined Prompt85-97 audit regression | Passed: 194 passed | Local/synthetic audit tests only; no live database, source or model calls. |
+| Ruff check and format check on Prompt97 core, service, persistence, migration and tests | Passed | Changed Python files are clean and formatted. |
+| Strict MyPy on Prompt97 core/service/persistence/models/tests | Passed | Strict type check covers the health contracts, aggregation and persistence paths. |
+| `corepack pnpm --filter @polycodebench/contracts test:contracts` | Passed | Python/TypeScript canonical vector and existing property cases agree. |
+| Offline Alembic upgrade `e5c7b2a94d10:head` and guarded downgrade `f67a3d91c4b2:e5c7b2a94d10` | Passed: PostgreSQL SQL rendered both ways | Append-only health-kind constraint renders; downgrade guard retains stored health evidence. No database was contacted. |
+| `uv run alembic -c packages/persistence/alembic.ini heads` | Passed: `f67a3d91c4b2` is the only head | Migration history remains linear. |
+| `git diff --check` | Passed | No whitespace errors. |
+| Approved live source, PostgreSQL, independent detector labels and reviewed projection | Blocked | None was available; fixtures/offline SQL do not count as live evidence. |

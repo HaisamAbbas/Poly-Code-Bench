@@ -2,7 +2,7 @@
 
 The addendum §§3, 25–28 remains authoritative for exact requirement text and ticket/gate DoDs. This ledger assigns owners and records evidence without modifying those contracts.
 
-At Prompt96, BWP-01 and BWP-02 are complete; BWP-03 through BWP-14 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
+At Prompt97, BWP-01 and BWP-02 are complete; BWP-03 through BWP-15 are partial pending live database/source/resource/reviewer/calibration evidence. Capability requirements remain partial or pending until their assigned import, evidence, lifecycle and live gates close.
 
 ## Requirements (BREQ)
 
@@ -28,7 +28,7 @@ At Prompt96, BWP-01 and BWP-02 are complete; BWP-03 through BWP-14 are partial p
 | BREQ-18 | 86,95,97 | BX-08,37,42 | partial | reports/prompt-86.md and reports/prompt-95.md; official membership remains immutable; derived manifests compute family/split/competency/difficulty distributions and separate score labels; live import and projection review remain unavailable |
 | BREQ-19 | 96,102 | BX-38-40,55 | partial | reports/prompt-96.md; timezone/DST-safe slots, bounded catch-up/retry, incremental/full refresh planning, per-source reservations and reference-only in-app alerts are implemented; owner-role verification, live scheduler/connectors and PostgreSQL execution are unavailable |
 | BREQ-20 | 90,96,100 | BX-21,39-40,49 | partial | reports/prompt-90.md and reports/prompt-96.md; immutable match successors, accepted-evidence successor-assessment alert checks, correction/dispute records and no-delete retention are implemented; live reviewer/source history and production alert delivery remain unavailable |
-| BREQ-21 | 97,99 | BX-41–43,46 | pending | see prompt 97 report |
+| BREQ-21 | 97,99 | BX-41-43,46 | partial | reports/prompt-97.md; denominator-first Decimal health metrics, explicit unknown/unscanned counts, frozen cohort keys and trend breaks are implemented; live source, database and reviewed projection evidence remain unavailable |
 | BREQ-22 | 98–99 | BX-44–47 | pending | see prompt 98 report |
 | BREQ-23 | 100 | BX-48–50 | pending | see prompt 100 report |
 | BREQ-24 | 86–90,93,98–99,103 | BX-07,11,14,20,28–30,44,47,58 | partial | reports/prompt-86.md through reports/prompt-90.md; source text is explicitly untrusted and judge packets have no tools, while no audit-specific model dispatch/exposure writer or live authorization verifier exists |
@@ -59,7 +59,7 @@ At Prompt96, BWP-01 and BWP-02 are complete; BWP-03 through BWP-14 are partial p
 | BWP-12 | 94 | partial | reports/prompt-94.md; registry, frozen plans, descriptive reconciliation and calibration/power limits exist; no pinned method adapter, approved model access or owned-training calibration is available |
 | BWP-13 | 95 | partial | reports/prompt-95.md; fail-closed firewall, bounded replacement contracts and derived manifests exist; production admission authority and live source/task evidence are unavailable |
 | BWP-14 | 96 | partial | reports/prompt-96.md; bounded monitor policies, reservations, retries and verified in-app alert persistence exist; no trusted owner-role verifier, live scheduler/source adapter, or PostgreSQL integration is available |
-| BWP-15 | 97 | pending | prompt report |
+| BWP-15 | 97 | partial | reports/prompt-97.md; descriptive health v2 contracts, Decimal goldens, sampling/missingness and trend-discontinuity rules are implemented; live source/database evidence and integrated projection review remain unavailable |
 | BWP-16 | 98 | pending | prompt report |
 | BWP-17 | 99 | pending | prompt report |
 | BWP-18 | 100 | pending | prompt report |
@@ -132,10 +132,10 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BAT-14-B | 96 | partial | reports/prompt-96.md; only changed approved sources enter incremental plans, finite full refreshes use every approved source, and retry reserves fit frozen caps; production corpus-snapshot trigger and connector execution are unavailable |
 | BAT-14-C | 96 | partial | reports/prompt-96.md; alerts require accepted verified evidence plus a same-task successor risk assessment, risk increases require comparable measured scores, dedupe is deterministic, inbox rows insert atomically, and immutable evidence has no delete path; live production evidence is unavailable |
 | BAT-14-D | 96 | partial | reports/prompt-96.md; staleness, outage, dispute, correction, policy/corpus/method discontinuity and compromised-seal alerts are distinct; routes are in-app only and payloads contain typed references without source text; external recipient authorization and a live notification UI are unavailable |
-| BAT-15-A | 97 | pending | prompt report |
-| BAT-15-B | 97 | pending | prompt report |
-| BAT-15-C | 97 | pending | prompt report |
-| BAT-15-D | 97 | pending | prompt report |
+| BAT-15-A | 97 | partial | reports/prompt-97.md; count, percentage, overlap-union, null-denominator, family and coverage goldens pass with Decimal; live scope/query evidence remains unavailable |
+| BAT-15-B | 97 | partial | reports/prompt-97.md; census/sample identity is frozen, no sample extrapolation is exposed, and eligible mean risk reports eligible/missing counts; no live cohort or reviewed projection is available |
+| BAT-15-C | 97 | partial | reports/prompt-97.md; membership, policy, context, source window, source set and versioned freshness/provenance definitions drive comparability breaks; live source freshness/outage integration remains unavailable |
+| BAT-15-D | 97 | partial | reports/prompt-97.md; native benchmark/code-quality/ranking paths were not changed and existing behavior-family bootstrap remains intact; integrated recommendation-surface review remains unavailable |
 | BAT-16-A | 98 | pending | prompt report |
 | BAT-16-B | 98 | pending | prompt report |
 | BAT-16-C | 98 | pending | prompt report |
@@ -217,9 +217,9 @@ Each prompt owns four tickets (A–D). The addendum retains each exact DoD.
 | BX-38 | 96 | partial | reports/prompt-96.md; unique (policy, slot) storage, idempotent replay, bounded catch-up/retry and atomic source-rate reservations are tested at contract/persistence-metadata level; retries crossing their reserved source-local day close terminally; PostgreSQL race/recovery and live scheduler evidence are unavailable |
 | BX-39 | 96 | partial | reports/prompt-96.md; accepted v2 evidence plus successor risk assessment is required for deterministic deduped in-app alerts; inbox insertion is transactional and historical documents are restrictive; no live source evidence or authenticated inbox UI exists |
 | BX-40 | 96 | partial | reports/prompt-96.md; stale, outage, correction/dispute, policy/corpus/method discontinuity and seal compromise use distinct alert types; external delivery is structurally disabled; live role authorization and key/source event integration are unavailable |
-| BX-41 | 97 | pending | criterion in addendum §26; prompt report |
-| BX-42 | 97 | pending | criterion in addendum §26; prompt report |
-| BX-43 | 97 | pending | criterion in addendum §26; prompt report |
+| BX-41 | 97 | partial | reports/prompt-97.md; section 18 Decimal goldens and reconciliation tests pass; no approved live coverage/source evidence or database execution exists |
+| BX-42 | 97 | partial | reports/prompt-97.md; sampled cohorts remain descriptive and mean eligibility/missingness is explicit; live sampled audit evidence is unavailable |
+| BX-43 | 97 | partial | reports/prompt-97.md; immutable trend points identify membership/policy/context/source/time/method/definition breaks; integrated reviewed projection is unavailable |
 | BX-44 | 98 | pending | criterion in addendum §26; prompt report |
 | BX-45 | 98 | pending | criterion in addendum §26; prompt report |
 | BX-46 | 99 | pending | criterion in addendum §26; prompt report |

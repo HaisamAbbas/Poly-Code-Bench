@@ -1542,6 +1542,152 @@
       },
       "expected_canonical_utf8": "{\"kind\":\"monitor_alert\",\"payload\":{\"alert_type\":\"source_outage\",\"assessment_ref\":null,\"coverage_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"10000000-0000-4000-8000-000000000003\",\"kind\":\"coverage_manifest\"},\"dedupe_key\":\"sha256:95e08d0441f2044e4dd427e679c25efd587f932b41d4a86e6ad873f501a0bbb9\",\"discontinuity_reasons\":[],\"evidence_ref\":null,\"occurred_at\":\"2026-10-08T12:00:00Z\",\"policy_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"10000000-0000-4000-8000-000000000001\",\"kind\":\"monitor_policy\"},\"previous_assessment_ref\":null,\"previous_policy_ref\":null,\"recipient_subjects\":[\"user:owner\"],\"sealed_manifest_ref\":null,\"source_ref\":{\"digest\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"document_id\":\"10000000-0000-4000-8000-000000000002\",\"kind\":\"corpus_snapshot\"},\"task_ref\":null},\"schema_version\":1}",
       "expected_digest": "sha256:1592d678a89fbf474440770404208e971838143ef2f8c293141520d689546a1d"
+    },
+    {
+      "name": "benchmark_health-v2",
+      "kind": "benchmark_health",
+      "schema_version": 2,
+      "payload": {
+        "scope": {
+          "membership_ref": {
+            "document_id": "30000000-0000-4000-8000-000000000001",
+            "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+            "kind": "benchmark_snapshot"
+          },
+          "plan_ref": {
+            "document_id": "30000000-0000-4000-8000-000000000002",
+            "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002",
+            "kind": "audit_plan"
+          },
+          "policy_ref": {
+            "document_id": "30000000-0000-4000-8000-000000000003",
+            "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000003",
+            "kind": "risk_policy"
+          },
+          "context_ref": null,
+          "source_refs": [],
+          "source_window_start": "2026-10-01T00:00:00Z",
+          "source_window_end": "2026-10-08T00:00:00Z",
+          "population_task_count": 1,
+          "selected_task_count": 1,
+          "sampling_mode": "census",
+          "sampling_method": "census_v1",
+          "sample_digest": "sha256:cca95f76e968a3ebe7e06dc116cccfaec13b594f954f48f7be6e6fb492d84910",
+          "sampling_design_digest": "sha256:66d2769e49b8d9e58035f11b3f95660a3b43429e5d32ad83ed43c3882683e993",
+          "method_digest": "sha256:e06d062059a080c35d35a791cfb502dc56c9842dbc21a24ca71dceed793c6cf9",
+          "family_mapping_digest": "sha256:46f78c45b8470d565762d89c649238792fd9d93ae62a0a724d1fa0a7a75ad9c0",
+          "family_mapping_ref": null,
+          "provenance_definition_version": "provenance-v1",
+          "freshness_definition_version": "freshness-v1",
+          "freshness_max_scan_age_hours": 168,
+          "freshness_max_source_age_days": 30,
+          "metric_definition_version": "benchmark-health-v1",
+          "comparability_key": "sha256:4b759c91879044baadf333b4a6a3520a1f42c61cb1695bb1f04911449b7d78d0"
+        },
+        "assessment_refs": [],
+        "temporal_refs": [],
+        "coverage_refs": [],
+        "metrics": {
+          "assessment_states": {
+            "selected_tasks": 1,
+            "complete": 0,
+            "partial": 0,
+            "unknown": 0,
+            "unscanned": 1,
+            "blocked": 0
+          },
+          "risk_tiers": {
+            "assessed_tasks": 0,
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "insufficient": 0
+          },
+          "families": {
+            "selected_tasks": 1,
+            "independent_families": 0,
+            "tasks_without_family_evidence": 1
+          },
+          "exact_duplicate_prevalence": {
+            "numerator": 0,
+            "denominator": 1,
+            "unknown_count": 1,
+            "value": "0.000000",
+            "null_reason": null,
+            "lower_bound": true
+          },
+          "semantic_duplicate_prevalence": {
+            "numerator": 0,
+            "denominator": 1,
+            "unknown_count": 1,
+            "value": "0.000000",
+            "null_reason": null,
+            "lower_bound": true
+          },
+          "duplicate_union_prevalence": {
+            "numerator": 0,
+            "denominator": 1,
+            "unknown_count": 1,
+            "value": "0.000000",
+            "null_reason": null,
+            "lower_bound": true
+          },
+          "pre_cutoff_exposure": {
+            "numerator": 0,
+            "denominator": 1,
+            "unknown_count": 0,
+            "value": null,
+            "null_reason": "not_applicable",
+            "lower_bound": false
+          },
+          "mandatory_coverage": {
+            "completed_units": 0,
+            "planned_units": 0,
+            "failed_units": 0,
+            "truncated_units": 0,
+            "blocked_units": 0,
+            "unknown_units": 0,
+            "value": null,
+            "null_reason": "empty_denominator"
+          },
+          "provenance_completeness": {
+            "numerator": 0,
+            "denominator": 1,
+            "unknown_count": 1,
+            "value": "0.000000",
+            "null_reason": null,
+            "lower_bound": true
+          },
+          "freshness": {
+            "numerator": 0,
+            "denominator": 1,
+            "unknown_count": 1,
+            "value": "0.000000",
+            "null_reason": null,
+            "lower_bound": true
+          },
+          "mean_observed_risk": {
+            "selected_tasks": 1,
+            "eligible_tasks": 0,
+            "missing_tasks": 1,
+            "value": null,
+            "null_reason": "insufficient_coverage"
+          },
+          "detector_quality": []
+        },
+        "trend_refs": [],
+        "trend_state": "initial",
+        "discontinuity_reasons": [],
+        "interpretation_limits": [
+          "descriptive_only",
+          "sampled_is_not_census",
+          "partial_coverage_is_not_clean",
+          "exposure_is_not_training_membership",
+          "no_binary_float_aggregation"
+        ]
+      },
+      "expected_canonical_utf8": "{\"kind\":\"benchmark_health\",\"payload\":{\"assessment_refs\":[],\"coverage_refs\":[],\"discontinuity_reasons\":[],\"interpretation_limits\":[\"descriptive_only\",\"sampled_is_not_census\",\"partial_coverage_is_not_clean\",\"exposure_is_not_training_membership\",\"no_binary_float_aggregation\"],\"metrics\":{\"assessment_states\":{\"blocked\":0,\"complete\":0,\"partial\":0,\"selected_tasks\":1,\"unknown\":0,\"unscanned\":1},\"detector_quality\":[],\"duplicate_union_prevalence\":{\"denominator\":1,\"lower_bound\":true,\"null_reason\":null,\"numerator\":0,\"unknown_count\":1,\"value\":\"0.000000\"},\"exact_duplicate_prevalence\":{\"denominator\":1,\"lower_bound\":true,\"null_reason\":null,\"numerator\":0,\"unknown_count\":1,\"value\":\"0.000000\"},\"families\":{\"independent_families\":0,\"selected_tasks\":1,\"tasks_without_family_evidence\":1},\"freshness\":{\"denominator\":1,\"lower_bound\":true,\"null_reason\":null,\"numerator\":0,\"unknown_count\":1,\"value\":\"0.000000\"},\"mandatory_coverage\":{\"blocked_units\":0,\"completed_units\":0,\"failed_units\":0,\"null_reason\":\"empty_denominator\",\"planned_units\":0,\"truncated_units\":0,\"unknown_units\":0,\"value\":null},\"mean_observed_risk\":{\"eligible_tasks\":0,\"missing_tasks\":1,\"null_reason\":\"insufficient_coverage\",\"selected_tasks\":1,\"value\":null},\"pre_cutoff_exposure\":{\"denominator\":1,\"lower_bound\":false,\"null_reason\":\"not_applicable\",\"numerator\":0,\"unknown_count\":0,\"value\":null},\"provenance_completeness\":{\"denominator\":1,\"lower_bound\":true,\"null_reason\":null,\"numerator\":0,\"unknown_count\":1,\"value\":\"0.000000\"},\"risk_tiers\":{\"assessed_tasks\":0,\"high\":0,\"insufficient\":0,\"low\":0,\"medium\":0},\"semantic_duplicate_prevalence\":{\"denominator\":1,\"lower_bound\":true,\"null_reason\":null,\"numerator\":0,\"unknown_count\":1,\"value\":\"0.000000\"}},\"scope\":{\"comparability_key\":\"sha256:4b759c91879044baadf333b4a6a3520a1f42c61cb1695bb1f04911449b7d78d0\",\"context_ref\":null,\"family_mapping_digest\":\"sha256:46f78c45b8470d565762d89c649238792fd9d93ae62a0a724d1fa0a7a75ad9c0\",\"family_mapping_ref\":null,\"freshness_definition_version\":\"freshness-v1\",\"freshness_max_scan_age_hours\":168,\"freshness_max_source_age_days\":30,\"membership_ref\":{\"digest\":\"sha256:0000000000000000000000000000000000000000000000000000000000000001\",\"document_id\":\"30000000-0000-4000-8000-000000000001\",\"kind\":\"benchmark_snapshot\"},\"method_digest\":\"sha256:e06d062059a080c35d35a791cfb502dc56c9842dbc21a24ca71dceed793c6cf9\",\"metric_definition_version\":\"benchmark-health-v1\",\"plan_ref\":{\"digest\":\"sha256:0000000000000000000000000000000000000000000000000000000000000002\",\"document_id\":\"30000000-0000-4000-8000-000000000002\",\"kind\":\"audit_plan\"},\"policy_ref\":{\"digest\":\"sha256:0000000000000000000000000000000000000000000000000000000000000003\",\"document_id\":\"30000000-0000-4000-8000-000000000003\",\"kind\":\"risk_policy\"},\"population_task_count\":1,\"provenance_definition_version\":\"provenance-v1\",\"sample_digest\":\"sha256:cca95f76e968a3ebe7e06dc116cccfaec13b594f954f48f7be6e6fb492d84910\",\"sampling_design_digest\":\"sha256:66d2769e49b8d9e58035f11b3f95660a3b43429e5d32ad83ed43c3882683e993\",\"sampling_method\":\"census_v1\",\"sampling_mode\":\"census\",\"selected_task_count\":1,\"source_refs\":[],\"source_window_end\":\"2026-10-08T00:00:00Z\",\"source_window_start\":\"2026-10-01T00:00:00Z\"},\"temporal_refs\":[],\"trend_refs\":[],\"trend_state\":\"initial\"},\"schema_version\":2}",
+      "expected_digest": "sha256:69a260d01d06cc476482b72355ab1945cc4637d7acf0278f576eea9afc692d61"
     }
   ]
 }

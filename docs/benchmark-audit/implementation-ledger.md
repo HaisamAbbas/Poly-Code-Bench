@@ -1,6 +1,6 @@
 # Benchmark audit implementation ledger
 
-Status: active. Prompts83-84 are complete; Prompts85-96 are partial foundations; Prompt97 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
+Status: active. Prompts83-84 are complete; Prompts85-97 are partial foundations; Prompt98 is next. This ledger describes the actual worktree and never treats metadata or fixtures as live audit evidence.
 
 ## Repository inventory at Prompt83
 
@@ -177,3 +177,13 @@ Independent CPU/local work continues around these gates. The exact historical ba
 - Partial, not complete: trusted owner/approver roles, authenticated enable/pause API, production scheduler, approved source adapters, live reviewer/source history, authenticated inbox UI, PostgreSQL concurrency/recovery and production evidence are not available. No scan or external notification was enabled; offline DDL rendering and synthetic fixtures do not close those gates.
 - No new Prompt96 specification discrepancy. The Prompt93 source-input discrepancy remains: §1.1 describes five source Markdown files but lists/hashes three.
 - Exact next prompt: Prompt97 / BWP-15, benchmark health aggregation and comparable trends.
+
+## Prompt97 / BWP-15
+
+- Added versioned benchmark-health v2 documents while retaining historical v1 parsing and refusing new v1 writes. The frozen scope binds exact benchmark membership, plan, risk policy, optional model context, sorted source snapshots, source window, census/sample method and task-set digest, family-map digest/private artifact, scan methods, and versioned provenance/freshness thresholds.
+- Added denominator-first health counts and Decimal-only six-place half-even percentages, null reasons, explicit unknown/lower-bound counts, risk-tier reconciliation, exact/semantic/union duplicate prevalence, contextual pre-cutoff exposure, planned/completed/failed/truncated/blocked/unknown coverage, provenance/freshness, eligible mean observed risk, and detector precision/recall/FPR/FNR with strata and Wilson intervals. Samples remain descriptive; no extrapolation or cleanliness verdict is produced.
+- Added immutable trend points with explicit discontinuity reasons for membership, sampling, policy, model context, source set/window, scan method, family mapping, provenance/freshness definitions and metric version. Persistence binds health scope to stored plan/snapshot/policy/context and task assessment refs, validates accepted match evidence against exact task/benchmark/plan/source scope, reconciles tier/state/mean/duplicate numerators, checks temporal/coverage references and linked trend breaks, and forbids health successors.
+- Added append-only health-kind migration `f67a3d91c4b2`, a cross-runtime canonical v2 vector, and section 18 goldens for the 10,000-task tiers, 200 unscanned tasks, overlap deduplication, 2.1% pre-cutoff, 40/50 coverage, empty denominators, half-even means, family grouping and detector unknowns.
+- Partial, not complete: tests use synthetic inputs; no approved benchmark/corpus source scope, live query coverage, temporal exposure source, PostgreSQL integration, independent detector labels, or authenticated health projection is available. Migration SQL was rendered offline only. Health outputs remain descriptive and do not change native benchmark, code-quality, ranking, or behavior-statistic contracts.
+- No new Prompt97 specification discrepancy. The Prompt93 source-input discrepancy remains: section 1.1 describes five source Markdown files but lists and hashes three.
+- Exact next prompt: Prompt98 / BWP-16, private API, CLI, SDK and permission contracts.

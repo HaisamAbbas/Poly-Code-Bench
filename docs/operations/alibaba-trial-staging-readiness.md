@@ -5,7 +5,7 @@ account-specific product eligibility, quotas, region, expiry, and an approved sp
 have not been checked. No Alibaba API has been called and no cloud resource has been created.
 This document records the code boundary and the inputs needed before a deployable target can be
 selected. Alibaba's general trial terms were rechecked against the official documentation on
-October 7, 2026; the signed-in console remains authoritative for account-specific offers.
+October 8, 2026; the signed-in console remains authoritative for account-specific offers.
 
 ## Can the linked free trial host this application?
 

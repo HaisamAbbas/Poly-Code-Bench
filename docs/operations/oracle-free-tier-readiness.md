@@ -3,7 +3,7 @@
 **Status: preparation only.** The owner linked Oracle's Free Tier page, but has not reported an
 Oracle account, selected a home region, checked account quotas, or approved a spend limit. No OCI
 API has been called and no cloud resource has been created. This assessment was checked against
-Oracle's official documentation on October 7, 2026; the signed-in console remains authoritative
+Oracle's official documentation on October 8, 2026; the signed-in console remains authoritative
 for the account's limits and available capacity.
 
 ## Can OCI Free Tier host this application?

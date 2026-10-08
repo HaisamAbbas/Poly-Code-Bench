@@ -1,4 +1,4 @@
-# Free cloud target review (2026-10-07)
+# Free cloud target review (2026-10-08)
 
 ## Decision
 
@@ -40,14 +40,18 @@ none of those resources have been created.
 
 OCI offers US$300 of promotional credit for up to 30 days, separate from its Always Free
 resources. Always Free A1 compute totals 2 OCPUs / 12 GB memory with 200 GB block storage in the
-home region, subject to available host capacity. It is a more plausible size for a private,
-self-managed Compose/PostgreSQL development session than Alibaba's generic 1 GiB ECS offer, if
-the account can allocate it and the app's images are built for ARM64. However, OCI may reclaim an
-Always Free instance after a seven-day period if its CPU p95, network, and A1 memory utilization
-are all below 20%; it is not reliable public hosting. The Always Free Autonomous Database is
-Oracle Database, not PostgreSQL, so PostgreSQL must run on the VM. Paid resources made with trial
-credits are reclaimed after the trial grace period unless the account is upgraded. Signup
-requires card verification; the temporary authorization hold is not a resource charge. See
+home region, subject to available host capacity. The current Always Free list also includes
+20 GB of Object Storage with 50,000 API requests per month, 150 Vault secrets, one 10-Mbps load
+balancer, and 10 TB monthly outbound transfer. These allowances could support a private
+self-managed Compose/PostgreSQL development session if the account can allocate the A1 capacity
+and the app's images are built for ARM64. The repository has no OCI instance-principal or
+Object-Storage integration, so the existing AWS/Alibaba credential and storage adapters cannot
+be presumed compatible with OCI. OCI may reclaim an Always Free instance after a seven-day period
+if its CPU p95, network, and A1 memory utilization are all below 20%; it is not reliable public
+hosting. The Always Free Autonomous Database is Oracle Database, not PostgreSQL, so PostgreSQL
+must run on the VM. Paid resources made with trial credits are reclaimed after the trial grace
+period unless the account is upgraded. Signup requires card verification; the temporary
+authorization hold is not a resource charge. See
 [OCI Always Free quotas](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm),
 [OCI trial terms](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier.htm), and the
 [OCI FAQ](https://www.oracle.com/cloud/free/faq/).

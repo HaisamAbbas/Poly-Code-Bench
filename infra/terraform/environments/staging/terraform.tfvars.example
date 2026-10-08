@@ -98,6 +98,11 @@ services = {
     cpu           = 512
     memory        = 1024
     desired_count = 0
+    command = [
+      "pcb-worker", "ec2-grading-run", "--watch",
+      "--known-hosts", "/etc/pcb/guest-known-hosts"
+    ]
+    environment = { PCB_WORKER_DISPATCH_ENABLED = "false" }
   }
   "scorer" = {
     role          = "scorer"

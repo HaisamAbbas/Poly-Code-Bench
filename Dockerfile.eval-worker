@@ -2,6 +2,7 @@
 
 ARG PYTHON_IMAGE=python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
 ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.12.17@sha256:10787c682e4184e4f290de1171fd4703dc63de99221f10fe1c99002ce7fa9acc
+ARG OPENSSH_CLIENT_VERSION=1:9.2p1-2+deb12u10
 
 FROM ${UV_IMAGE} AS uv
 
@@ -19,29 +20,33 @@ COPY plugins/ ./plugins/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable \
       --package polycodebench-orchestration \
-      --package polycodebench-operations
+      --package polycodebench-operations \
+      --package polycodebench-lang-c \
+      --package polycodebench-lang-cpp \
+      --package polycodebench-lang-go \
+      --package polycodebench-lang-java \
+      --package polycodebench-lang-javascript \
+      --package polycodebench-lang-python \
+      --package polycodebench-lang-rust
 
 FROM ${PYTHON_IMAGE} AS runtime
+ARG OPENSSH_CLIENT_VERSION
 ARG PCB_ENV_MANIFEST_SOURCE=config/environments/dev.yaml
-ARG PCB_WORKER_RESOURCE_SPEC_SOURCE=config/worker/local-small-resource.json
-ARG PCB_CANDIDATE_IMAGE_ALLOWLIST_SOURCE=config/worker/empty-image-allowlist.json
+ARG PCB_GUEST_KNOWN_HOSTS_SOURCE=config/worker/empty-known-hosts
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PCB_ENV_MANIFEST=/etc/pcb/environment.yaml \
-    PCB_ENVIRONMENT=dev \
-    PCB_AWS_WORKER_SETUP_ENABLED=false
+    PCB_ENVIRONMENT=dev
 WORKDIR /usr/local
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends "openssh-client=${OPENSSH_CLIENT_VERSION}" \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=build /opt/venv /opt/venv
 COPY ${PCB_ENV_MANIFEST_SOURCE} /etc/pcb/environment.yaml
-COPY ${PCB_WORKER_RESOURCE_SPEC_SOURCE} /etc/pcb/solve-resource-spec.json
-COPY ${PCB_CANDIDATE_IMAGE_ALLOWLIST_SOURCE} /etc/pcb/candidate-image-allowlist.json
-COPY config/operations/migration-policy.yaml /usr/local/config/operations/migration-policy.yaml
+COPY ${PCB_GUEST_KNOWN_HOSTS_SOURCE} /etc/pcb/guest-known-hosts
 COPY config/plugins/ /usr/local/config/plugins/
-COPY config/scoring/ /usr/local/config/scoring/
 COPY config/images/ /usr/local/config/images/
-COPY infra/observability/ /usr/local/infra/observability/
-COPY docs/operations/runbooks/ /usr/local/docs/operations/runbooks/
 COPY packages/persistence/alembic.ini /usr/local/packages/persistence/alembic.ini
 COPY packages/persistence/src/polycodebench_persistence/migrations/ /usr/local/packages/persistence/src/polycodebench_persistence/migrations/
 RUN useradd --system --uid 10001 --user-group --home-dir /home/pcb --create-home \
@@ -49,5 +54,5 @@ RUN useradd --system --uid 10001 --user-group --home-dir /home/pcb --create-home
     && mkdir -p /tmp /usr/local/.cache \
     && chown 10001:10001 /tmp /usr/local/.cache /home/pcb
 USER 10001:10001
-# ECS overrides this with its identity-verifying entrypoint and the requested ops command.
-CMD ["pcb-ops", "--help"]
+# Terraform supplies an explicit queue command. The default remains inert.
+CMD ["pcb-worker", "--help"]

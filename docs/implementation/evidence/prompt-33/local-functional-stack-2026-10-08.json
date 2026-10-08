@@ -36,6 +36,11 @@
     "result": "passed",
     "tests_passed": 4
   },
+  "scoring_postgres_integration": {
+    "result": "passed",
+    "tests_passed": 2,
+    "bounded_pending_selection_and_scorecard_lock": "passed"
+  },
   "browser_smoke": {
     "result": "passed",
     "postgres_release_backed_public_pages": 9,

@@ -225,8 +225,9 @@ class PostgresScoringRepository:
                             )
                             .join(outcome_artifact, outcome_artifact.c.id == record.artifact_id)
                         )
+                        # No row lock: pcb_scorer has SELECT only, scoring is already serialized
+                        # by evaluation_lock, and ready/failed evaluations are immutable.
                         .where(evaluation.c.id == record.evaluation_id)
-                        .with_for_update(of=evaluation)
                     )
                     .mappings()
                     .one_or_none()

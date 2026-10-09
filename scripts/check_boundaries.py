@@ -17,6 +17,7 @@ OWNERS = {
     "polycodebench_evaluation": "evaluation",
     "polycodebench_scoring": "scoring",
     "polycodebench_publication": "publication",
+    "polycodebench_taskgen": "taskgen",
     "polycodebench_configuration": "configuration",
     "polycodebench_operations": "operations",
     "polycodebench_plugins_api": "plugins_api",
@@ -46,6 +47,9 @@ ALLOWED = {
     # administrative use cases. It may reach the layers below it and nothing else.
     "api": {"core", "services", "persistence", "publication", "scoring", "orchestration"},
     "publication": {"core", "scoring"},
+    # Contamination screening is pure: it reads reference text and candidate text, applies
+    # deterministic gates and never calls a model, opens a network socket or executes a task.
+    "taskgen": {"core"},
     "configuration": set(),
     # Operations verifies deployments and rehearses recovery over the persisted state, the
     # publication store, the pure scorer and the sandbox drivers. Nothing imports it back.
@@ -65,6 +69,17 @@ ALLOWED = {
 FORBIDDEN_IMPORTS = {
     "core": ("fastapi", "typer", "sqlalchemy", "alembic", "openai", "anthropic", "boto3"),
     "scoring": ("openai", "anthropic", "google", "httpx", "boto3"),
+    "taskgen": (
+        "openai",
+        "anthropic",
+        "google",
+        "httpx",
+        "boto3",
+        "requests",
+        "sqlalchemy",
+        "fastapi",
+        "socket",
+    ),  # fmt: skip
 }
 
 

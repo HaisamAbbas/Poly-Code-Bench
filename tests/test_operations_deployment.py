@@ -529,7 +529,9 @@ def test_committed_migration_policy_covers_the_exact_repair_fk_replacements() ->
 
     replacements = policy["safe_fk_action_replacements"]["d8f971ea2b34"]
     assert len(replacements) == 3
-    assert report.head == "b390a26f17cd"
+    # Pin the repair migration's position, not the head: later revisions are expected to follow it.
+    chain = migrations.linear_chain(migrations.revisions(migrations.VERSIONS))
+    assert chain.index("b390a26f17cd") <= chain.index(report.head)
     assert report.violations == []
 
     released_source = migrations.VERSIONS / "e5f6a7b8c9d0_repair_runs_and_rounds.py"

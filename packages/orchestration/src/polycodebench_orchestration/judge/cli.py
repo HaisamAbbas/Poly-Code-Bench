@@ -15,7 +15,9 @@ import argparse
 import asyncio
 import json
 import os
+import signal
 import sys
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -42,6 +44,7 @@ from polycodebench_core.judge_contracts import (
     judge_record_bytes,
 )
 from polycodebench_core.model_contracts import CallScope, ProviderKind
+from polycodebench_core.model_planning import ModelConfig
 from polycodebench_persistence.artifacts import ArtifactRepository
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.endpoints import PostgresEndpointRepository
@@ -144,7 +147,19 @@ def _world() -> World:
 
 def _principal() -> Principal:
     subject = os.environ.get("PCB_SERVICE_IDENTITY", "")
-    roles = {Role(item) for item in os.environ.get("PCB_ROLES", "").split(",") if item}
+    verified_role = os.environ.get("PCB_VERIFIED_ROLE")
+    if verified_role is not None:
+        # A cloud startup guard sets these fields only after checking the actual task identity.
+        # Ignore task-provided PCB_ROLES in that case so a role environment value cannot elevate
+        # the verified judge process into an operator, reviewer or administrator.
+        if os.environ.get("PCB_VERIFIED_BY") not in {"aws-sts", "local-development"}:
+            roles: set[Role] = set()
+        elif verified_role == "judge-gateway":
+            roles = {Role.JUDGE_SERVICE}
+        else:
+            roles = set()
+    else:
+        roles = {Role(item) for item in os.environ.get("PCB_ROLES", "").split(",") if item}
     return Principal(subject, frozenset(roles))
 
 
@@ -210,6 +225,18 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--rubric", type=Path, default=RUBRIC)
     run.add_argument("--panel", type=Path, default=PANEL)
     run.add_argument("--cohort-id", type=UUID)
+
+    run_pending = commands.add_parser(
+        "run-pending",
+        help="process a bounded queue of persisted scored packets for one evaluation and cohort",
+    )
+    run_pending.add_argument("--evaluation-id", type=UUID, required=True)
+    run_pending.add_argument("--cohort-id", type=UUID, required=True)
+    run_pending.add_argument("--limit", type=int, default=5)
+    run_pending.add_argument("--watch", action="store_true")
+    run_pending.add_argument("--poll-seconds", type=int, default=15)
+    run_pending.add_argument("--rubric", type=Path, default=RUBRIC)
+    run_pending.add_argument("--panel", type=Path, default=PANEL)
 
     stored = commands.add_parser("result", help="show a stored judge result and its deliveries")
     stored.add_argument("packet_id", type=UUID)
@@ -357,24 +384,18 @@ def _run_packet(world: World, args: argparse.Namespace) -> int:
         packet_artifact_id=packet_artifact,
         cohort_id=args.cohort_id,
     )
-    runner = JudgeRunner(
-        gateway=world.gateway(),
-        panel=panel,
-        protocol=load_judge_protocol(),
-        resolve_artifacts=_artifact_resolver(world),
-        persist_delivery=_delivery_writer(world, packet_row_id),
-        persist_vote=_vote_writer(world, packet_row_id),
-    )
-    run = asyncio.run(
-        runner.run(
+    with world.judging.packet_execution_lock(packet_row_id) as acquired:
+        if not acquired:
+            raise InvalidState("judge packet is already being processed")
+        result, digest = _execute_registered_packet(
+            world=world,
             packet=packet,
+            packet_row_id=packet_row_id,
+            evaluation_id=args.evaluation_id,
+            panel=panel,
             config=config,
             config_document_id=UUID(judge_config_id),
-            scope=CallScope(kind="evaluation", scope_id=args.evaluation_id),
         )
-    )
-    result = run.result(panel, audit_selected=audit_selected(packet, panel))
-    digest = _store_result(world, packet_row_id, args.evaluation_id, result)
     _emit(
         {
             "packet_row_id": str(packet_row_id),
@@ -387,6 +408,165 @@ def _run_packet(world: World, args: argparse.Namespace) -> int:
         }
     )
     return EXIT_OK if result.status == "ready" else EXIT_BLOCKED
+
+
+def _execute_registered_packet(
+    *,
+    world: World,
+    packet: JudgePacket,
+    packet_row_id: UUID,
+    evaluation_id: UUID,
+    panel: JudgePanel,
+    config: ModelConfig,
+    config_document_id: UUID,
+) -> tuple[JudgementResult, str]:
+    runner = JudgeRunner(
+        gateway=world.gateway(),
+        panel=panel,
+        protocol=load_judge_protocol(),
+        resolve_artifacts=_artifact_resolver(world),
+        persist_delivery=_delivery_writer(world, packet_row_id),
+        persist_vote=_vote_writer(world, packet_row_id),
+    )
+    run = asyncio.run(
+        runner.run(
+            packet=packet,
+            config=config,
+            config_document_id=config_document_id,
+            scope=CallScope(kind="evaluation", scope_id=evaluation_id),
+        )
+    )
+    result = run.result(panel, audit_selected=audit_selected(packet, panel))
+    digest = _store_result(world, packet_row_id, evaluation_id, result)
+    return result, digest
+
+
+def _run_pending_batch(
+    world: World,
+    args: argparse.Namespace,
+    *,
+    stop: threading.Event | None = None,
+) -> int:
+    if os.environ.get("PCB_JUDGE_DISPATCH_ENABLED", "false").lower() != "true":
+        print("JUDGE_QUEUE_DISPATCH_DISABLED", file=sys.stderr)
+        return EXIT_BLOCKED
+    if not 1 <= args.limit <= 25:
+        raise ValueError("judge queue batch size must be in [1,25]")
+    if not 5 <= args.poll_seconds <= 300:
+        raise ValueError("judge queue poll interval must be in [5,300] seconds")
+    authorize(_principal(), Permission.RUN_PLAN)
+
+    rubric = load_rubric(args.rubric)
+    panel = load_panel(args.panel)
+    cohort = world.judging.cohort_for_panel(args.cohort_id)
+    if cohort["panel_digest"] != panel.digest() or cohort["rubric_digest"] != rubric.digest():
+        raise InvalidState("judge queue cohort does not match the frozen panel and rubric")
+    config_id = UUID(panel.require_access(tuple(cohort["candidate_model_config_ids"])))
+    config = world.configs.load(config_id)
+    cursor_created_at = getattr(args, "_queue_cursor_created_at", None)
+    cursor_packet_id = getattr(args, "_queue_cursor_packet_id", None)
+    packets = world.judging.packets_pending_execution(
+        evaluation_id=args.evaluation_id,
+        cohort_id=args.cohort_id,
+        panel_digest=panel.digest(),
+        limit=args.limit,
+        after_created_at=cursor_created_at,
+        after_packet_id=cursor_packet_id,
+    )
+    if not packets:
+        # A watch process completed one pass. Reset so blocked packets can be retried next cycle.
+        args._queue_cursor_created_at = None
+        args._queue_cursor_packet_id = None
+    completed: list[dict[str, str]] = []
+    blocked: list[dict[str, str]] = []
+    skipped_busy = 0
+    for row in packets:
+        if stop is not None and stop.is_set():
+            break
+        packet_id = UUID(str(row["id"]))
+        args._queue_cursor_created_at = row["created_at"]
+        args._queue_cursor_packet_id = packet_id
+        with world.judging.packet_execution_lock(packet_id) as acquired:
+            if not acquired:
+                skipped_busy += 1
+                continue
+            if not world.judging.packet_pending_execution(
+                packet_id=packet_id,
+                evaluation_id=args.evaluation_id,
+                cohort_id=args.cohort_id,
+                panel_digest=panel.digest(),
+            ):
+                continue
+            try:
+                packet = _stored_packet(world, row)
+                if packet.panel_digest != panel.digest() or packet.rubric_digest != rubric.digest():
+                    raise InvalidState("stored packet does not match the queue's frozen inputs")
+                result, report_digest = _execute_registered_packet(
+                    world=world,
+                    packet=packet,
+                    packet_row_id=packet_id,
+                    evaluation_id=args.evaluation_id,
+                    panel=panel,
+                    config=config,
+                    config_document_id=config_id,
+                )
+            except ServiceError as error:
+                blocked.append({"packet_row_id": str(packet_id), "code": error.code})
+                # Retriable infrastructure failures pause this pass. A watched process advances
+                # past this packet, visits the rest of the queue, then retries on its next cycle.
+                if error.status_code >= 500:
+                    break
+                continue
+            completed.append(
+                {
+                    "packet_row_id": str(packet_id),
+                    "status": result.status,
+                    "report_digest": report_digest,
+                }
+            )
+    _emit(
+        {
+            "evaluation_id": str(args.evaluation_id),
+            "cohort_id": str(args.cohort_id),
+            "panel_digest": panel.digest(),
+            "batch_limit": args.limit,
+            "pending_seen": len(packets),
+            "completed": completed,
+            "skipped_busy": skipped_busy,
+            "blocked": blocked,
+        }
+    )
+    if blocked:
+        return EXIT_BLOCKED
+    if any(row["status"] != "ready" for row in completed):
+        return EXIT_BLOCKED
+    return EXIT_OK
+
+
+def _serve_pending(world: World, args: argparse.Namespace) -> int:
+    if os.environ.get("PCB_JUDGE_DISPATCH_ENABLED", "false").lower() != "true":
+        print("JUDGE_QUEUE_DISPATCH_DISABLED", file=sys.stderr)
+        return EXIT_BLOCKED
+    stop = threading.Event()
+    prior_handlers: dict[int, Any] = {}
+
+    def request_stop(_signum: int, _frame: Any) -> None:
+        stop.set()
+
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        try:
+            prior_handlers[signum] = signal.signal(signum, request_stop)
+        except (OSError, ValueError):
+            # Some embedded/test runners do not allow installing handlers outside the main thread.
+            pass
+    try:
+        while not stop.is_set():
+            _run_pending_batch(world, args, stop=stop)
+            stop.wait(args.poll_seconds)
+        return EXIT_OK
+    finally:
+        for signal_number, handler in prior_handlers.items():
+            signal.signal(signal_number, handler)
 
 
 def _artifact_resolver(
@@ -758,9 +938,17 @@ def main() -> int:
             return _offline(args)
         if args.command == "calibration":
             return _calibration(args)
+        if (
+            args.command == "run-pending"
+            and os.environ.get("PCB_JUDGE_DISPATCH_ENABLED", "false").lower() != "true"
+        ):
+            print("JUDGE_QUEUE_DISPATCH_DISABLED", file=sys.stderr)
+            return EXIT_BLOCKED
         world = _world()
         if args.command == "run":
             return _run_packet(world, args)
+        if args.command == "run-pending":
+            return _serve_pending(world, args) if args.watch else _run_pending_batch(world, args)
         if args.command == "result":
             return _stored_result(world, args.packet_id)
         if args.command == "review-queue":

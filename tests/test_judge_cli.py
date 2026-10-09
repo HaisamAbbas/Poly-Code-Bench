@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -26,8 +27,11 @@ from polycodebench_orchestration.judge.cli import (
     EXIT_OK,
     EXIT_PERMISSION,
     EXIT_VALIDATION,
+    _principal,
     main,
 )
+from polycodebench_services.errors import AuthorizationError
+from polycodebench_services.rbac import Permission, Role, authorize
 
 ROOT = Path(__file__).resolve().parents[1]
 RUBRIC = ROOT / "config" / "judging" / "rubric-v1.yaml"
@@ -88,6 +92,48 @@ def test_panel_command_reports_the_missing_judge_access_as_blocked(
     ]
     assert payload["effective_for_scoring"] is False
     assert payload["calibration_status"] == "pending"
+
+
+def test_pending_queue_fails_closed_without_dispatch_and_service_permission(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    command = (
+        "run-pending",
+        "--evaluation-id",
+        "11111111-1111-4111-8111-111111111111",
+        "--cohort-id",
+        "22222222-2222-4222-8222-222222222222",
+    )
+    monkeypatch.delenv("PCB_JUDGE_DISPATCH_ENABLED", raising=False)
+    code, payload = run_cli(monkeypatch, capsys, *command)
+    assert code == EXIT_BLOCKED
+    assert payload is None
+
+    monkeypatch.setenv("PCB_JUDGE_DISPATCH_ENABLED", "true")
+    monkeypatch.setenv("PCB_SERVICE_IDENTITY", "unprivileged-judge-test")
+    monkeypatch.delenv("PCB_ROLES", raising=False)
+    monkeypatch.setattr(
+        "polycodebench_orchestration.judge.cli._world",
+        lambda: SimpleNamespace(database=SimpleNamespace(dispose=lambda: None)),
+    )
+    code, payload = run_cli(monkeypatch, capsys, *command)
+    assert code == EXIT_PERMISSION
+    assert payload is None
+
+
+def test_verified_judge_identity_gets_only_queue_execution_permission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PCB_SERVICE_IDENTITY", "arn:aws:sts::123456789012:assumed-role/judge/i-1")
+    monkeypatch.setenv("PCB_VERIFIED_BY", "aws-sts")
+    monkeypatch.setenv("PCB_VERIFIED_ROLE", "judge-gateway")
+    monkeypatch.setenv("PCB_ROLES", Role.ADMINISTRATOR.value)
+    principal = _principal()
+
+    assert principal.roles == frozenset({Role.JUDGE_SERVICE})
+    authorize(principal, Permission.RUN_PLAN)
+    with pytest.raises(AuthorizationError):
+        authorize(principal, Permission.EVALUATION_ADJUDICATE)
 
 
 def test_packet_command_writes_a_canonical_packet_with_untrusted_comments(

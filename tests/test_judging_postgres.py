@@ -22,6 +22,7 @@ import os
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -60,6 +61,7 @@ from polycodebench_orchestration.gateway.secrets import EnvironmentSecretResolve
 from polycodebench_orchestration.gateway.service import ModelGateway, RetryPolicy
 from polycodebench_orchestration.gateway.store import ArtifactResponseStore
 from polycodebench_orchestration.gateway.throttle import ThrottleRegistry
+from polycodebench_orchestration.judge.cli import EXIT_OK, _run_pending_batch
 from polycodebench_orchestration.judge.protocol import load_judge_protocol
 from polycodebench_orchestration.judge.runner import JudgeRunner, VoteArtifacts
 from polycodebench_persistence.artifacts import ArtifactRepository
@@ -83,6 +85,7 @@ from polycodebench_persistence.models import (
 from polycodebench_persistence.object_store import S3ArtifactStore
 from polycodebench_persistence.runs import PostgresRunRepository
 from polycodebench_services.judging import adjudication_id, build_adjudication
+from polycodebench_services.rbac import Role
 from polycodebench_services.runs import RunCreationService
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -980,6 +983,97 @@ def test_cohort_registration_replays_but_refuses_a_different_panel(world: Any) -
         world.judging.register_cohort(
             same.model_copy(update={"panel_digest": "sha256:" + "8" * 64})
         )
+
+
+def test_judge_pending_queue_is_scoped_bounded_and_packet_locked(
+    world: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = packet(judge_panel=world.judge_panel)
+    packet_row_id, _ = _register_packet(world, target)
+    calibration_packet = packet(judge_panel=world.judge_panel, packet_role="calibration")
+    _register_packet(world, calibration_packet)
+
+    pending = world.judging.packets_pending_execution(
+        evaluation_id=world.evaluation_id,
+        cohort_id=world.cohort_id,
+        panel_digest=world.judge_panel.digest(),
+        limit=25,
+    )
+    assert [row["id"] for row in pending] == [packet_row_id]
+    assert (
+        world.judging.packets_pending_execution(
+            evaluation_id=world.evaluation_id,
+            cohort_id=world.cohort_id,
+            panel_digest=world.judge_panel.digest(),
+            limit=25,
+            after_created_at=pending[0]["created_at"],
+            after_packet_id=packet_row_id,
+        )
+        == []
+    )
+    assert (
+        world.judging.packets_pending_execution(
+            evaluation_id=world.evaluation_id,
+            cohort_id=uuid4(),
+            panel_digest=world.judge_panel.digest(),
+            limit=25,
+        )
+        == []
+    )
+    with pytest.raises(ValueError, match="batch size"):
+        world.judging.packets_pending_execution(
+            evaluation_id=world.evaluation_id,
+            cohort_id=world.cohort_id,
+            panel_digest=world.judge_panel.digest(),
+            limit=26,
+        )
+    with pytest.raises(ValueError, match="both created_at and packet_id"):
+        world.judging.packets_pending_execution(
+            evaluation_id=world.evaluation_id,
+            cohort_id=world.cohort_id,
+            panel_digest=world.judge_panel.digest(),
+            limit=25,
+            after_created_at=pending[0]["created_at"],
+        )
+
+    with world.judging.packet_execution_lock(packet_row_id) as acquired:
+        assert acquired is True
+        with world.judging.packet_execution_lock(packet_row_id) as duplicate:
+            assert duplicate is False
+
+    monkeypatch.setattr(
+        "polycodebench_orchestration.judge.cli.load_panel", lambda _path: world.judge_panel
+    )
+    replies = [
+        _reply(json.dumps(vote_document(target)), f"queue-vote-{index}") for index in range(3)
+    ]
+    transport = ScriptedTransport(replies)
+    gateway_factory = world.gateway
+    world.gateway = lambda: gateway_factory(transport)
+    monkeypatch.setenv("PCB_JUDGE_DISPATCH_ENABLED", "true")
+    monkeypatch.setenv("PCB_SERVICE_IDENTITY", "prompt14-queue-test")
+    monkeypatch.setenv("PCB_ROLES", Role.OPERATOR.value)
+    monkeypatch.delenv("PCB_VERIFIED_BY", raising=False)
+    monkeypatch.delenv("PCB_VERIFIED_ROLE", raising=False)
+    args = SimpleNamespace(
+        evaluation_id=world.evaluation_id,
+        cohort_id=world.cohort_id,
+        limit=25,
+        poll_seconds=15,
+        rubric=Path("config/judging/rubric-v1.yaml"),
+        panel=Path("config/judging/panel-v1.yaml"),
+    )
+    assert _run_pending_batch(world, args) == EXIT_OK
+    assert len(transport.sent) == 3
+    assert (
+        world.judging.packets_pending_execution(
+            evaluation_id=world.evaluation_id,
+            cohort_id=world.cohort_id,
+            panel_digest=world.judge_panel.digest(),
+            limit=25,
+        )
+        == []
+    )
 
 
 def test_attempt_and_evaluation_rows_are_the_real_solve_graph(world: Any) -> None:

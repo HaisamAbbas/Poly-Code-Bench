@@ -9,6 +9,8 @@ what was registered.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -26,7 +28,7 @@ from polycodebench_core.judge_contracts import (
     JudgeVote,
     adjudication_identity,
 )
-from sqlalchemy import select
+from sqlalchemy import and_, exists, or_, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
@@ -168,6 +170,104 @@ class PostgresJudgingRepository:
                 .order_by(judge_packet.c.created_at, judge_packet.c.id)
             ).mappings()
             return [dict(row) for row in rows]
+
+    def packets_pending_execution(
+        self,
+        *,
+        evaluation_id: UUID,
+        cohort_id: UUID,
+        panel_digest: str,
+        limit: int,
+        after_created_at: datetime | None = None,
+        after_packet_id: UUID | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return a small oldest-first batch of scored packets with no frozen result.
+
+        Queue execution is deliberately scoped to one evaluation, cohort and panel. Calibration
+        packets and packets from another panel cannot enter the normal scoring queue.
+        """
+        if not 1 <= limit <= 25:
+            raise ValueError("judge queue batch size must be in [1,25]")
+        if (after_created_at is None) != (after_packet_id is None):
+            raise ValueError("judge queue cursor requires both created_at and packet_id")
+        statement = select(judge_packet).where(
+            judge_packet.c.evaluation_id == evaluation_id,
+            judge_packet.c.cohort_id == cohort_id,
+            judge_packet.c.panel_digest == panel_digest,
+            judge_packet.c.packet_role == "scored",
+            ~exists(select(judge_result.c.id).where(judge_result.c.packet_id == judge_packet.c.id)),
+        )
+        if after_created_at is not None and after_packet_id is not None:
+            statement = statement.where(
+                or_(
+                    judge_packet.c.created_at > after_created_at,
+                    and_(
+                        judge_packet.c.created_at == after_created_at,
+                        judge_packet.c.id > after_packet_id,
+                    ),
+                )
+            )
+        statement = statement.order_by(judge_packet.c.created_at, judge_packet.c.id).limit(limit)
+        with self._engine.connect() as connection:
+            rows = connection.execute(statement).mappings()
+            return [dict(row) for row in rows]
+
+    def packet_pending_execution(
+        self,
+        *,
+        packet_id: UUID,
+        evaluation_id: UUID,
+        cohort_id: UUID,
+        panel_digest: str,
+    ) -> bool:
+        """Recheck queue eligibility after acquiring the packet's cross-process lock."""
+        statement = select(judge_packet.c.id).where(
+            judge_packet.c.id == packet_id,
+            judge_packet.c.evaluation_id == evaluation_id,
+            judge_packet.c.cohort_id == cohort_id,
+            judge_packet.c.panel_digest == panel_digest,
+            judge_packet.c.packet_role == "scored",
+            ~exists(select(judge_result.c.id).where(judge_result.c.packet_id == judge_packet.c.id)),
+        )
+        with self._engine.connect() as connection:
+            return connection.execute(statement).scalar_one_or_none() is not None
+
+    @contextmanager
+    def packet_execution_lock(self, packet_id: UUID) -> Iterator[bool]:
+        """Hold a PostgreSQL session lock while one packet is being dispatched and persisted.
+
+        A session lock is used instead of holding a database transaction open across provider
+        requests. If the worker process exits, PostgreSQL releases the lock with its connection.
+        """
+        lock_key = f"pcb.judge.packet:{packet_id}"
+        with self._engine.connect() as connection:
+            acquired = bool(
+                connection.execute(
+                    text("SELECT pg_try_advisory_lock(hashtextextended(:key, 0))"),
+                    {"key": lock_key},
+                ).scalar_one()
+            )
+            connection.commit()
+            if not acquired:
+                yield False
+                return
+            try:
+                yield True
+            finally:
+                try:
+                    released = bool(
+                        connection.execute(
+                            text("SELECT pg_advisory_unlock(hashtextextended(:key, 0))"),
+                            {"key": lock_key},
+                        ).scalar_one()
+                    )
+                    connection.commit()
+                    if not released:
+                        raise InvalidState("judge packet execution lock was not held")
+                except Exception:
+                    # Never return a pooled connection that may still own a session lock.
+                    connection.invalidate()
+                    raise
 
     def packets_needing_review(self, *, limit: int = 50) -> list[dict[str, Any]]:
         """Packets whose *newest* result is not ``ready``, newest first.

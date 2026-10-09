@@ -22,6 +22,10 @@ from polycodebench_core.audit_attestations import (
 from polycodebench_core.benchmark_audit_documents import AuditPlanDocument, parse_audit_document
 from polycodebench_core.benchmark_audit_registry import AuditResourceRequest
 from polycodebench_core.canonical import canonical_json_bytes, parse_json_strict
+from polycodebench_core.match_verification import (
+    MatchAdjudicationSubmission,
+    MatchReviewSubmission,
+)
 from polycodebench_services.audit_attestations import verify_public_attestation
 
 from polycodebench_api.submission_routes import (
@@ -40,6 +44,7 @@ _AUDIT_CAPABILITIES = {
         "audit scope-preview",
         "audit registry list",
         "audit list/show stored documents (tenant and object access checked)",
+        "audit matches history (MFA reviewer, immutable opinion ledger)",
         "audit status",
         "audit attest report",
     ],
@@ -47,11 +52,12 @@ _AUDIT_CAPABILITIES = {
     "remote_writes": [
         "audit plan (immutable document, no dispatch)",
         "audit run (planned state, dispatch_authorized=false)",
+        "audit matches review (MFA reviewer, immutable opinion)",
+        "audit matches adjudicate (independent MFA conflict resolution)",
     ],
     "local_only": ["audit verify-attestation"],
     "blocked_without_reviewed_adapters": [
         "audit import (durable import and membership admission)",
-        "audit matches review",
         "audit temporal assess",
         "audit sealed create",
         "audit firewall evaluate",
@@ -132,11 +138,18 @@ def _parser() -> argparse.ArgumentParser:
     status = commands.add_parser("status", help="read audit run status")
     status.add_argument("run_id", type=UUID)
 
-    review = commands.add_parser("matches", help="review match evidence")
-    review_sub = review.add_subparsers(dest="matches_action", required=True)
-    review_action = review_sub.add_parser("review")
+    matches = commands.add_parser("matches", help="review match evidence")
+    review_sub = matches.add_subparsers(dest="matches_action", required=True)
+    history_action = review_sub.add_parser("history", help="read the verified opinion ledger")
+    history_action.add_argument("match_id", type=UUID)
+    review_action = review_sub.add_parser("review", help="append an independent opinion")
     review_action.add_argument("match_id", type=UUID)
     review_action.add_argument("--decision", type=Path, required=True)
+    adjudicate_action = review_sub.add_parser(
+        "adjudicate", help="resolve conflicting opinions independently"
+    )
+    adjudicate_action.add_argument("match_id", type=UUID)
+    adjudicate_action.add_argument("--decision", type=Path, required=True)
 
     temporal = commands.add_parser("temporal", help="review exposure chronology")
     temporal_sub = temporal.add_subparsers(dest="temporal_action", required=True)
@@ -285,6 +298,12 @@ def _command_route(args: argparse.Namespace) -> tuple[str, str] | None:
         return "GET", f"/v1/benchmark-audit/{args.resource}?{urlencode(query)}"
     if command == "show":
         return "GET", f"/v1/benchmark-audit/{args.resource}/{args.document_id}"
+    if command == "matches" and args.matches_action == "review":
+        return "POST", f"/v1/benchmark-audit/matches/{args.match_id}/reviews"
+    if command == "matches" and args.matches_action == "history":
+        return "GET", f"/v1/benchmark-audit/matches/{args.match_id}/reviews"
+    if command == "matches" and args.matches_action == "adjudicate":
+        return "POST", f"/v1/benchmark-audit/matches/{args.match_id}/adjudications"
     if command == "plan":
         return "POST", "/v1/benchmark-audit/plans"
     if command == "run":
@@ -313,10 +332,10 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
         if action == "submit":
             raw = _read_local_file(args.payload, "submission")
             parse_json_strict(raw)
-            submission = ModelSubmissionInput.model_validate_json(raw, strict=True)
+            model_submission = ModelSubmissionInput.model_validate_json(raw, strict=True)
             return {
-                "model_name": submission.model_name,
-                "provider": submission.provider,
+                "model_name": model_submission.model_name,
+                "provider": model_submission.provider,
                 "input_bytes": len(raw),
             }
         if action == "show":
@@ -324,19 +343,19 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
         if action == "approve":
             raw = _read_local_file(args.decision, "approval")
             parse_json_strict(raw)
-            decision = SubmissionApprovalInput.model_validate_json(raw, strict=True)
+            approval = SubmissionApprovalInput.model_validate_json(raw, strict=True)
             return {
                 "submission_id": str(args.submission_id),
-                "endpoint_registration_id": str(decision.endpoint_registration_id),
+                "endpoint_registration_id": str(approval.endpoint_registration_id),
                 "input_bytes": len(raw),
             }
         if action == "reject":
             raw = _read_local_file(args.decision, "rejection")
             parse_json_strict(raw)
-            decision = SubmissionRejectInput.model_validate_json(raw, strict=True)
+            rejection = SubmissionRejectInput.model_validate_json(raw, strict=True)
             return {
                 "submission_id": str(args.submission_id),
-                "expected_version": decision.expected_version,
+                "expected_version": rejection.expected_version,
                 "input_bytes": len(raw),
             }
     if args.root_command == "endpoints":
@@ -353,10 +372,10 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
         if action == "register":
             raw = _read_local_file(args.payload, "endpoint registration")
             parse_json_strict(raw)
-            registration = EndpointRegistrationInput.model_validate_json(raw, strict=True)
+            endpoint_registration = EndpointRegistrationInput.model_validate_json(raw, strict=True)
             return {
-                "provider_kind": registration.provider_kind.value,
-                "base_url": registration.base_url,
+                "provider_kind": endpoint_registration.provider_kind.value,
+                "base_url": endpoint_registration.base_url,
                 "input_bytes": len(raw),
             }
         if action == "show":
@@ -364,11 +383,11 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
         if action == "decide":
             raw = _read_local_file(args.decision, "endpoint decision")
             parse_json_strict(raw)
-            decision = EndpointDecisionInput.model_validate_json(raw, strict=True)
+            endpoint_decision = EndpointDecisionInput.model_validate_json(raw, strict=True)
             return {
                 "endpoint_id": str(args.endpoint_id),
-                "decision": decision.decision,
-                "expected_version": decision.expected_version,
+                "decision": endpoint_decision.decision,
+                "expected_version": endpoint_decision.expected_version,
                 "input_bytes": len(raw),
             }
     if args.command == "plan":
@@ -418,15 +437,25 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
             "reserved_query_units": args.query_units,
             "reserved_storage_bytes": args.storage_bytes,
         }
+    if args.command == "matches" and args.matches_action == "history":
+        return {"candidate_document_id": str(args.match_id)}
     if args.command in {"matches", "temporal", "sealed", "firewall", "replacements", "monitor"}:
         result: dict[str, Any] = {
             "command": args.command,
             "validation_scope": "command_arguments_only",
         }
-        if args.command == "matches":
+        if args.command == "matches" and args.matches_action in {"review", "adjudicate"}:
             content = _read_local_file(args.decision, "decision")
-            json.loads(content)
-            result["validation_scope"] = "decision_json_syntax"
+            parse_json_strict(content)
+            submission_model = (
+                MatchReviewSubmission
+                if args.matches_action == "review"
+                else MatchAdjudicationSubmission
+            )
+            submission = submission_model.model_validate_json(content, strict=True)
+            result["validation_scope"] = f"match_{args.matches_action}_submission_schema"
+            result["decision"] = submission.decision
+            result["relation"] = submission.relation
             result["decision_bytes"] = len(content)
         elif args.command == "sealed":
             content = _read_local_file(args.manifest, "manifest")
@@ -477,26 +506,26 @@ def _request_body(args: argparse.Namespace) -> bytes | None:
         action = args.submission_action
         if action == "submit":
             raw = _read_local_file(args.payload, "submission")
-            value = ModelSubmissionInput.model_validate_json(raw, strict=True)
-            return canonical_json_bytes(value.model_dump(mode="json"))
+            model_submission = ModelSubmissionInput.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(model_submission.model_dump(mode="json"))
         if action == "approve":
             raw = _read_local_file(args.decision, "approval")
-            value = SubmissionApprovalInput.model_validate_json(raw, strict=True)
-            return canonical_json_bytes(value.model_dump(mode="json"))
+            approval = SubmissionApprovalInput.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(approval.model_dump(mode="json"))
         if action == "reject":
             raw = _read_local_file(args.decision, "rejection")
-            value = SubmissionRejectInput.model_validate_json(raw, strict=True)
-            return canonical_json_bytes(value.model_dump(mode="json"))
+            rejection = SubmissionRejectInput.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(rejection.model_dump(mode="json"))
     elif args.root_command == "endpoints":
         action = args.endpoint_action
         if action == "register":
             raw = _read_local_file(args.payload, "endpoint registration")
-            value = EndpointRegistrationInput.model_validate_json(raw, strict=True)
-            return canonical_json_bytes(value.model_dump(mode="json"))
+            endpoint_registration = EndpointRegistrationInput.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(endpoint_registration.model_dump(mode="json"))
         if action == "decide":
             raw = _read_local_file(args.decision, "endpoint decision")
-            value = EndpointDecisionInput.model_validate_json(raw, strict=True)
-            return canonical_json_bytes(value.model_dump(mode="json"))
+            endpoint_decision = EndpointDecisionInput.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(endpoint_decision.model_dump(mode="json"))
     elif args.root_command == "audit":
         if args.command == "plan":
             return _read_local_file(args.payload, "plan")
@@ -504,8 +533,18 @@ def _request_body(args: argparse.Namespace) -> bytes | None:
             raw = _read_local_file(args.payload, "resource plan")
             if len(raw) > _MAX_AUDIT_REQUEST_BYTES:
                 raise ValueError("resource plan exceeds the 64 KiB API request limit")
-            value = AuditResourceRequest.model_validate_json(raw, strict=True)
-            return canonical_json_bytes(value.model_dump(mode="json"))
+            resource_request = AuditResourceRequest.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(resource_request.model_dump(mode="json"))
+        if args.command == "matches" and args.matches_action in {"review", "adjudicate"}:
+            raw = _read_local_file(args.decision, "decision")
+            parse_json_strict(raw)
+            submission_model = (
+                MatchReviewSubmission
+                if args.matches_action == "review"
+                else MatchAdjudicationSubmission
+            )
+            submission = submission_model.model_validate_json(raw, strict=True)
+            return canonical_json_bytes(submission.model_dump(mode="json"))
         if args.command == "run":
             return canonical_json_bytes(_validate_local_input(args))
     return None
@@ -516,11 +555,15 @@ def _is_mutation(args: argparse.Namespace) -> bool:
         return args.submission_action in {"submit", "approve", "reject"}
     if args.root_command == "endpoints":
         return args.endpoint_action in {"register", "decide"}
-    return args.command in {"plan", "run"}
+    return args.command in {"plan", "run"} or (
+        args.command == "matches" and args.matches_action in {"review", "adjudicate"}
+    )
 
 
 def _command_name(args: argparse.Namespace) -> str:
     if args.root_command == "audit":
+        if args.command == "matches":
+            return f"audit matches {args.matches_action}"
         return f"audit {args.command}"
     if args.root_command == "submissions":
         return f"submissions {args.submission_action}"
@@ -615,11 +658,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         base_url = _safe_base_url(args.api_url)
         method, path = route
         headers: dict[str, str] = {}
-        if args.root_command == "audit" and args.command in {"plan", "run"}:
+        if args.root_command == "audit" and (
+            args.command in {"plan", "run"}
+            or (args.command == "matches" and args.matches_action in {"review", "adjudicate"})
+        ):
             path += "?dry_run=false"
         if _is_mutation(args):
             headers["Idempotency-Key"] = args.idempotency_key
-        if args.root_command == "audit" and args.command in {"plan", "run"}:
+        if args.root_command == "audit" and (
+            args.command in {"plan", "run"}
+            or (args.command == "matches" and args.matches_action in {"review", "adjudicate"})
+        ):
             headers["If-None-Match"] = "*"
         status, response = _request(method, base_url + path, args.token, body, headers)
         if status in {200, 201, 202}:

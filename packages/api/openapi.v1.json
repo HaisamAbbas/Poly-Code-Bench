@@ -8310,6 +8310,192 @@
         "title": "LocalTimestampReceipt",
         "type": "object"
       },
+      "MatchAdjudication": {
+        "additionalProperties": false,
+        "properties": {
+          "adjudication_id": {
+            "format": "uuid",
+            "title": "Adjudication Id",
+            "type": "string"
+          },
+          "adjudicator_subject": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Adjudicator Subject",
+            "type": "string"
+          },
+          "candidate_author_subject": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Candidate Author Subject",
+            "type": "string"
+          },
+          "candidate_ref": {
+            "$ref": "#/components/schemas/AuditDocumentRef"
+          },
+          "created_at": {
+            "maxLength": 35,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "accepted",
+              "rejected"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_artifact_ref": {
+            "$ref": "#/components/schemas/ImmutableArtifactRef"
+          },
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/AuditDocumentRef"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "reason": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "relation": {
+            "enum": [
+              "exact_component",
+              "near_exact_component",
+              "semantic_duplicate",
+              "shared_family",
+              "shared_concept",
+              "no_substantive_match",
+              "unresolved"
+            ],
+            "title": "Relation",
+            "type": "string"
+          },
+          "reviewed_opinion_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 2,
+            "title": "Reviewed Opinion Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "adjudication_id",
+          "candidate_ref",
+          "candidate_author_subject",
+          "adjudicator_subject",
+          "reviewed_opinion_ids",
+          "decision",
+          "relation",
+          "reason",
+          "evidence_refs",
+          "decision_artifact_ref",
+          "created_at"
+        ],
+        "title": "MatchAdjudication",
+        "type": "object"
+      },
+      "MatchAdjudicationMutationData": {
+        "additionalProperties": false,
+        "properties": {
+          "adjudication_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adjudication Id"
+          },
+          "candidate_document_id": {
+            "format": "uuid",
+            "title": "Candidate Document Id",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Digest",
+            "type": "string"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "match_adjudication_result",
+            "default": "match_adjudication_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "validated",
+              "adjudicated"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "candidate_document_id",
+          "adjudication_id",
+          "digest",
+          "state",
+          "created",
+          "dry_run"
+        ],
+        "title": "MatchAdjudicationMutationData",
+        "type": "object"
+      },
+      "MatchAdjudicationMutationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MatchAdjudicationMutationData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditApiMeta"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "data",
+          "meta"
+        ],
+        "title": "MatchAdjudicationMutationResult",
+        "type": "object"
+      },
       "MatchEvidenceDocument": {
         "additionalProperties": false,
         "properties": {
@@ -8738,6 +8924,343 @@
           "counter_evidence_refs"
         ],
         "title": "MatchEvidencePayloadV2",
+        "type": "object"
+      },
+      "MatchReviewHistoryData": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_document_id": {
+            "format": "uuid",
+            "title": "Candidate Document Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "match_review_history",
+            "default": "match_review_history",
+            "title": "Kind",
+            "type": "string"
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/MatchReviewLedger"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "candidate_document_id",
+          "ledger"
+        ],
+        "title": "MatchReviewHistoryData",
+        "type": "object"
+      },
+      "MatchReviewHistoryResult": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MatchReviewHistoryData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditApiMeta"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "data",
+          "meta"
+        ],
+        "title": "MatchReviewHistoryResult",
+        "type": "object"
+      },
+      "MatchReviewLedger": {
+        "additionalProperties": false,
+        "description": "An immutable projection of append-only opinions; persistence must append events.",
+        "properties": {
+          "adjudication": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchAdjudication"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidate_author_subject": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Candidate Author Subject",
+            "type": "string"
+          },
+          "candidate_ref": {
+            "$ref": "#/components/schemas/AuditDocumentRef"
+          },
+          "opinions": {
+            "items": {
+              "$ref": "#/components/schemas/MatchReviewOpinion"
+            },
+            "maxItems": 32,
+            "title": "Opinions",
+            "type": "array"
+          },
+          "resolved_relation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "exact_component",
+                  "near_exact_component",
+                  "semantic_duplicate",
+                  "shared_family",
+                  "shared_concept",
+                  "no_substantive_match",
+                  "unresolved"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Relation"
+          },
+          "state": {
+            "enum": [
+              "proposed",
+              "accepted",
+              "rejected",
+              "disputed",
+              "adjudicated"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_ref",
+          "candidate_author_subject",
+          "opinions",
+          "adjudication",
+          "state",
+          "resolved_relation"
+        ],
+        "title": "MatchReviewLedger",
+        "type": "object"
+      },
+      "MatchReviewMutationData": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_document_id": {
+            "format": "uuid",
+            "title": "Candidate Document Id",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "title": "Digest",
+            "type": "string"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "match_review_result",
+            "default": "match_review_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "opinion_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opinion Id"
+          },
+          "review_seq": {
+            "anyOf": [
+              {
+                "maximum": 1000000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Seq"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "validated",
+              "accepted",
+              "rejected",
+              "disputed"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "candidate_document_id",
+          "opinion_id",
+          "digest",
+          "review_seq",
+          "state",
+          "created",
+          "dry_run"
+        ],
+        "title": "MatchReviewMutationData",
+        "type": "object"
+      },
+      "MatchReviewMutationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MatchReviewMutationData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditApiMeta"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "data",
+          "meta"
+        ],
+        "title": "MatchReviewMutationResult",
+        "type": "object"
+      },
+      "MatchReviewOpinion": {
+        "additionalProperties": false,
+        "description": "One independent human opinion persisted in the append-only match-review ledger.",
+        "properties": {
+          "candidate_author_subject": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Candidate Author Subject",
+            "type": "string"
+          },
+          "candidate_ref": {
+            "$ref": "#/components/schemas/AuditDocumentRef"
+          },
+          "created_at": {
+            "maxLength": 35,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "accepted",
+              "rejected",
+              "disputed"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_artifact_ref": {
+            "$ref": "#/components/schemas/ImmutableArtifactRef"
+          },
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/AuditDocumentRef"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "opinion_id": {
+            "format": "uuid",
+            "title": "Opinion Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "relation": {
+            "enum": [
+              "exact_component",
+              "near_exact_component",
+              "semantic_duplicate",
+              "shared_family",
+              "shared_concept",
+              "no_substantive_match",
+              "unresolved"
+            ],
+            "title": "Relation",
+            "type": "string"
+          },
+          "review_seq": {
+            "maximum": 1000000.0,
+            "minimum": 1.0,
+            "title": "Review Seq",
+            "type": "integer"
+          },
+          "reviewer_kind": {
+            "const": "human",
+            "default": "human",
+            "title": "Reviewer Kind",
+            "type": "string"
+          },
+          "reviewer_subject": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Reviewer Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "opinion_id",
+          "candidate_ref",
+          "candidate_author_subject",
+          "reviewer_subject",
+          "review_seq",
+          "decision",
+          "relation",
+          "reason",
+          "evidence_refs",
+          "decision_artifact_ref",
+          "created_at"
+        ],
+        "title": "MatchReviewOpinion",
         "type": "object"
       },
       "MatchSpanV2": {
@@ -16412,6 +16935,786 @@
           }
         },
         "summary": "Download Public Artifact"
+      }
+    },
+    "/v1/benchmark-audit/matches/{candidate_document_id}/adjudications": {
+      "post": {
+        "operationId": "create_match_adjudication_v1_benchmark_audit_matches__candidate_document_id__adjudications_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Candidate Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dry_run",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Dry Run",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-None-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$defs": {
+                  "AuditDocumentRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "digest": {
+                        "maxLength": 71,
+                        "minLength": 71,
+                        "pattern": "^sha256:[0-9a-f]{64}$",
+                        "title": "Digest",
+                        "type": "string"
+                      },
+                      "document_id": {
+                        "format": "uuid",
+                        "title": "Document Id",
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": [
+                          "benchmark_snapshot",
+                          "task_fingerprint",
+                          "corpus_snapshot",
+                          "audit_plan",
+                          "query_manifest",
+                          "coverage_manifest",
+                          "match_evidence",
+                          "model_context",
+                          "risk_policy",
+                          "risk_assessment",
+                          "temporal_assessment",
+                          "sealed_manifest",
+                          "canary_policy",
+                          "seal_access_event",
+                          "canary_observation",
+                          "behavioral_audit_plan",
+                          "behavioral_method_registry",
+                          "behavioral_task_validity",
+                          "behavioral_observation",
+                          "behavioral_assessment",
+                          "firewall_policy",
+                          "firewall_scope",
+                          "firewall_decision",
+                          "replacement_source_metadata",
+                          "replacement_plan",
+                          "replacement_validation",
+                          "derived_benchmark_manifest",
+                          "monitor_policy",
+                          "monitor_alert",
+                          "benchmark_health",
+                          "audit_attestation"
+                        ],
+                        "title": "Kind",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "document_id",
+                      "digest",
+                      "kind"
+                    ],
+                    "title": "AuditDocumentRef",
+                    "type": "object"
+                  },
+                  "ImmutableArtifactRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "artifact_id": {
+                        "format": "uuid",
+                        "title": "Artifact Id",
+                        "type": "string"
+                      },
+                      "digest": {
+                        "maxLength": 71,
+                        "minLength": 71,
+                        "pattern": "^sha256:[0-9a-f]{64}$",
+                        "title": "Digest",
+                        "type": "string"
+                      },
+                      "media_type": {
+                        "maxLength": 512,
+                        "minLength": 1,
+                        "title": "Media Type",
+                        "type": "string"
+                      },
+                      "visibility": {
+                        "enum": [
+                          "private",
+                          "restricted",
+                          "public"
+                        ],
+                        "title": "Visibility",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "artifact_id",
+                      "digest",
+                      "visibility",
+                      "media_type"
+                    ],
+                    "title": "ImmutableArtifactRef",
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Adjudicator-supplied fields; identity, opinion set and time are server-owned.",
+                "properties": {
+                  "decision": {
+                    "enum": [
+                      "accepted",
+                      "rejected"
+                    ],
+                    "title": "Decision",
+                    "type": "string"
+                  },
+                  "decision_artifact_ref": {
+                    "$ref": "#/$defs/ImmutableArtifactRef"
+                  },
+                  "evidence_refs": {
+                    "items": {
+                      "$ref": "#/$defs/AuditDocumentRef"
+                    },
+                    "maxItems": 32,
+                    "minItems": 1,
+                    "title": "Evidence Refs",
+                    "type": "array"
+                  },
+                  "reason": {
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "title": "Reason",
+                    "type": "string"
+                  },
+                  "relation": {
+                    "enum": [
+                      "exact_component",
+                      "near_exact_component",
+                      "semantic_duplicate",
+                      "shared_family",
+                      "shared_concept",
+                      "no_substantive_match",
+                      "unresolved"
+                    ],
+                    "title": "Relation",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "decision",
+                  "relation",
+                  "reason",
+                  "evidence_refs",
+                  "decision_artifact_ref"
+                ],
+                "title": "MatchAdjudicationSubmission",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchAdjudicationMutationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Create Match Adjudication",
+        "tags": [
+          "benchmark-audit-private"
+        ]
+      }
+    },
+    "/v1/benchmark-audit/matches/{candidate_document_id}/reviews": {
+      "get": {
+        "operationId": "get_match_review_history_v1_benchmark_audit_matches__candidate_document_id__reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Candidate Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchReviewHistoryResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Get Match Review History",
+        "tags": [
+          "benchmark-audit-private"
+        ]
+      },
+      "post": {
+        "operationId": "create_match_review_v1_benchmark_audit_matches__candidate_document_id__reviews_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Candidate Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dry_run",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Dry Run",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-None-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$defs": {
+                  "AuditDocumentRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "digest": {
+                        "maxLength": 71,
+                        "minLength": 71,
+                        "pattern": "^sha256:[0-9a-f]{64}$",
+                        "title": "Digest",
+                        "type": "string"
+                      },
+                      "document_id": {
+                        "format": "uuid",
+                        "title": "Document Id",
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": [
+                          "benchmark_snapshot",
+                          "task_fingerprint",
+                          "corpus_snapshot",
+                          "audit_plan",
+                          "query_manifest",
+                          "coverage_manifest",
+                          "match_evidence",
+                          "model_context",
+                          "risk_policy",
+                          "risk_assessment",
+                          "temporal_assessment",
+                          "sealed_manifest",
+                          "canary_policy",
+                          "seal_access_event",
+                          "canary_observation",
+                          "behavioral_audit_plan",
+                          "behavioral_method_registry",
+                          "behavioral_task_validity",
+                          "behavioral_observation",
+                          "behavioral_assessment",
+                          "firewall_policy",
+                          "firewall_scope",
+                          "firewall_decision",
+                          "replacement_source_metadata",
+                          "replacement_plan",
+                          "replacement_validation",
+                          "derived_benchmark_manifest",
+                          "monitor_policy",
+                          "monitor_alert",
+                          "benchmark_health",
+                          "audit_attestation"
+                        ],
+                        "title": "Kind",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "document_id",
+                      "digest",
+                      "kind"
+                    ],
+                    "title": "AuditDocumentRef",
+                    "type": "object"
+                  },
+                  "ImmutableArtifactRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "artifact_id": {
+                        "format": "uuid",
+                        "title": "Artifact Id",
+                        "type": "string"
+                      },
+                      "digest": {
+                        "maxLength": 71,
+                        "minLength": 71,
+                        "pattern": "^sha256:[0-9a-f]{64}$",
+                        "title": "Digest",
+                        "type": "string"
+                      },
+                      "media_type": {
+                        "maxLength": 512,
+                        "minLength": 1,
+                        "title": "Media Type",
+                        "type": "string"
+                      },
+                      "visibility": {
+                        "enum": [
+                          "private",
+                          "restricted",
+                          "public"
+                        ],
+                        "title": "Visibility",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "artifact_id",
+                      "digest",
+                      "visibility",
+                      "media_type"
+                    ],
+                    "title": "ImmutableArtifactRef",
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Reviewer-supplied decision fields; identity, sequence and time are server-owned.",
+                "properties": {
+                  "decision": {
+                    "enum": [
+                      "accepted",
+                      "rejected",
+                      "disputed"
+                    ],
+                    "title": "Decision",
+                    "type": "string"
+                  },
+                  "decision_artifact_ref": {
+                    "$ref": "#/$defs/ImmutableArtifactRef"
+                  },
+                  "evidence_refs": {
+                    "items": {
+                      "$ref": "#/$defs/AuditDocumentRef"
+                    },
+                    "maxItems": 32,
+                    "minItems": 1,
+                    "title": "Evidence Refs",
+                    "type": "array"
+                  },
+                  "reason": {
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "title": "Reason",
+                    "type": "string"
+                  },
+                  "relation": {
+                    "enum": [
+                      "exact_component",
+                      "near_exact_component",
+                      "semantic_duplicate",
+                      "shared_family",
+                      "shared_concept",
+                      "no_substantive_match",
+                      "unresolved"
+                    ],
+                    "title": "Relation",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "decision",
+                  "relation",
+                  "reason",
+                  "evidence_refs",
+                  "decision_artifact_ref"
+                ],
+                "title": "MatchReviewSubmission",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchReviewMutationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Create Match Review",
+        "tags": [
+          "benchmark-audit-private"
+        ]
       }
     },
     "/v1/benchmark-audit/plans": {

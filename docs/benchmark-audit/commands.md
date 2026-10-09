@@ -316,3 +316,35 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | `uv run --locked --project packages/api pcb audit verify-attestation --help` | Passed | Confirms the public trust-store/file interface and local `--dry-run` option. No attestation was verified and no key was read. |
 | `git diff --cached --check` | Passed: no whitespace errors in the 22 Prompt106-owned staged paths | Only the exact Prompt106 files were staged; unrelated worktree changes remain unstaged. |
 | Live benchmark/source/rights/reviewer/database/key/capacity/cost work | Blocked or unavailable | No live source, model, paid service, reviewer, signer or production database was used for Prompt106. Configured ceilings are not measured operating costs/capacity. |
+
+## Private match-review and adjudication CLI
+
+| Command/check | Result | Scope |
+|---|---|---|
+| Focused review/adjudication, API, CLI, contract, persistence, operator-capability and migration-policy tests | Passed: 64 tests | Synthetic authenticated API calls, dry-run/remote CLI path, immutable ledger rebuild, independent adjudicator rules, idempotent replay, post-adjudication lockout, controls and migration policy. |
+| Ruff check/format and strict mypy on changed modules | Passed | No lint, formatting or type errors. |
+| `uv run --offline --locked python scripts/export_public_api_openapi.py --check` | Passed | Snapshot matches API routes and typed schemas. |
+| Offline Alembic `upgrade c81a4d2e7f30:head --sql` | Passed; `e1f2a3b4c5d6` is the head | Opinion ledger and immutable adjudication table render without contacting a database. |
+| Full Python suite | Passed: 1,690 passed, 219 skipped | PostgreSQL, Docker and other opt-in cases remain skipped when their test services are not configured. |
+| Migrated PostgreSQL integration | Not run | No disposable audit database was configured; no live database was contacted or migrated. |
+
+## Match-review CLI implementation update (2026-10-10)
+
+| Command/check | Result | Scope |
+|---|---|---|
+| Focused review/API/CLI/contract/operator-capability tests | Passed: 64 passed | Synthetic API/CLI, MFA/ACL, append-only opinion ledger, history verification, self-review rejection, idempotency/replay, controls and migration policy. No live database. |
+| `uv run --offline --locked mypy --strict` over the six changed core/services/persistence/API source modules | Passed: no issues in 6 files | Strict type check of implementation modules. |
+| Ruff check, targeted format check, strict mypy and full Python suite | Passed: focused checks passed; full suite 1,690 passed, 219 skipped | The 219 skips require optional PostgreSQL, Docker or host-specific integration services. One Starlette/httpx deprecation warning. |
+| Alembic graph and offline `upgrade c81a4d2e7f30:head --sql` render | Passed; `e1f2a3b4c5d6` is the sole head | The additive opinion/idempotency and adjudication migrations render without a database connection or migration. |
+| `uv run --offline --locked python scripts/benchmark_audit_traceability.py` | Passed, exit 0; status `partial`; 0 structural errors | Existing source-owner and live/source/reviewer/database evidence blockers remain. |
+| Current-schema PostgreSQL writer integration and installation ACL configuration | Not run | No approved disposable audit database or production ACL configuration was contacted. |
+
+## Workspace-wide checks during the match-review update
+
+| Command/check | Result | Notes |
+|---|---|---|
+| `ruff check .` | Passed | No lint violations. |
+| Web lint, typecheck and production build | Passed | Public web source was not changed by this CLI work. |
+| Workspace format check | Existing failures | `ruff format --check .` reports extensive drift in unrelated files; no repository-wide formatting was applied. Changed files were checked separately. |
+| Workspace mypy and boundary check | Existing failures | Broad mypy errors are in unrelated ops/render/publish scripts. Boundary violations are in existing evaluation/orchestration modules; changed modules pass strict mypy. |
+| Workspace smoke check and offline package build | Passed | No external services or database were needed. |

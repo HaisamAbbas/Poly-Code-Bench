@@ -34,7 +34,7 @@ overwriting newer review state. CLI output never includes endpoint secret refere
 |---|---|
 | `pcb submissions` | Submit a model for private review; list/show requests; approve a bounded evaluation run or reject a request. |
 | `pcb endpoints` | Register endpoints; list/show registrations; record approval, rejection, or revocation decisions. |
-| `pcb audit` | Preview benchmark scope, estimate bounded resources, list and inspect tenant-scoped audit documents, save immutable plans, create planned no-dispatch audit runs, and verify signed attestations locally. `pcb audit capabilities` lists supported and blocked operations. |
+| `pcb audit` | Preview benchmark scope, estimate bounded resources, list and inspect tenant-scoped audit documents, save immutable plans, create planned no-dispatch audit runs, append MFA-reviewed match opinions, independently adjudicate conflicts, and verify signed attestations locally. `pcb audit capabilities` lists supported and blocked operations. |
 | `pcb-ops` | Deployment checks, identity checks, migrations, worker draining, orphan/artifact cleanup, backups/restores, signing keys, release synchronization, and alert-rule validation. |
 | `pcb-release` | Build, validate, sign, publish, withdraw, and inspect public release manifests. Publication still requires the configured release authority. |
 | `pcb-model` | Register/probe model endpoints, plan bounded model calls, inspect budgets, and reconcile provider delivery records. |
@@ -69,10 +69,11 @@ their narrowly scoped service identities and environment configuration.
 ## Benchmark containment boundary
 
 The `pcb audit` API supports scope preview, bounded resource estimates, tenant-scoped document
-reads, registry reads, immutable audit-plan creation, and planned no-dispatch run creation/status
-reads. Attestations can be read through authorized document access and verified locally. An audit
-run returned by this API always has `dispatch_authorized=false`. No CLI command in this build can
-launch source queries, benchmark/model/guest execution, or issue a clean-benchmark verdict.
+reads, registry reads, immutable audit-plan creation, planned no-dispatch run creation/status
+reads, and append-only human match opinions. Attestations can be read through authorized document
+access and verified locally. An audit run returned by this API always has
+`dispatch_authorized=false`. No CLI command in this build can launch source queries,
+benchmark/model/guest execution, or issue a clean-benchmark verdict.
 
 An operator can inspect the catalog, request a bounded estimate, and review saved plan records
 without dispatching work:
@@ -90,12 +91,47 @@ an optional average item size. The API rejects unknown catalog entries and reque
 frozen task, query, source, stage, or storage limits. Its result includes blockers and always sets
 `dispatch_allowed=false`.
 
+An authorized reviewer can append a match opinion after reviewing its evidence. The reviewer token
+must include MFA, restricted-evidence read and adjudication permissions, and the deployment's
+object ACL must grant review access to that match. The decision artifact must already be verified
+and referenced by its immutable ID and digest. The server supplies reviewer identity and sequence;
+the CLI only accepts the decision, relation, reason, evidence references and artifact reference.
+Reviews are immutable and use an idempotency key.
+
+```powershell
+pcb audit matches review <match-evidence-document-id> `
+  --decision match-review.json `
+  --idempotency-key <unique-key>
+pcb audit matches history <match-evidence-document-id>
+```
+
+If independent reviewers disagree, an authorized adjudicator who did not author the candidate or
+submit either opinion can resolve the conflict:
+
+```powershell
+pcb audit matches adjudicate <match-evidence-document-id> `
+  --decision match-adjudication.json `
+  --idempotency-key <unique-key>
+pcb audit matches history <match-evidence-document-id>
+```
+
+`match-review.json` must follow the strict `MatchReviewSubmission` schema shown by the API's
+OpenAPI document. Review opinions are append-only rows in the match-review ledger; the API verifies
+the complete sequence and candidate-state projection when returning history. Review opinions do not
+start source scans or model/guest execution. Conflicting opinions remain disputed until a separate,
+append-only adjudication is recorded. `match-adjudication.json` follows the strict
+`MatchAdjudicationSubmission` schema. Its adjudicator identity and the opinion IDs being resolved
+come from the authenticated server-side ledger; the artifact remains private or restricted.
+
+See the [match-review implementation note](benchmark-audit/reports/match-review-implementation-2026-10-10.md)
+for verification results and remaining deployment requirements.
+
 `pcb audit capabilities` also identifies local preparation and operations with no reviewed API
-adapter. Match review, temporal assessment, sealed evaluation, firewall decisions, replacement
-admission, monitoring/alerts, health generation, and the durable benchmark import/membership flow
-must remain blocked until their reviewer/tenant authorization, source/artifact and rights validation,
-database writers, and required key or delivery adapters are in place. Validation-only flags and
-synthetic fixtures do not authorize live source access, external model calls, signing, or publication.
+adapter. Temporal assessment, sealed evaluation, firewall decisions, replacement admission,
+monitoring/alerts, health generation, and the durable benchmark import/membership flow remain
+blocked until their reviewer/tenant authorization, source/artifact and rights validation, database
+writers, and required key or delivery adapters are in place. Validation-only flags and synthetic
+fixtures do not authorize live source access, external model calls, signing, or publication.
 
 ## Running checks
 

@@ -398,5 +398,14 @@ def test_audit_cli_capabilities_are_local_and_never_claim_dispatch(capsys) -> No
     assert audit_cli.main(["audit", "capabilities"]) == 0
     output = json.loads(capsys.readouterr().out)
     assert output["dispatch_authorized"] is False
-    assert "audit matches review" in output["blocked_without_reviewed_adapters"]
+    assert "audit matches review (MFA reviewer, immutable opinion)" in output["remote_writes"]
+    assert (
+        "audit matches adjudicate (independent MFA conflict resolution)" in output["remote_writes"]
+    )
+    assert not any(
+        "audit matches adjudicate" in item for item in output["blocked_without_reviewed_adapters"]
+    )
+    assert (
+        "audit matches history (MFA reviewer, immutable opinion ledger)" in output["remote_reads"]
+    )
     assert "audit plan (immutable document, no dispatch)" in output["remote_writes"]

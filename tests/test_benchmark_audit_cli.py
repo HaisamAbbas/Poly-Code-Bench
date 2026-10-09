@@ -24,6 +24,66 @@ def test_registry_dry_run_is_local_and_has_a_real_read_route(
     assert output["path"] == "/v1/benchmark-audit/registry"
 
 
+def test_match_history_dry_run_uses_private_read_route_without_http(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def no_request(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise AssertionError("dry-run must not make HTTP requests")
+
+    monkeypatch.setattr(audit_cli, "_request", no_request)
+    candidate_id = "11111111-1111-4111-8111-111111111111"
+    result = audit_cli.main(["audit", "matches", "history", candidate_id, "--dry-run"])
+    output = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert output["command"] == "audit matches history"
+    assert output["method"] == "GET"
+    assert output["path"] == f"/v1/benchmark-audit/matches/{candidate_id}/reviews"
+    assert output["remote_work"] == "none"
+
+
+def test_match_adjudication_dry_run_validates_locally_and_uses_adjudication_route(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    def no_request(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise AssertionError("dry-run must not make HTTP requests")
+
+    monkeypatch.setattr(audit_cli, "_request", no_request)
+    decision = tmp_path / "adjudication.json"
+    decision.write_text(
+        '{"decision":"accepted","relation":"semantic_duplicate",'
+        '"reason":"Independent adjudication resolves the conflicting reviews.",'
+        '"evidence_refs":[{"document_id":"11111111-1111-4111-8111-111111111111",'
+        '"digest":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",'
+        '"kind":"corpus_snapshot"}],"decision_artifact_ref":'
+        '{"artifact_id":"22222222-2222-4222-8222-222222222222",'
+        '"digest":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",'
+        '"visibility":"restricted","media_type":"application/json"}}',
+        encoding="utf-8",
+    )
+    candidate_id = "33333333-3333-4333-8333-333333333333"
+
+    result = audit_cli.main(
+        [
+            "audit",
+            "matches",
+            "adjudicate",
+            candidate_id,
+            "--decision",
+            str(decision),
+            "--dry-run",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+    assert result == 0
+    assert output["command"] == "audit matches adjudicate"
+    assert output["method"] == "POST"
+    assert output["path"] == (f"/v1/benchmark-audit/matches/{candidate_id}/adjudications")
+    assert output["input"]["validation_scope"] == "match_adjudicate_submission_schema"
+    assert output["remote_work"] == "none"
+
+
 def test_resource_plan_dry_run_is_local_and_respects_api_body_limit(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -52,11 +112,7 @@ def test_resource_plan_dry_run_is_local_and_respects_api_body_limit(
 def test_unsupported_transition_is_blocked_without_http(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
-    tmp_path: Path,
 ) -> None:
-    decision = tmp_path / "decision.json"
-    decision.write_text('{"decision":"accept"}', encoding="utf-8")
-
     def no_request(*args, **kwargs):  # type: ignore[no-untyped-def]
         raise AssertionError("uninstalled transitions must not make HTTP requests")
 
@@ -65,11 +121,11 @@ def test_unsupported_transition_is_blocked_without_http(
     result = audit_cli.main(
         [
             "audit",
-            "matches",
-            "review",
+            "temporal",
+            "assess",
             "11111111-1111-4111-8111-111111111111",
-            "--decision",
-            str(decision),
+            "--model-context",
+            "22222222-2222-4222-8222-222222222222",
         ]
     )
     assert result == 3

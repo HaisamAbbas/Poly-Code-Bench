@@ -26,6 +26,7 @@ from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
     AuditPlanDocument,
     AuditRunState,
+    MatchEvidenceDocumentV2,
     audit_document_digest,
     audit_document_value,
     parse_audit_document,
@@ -39,6 +40,11 @@ from polycodebench_core.benchmark_audit_registry import (
     SourceGroupPolicy,
 )
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
+from polycodebench_core.match_verification import (
+    MatchAdjudicationSubmission,
+    MatchReviewLedger,
+    MatchReviewSubmission,
+)
 from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_publication.aggregation import PublicationModel
 from polycodebench_publication.projections import ERROR_STATUS, Cursor, ErrorCode
@@ -184,6 +190,51 @@ class AuditRunCreateInput(PublicationModel):
     reserved_query_units: int = Field(ge=0, le=9_007_199_254_740_991)
     reserved_storage_bytes: int = Field(ge=0, le=9_007_199_254_740_991)
     campaign_id: UUID | None = None
+
+
+class MatchReviewMutationData(PublicationModel):
+    kind: Literal["match_review_result"] = "match_review_result"
+    schema_version: Literal[1] = 1
+    candidate_document_id: UUID
+    opinion_id: UUID | None
+    digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    review_seq: int | None = Field(default=None, ge=1, le=1_000_000)
+    state: Literal["validated", "accepted", "rejected", "disputed"]
+    created: bool
+    dry_run: bool
+
+
+class MatchReviewMutationResult(PublicationModel):
+    data: MatchReviewMutationData
+    meta: AuditApiMeta
+
+
+class MatchAdjudicationMutationData(PublicationModel):
+    kind: Literal["match_adjudication_result"] = "match_adjudication_result"
+    schema_version: Literal[1] = 1
+    candidate_document_id: UUID
+    adjudication_id: UUID | None
+    digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    state: Literal["validated", "adjudicated"]
+    created: bool
+    dry_run: bool
+
+
+class MatchAdjudicationMutationResult(PublicationModel):
+    data: MatchAdjudicationMutationData
+    meta: AuditApiMeta
+
+
+class MatchReviewHistoryData(PublicationModel):
+    kind: Literal["match_review_history"] = "match_review_history"
+    schema_version: Literal[1] = 1
+    candidate_document_id: UUID
+    ledger: MatchReviewLedger
+
+
+class MatchReviewHistoryResult(PublicationModel):
+    data: MatchReviewHistoryData
+    meta: AuditApiMeta
 
 
 class PublicHealthView(PublicationModel):
@@ -404,9 +455,7 @@ def get_audit_scope_preview(request: Request) -> Response:
     openapi_extra={
         "requestBody": {
             "required": True,
-            "content": {
-                "application/json": {"schema": AuditResourceRequest.model_json_schema()}
-            },
+            "content": {"application/json": {"schema": AuditResourceRequest.model_json_schema()}},
         }
     },
 )
@@ -810,6 +859,242 @@ async def create_audit_run(
         cache=NO_STORE,
         status_code=200 if dry_run_value or not created else 201,
     )
+
+
+@private_router.post(
+    "/matches/{candidate_document_id}/reviews",
+    response_model=MatchReviewMutationResult,
+    status_code=201,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {"application/json": {"schema": MatchReviewSubmission.model_json_schema()}},
+        }
+    },
+)
+async def create_match_review(
+    request: Request,
+    candidate_document_id: UUID,
+    dry_run: bool = True,
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    if_none_match: Annotated[str | None, Header(alias="If-None-Match")] = None,
+) -> Response:
+    principal, repository = _private_services(request)
+    tenant_id = _tenant_id(principal)
+    require_permission(
+        request,
+        services_of(request).tokens,
+        Permission.RESTRICTED_EVIDENCE_READ,
+        mfa=True,
+    )
+    require_permission(
+        request,
+        services_of(request).tokens,
+        Permission.EVALUATION_ADJUDICATE,
+        mfa=True,
+    )
+    candidate = repository.get_document(candidate_document_id, tenant_id=tenant_id)
+    if not isinstance(candidate, MatchEvidenceDocumentV2):
+        raise ApiError("NOT_FOUND")
+    _authorize_object(request, principal, candidate, "review")
+    if candidate.payload.author_subject == principal.subject_id:
+        raise ApiError("FORBIDDEN")
+    if (
+        request.headers.get("content-type", "").partition(";")[0].strip().lower()
+        != "application/json"
+    ):
+        raise ApiError("SCHEMA_INVALID")
+    raw_body = await _read_bounded_body(request, 64 * 1024)
+    try:
+        _reject_duplicate_json_members(raw_body)
+        submission = MatchReviewSubmission.model_validate_json(raw_body, strict=True)
+    except (ValidationError, ValueError):
+        raise ApiError("SCHEMA_INVALID") from None
+
+    request_digest = _meta_digest(submission.model_dump(mode="json"))
+    if dry_run:
+        opinion_id = None
+        digest = request_digest
+        review_seq = None
+        state: Literal["validated", "accepted", "rejected", "disputed"] = "validated"
+        created = False
+    else:
+        if if_none_match != "*":
+            raise ApiError("SCHEMA_INVALID")
+        key = _validated_idempotency_key(idempotency_key)
+        write = repository.append_match_review(
+            candidate_document_id=candidate_document_id,
+            submission=submission,
+            reviewer_subject=principal.subject_id,
+            idempotency_key=key,
+            request_digest=request_digest,
+            tenant_id=tenant_id,
+        )
+        opinion_id = write.opinion_id
+        digest = write.digest
+        review_seq = write.review_seq
+        state = write.state
+        created = write.created
+    data = MatchReviewMutationData(
+        candidate_document_id=candidate_document_id,
+        opinion_id=opinion_id,
+        digest=digest,
+        review_seq=review_seq,
+        state=state,
+        created=created,
+        dry_run=dry_run,
+    )
+    body = MatchReviewMutationResult(
+        data=data,
+        meta=AuditApiMeta(
+            release_digest=_meta_digest(data.model_dump(mode="json")),
+            returned=1,
+            total=1,
+            limit=1,
+        ),
+    )
+    return respond(
+        request,
+        body.model_dump(mode="json"),
+        cache=NO_STORE,
+        status_code=200 if dry_run or not created else 201,
+    )
+
+
+@private_router.post(
+    "/matches/{candidate_document_id}/adjudications",
+    response_model=MatchAdjudicationMutationResult,
+    status_code=201,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {"schema": MatchAdjudicationSubmission.model_json_schema()}
+            },
+        }
+    },
+)
+async def create_match_adjudication(
+    request: Request,
+    candidate_document_id: UUID,
+    dry_run: bool = True,
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    if_none_match: Annotated[str | None, Header(alias="If-None-Match")] = None,
+) -> Response:
+    principal, repository = _private_services(request)
+    tenant_id = _tenant_id(principal)
+    require_permission(
+        request,
+        services_of(request).tokens,
+        Permission.RESTRICTED_EVIDENCE_READ,
+        mfa=True,
+    )
+    require_permission(
+        request,
+        services_of(request).tokens,
+        Permission.EVALUATION_ADJUDICATE,
+        mfa=True,
+    )
+    candidate = repository.get_document(candidate_document_id, tenant_id=tenant_id)
+    if not isinstance(candidate, MatchEvidenceDocumentV2):
+        raise ApiError("NOT_FOUND")
+    _authorize_object(request, principal, candidate, "review")
+    if candidate.payload.author_subject == principal.subject_id:
+        raise ApiError("FORBIDDEN")
+    if (
+        request.headers.get("content-type", "").partition(";")[0].strip().lower()
+        != "application/json"
+    ):
+        raise ApiError("SCHEMA_INVALID")
+    raw_body = await _read_bounded_body(request, 64 * 1024)
+    try:
+        _reject_duplicate_json_members(raw_body)
+        submission = MatchAdjudicationSubmission.model_validate_json(raw_body, strict=True)
+    except (ValidationError, ValueError):
+        raise ApiError("SCHEMA_INVALID") from None
+
+    request_digest = _meta_digest(submission.model_dump(mode="json"))
+    if dry_run:
+        adjudication_id = None
+        digest = request_digest
+        state: Literal["validated", "adjudicated"] = "validated"
+        created = False
+    else:
+        if if_none_match != "*":
+            raise ApiError("SCHEMA_INVALID")
+        key = _validated_idempotency_key(idempotency_key)
+        write = repository.append_match_adjudication(
+            candidate_document_id=candidate_document_id,
+            submission=submission,
+            adjudicator_subject=principal.subject_id,
+            idempotency_key=key,
+            request_digest=request_digest,
+            tenant_id=tenant_id,
+        )
+        adjudication_id = write.adjudication_id
+        digest = write.digest
+        state = write.state
+        created = write.created
+    data = MatchAdjudicationMutationData(
+        candidate_document_id=candidate_document_id,
+        adjudication_id=adjudication_id,
+        digest=digest,
+        state=state,
+        created=created,
+        dry_run=dry_run,
+    )
+    body = MatchAdjudicationMutationResult(
+        data=data,
+        meta=AuditApiMeta(
+            release_digest=_meta_digest(data.model_dump(mode="json")),
+            returned=1,
+            total=1,
+            limit=1,
+        ),
+    )
+    return respond(
+        request,
+        body.model_dump(mode="json"),
+        cache=NO_STORE,
+        status_code=200 if dry_run or not created else 201,
+    )
+
+
+@private_router.get(
+    "/matches/{candidate_document_id}/reviews",
+    response_model=MatchReviewHistoryResult,
+)
+def get_match_review_history(request: Request, candidate_document_id: UUID) -> Response:
+    principal, repository = _private_services(request)
+    tenant_id = _tenant_id(principal)
+    require_permission(
+        request,
+        services_of(request).tokens,
+        Permission.RESTRICTED_EVIDENCE_READ,
+        mfa=True,
+    )
+    candidate = repository.get_document(candidate_document_id, tenant_id=tenant_id)
+    if not isinstance(candidate, MatchEvidenceDocumentV2):
+        raise ApiError("NOT_FOUND")
+    _authorize_object(request, principal, candidate, "review")
+    ledger = repository.list_match_reviews(
+        candidate_document_id=candidate_document_id,
+        tenant_id=tenant_id,
+    )
+    data = MatchReviewHistoryData(
+        candidate_document_id=candidate_document_id,
+        ledger=ledger,
+    )
+    data_json = data.model_dump(mode="json")
+    body = MatchReviewHistoryResult(
+        data=data,
+        meta=AuditApiMeta(
+            release_digest=_meta_digest(data_json),
+            total=len(ledger.opinions),
+            returned=len(ledger.opinions),
+        ),
+    )
+    return respond(request, body.model_dump(mode="json"), cache=NO_STORE)
 
 
 def _plan_limit(limits: Mapping[str, int], canonical: str, configured: str) -> int | None:

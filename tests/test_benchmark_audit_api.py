@@ -18,12 +18,29 @@ from polycodebench_api.context import AuditAccessPolicy
 from polycodebench_api.submissions import SubmissionStore
 from polycodebench_core.benchmark_audit_documents import (
     AuditDocument,
+    AuditDocumentRef,
     AuditPlanDocument,
+    DocumentMetadata,
+    EntityRef,
+    ImmutableArtifactRef,
+    MatchEvidenceDocumentV2,
+    MatchEvidencePayloadV2,
+    MatchSpanV2,
     audit_document_digest,
     parse_audit_document,
 )
 from polycodebench_core.canonical import canonical_json_bytes
-from polycodebench_persistence.benchmark_audit import AuditDocumentWrite, AuditRunWrite
+from polycodebench_core.match_verification import (
+    MatchAdjudicationSubmission,
+    MatchReviewSubmission,
+    initial_match_review_ledger,
+)
+from polycodebench_persistence.benchmark_audit import (
+    AuditDocumentWrite,
+    AuditRunWrite,
+    MatchAdjudicationWrite,
+    MatchReviewWrite,
+)
 from polycodebench_publication.releases import ReleaseStore
 
 TENANT_A = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
@@ -31,6 +48,7 @@ TENANT_B = UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")
 OPERATOR_TOKEN = "operator-private-audit-token-01"
 OTHER_TENANT_TOKEN = "operator-private-audit-token-02"
 REVIEWER_TOKEN = "reviewer-private-audit-token-01"
+MFA_REVIEWER_TOKEN = "reviewer-private-audit-token-mfa-01"
 
 
 def _plan(actor: str = "operator-1") -> AuditPlanDocument:
@@ -71,12 +89,120 @@ def _plan(actor: str = "operator-1") -> AuditPlanDocument:
     return document
 
 
+def _match_evidence(author: str = "match-author") -> MatchEvidenceDocumentV2:
+    digest = "sha256:" + "a" * 64
+    source_artifact = ImmutableArtifactRef(
+        artifact_id=uuid4(),
+        digest=digest,
+        visibility="restricted",
+        media_type="text/plain",
+    )
+    component = EntityRef(entity_id=uuid4(), entity_kind="audit_component", digest=digest)
+    payload = MatchEvidencePayloadV2(
+        task_ref=EntityRef(entity_id=uuid4(), entity_kind="task_version", digest=digest),
+        target_benchmark_ref=AuditDocumentRef(
+            document_id=uuid4(), digest=digest, kind="benchmark_snapshot"
+        ),
+        retrieval_plan_ref=AuditDocumentRef(document_id=uuid4(), digest=digest, kind="audit_plan"),
+        retrieval_result_digest=digest,
+        candidate_hit_digest=digest,
+        source_snapshot_ref=AuditDocumentRef(
+            document_id=uuid4(), digest=digest, kind="corpus_snapshot"
+        ),
+        source_document_ref=source_artifact,
+        source_revision="fixture-revision",
+        source_task_ref=EntityRef(entity_id=uuid4(), entity_kind="task_version", digest=digest),
+        source_benchmark_ref=AuditDocumentRef(
+            document_id=uuid4(), digest=digest, kind="benchmark_snapshot"
+        ),
+        source_lineage="independent_copy",
+        component_refs=(component,),
+        matching_spans=(
+            MatchSpanV2(
+                component_ref=component,
+                component_artifact_ref=source_artifact,
+                source_start_byte=0,
+                source_end_byte=1,
+                source_span_digest=digest,
+                field="question",
+                content_class="substantive",
+                comparison="exact_bytes",
+            ),
+        ),
+        relation="exact_component",
+        answer_relationship="not_applicable",
+        source_date_state="unknown",
+        source_date_evidence=(),
+        rights_refs=(AuditDocumentRef(document_id=uuid4(), digest=digest, kind="corpus_snapshot"),),
+        normalizer_version="text-nfc-lf-preserve-v1",
+        parser_version=None,
+        rubric_digest=digest,
+        review_state="proposed",
+        author_subject=author,
+        reviewer_subjects=(),
+        review_record_ref=None,
+        counter_evidence_refs=(),
+    )
+    return MatchEvidenceDocumentV2(
+        id=uuid4(),
+        kind="match_evidence",
+        schema_version=2,
+        payload=payload,
+        metadata=DocumentMetadata(
+            created_at="2026-10-08T12:00:00Z",
+            timestamp_precision="second",
+            actor=author,
+            trace_id=None,
+            row_version=0,
+        ),
+    )
+
+
+def _match_review_submission() -> MatchReviewSubmission:
+    digest = "sha256:" + "b" * 64
+    return MatchReviewSubmission(
+        decision="accepted",
+        relation="exact_component",
+        reason="Independent review confirms substantive overlap.",
+        evidence_refs=(
+            AuditDocumentRef(document_id=uuid4(), digest=digest, kind="corpus_snapshot"),
+        ),
+        decision_artifact_ref=ImmutableArtifactRef(
+            artifact_id=uuid4(),
+            digest=digest,
+            visibility="restricted",
+            media_type="application/json",
+        ),
+    )
+
+
+def _match_adjudication_submission() -> MatchAdjudicationSubmission:
+    digest = "sha256:" + "c" * 64
+    return MatchAdjudicationSubmission(
+        decision="accepted",
+        relation="semantic_duplicate",
+        reason="Independent adjudication resolves the conflicting evidence reviews.",
+        evidence_refs=(
+            AuditDocumentRef(document_id=uuid4(), digest=digest, kind="corpus_snapshot"),
+        ),
+        decision_artifact_ref=ImmutableArtifactRef(
+            artifact_id=uuid4(),
+            digest=digest,
+            visibility="restricted",
+            media_type="application/json",
+        ),
+    )
+
+
 class _AuditRepository:
     def __init__(self) -> None:
         self.documents: dict[UUID, tuple[AuditDocument, UUID]] = {}
         self.idempotency: dict[tuple[str, str, str], tuple[str, AuditDocumentWrite]] = {}
         self.save_calls = 0
         self.run_calls: list[dict[str, object]] = []
+        self.match_review_calls: list[dict[str, object]] = []
+        self.match_adjudication_calls: list[dict[str, object]] = []
+        self.match_history_calls: list[dict[str, object]] = []
 
     def save_document_idempotent(
         self,
@@ -154,10 +280,71 @@ class _AuditRepository:
         )
         return AuditRunWrite(uuid4(), True, 0)
 
+    def append_match_review(
+        self,
+        *,
+        candidate_document_id: UUID,
+        submission: MatchReviewSubmission,
+        reviewer_subject: str,
+        idempotency_key: str,
+        request_digest: str,
+        tenant_id: UUID,
+    ) -> MatchReviewWrite:
+        self.match_review_calls.append(
+            {
+                "candidate_document_id": candidate_document_id,
+                "submission": submission,
+                "reviewer_subject": reviewer_subject,
+                "idempotency_key": idempotency_key,
+                "request_digest": request_digest,
+                "tenant_id": tenant_id,
+            }
+        )
+        return MatchReviewWrite(uuid4(), "sha256:" + "c" * 64, True, 1, submission.decision)
+
+    def list_match_reviews(self, *, candidate_document_id: UUID, tenant_id: UUID):
+        self.match_history_calls.append(
+            {"candidate_document_id": candidate_document_id, "tenant_id": tenant_id}
+        )
+        candidate = self.get_document(candidate_document_id, tenant_id=tenant_id)
+        assert isinstance(candidate, MatchEvidenceDocumentV2)
+        return initial_match_review_ledger(candidate)
+
+    def append_match_adjudication(
+        self,
+        *,
+        candidate_document_id: UUID,
+        submission: MatchAdjudicationSubmission,
+        adjudicator_subject: str,
+        idempotency_key: str,
+        request_digest: str,
+        tenant_id: UUID,
+    ) -> MatchAdjudicationWrite:
+        self.match_adjudication_calls.append(
+            {
+                "candidate_document_id": candidate_document_id,
+                "submission": submission,
+                "adjudicator_subject": adjudicator_subject,
+                "idempotency_key": idempotency_key,
+                "request_digest": request_digest,
+                "tenant_id": tenant_id,
+            }
+        )
+        return MatchAdjudicationWrite(uuid4(), "sha256:" + "d" * 64, True)
+
 
 class _DenyAuditAccess:
     def allows(self, *, principal: ApiPrincipal, document: AuditDocument, action: str) -> bool:
         return False
+
+
+class _ReviewAuditAccess:
+    def allows(self, *, principal: ApiPrincipal, document: AuditDocument, action: str) -> bool:
+        return (
+            action == "review"
+            and document.kind == "match_evidence"
+            and principal.subject_id == "reviewer-1"
+        )
 
 
 class _PublicHealthProjection:
@@ -186,6 +373,12 @@ def _app(
             ),
             REVIEWER_TOKEN: ApiPrincipal(
                 subject_id="reviewer-1", roles=frozenset({"reviewer"}), tenant_id=TENANT_A
+            ),
+            MFA_REVIEWER_TOKEN: ApiPrincipal(
+                subject_id="reviewer-1",
+                roles=frozenset({"reviewer"}),
+                mfa=True,
+                tenant_id=TENANT_A,
             ),
         }
     )
@@ -255,6 +448,186 @@ def test_private_api_object_acl_is_fail_closed(tmp_path: Path) -> None:
             )
             assert response.status_code == 404
             assert "audit_plan" not in response.text
+
+    asyncio.run(verify())
+
+
+def test_match_review_requires_mfa_acl_and_uses_authenticated_reviewer(
+    tmp_path: Path,
+) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo, access=_ReviewAuditAccess())
+    body = _match_review_submission().model_dump(mode="json")
+    headers = {
+        "Authorization": f"Bearer {MFA_REVIEWER_TOKEN}",
+        "Idempotency-Key": "match-review-001",
+        "If-None-Match": "*",
+    }
+
+    async def verify() -> None:
+        async with _client(app) as client:
+            missing_mfa = await client.post(
+                f"/v1/benchmark-audit/matches/{candidate.id}/reviews?dry_run=false",
+                json=body,
+                headers={**headers, "Authorization": f"Bearer {REVIEWER_TOKEN}"},
+            )
+            assert missing_mfa.status_code == 403
+            assert not repo.match_review_calls
+
+            accepted = await client.post(
+                f"/v1/benchmark-audit/matches/{candidate.id}/reviews?dry_run=false",
+                json=body,
+                headers=headers,
+            )
+            assert accepted.status_code == 201
+            assert accepted.json()["data"]["state"] == "accepted"
+            assert accepted.json()["data"]["opinion_id"]
+            assert "review_document_id" not in accepted.json()["data"]
+            assert accepted.json()["data"]["review_seq"] == 1
+            assert len(repo.match_review_calls) == 1
+            assert repo.match_review_calls[0]["reviewer_subject"] == "reviewer-1"
+            assert repo.match_review_calls[0]["candidate_document_id"] == candidate.id
+            assert accepted.headers["cache-control"] == "private, no-store"
+
+    asyncio.run(verify())
+
+
+def test_match_review_history_is_mfa_and_object_acl_gated(tmp_path: Path) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo, access=_ReviewAuditAccess())
+
+    async def verify() -> None:
+        async with _client(app) as client:
+            missing_mfa = await client.get(
+                f"/v1/benchmark-audit/matches/{candidate.id}/reviews",
+                headers={"Authorization": f"Bearer {REVIEWER_TOKEN}"},
+            )
+            assert missing_mfa.status_code == 403
+
+            response = await client.get(
+                f"/v1/benchmark-audit/matches/{candidate.id}/reviews",
+                headers={"Authorization": f"Bearer {MFA_REVIEWER_TOKEN}"},
+            )
+            assert response.status_code == 200
+            assert response.json()["data"]["ledger"]["opinions"] == []
+            assert response.json()["meta"]["total"] == 0
+            assert repo.match_history_calls == [
+                {"candidate_document_id": candidate.id, "tenant_id": TENANT_A}
+            ]
+            assert response.headers["cache-control"] == "private, no-store"
+
+    asyncio.run(verify())
+
+
+def test_match_adjudication_requires_mfa_acl_and_uses_authenticated_adjudicator(
+    tmp_path: Path,
+) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo, access=_ReviewAuditAccess())
+    body = _match_adjudication_submission().model_dump(mode="json")
+    headers = {
+        "Authorization": f"Bearer {MFA_REVIEWER_TOKEN}",
+        "Idempotency-Key": "match-adjudication-001",
+        "If-None-Match": "*",
+    }
+
+    async def verify() -> None:
+        async with _client(app) as client:
+            missing_mfa = await client.post(
+                f"/v1/benchmark-audit/matches/{candidate.id}/adjudications?dry_run=false",
+                json=body,
+                headers={**headers, "Authorization": f"Bearer {REVIEWER_TOKEN}"},
+            )
+            assert missing_mfa.status_code == 403
+            assert not repo.match_adjudication_calls
+
+            response = await client.post(
+                f"/v1/benchmark-audit/matches/{candidate.id}/adjudications?dry_run=false",
+                json=body,
+                headers=headers,
+            )
+            assert response.status_code == 201
+            assert response.json()["data"]["state"] == "adjudicated"
+            assert response.json()["data"]["adjudication_id"]
+            assert len(repo.match_adjudication_calls) == 1
+            assert repo.match_adjudication_calls[0]["adjudicator_subject"] == "reviewer-1"
+            assert repo.match_adjudication_calls[0]["candidate_document_id"] == candidate.id
+            assert repo.match_adjudication_calls[0]["idempotency_key"] == ("match-adjudication-001")
+
+    asyncio.run(verify())
+
+
+def test_match_history_cli_reads_the_private_api_ledger(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo, access=_ReviewAuditAccess())
+
+    def request(method, url, token, body, extra_headers):  # type: ignore[no-untyped-def]
+        from urllib.parse import urlsplit
+
+        parsed = urlsplit(url)
+        response = client.request(
+            method,
+            parsed.path + (f"?{parsed.query}" if parsed.query else ""),
+            content=body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                **({"Content-Type": "application/json"} if body is not None else {}),
+                **extra_headers,
+            },
+        )
+        return response.status_code, response.content
+
+    with TestClient(app) as client:
+        monkeypatch.setattr(audit_cli, "_request", request)
+        status = audit_cli.main(
+            [
+                "audit",
+                "matches",
+                "history",
+                str(candidate.id),
+                "--token",
+                MFA_REVIEWER_TOKEN,
+                "--api-url",
+                "http://127.0.0.1:8000",
+            ]
+        )
+    assert status == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["data"]["ledger"]["opinions"] == []
+    assert repo.match_history_calls == [
+        {"candidate_document_id": candidate.id, "tenant_id": TENANT_A}
+    ]
+
+
+def test_match_review_is_hidden_without_shared_reviewer_acl(tmp_path: Path) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo)
+
+    async def verify() -> None:
+        async with _client(app) as client:
+            response = await client.post(
+                f"/v1/benchmark-audit/matches/{candidate.id}/reviews?dry_run=false",
+                json=_match_review_submission().model_dump(mode="json"),
+                headers={
+                    "Authorization": f"Bearer {MFA_REVIEWER_TOKEN}",
+                    "Idempotency-Key": "match-review-002",
+                    "If-None-Match": "*",
+                },
+            )
+            assert response.status_code == 404
+            assert not repo.match_review_calls
 
     asyncio.run(verify())
 
@@ -380,6 +753,108 @@ def test_audit_cli_covers_catalog_planning_and_stored_document_reads(
         detail = json.loads(capsys.readouterr().out)["data"]
         assert detail["id"] == str(plan.id)
         assert detail["kind"] == "audit_plan"
+
+
+def test_match_review_cli_posts_a_typed_idempotent_decision(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo, access=_ReviewAuditAccess())
+    decision_file = tmp_path / "match-review.json"
+    decision_file.write_text(_match_review_submission().model_dump_json(), encoding="utf-8")
+
+    def request(method, url, token, body, extra_headers):  # type: ignore[no-untyped-def]
+        from urllib.parse import urlsplit
+
+        parsed = urlsplit(url)
+        response = client.request(
+            method,
+            parsed.path + (f"?{parsed.query}" if parsed.query else ""),
+            content=body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                **({"Content-Type": "application/json"} if body is not None else {}),
+                **extra_headers,
+            },
+        )
+        return response.status_code, response.content
+
+    with TestClient(app) as client:
+        monkeypatch.setattr(audit_cli, "_request", request)
+        status = audit_cli.main(
+            [
+                "audit",
+                "matches",
+                "review",
+                str(candidate.id),
+                "--decision",
+                str(decision_file),
+                "--idempotency-key",
+                "cli-match-review-001",
+                "--token",
+                MFA_REVIEWER_TOKEN,
+                "--api-url",
+                "http://127.0.0.1:8000",
+            ]
+        )
+        assert status == 0
+        result = json.loads(capsys.readouterr().out)
+        assert result["data"]["state"] == "accepted"
+        assert repo.match_review_calls[0]["reviewer_subject"] == "reviewer-1"
+        assert repo.match_review_calls[0]["idempotency_key"] == "cli-match-review-001"
+
+
+def test_match_adjudication_cli_posts_a_typed_idempotent_decision(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _AuditRepository()
+    candidate = _match_evidence()
+    repo.documents[candidate.id] = (candidate, TENANT_A)
+    app = _app(tmp_path, repo, access=_ReviewAuditAccess())
+    decision_file = tmp_path / "match-adjudication.json"
+    decision_file.write_text(_match_adjudication_submission().model_dump_json(), encoding="utf-8")
+
+    def request(method, url, token, body, extra_headers):  # type: ignore[no-untyped-def]
+        from urllib.parse import urlsplit
+
+        parsed = urlsplit(url)
+        response = client.request(
+            method,
+            parsed.path + (f"?{parsed.query}" if parsed.query else ""),
+            content=body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                **({"Content-Type": "application/json"} if body is not None else {}),
+                **extra_headers,
+            },
+        )
+        return response.status_code, response.content
+
+    with TestClient(app) as client:
+        monkeypatch.setattr(audit_cli, "_request", request)
+        status = audit_cli.main(
+            [
+                "audit",
+                "matches",
+                "adjudicate",
+                str(candidate.id),
+                "--decision",
+                str(decision_file),
+                "--idempotency-key",
+                "cli-match-adjudication-001",
+                "--token",
+                MFA_REVIEWER_TOKEN,
+                "--api-url",
+                "http://127.0.0.1:8000",
+            ]
+        )
+    assert status == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["data"]["state"] == "adjudicated"
+    assert repo.match_adjudication_calls[0]["adjudicator_subject"] == "reviewer-1"
+    assert repo.match_adjudication_calls[0]["idempotency_key"] == ("cli-match-adjudication-001")
 
 
 def test_restricted_evidence_reads_require_reviewer_mfa(tmp_path: Path) -> None:
@@ -613,6 +1088,8 @@ def test_openapi_exposes_typed_audit_contracts_without_a_scan_route(tmp_path: Pa
     paths = openapi["paths"]
     assert "/v1/benchmark-audit/plans" in paths
     assert "/v1/benchmark-audit/runs" in paths
+    assert "/v1/benchmark-audit/matches/{candidate_document_id}/reviews" in paths
+    assert "/v1/benchmark-audit/matches/{candidate_document_id}/adjudications" in paths
     assert "/v1/public/benchmark-health/{report_id}" in paths
     assert "/v1/public/audit-reports/{report_id}" in paths
     assert "/v1/public/audit-attestations/{attestation_id}" in paths
@@ -622,6 +1099,14 @@ def test_openapi_exposes_typed_audit_contracts_without_a_scan_route(tmp_path: Pa
     assert set(paths["/v1/public/audit-attestations/{attestation_id}"]) == {"get"}
     components = openapi["components"]["schemas"]
     assert "AuditRunView" in components
+    review_request_schema = paths["/v1/benchmark-audit/matches/{candidate_document_id}/reviews"][
+        "post"
+    ]["requestBody"]["content"]["application/json"]["schema"]
+    assert review_request_schema["title"] == "MatchReviewSubmission"
+    adjudication_request_schema = paths[
+        "/v1/benchmark-audit/matches/{candidate_document_id}/adjudications"
+    ]["post"]["requestBody"]["content"]["application/json"]["schema"]
+    assert adjudication_request_schema["title"] == "MatchAdjudicationSubmission"
     assert any("Decimal" in schema.get("title", "") for schema in components.values())
     decimal_value = components["DecimalMeasurement"]["properties"]["value"]["anyOf"]
     assert {entry["type"] for entry in decimal_value} == {"string", "null"}

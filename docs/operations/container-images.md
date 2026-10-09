@@ -138,7 +138,11 @@ worker registration, queue dispatch, guest launch, ECR push or model call has be
 AWS account, approved AMI, host-key bundle, production candidate allowlist and spend authorization
 remain unavailable. The evaluator and scorer commands and images are now defined but have not been
 built or exercised against AWS. Publication still lacks a complete long-running processing mode,
-as do the model and judge gateways.
+as does the model gateway. The judge gateway now has a separate `Dockerfile.judge` image and a
+bounded `pcb-judge run-pending` mode. It processes only stored scored packets for one evaluation,
+cohort and frozen panel; it requires the `RUN_PLAN` service permission and
+`PCB_JUDGE_DISPATCH_ENABLED=true`. Its image defaults to dispatch disabled and an inert help
+command. Queue execution and its container have not yet been built or exercised against AWS.
 
 ## Current web image rebuild (2026-10-07)
 

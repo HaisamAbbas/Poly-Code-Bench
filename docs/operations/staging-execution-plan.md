@@ -42,8 +42,10 @@ Production-shaped API, web, and scheduler lease-reaper image builds exist. The s
 not a job worker. The solve supervisor has an identity-gated runner, the evaluator has a separate
 migrator registration command and identity-gated grading runner, and the scorer has a role-gated
 bounded poller. These modes have not been built as reviewed staging images or verified against
-staging. The model/judge gateways and publisher still lack complete long-running processing modes.
-These image builds do not
+staging. The judge gateway now has a bounded processor for persisted scored packets, scoped to one
+evaluation/cohort/panel and explicitly disabled unless `PCB_JUDGE_DISPATCH_ENABLED=true`; it still
+needs its reviewed image and staging runtime verification. The model gateway and publisher still
+lack complete long-running processing modes. These image builds do not
 make E2E-42/E2E-43 deployable; do not scale roles without a passing runtime check. Build details
 and the evidence scope are recorded in
 [`container-images.md`](container-images.md).
@@ -129,10 +131,11 @@ This bootstrap is infrastructure preparation, not the full staging acceptance ru
 scheduler image exists, it only reaps expired leases and has not been exercised against staging
 PostgreSQL. The solve/evaluation supervisors have guarded source commands, but neither has a
 reviewed, built staging image, registered capacity, or verified runtime. The scorer has a bounded
-role-gated poller but no reviewed, built staging image or runtime check. The model/judge gateways
-and publisher still lack complete long-running processing modes. Their Terraform example counts
-remain zero; the API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise worker/gateway
-counts or point them at the API image.
+role-gated poller but no reviewed, built staging image or runtime check. The judge gateway has a
+scoped bounded queue mode but no built image or runtime check; the model gateway and publisher
+still lack complete long-running processing modes. Their Terraform example counts remain zero;
+the API/web/scheduler images cannot pass E2E-42/E2E-43. Do not raise worker/gateway counts or point
+them at the API image.
 
 ## 3. Staging acceptance runs (E2E-42, E2E-43)
 

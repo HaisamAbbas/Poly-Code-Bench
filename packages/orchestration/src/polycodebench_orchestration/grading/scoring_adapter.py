@@ -176,7 +176,9 @@ def evaluation_to_manifest(
         invocation=invocation,
         gate=gate,
         required_evidence=required_records,
-        applicability=(ScoreDimension.CORRECTNESS, *task.applicable_dimensions),
+        applicability=tuple(
+            dict.fromkeys((ScoreDimension.CORRECTNESS, *task.applicable_dimensions))
+        ),
         security_issues=security_issues,
         security_unreviewed_relevant=unreviewed_security,
         efficiency=efficiency,

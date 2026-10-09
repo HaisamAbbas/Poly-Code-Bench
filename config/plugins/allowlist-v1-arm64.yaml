@@ -1,0 +1,18 @@
+schema_version: 1
+kind: language_plugin_allowlist
+plugins:
+  - plugin_id: python
+    entry_point: polycodebench_lang_python.plugin:PythonLanguagePlugin
+    api_version: 1
+    plugin_version: "0.1.0"
+    image_digests:
+      - sha256:aadceae00ef7a15fe1414d50af60ca6427dc670e7d8b2c37834bc54280027c72
+      - sha256:be779b27ed1fdba550e8ad9213c1150e496f2d758a7c80a957f12cef7e2f9ae6
+  - plugin_id: rust
+    entry_point: polycodebench_lang_rust.plugin:RustLanguagePlugin
+    api_version: 1
+    plugin_version: "0.1.0"
+    image_digests:
+      - sha256:6ddc8b1af8fb197de9e96a4df6a9ea93982a03f7b6a373d983073f8eb0cf9444
+      - sha256:eaa7e067c6b97b7f25a807d18804a4017be8236778a458e779ac8e5f1e5621ce
+      - sha256:f2ac7b2de670772b6f3c15c6dd9ab27e505760c0b9682671348907032cb8e5b8

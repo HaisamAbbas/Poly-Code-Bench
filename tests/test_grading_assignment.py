@@ -161,3 +161,50 @@ def test_admin_manifest_rejects_duplicate_yaml_keys() -> None:
             {"administrative-manifest.yaml": b"kind: task_package\nkind: altered\n"},
             cast(TaskVersion, object()),
         )
+
+
+class _OneArtifact:
+    """Minimal verified-artifact reader returning one stored bundle."""
+
+    def __init__(self, body: bytes, visibility: str) -> None:
+        self._body = body
+        self._visibility = visibility
+
+    def read_verified(self, _artifact_id: object) -> tuple[dict[str, object], bytes]:
+        digest = "sha256:" + hashlib.sha256(self._body).hexdigest()
+        return {
+            "status": "verified",
+            "visibility": self._visibility,
+            "content_digest": digest,
+        }, self._body
+
+
+def _read_hidden_bundle(entries: list[tuple[str, bytes, int | None]]) -> dict[str, bytes]:
+    body = _zip(entries)
+    loader = DatabaseEvaluationAssignmentLoader(
+        cast(object, None),  # type: ignore[arg-type]
+        cast(object, _OneArtifact(body, "hidden")),  # type: ignore[arg-type]
+        cast(object, None),  # type: ignore[arg-type]
+    )
+    _meta, files = loader._read_bundle(
+        uuid4(),
+        expected_digest="sha256:" + hashlib.sha256(body).hexdigest(),
+        expected_visibility="hidden",
+        expected_prefixes=("hidden/", "admission/"),
+        special_names=frozenset({"administrative-manifest.yaml"}),
+    )
+    return files
+
+
+def test_hidden_bundle_allows_only_the_importers_exact_root_manifest() -> None:
+    files = _read_hidden_bundle(
+        [
+            ("administrative-manifest.yaml", b"schema_version: 1\n", None),
+            ("hidden/tests/test_a.py", b"pass", None),
+            ("admission/report.json", b"{}", None),
+        ]
+    )
+    assert "administrative-manifest.yaml" in files
+    for stray in ("administrative-manifest.yaml.bak", "notes.txt", "other/x.py"):
+        with pytest.raises(EvaluationAssignmentRejected, match="outside its namespace"):
+            _read_hidden_bundle([(stray, b"x", None), ("hidden/tests/test_a.py", b"pass", None)])

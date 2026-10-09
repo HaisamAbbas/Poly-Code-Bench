@@ -1,25 +1,26 @@
 {
   "base_image": {
-    "digest": "sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
-    "reference": "python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b"
+    "digest": "sha256:950206c37262dd86c55659797f6ee418fee30535072f65a82ed470d985f5cda5",
+    "reference": "python@sha256:950206c37262dd86c55659797f6ee418fee30535072f65a82ed470d985f5cda5"
   },
   "build": {
     "network": "none",
     "note": "Local development build; a rebuild yields a new image digest. Registry publication and production-worker pinning belong to the deployment prompts.",
     "offline_install": true,
+    "platform": "linux/arm64",
     "wheelhouse_wheels": 79
   },
   "guest_digest": "sha256:4162764848630890d5228c43f3eca953d7d8e600bf990c775b6ecc7d980d79e6",
   "images": {
     "evaluator": {
-      "digest": "sha256:15b55474bb749a5b1a63686a79ec878d5fb20ecb111d76ded16a13950be462a6",
+      "digest": "sha256:aadceae00ef7a15fe1414d50af60ca6427dc670e7d8b2c37834bc54280027c72",
       "guest_and_rules_digest": "sha256:d8fcd47c14304709bb9a234cb4f136eec4e66e0e0007973210ccb225eea7b57b",
       "installed_package_count": 80,
       "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
       "lock_file": "infra/images/python/evaluator.lock",
       "python": "Python 3.12.14",
-      "reference": "pcb-python-evaluator@sha256:15b55474bb749a5b1a63686a79ec878d5fb20ecb111d76ded16a13950be462a6",
-      "tag": "pcb-python-evaluator:v1",
+      "reference": "pcb-python-evaluator@sha256:aadceae00ef7a15fe1414d50af60ca6427dc670e7d8b2c37834bc54280027c72",
+      "tag": "pcb-python-evaluator:v1-arm64",
       "tools": {
         "bandit": "1.9.2",
         "hypothesis": "6.150.2",
@@ -30,14 +31,14 @@
       }
     },
     "runtime": {
-      "digest": "sha256:d70a32e18e4337d5efc9aebee971d8a22c7b32a7099bf3a001c1f510e0236efd",
+      "digest": "sha256:be779b27ed1fdba550e8ad9213c1150e496f2d758a7c80a957f12cef7e2f9ae6",
       "guest_and_rules_digest": "sha256:d8fcd47c14304709bb9a234cb4f136eec4e66e0e0007973210ccb225eea7b57b",
       "installed_package_count": 8,
       "lock_digest": "sha256:cc10c52a3a2751b2240fcb8eb234aaf05f63493a49375de68fe9ac5580664a30",
       "lock_file": "infra/images/python/runtime.lock",
       "python": "Python 3.12.14",
-      "reference": "pcb-python-runtime@sha256:d70a32e18e4337d5efc9aebee971d8a22c7b32a7099bf3a001c1f510e0236efd",
-      "tag": "pcb-python-runtime:v1",
+      "reference": "pcb-python-runtime@sha256:be779b27ed1fdba550e8ad9213c1150e496f2d758a7c80a957f12cef7e2f9ae6",
+      "tag": "pcb-python-runtime:v1-arm64",
       "tools": {
         "hypothesis": "6.150.2",
         "pytest": "9.0.2"

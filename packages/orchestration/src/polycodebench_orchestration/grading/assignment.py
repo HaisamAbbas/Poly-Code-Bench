@@ -220,6 +220,8 @@ class DatabaseEvaluationAssignmentLoader:
             expected_digest=str(task.hidden_bundle.digest),
             expected_visibility="hidden",
             expected_prefixes=("hidden/", "admission/"),
+            # The importer always writes this one file at the archive root (task_packages.py).
+            special_names=frozenset({"administrative-manifest.yaml"}),
         )
         if (
             visible_meta["visibility"] != str(task.visible_bundle.visibility)

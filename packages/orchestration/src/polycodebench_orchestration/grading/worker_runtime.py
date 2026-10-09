@@ -21,6 +21,11 @@ from polycodebench_core.deployment import (
     VerifiedDeployment,
     resolve_deployment,
 )
+from polycodebench_core.image_platform import (
+    ImageArchitecture,
+    architecture_variant,
+    host_image_architecture,
+)
 from polycodebench_core.model_contracts import Strict
 from polycodebench_core.models import Digest, Slug
 from polycodebench_persistence.artifacts import ArtifactRepository
@@ -76,10 +81,22 @@ class GradingWorkerResourceSpec(Strict):
         return value
 
 
-def load_grading_image_allowlist(directory: Path) -> dict[str, str]:
-    """Read the image identities for every installed language without a language registry."""
+def load_grading_image_allowlist(
+    directory: Path, *, architecture: ImageArchitecture | None = None
+) -> dict[str, str]:
+    """Read the image identities for every installed language without a language registry.
+
+    ``<language>-v1.json`` holds the linux/amd64 pins. On an arm64 host only languages that ship a
+    ``<language>-v1-arm64.json`` sibling are offered: an amd64 digest cannot run there.
+    """
     result: dict[str, str] = {}
-    sources = sorted(directory.glob("*-v1.json"))
+    chosen = architecture or host_image_architecture()
+    canonical = sorted(directory.glob("*-v1.json"))
+    sources = [
+        variant
+        for variant in (architecture_variant(path, chosen) for path in canonical)
+        if variant.is_file()
+    ]
     if not sources:
         raise ValueError("no versioned language image identities were found")
     for path in sources:

@@ -72,8 +72,6 @@ class SolveStageExecutor:
         sandbox: SandboxProvider,
         artifacts: ArtifactRepository,
     ) -> StageResult:
-        if handle is None:
-            raise RuntimeError("solve execution requires a worker-managed guest")
         assignment = self._load(claim)
         store = self._store_factory(artifacts)
         common = {
@@ -87,6 +85,8 @@ class SolveStageExecutor:
         if assignment.effective.protocol.mode == "single_shot":
             result = await SingleShotSession(**common).run()  # type: ignore[arg-type]
         else:
+            if handle is None:
+                raise RuntimeError("agent execution requires a worker-managed guest")
             toolbox = GuestToolbox(sandbox, handle)
             result = await AgentSession(toolbox=toolbox, **common).run()
         return StageResult(

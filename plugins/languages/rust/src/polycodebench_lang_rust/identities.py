@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Literal
 
 from polycodebench_core.canonical import parse_json_strict
+from polycodebench_core.image_platform import architecture_variant_name
 from polycodebench_core.models import Digest
 from polycodebench_plugins_api import ToolIdentity
 from pydantic import BaseModel, ConfigDict, Field
@@ -109,11 +110,13 @@ class ImageIdentities(_Strict):
 
 
 def _find(start: Path) -> Path:
+    # The canonical file holds the linux/amd64 pins; an arm64 host reads the ``-arm64`` sibling.
+    wanted = architecture_variant_name(IMAGE_IDENTITY_FILE)
     for parent in (start, *start.parents):
-        candidate = parent / IMAGE_IDENTITY_FILE
+        candidate = parent / wanted
         if candidate.is_file():
             return candidate
-    raise FileNotFoundError(IMAGE_IDENTITY_FILE)
+    raise FileNotFoundError(wanted)
 
 
 @lru_cache(maxsize=4)

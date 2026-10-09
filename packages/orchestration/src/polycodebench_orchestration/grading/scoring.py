@@ -126,11 +126,7 @@ class DatabaseEvaluationScorer:
             or evidence.gate != expected_gate
         ):
             raise EvaluationScoringRejected("evaluation state and evidence gate disagree")
-        profile = getattr(assignment.plugin, "language_profile", None)
-        if callable(profile):
-            profile = profile()
-        if profile is not None and not isinstance(profile, LanguageProfile):
-            raise EvaluationScoringRejected("language plugin returned an invalid scoring profile")
+        profile = _scoring_profile(assignment.plugin)
         profile_source_digest = _profile_source_digest(profile, self._profile_source_path)
 
         invocation = ScoringInvocation(
@@ -245,6 +241,21 @@ def _artifact_recorded_at(metadata: dict[str, object]) -> str:
     if not isinstance(created_at, datetime) or created_at.tzinfo is None:
         raise EvaluationScoringRejected("evaluation evidence artifact has no stable creation time")
     return created_at.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _scoring_profile(plugin: object) -> LanguageProfile | None:
+    """The frozen ``LanguageProfile`` a plugin publishes, unwrapping its evaluator wrapper."""
+    profile = getattr(plugin, "language_profile", None)
+    if callable(profile):
+        profile = profile()
+    # Plugins publish a LanguageProfileEvaluator wrapper; the scorer needs the frozen
+    # LanguageProfile contract it carries. Anything else is still rejected below.
+    wrapped = getattr(profile, "profile", None)
+    if not isinstance(profile, LanguageProfile) and isinstance(wrapped, LanguageProfile):
+        profile = wrapped
+    if profile is not None and not isinstance(profile, LanguageProfile):
+        raise EvaluationScoringRejected("language plugin returned an invalid scoring profile")
+    return profile
 
 
 def _profile_source_digest(profile: LanguageProfile | None, source_path: Path) -> str:

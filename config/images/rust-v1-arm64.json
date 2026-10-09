@@ -1,0 +1,106 @@
+{
+  "base_image": {
+    "digest": "sha256:200f14b0b84ac302774ef5963119f7d949fcf72bd24b365f5ddb829b254c9594",
+    "reference": "rust@sha256:200f14b0b84ac302774ef5963119f7d949fcf72bd24b365f5ddb829b254c9594"
+  },
+  "build": {
+    "components_installed_at_build_time": true,
+    "guest_interpreter": "python@sha256:950206c37262dd86c55659797f6ee418fee30535072f65a82ed470d985f5cda5",
+    "miri_toolchain": "nightly-2026-09-30",
+    "network": "none",
+    "note": "Local development build. The compiler ships in the pinned base image; task crates are stdlib-only and each task pins its own Cargo.lock, whose digest is part of the evaluator identity. Miri requires nightly and is installed as a pinned separate toolchain in the evaluator recipe only. A rebuild changes image digests, so task manifests must be resealed and admission re-run.",
+    "offline_install": true,
+    "platform": "linux/arm64",
+    "scored_runs_offline": true
+  },
+  "guest_digest": "sha256:a51172c93cf77318598f67b02bf6033543879984ac6442c5d7058172a8efd608",
+  "images": {
+    "evaluator": {
+      "cargo": "1.83.0",
+      "components": [
+        "rustc:stable",
+        "cargo:stable",
+        "clippy:stable",
+        "rustfmt:stable",
+        "miri:nightly"
+      ],
+      "digest": "sha256:f2ac7b2de670772b6f3c15c6dd9ab27e505760c0b9682671348907032cb8e5b8",
+      "dockerfile_digest": "sha256:b1c6e9d8627aad39735e7a5431537cef4c3200063eb156805e9b68effacc2ca3",
+      "expected_tools": [
+        "rustc",
+        "cargo",
+        "clippy",
+        "rustfmt",
+        "miri"
+      ],
+      "guest_and_rules_digest": "sha256:2ad2db8b16eab9d566db6f3169b5cfd7ff8d3be04f054538e239a71757be0c27",
+      "recipe": "evaluator",
+      "recipe_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+      "reference": "pcb-rust-evaluator@sha256:f2ac7b2de670772b6f3c15c6dd9ab27e505760c0b9682671348907032cb8e5b8",
+      "rustc": "1.83.0",
+      "tag": "pcb-rust-evaluator:v1-arm64",
+      "tools": {
+        "cargo": "1.83.0",
+        "clippy": "0.1.83",
+        "miri": "0.1.0",
+        "rustc": "1.83.0",
+        "rustfmt": "1.8.0-stable"
+      }
+    },
+    "performance": {
+      "cargo": "1.83.0",
+      "components": [
+        "rustc:stable",
+        "cargo:stable"
+      ],
+      "digest": "sha256:eaa7e067c6b97b7f25a807d18804a4017be8236778a458e779ac8e5f1e5621ce",
+      "dockerfile_digest": "sha256:b1c6e9d8627aad39735e7a5431537cef4c3200063eb156805e9b68effacc2ca3",
+      "expected_tools": [
+        "rustc",
+        "cargo"
+      ],
+      "guest_and_rules_digest": "sha256:2ad2db8b16eab9d566db6f3169b5cfd7ff8d3be04f054538e239a71757be0c27",
+      "recipe": "performance",
+      "recipe_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+      "reference": "pcb-rust-performance@sha256:eaa7e067c6b97b7f25a807d18804a4017be8236778a458e779ac8e5f1e5621ce",
+      "rustc": "1.83.0",
+      "tag": "pcb-rust-performance:v1-arm64",
+      "tools": {
+        "cargo": "1.83.0",
+        "clippy": "absent",
+        "miri": "absent",
+        "rustc": "1.83.0",
+        "rustfmt": "absent"
+      }
+    },
+    "runtime": {
+      "cargo": "1.83.0",
+      "components": [
+        "rustc:stable",
+        "cargo:stable"
+      ],
+      "digest": "sha256:6ddc8b1af8fb197de9e96a4df6a9ea93982a03f7b6a373d983073f8eb0cf9444",
+      "dockerfile_digest": "sha256:b1c6e9d8627aad39735e7a5431537cef4c3200063eb156805e9b68effacc2ca3",
+      "expected_tools": [
+        "rustc",
+        "cargo"
+      ],
+      "guest_and_rules_digest": "sha256:2ad2db8b16eab9d566db6f3169b5cfd7ff8d3be04f054538e239a71757be0c27",
+      "recipe": "runtime",
+      "recipe_digest": "sha256:7534064a456e54f36946b64862aad4fedb86d56084668e82d9edfbe6b38d3cff",
+      "reference": "pcb-rust-runtime@sha256:6ddc8b1af8fb197de9e96a4df6a9ea93982a03f7b6a373d983073f8eb0cf9444",
+      "rustc": "1.83.0",
+      "tag": "pcb-rust-runtime:v1-arm64",
+      "tools": {
+        "cargo": "1.83.0",
+        "clippy": "absent",
+        "miri": "absent",
+        "rustc": "1.83.0",
+        "rustfmt": "absent"
+      }
+    }
+  },
+  "kind": "rust_images",
+  "rule_bundle_digest": "sha256:6393fbf729c051330f52292794e136b2d3181d47d9ba8145ec5b688d3c07c9cd",
+  "schema_version": 1
+}

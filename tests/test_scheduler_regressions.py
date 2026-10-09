@@ -518,15 +518,26 @@ def test_parallel_parent_completions_unblock_join_and_complete_scope(database, o
         )
 
 
+# PolyCodeBench-Architecture-v1.md section 5.4 (failure classification) and section 10.3
+# (missing and incomplete work): a model failure, such as a malformed final artifact, counts
+# against the attempt and is scored as zero, so it is a terminal attempt outcome inside a run that
+# still completes. An infrastructure failure is missing data and keeps failing the run.
 @pytest.mark.parametrize(
-    ("outcome", "expected_attempt", "expected_run"),
+    ("outcome", "expected_attempt", "expected_failure", "expected_run"),
     [
-        (StageOutcome(), "completed", "completed"),
-        (StageOutcome(quality_gate="fail", model_failure=True), "failed", "failed"),
+        (StageOutcome(), "completed", None, "completed"),
+        (
+            StageOutcome(quality_gate="fail", model_failure=True),
+            "failed",
+            "model_failure",
+            "completed",
+        ),
+        (None, "failed", "infra_blocked", "failed"),
     ],
+    ids=["success", "model_failure_scores_zero", "infrastructure_failure"],
 )
 def test_run_lifecycle_tracks_claim_and_terminal_attempt(
-    database, outcome, expected_attempt, expected_run
+    database, outcome, expected_attempt, expected_failure, expected_run
 ):
     repo = PostgresJobRepository(database.engine)
     scope = _attempt(database)
@@ -535,7 +546,7 @@ def test_run_lifecycle_tracks_claim_and_terminal_attempt(
         scope_type="attempt",
         scope_id=scope,
         actor="review",
-        jobs=(_definition(queue_class=queue),),
+        jobs=(_definition(queue_class=queue).model_copy(update={"max_deliveries": 1}),),
     )
     object_store = _MemoryArtifactStore()
     worker = _register_worker(database, object_store, label="run-life", queue_class=queue)
@@ -550,14 +561,73 @@ def test_run_lifecycle_tracks_claim_and_terminal_attempt(
             conn.execute(select(run.c.status).where(run.c.id == run_id)).scalar_one() == "running"
         )
 
-    output = _verified_upload(_artifact_repo(database, object_store), b"run lifecycle result")
-    repo.complete(claim, output_artifact_id=output, outcome=outcome)
+    if outcome is None:
+        assert repo.fail(claim, failure_class="transport_unavailable") == "dead"
+    else:
+        output = _verified_upload(_artifact_repo(database, object_store), b"run lifecycle result")
+        repo.complete(claim, output_artifact_id=output, outcome=outcome)
     with database.engine.connect() as conn:
-        assert conn.execute(select(attempt.c.state).where(attempt.c.id == scope)).scalar_one() == (
-            expected_attempt
-        )
+        assert tuple(
+            conn.execute(
+                select(attempt.c.state, attempt.c.failure_class).where(attempt.c.id == scope)
+            ).one()
+        ) == (expected_attempt, expected_failure)
         assert conn.execute(select(run.c.status).where(run.c.id == run_id)).scalar_one() == (
             expected_run
+        )
+
+
+def test_model_failure_beside_graded_attempt_completes_run(database):
+    """Architecture v1 sections 5.4/10.3: a model-failure zero does not block its sibling."""
+    repo = PostgresJobRepository(database.engine)
+    object_store = _MemoryArtifactStore()
+    first_attempt = _attempt(database)
+    queue = f"review-run-mixed-{uuid4().hex}"
+    with database.engine.begin() as conn:
+        first = conn.execute(
+            select(attempt.c.run_id, attempt.c.task_version_id).where(attempt.c.id == first_attempt)
+        ).one()
+        second_attempt = uuid4()
+        conn.execute(
+            insert(attempt).values(
+                id=second_attempt,
+                run_id=first.run_id,
+                task_version_id=first.task_version_id,
+                sample_index=1,
+                seed=1,
+                state="queued",
+                row_version=0,
+            )
+        )
+    for scope in (first_attempt, second_attempt):
+        repo.create_dag(
+            scope_type="attempt",
+            scope_id=scope,
+            actor="review",
+            jobs=(_definition(queue_class=queue),),
+        )
+    workers = [
+        _register_worker(database, object_store, label="run-mixed", queue_class=queue)
+        for _ in range(2)
+    ]
+    claims = [repo.claim(worker) for worker in workers]
+    assert all(claim is not None for claim in claims)
+    output = _verified_upload(_artifact_repo(database, object_store), b"mixed run result")
+    outcomes = (StageOutcome(quality_gate="fail", model_failure=True), StageOutcome())
+    for claim, outcome in zip(claims, outcomes, strict=True):
+        repo.complete(claim, output_artifact_id=output, outcome=outcome)
+    with database.engine.connect() as conn:
+        states = sorted(
+            tuple(row)
+            for row in conn.execute(
+                select(attempt.c.state, attempt.c.failure_class).where(
+                    attempt.c.run_id == first.run_id
+                )
+            )
+        )
+        assert states == [("completed", None), ("failed", "model_failure")]
+        assert conn.execute(select(run.c.status).where(run.c.id == first.run_id)).scalar_one() == (
+            "completed"
         )
 
 

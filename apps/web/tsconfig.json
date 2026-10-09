@@ -33,7 +33,21 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next/frontend-preview-green/types/**/*.ts",
+    ".next/frontend-preview-green/dev/types/**/*.ts",
+    ".next/prompt30-e2e/types/**/*.ts",
+    ".next/prompt30-e2e/dev/types/**/*.ts",
+    ".next/prompt31-e2e/types/**/*.ts",
+    ".next/prompt31-e2e/dev/types/**/*.ts",
+    ".next/prompt32-e2e/types/**/*.ts",
+    ".next/prompt32-e2e/dev/types/**/*.ts",
+    ".next/prompt99-e2e/types/**/*.ts",
+    ".next/prompt99-e2e/dev/types/**/*.ts",
+    ".next/prompt100-e2e/types/**/*.ts",
+    ".next/prompt100-e2e/dev/types/**/*.ts",
+    ".next/design-review-31488/types/**/*.ts",
+    ".next/design-review-31488/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

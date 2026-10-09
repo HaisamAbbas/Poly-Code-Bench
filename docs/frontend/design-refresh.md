@@ -59,7 +59,7 @@ The API, auth, data-loading modules, routes, scoring and payload construction ar
 | Page, chart and table overflow | No failures; 36 table instances inspected across the three route matrices |
 | Palette and source/interface audit | All 13 seeds match original colors; no new colors, undefined tokens or API/auth/data-module changes; 35 existing signatures preserved |
 
-The route matrix covers all **15 existing page templates**, the `/` redirect, code and answer-only profiles, compatible/incompatible comparisons, opened task evidence, error/unknown views, curator boundary, public health, valid/revoked attestations and invalid lookup. Full screenshots and 22 review plates are available under `.cache/frontend-design-review/`; the evidence manifest is [design-refresh-evidence.json](design-refresh-evidence.json). Every plate was visually inspected at all three widths, with the narrow chart/card details also inspected at original resolution.
+The route matrix covers the public results page templates, the `/` redirect, code and answer-only profiles, compatible/incompatible comparisons, opened task evidence, error/unknown views, public health, valid/revoked attestations and invalid lookup. Private operator workflows and submission intake are handled outside the website. Full screenshots and 22 review plates are available under `.cache/frontend-design-review/`; the evidence manifest is [design-refresh-evidence.json](design-refresh-evidence.json). Every plate was visually inspected at all three widths, with the narrow chart/card details also inspected at original resolution.
 
 Actual commands:
 
@@ -85,5 +85,5 @@ Existing browser artifacts were redirected with `PCB_BROWSER_ARTIFACT_ROOT` into
 
 - A searchable configuration picker could improve large model selections. The current native multi-select remains usable and preserves the existing interaction contract; a new picker warrants separate interaction design and testing.
 - Additional Firefox/Safari and NVDA/VoiceOver review would strengthen coverage. This run used the installed Chromium browser suite, automated contrast/geometry inspection and keyboard testing.
-- Connecting curator review/import/monitor/correction controls requires authenticated workflow APIs and authorization work. Those business/data-flow changes exceed this visual refresh's hard constraints; the existing access boundary and its content are preserved.
+- The public website intentionally has no curator, evaluation, benchmark-audit, or model-submission controls. Operators use the private CLI and API; only reviewed result projections are shown here.
 - A new font, dark mode, modal/toast system or icon dependency was not introduced. The existing font is set, the app is light-only, and the current screens do not contain those additional surfaces.

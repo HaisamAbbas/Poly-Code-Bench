@@ -11,10 +11,28 @@ export interface paths {
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        /** List Model Endpoints */
+        readonly get: operations["list_model_endpoints_v1_admin_model_endpoints_get"];
         readonly put?: never;
         /** Register Model Endpoint */
         readonly post: operations["register_model_endpoint_v1_admin_model_endpoints_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/admin/model-endpoints/{endpoint_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Model Endpoint */
+        readonly get: operations["get_model_endpoint_v1_admin_model_endpoints__endpoint_id__get"];
+        readonly put?: never;
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -582,6 +600,11 @@ export interface components {
             readonly data: components["schemas"]["EndpointRegistrationResult"];
             readonly meta: components["schemas"]["ResponseMeta"];
         };
+        /** ApiEnvelope[EndpointReviewView] */
+        readonly ApiEnvelope_EndpointReviewView_: {
+            readonly data: components["schemas"]["EndpointReviewView"];
+            readonly meta: components["schemas"]["ResponseMeta"];
+        };
         /** ApiEnvelope[LanguageProfile] */
         readonly ApiEnvelope_LanguageProfile_: {
             readonly data: components["schemas"]["LanguageProfile"];
@@ -625,6 +648,12 @@ export interface components {
         /** ApiEnvelope[TaskSummary] */
         readonly ApiEnvelope_TaskSummary_: {
             readonly data: components["schemas"]["TaskSummary"];
+            readonly meta: components["schemas"]["ResponseMeta"];
+        };
+        /** ApiEnvelope[list[EndpointReviewView]] */
+        readonly ApiEnvelope_list_EndpointReviewView__: {
+            /** Data */
+            readonly data: readonly components["schemas"]["EndpointReviewView"][];
             readonly meta: components["schemas"]["ResponseMeta"];
         };
         /** ApiEnvelope[list[LeaderboardEntry]] */
@@ -2710,6 +2739,64 @@ export interface components {
              * @constant
              */
             readonly status: "pending";
+        };
+        /** EndpointReviewView */
+        readonly EndpointReviewView: {
+            /**
+             * Approval Status
+             * @enum {string}
+             */
+            readonly approval_status: "pending" | "approved" | "rejected" | "revoked";
+            /** Approved At */
+            readonly approved_at: string | null;
+            /** Approved By */
+            readonly approved_by: string | null;
+            /** Base Url */
+            readonly base_url: string;
+            /** Capabilities Digest */
+            readonly capabilities_digest: string;
+            /** Conformance Report */
+            readonly conformance_report: {
+                readonly [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            readonly created_at: string;
+            /** Decision Reason */
+            readonly decision_reason: string | null;
+            /** Declared Capabilities */
+            readonly declared_capabilities: {
+                readonly [key: string]: unknown;
+            };
+            /** Endpoint Registration Id */
+            readonly endpoint_registration_id: string;
+            /**
+             * Kind
+             * @default endpoint_review_view
+             * @constant
+             */
+            readonly kind: "endpoint_review_view";
+            /** Network Policy */
+            readonly network_policy: {
+                readonly [key: string]: unknown;
+            };
+            /** Network Policy Id */
+            readonly network_policy_id: string;
+            readonly provider_kind: components["schemas"]["ProviderKind"];
+            /** Registered By */
+            readonly registered_by: string;
+            /** Row Version */
+            readonly row_version: number;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Secret Configured */
+            readonly secret_configured: boolean;
         };
         /** EntityRef */
         readonly EntityRef: {
@@ -5035,6 +5122,8 @@ export interface components {
              * @default []
              */
             readonly filters: readonly string[];
+            /** Fixture Kind */
+            readonly fixture_kind: string | null;
             /** Limit */
             readonly limit: number | null;
             /** Next Cursor */
@@ -5737,6 +5826,9 @@ export interface components {
             readonly reviewer_subject: string | null;
             /** Row Version */
             readonly row_version: number;
+            readonly run_progress: components["schemas"]["SubmissionRunProgress"] | null;
+            /** Run Status */
+            readonly run_status: string | null;
             /**
              * Schema Version
              * @default 1
@@ -6016,10 +6108,44 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly list_model_endpoints_v1_admin_model_endpoints_get: {
+        readonly parameters: {
+            readonly query?: {
+                readonly status?: readonly string[] | null;
+                readonly limit?: number;
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiEnvelope_list_EndpointReviewView__"];
+                };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     readonly register_model_endpoint_v1_admin_model_endpoints_post: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                readonly "Idempotency-Key"?: string | null;
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -6049,10 +6175,43 @@ export interface operations {
             };
         };
     };
-    readonly decide_model_endpoint_v1_admin_model_endpoints__endpoint_id__decision_post: {
+    readonly get_model_endpoint_v1_admin_model_endpoints__endpoint_id__get: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
+            readonly path: {
+                readonly endpoint_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiEnvelope_EndpointReviewView_"];
+                };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readonly decide_model_endpoint_v1_admin_model_endpoints__endpoint_id__decision_post: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: {
+                readonly "Idempotency-Key"?: string | null;
+            };
             readonly path: {
                 readonly endpoint_id: string;
             };

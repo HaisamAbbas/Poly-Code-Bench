@@ -65,17 +65,28 @@ test("E2E: invalid public projection fails closed without exposing a private fie
   await expect(page.locator("body")).not.toContainText(privateSentinel);
 });
 
-test("E2E: curator page discloses the authorization block without requesting private data", async ({ page }) => {
-  const privateApiRequests: string[] = [];
-  page.on("request", (request) => {
-    if (request.url().includes("/v1/benchmark-audit")) privateApiRequests.push(request.url());
-  });
-
+test("E2E: private operator workflows are absent from the public results site", async ({ page }) => {
+  const navigationRequests: string[] = [];
+  page.on("request", (request) => navigationRequests.push(new URL(request.url()).pathname));
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/benchmark-audit");
-  await expect(page.getByRole("heading", { name: "Curator access is not configured" })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("No private data loaded");
-  await expect(page.getByRole("status")).toContainText("No private API request was sent");
-  expect(privateApiRequests).toEqual([]);
+  await page.goto("/leaderboard");
+  const navigation = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(navigation.getByRole("link", { name: "Audit reports" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Verify attestation" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Submit model" })).toHaveCount(0);
+
+  for (const route of [
+    "/admin",
+    "/admin/benchmark-audit",
+    "/benchmark-audit",
+    "/model-submissions",
+    "/auth/sign-in",
+    "/api/model-submissions",
+    "/api/benchmark-audit/scope-preview",
+  ]) {
+    const response = await page.request.get(route);
+    expect(response.status(), route).toBe(404);
+  }
+  expect(navigationRequests).not.toContain("/v1/benchmark-audit/scope-preview");
   await expect(page.locator("body")).not.toContainText(privateSentinel);
 });

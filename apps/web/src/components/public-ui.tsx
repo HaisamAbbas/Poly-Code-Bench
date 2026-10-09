@@ -13,6 +13,7 @@ import {
 import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 import { AppNavigation } from "@/components/app-navigation";
 import { ContentSkeleton } from "@/components/content-skeleton";
+import { metricScalePosition } from "@/lib/metric-scale";
 
 export function AppHeader() {
   return (
@@ -343,7 +344,7 @@ export function SortableLeaderboard({
                 </span>
               </th>
               {showRank ? (
-                <td>
+                <td data-label="Rank">
                   <a className="detail-value" href={scoreEvidenceHref(entry.evidence_url, releaseId)}>
                     {entry.rank === null ? "Not ranked" : entry.rank}
                   </a>
@@ -351,28 +352,45 @@ export function SortableLeaderboard({
               ) : null}
               {metrics.map((metric) => {
                 const value = entry.metrics.find((item) => item.metric_id === metric.id);
+                const position = metricScalePosition(value, metric.definition);
                 return (
-                  <td key={metric.id}>
+                  <td className="leaderboard-metric-cell" data-label={metric.label} key={metric.id}>
                     {value ? (
-                      <MetricValue metric={value} sourceUrl={scoreEvidenceHref(entry.evidence_url, releaseId)} compact />
+                      <>
+                        <MetricValue metric={value} sourceUrl={scoreEvidenceHref(entry.evidence_url, releaseId)} compact />
+                        {position && metric.definition ? (
+                          <span
+                            className="metric-scale-meter"
+                            role="meter"
+                            aria-label={`${metric.label} on its published scale`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Math.round(position.performanceRatio * 100)}
+                            aria-valuetext={`${value.value} ${metric.definition.unit}; ${metric.definition.direction === "lower" ? "lower" : "higher"} values are better`}
+                            title={`${value.value} ${metric.definition.unit} · ${metric.definition.domain[0]}–${metric.definition.domain[1]}`}
+                          >
+                            <span className="metric-scale-meter-fill" style={{ width: `${position.performanceRatio * 100}%` }} />
+                          </span>
+                        ) : null}
+                      </>
                     ) : <span className="unreported" aria-label={`${metric.label}: not reported`}>Not reported</span>}
                   </td>
                 );
               })}
-              <td><CoverageBadge coverage={entry.coverage} sourceUrl={scoreEvidenceHref(entry.evidence_url, releaseId)} /></td>
-              <td>
+              <td data-label="Coverage"><CoverageBadge coverage={entry.coverage} sourceUrl={scoreEvidenceHref(entry.evidence_url, releaseId)} /></td>
+              <td data-label="Generation cost">
                 <a className="detail-value" href={scoreEvidenceHref(entry.evidence_url, releaseId)}>
                   {entry.generation_cost_micros === null ? "Not reported" : formatMicros(entry.generation_cost_micros)}
                 </a>
               </td>
-              <td>
+              <td data-label="Generation latency">
                 <a className="detail-value" href={scoreEvidenceHref(entry.evidence_url, releaseId)}>
                   {entry.latency_ms_p50 === null && entry.latency_ms_p95 === null
                     ? "Not reported"
                     : `p50 ${entry.latency_ms_p50 ?? "—"} ms · p95 ${entry.latency_ms_p95 ?? "—"} ms`}
                 </a>
               </td>
-              <td>
+              <td data-label="Mode / budget">
                 <a className="mode-budget" href={scoreEvidenceHref(entry.evidence_url, releaseId)}>
                   <span>{entry.run_mode ?? "Mode not disclosed"}</span>
                   <span>{entry.budget_profile_id ?? "Budget not disclosed"}</span>

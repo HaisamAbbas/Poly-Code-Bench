@@ -167,14 +167,14 @@ test("leaderboard bars select a published metric, preserve scope, and open model
   await page.getByRole("navigation", { name: "Results display" }).getByRole("link", { name: "Bars" }).click();
   await expect(page).toHaveURL(/view=bars/);
   await expect(page.getByRole("heading", { name: "Metric comparison" })).toBeVisible();
-  await expect(page.locator(".leaderboard-bars-row")).not.toHaveCount(0);
+  await expect(page.locator(".leaderboard-bars-column")).not.toHaveCount(0);
 
   const metric = page.getByLabel("Metric", { exact: true });
   await metric.selectOption("pass_rate");
   await page.getByLabel("Order", { exact: true }).selectOption("asc");
   await page.getByRole("button", { name: "Update bars" }).click();
   await expect(page).toHaveURL(new RegExp(`release=${encodeURIComponent(release)}.*view=bars.*sort_metric=pass_rate.*direction=asc`));
-  await expect(page.locator(".leaderboard-bars-axis-value")).toHaveText("Pass rate");
+  await expect(page.getByLabel("Metric", { exact: true })).toHaveValue("pass_rate");
 
   const bar = page.locator(".leaderboard-bars-hit-area").first();
   await expect(bar).toHaveAttribute("aria-label", /Pass rate/);

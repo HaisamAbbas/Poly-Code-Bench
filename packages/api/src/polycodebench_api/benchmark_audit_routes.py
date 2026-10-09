@@ -55,7 +55,7 @@ from starlette.responses import Response
 
 from polycodebench_api.auth import ApiPrincipal, bearer_principal, require_permission
 from polycodebench_api.context import services_of
-from polycodebench_api.envelope import NO_STORE, REVALIDATE_CACHE, respond
+from polycodebench_api.envelope import NO_STORE, respond
 from polycodebench_api.errors import ApiError
 from polycodebench_api.pagination import DEFAULT_LIMIT, MAX_LIMIT, parse_page_request
 
@@ -66,9 +66,6 @@ public_reports_router = APIRouter(
 )
 public_attestations_router = APIRouter(
     prefix="/v1/public/audit-attestations", tags=["benchmark-attestations-public"]
-)
-public_planning_router = APIRouter(
-    prefix="/v1/public/benchmark-audit", tags=["benchmark-audit-public-planning"]
 )
 
 AuditCollection = Literal[
@@ -291,7 +288,6 @@ _ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
 private_router.responses.update(_ERROR_RESPONSES)
 public_router.responses.update(_ERROR_RESPONSES)
 public_reports_router.responses.update(_ERROR_RESPONSES)
-public_planning_router.responses.update(_ERROR_RESPONSES)
 
 
 def _private_services(request: Request) -> tuple[ApiPrincipal, PostgresBenchmarkAuditRepository]:
@@ -375,9 +371,11 @@ def _catalog() -> AuditCatalogBundle:
         raise ApiError("DEPENDENCY_UNAVAILABLE") from None
 
 
-@public_planning_router.get("/scope-preview", response_model=PublicAuditWorkspaceResult)
-def get_public_scope_preview(request: Request) -> Response:
-    """Expose the versioned metadata-only catalog and deterministic scope checks."""
+@private_router.get("/scope-preview", response_model=PublicAuditWorkspaceResult)
+def get_audit_scope_preview(request: Request) -> Response:
+    """Expose metadata-only readiness to a tenant-scoped run planner."""
+    principal = require_permission(request, services_of(request).tokens, Permission.RUN_PLAN)
+    _tenant_id(principal)
     catalog = _catalog()
     scope = build_scope_conformance_report(catalog)
     data = PublicAuditWorkspaceData(
@@ -397,12 +395,25 @@ def get_public_scope_preview(request: Request) -> Response:
             limit=len(scope.benchmarks),
         ),
     )
-    return respond(request, body.model_dump(mode="json"), cache=REVALIDATE_CACHE)
+    return respond(request, body.model_dump(mode="json"), cache=NO_STORE)
 
 
-@public_planning_router.post("/resource-plan", response_model=PublicAuditResourcePlanResult)
-async def create_public_resource_plan(request: Request) -> Response:
-    """Calculate a bounded no-dispatch estimate from public catalog metadata."""
+@private_router.post(
+    "/resource-plan",
+    response_model=PublicAuditResourcePlanResult,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {"schema": AuditResourceRequest.model_json_schema()}
+            },
+        }
+    },
+)
+async def create_audit_resource_plan(request: Request) -> Response:
+    """Calculate a bounded no-dispatch estimate for a tenant-scoped operator."""
+    principal = require_permission(request, services_of(request).tokens, Permission.RUN_PLAN)
+    _tenant_id(principal)
     content_type = request.headers.get("content-type", "").partition(";")[0].strip().lower()
     if content_type != "application/json":
         raise ApiError("SCHEMA_INVALID")

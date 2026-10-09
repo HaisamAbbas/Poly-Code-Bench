@@ -181,7 +181,7 @@ class TokenDirectory:
         return principal
 
     def _resolve_web_auth_token(self, token: str) -> ApiPrincipal | None:
-        """Verify the web BFF's five-minute, submitter-only OIDC session assertion."""
+        """Verify the web BFF's submitter or tenant-bound operator assertion."""
         key = self._web_auth_signing_key
         if key is None:
             return None
@@ -202,15 +202,34 @@ class TokenDirectory:
             if not hmac.compare_digest(signature, expected):
                 return None
             now = int(datetime.now(UTC).timestamp())
+            has_tenant = "tenant_id" in claims
+            expected_claims = {
+                "iss",
+                "aud",
+                "sub",
+                "roles",
+                "email",
+                "email_verified",
+                "iat",
+                "exp",
+                "jti",
+            }
+            if has_tenant:
+                expected_claims.add("tenant_id")
+            roles = claims.get("roles")
+            valid_roles = (not has_tenant and roles == ["submitter"]) or (
+                has_tenant and roles == ["submitter", "operator"]
+            )
+            tenant_id = claims.get("tenant_id")
             if (
-                set(claims)
-                != {"iss", "aud", "sub", "roles", "email", "email_verified", "iat", "exp", "jti"}
+                set(claims) != expected_claims
                 or claims["iss"] != "polycodebench-web"
                 or claims["aud"] != "polycodebench-api"
                 or not isinstance(claims["sub"], str)
                 or not claims["sub"].strip()
                 or len(claims["sub"]) > 512
-                or claims["roles"] != ["submitter"]
+                or not valid_roles
+                or (has_tenant and (not isinstance(tenant_id, str) or not _is_uuid(tenant_id)))
                 or not isinstance(claims["email"], str)
                 or claims["email_verified"] is not True
                 or len(claims["email"]) > 320
@@ -229,10 +248,11 @@ class TokenDirectory:
                 return None
             return ApiPrincipal(
                 subject_id=claims["sub"],
-                roles=frozenset({"submitter"}),
+                roles=frozenset(cast(list[str], roles)),
                 email=claims["email"],
                 email_verified=True,
                 expires_at=claims["exp"],
+                tenant_id=UUID(cast(str, tenant_id)) if has_tenant else None,
             )
         except (UnicodeDecodeError, ValueError, TypeError, KeyError, json.JSONDecodeError):
             return None

@@ -3,7 +3,7 @@ import type { components, paths } from "./generated-public-api";
 type ApiSchema<Name extends keyof components["schemas"]> = components["schemas"][Name];
 type PublicPath = Exclude<
   Extract<keyof paths, `/v1/${string}`>,
-  `/v1/admin/${string}` | `/v1/model-submissions${string}`
+  `/v1/admin/${string}` | `/v1/benchmark-audit/${string}` | `/v1/model-submissions${string}`
 >;
 type GetOperation<Path extends keyof paths> = Path extends keyof paths
   ? paths[Path] extends { readonly get: infer Operation }
@@ -18,7 +18,6 @@ type SuccessEnvelope<Operation> = Operation extends { readonly responses: infer 
     : never
   : never;
 type PublicReadEnvelope = SuccessEnvelope<GetOperation<PublicPath>>;
-type SubmissionEnvelope = ApiSchema<"ApiEnvelope_ModelSubmission_">;
 
 export type MetricStatus = ApiSchema<"PublicMetric">["status"];
 export type PublicMetric = ApiSchema<"PublicMetric">;
@@ -64,8 +63,6 @@ export type ReleaseContext = {
   readonly summary: ReleaseSummary;
   readonly releases: readonly ReleaseSummary[];
 };
-export type ModelSubmissionRequest = ApiSchema<"ModelSubmissionInput">;
-export type ModelSubmissionStatus = ApiSchema<"ModelSubmission">;
 export type PublicAuditDocumentResult = ApiSchema<"AuditDocumentResult">;
 export type PublicBenchmarkHealth = ApiSchema<"PublicHealthView">;
 export type PublicAuditAttestationResult = ApiSchema<"PublicAuditAttestationResult">;
@@ -110,80 +107,6 @@ type ErrorEnvelope = {
     readonly request_id?: string;
   };
 };
-
-export async function sendModelSubmission(
-  idempotencyKey: string,
-  submission: ModelSubmissionRequest,
-): Promise<Resource<ApiEnvelope<ModelSubmissionStatus>>> {
-  return submissionApi<ApiEnvelope<ModelSubmissionStatus>>(
-    "/api/model-submissions",
-    {
-      method: "POST",
-      headers: { "content-type": "application/json", "idempotency-key": idempotencyKey },
-      body: JSON.stringify(submission),
-    },
-  );
-}
-
-export async function loadModelSubmissionStatus(
-  submissionId: string,
-): Promise<Resource<ApiEnvelope<ModelSubmissionStatus>>> {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) {
-    return { state: "error", title: "Request ID is invalid", message: "Enter the request ID returned after submission." };
-  }
-  return submissionApi<ApiEnvelope<ModelSubmissionStatus>>(
-    `/api/model-submissions/${encodeURIComponent(submissionId)}`,
-    { method: "GET" },
-  );
-}
-
-async function submissionApi<T extends SubmissionEnvelope>(
-  path: string,
-  init: RequestInit,
-): Promise<Resource<T>> {
-  try {
-    const headers = new Headers(init.headers);
-    headers.set("accept", "application/json");
-    const response = await fetch(path, {
-      ...init,
-      cache: "no-store",
-      headers,
-      signal: AbortSignal.timeout(9000),
-    });
-    const body: unknown = await response.json();
-    if (!response.ok) {
-      const error = body as ErrorEnvelope;
-      const code = error.error?.code;
-      return {
-        state: "error",
-        title: code === "UNAUTHENTICATED"
-          ? "Verified account sign-in required"
-          : code === "FORBIDDEN"
-            ? "Request origin could not be verified"
-            : "Submission request failed",
-        message: code === "RATE_LIMITED"
-          ? "Too many new requests. Wait for the limit window to pass, then try again."
-          : code === "UNAUTHENTICATED"
-            ? "Sign in with a verified account, then try again."
-          : code === "NOT_FOUND"
-            ? "No request with that ID belongs to this verified account."
-            : error.error?.message ?? `The API returned HTTP ${response.status}.`,
-        requestId: error.error?.request_id,
-      };
-    }
-    if (typeof body !== "object" || body === null || !("data" in body)) {
-      return { state: "error", title: "Unexpected API response", message: "The model-submission response did not match its contract." };
-    }
-    return { state: "ready", value: body as T };
-  } catch (error) {
-    const timeout = error instanceof DOMException && error.name === "TimeoutError";
-    return {
-      state: "error",
-      title: timeout ? "Submission request timed out" : "Submission service unavailable",
-      message: timeout ? "Check request status before trying again." : "Could not reach the submission service. Try again later.",
-    };
-  }
-}
 
 export function combineResources<A, B>(first: Resource<A>, second: Resource<B>): Resource<readonly [A, B]> {
   if (first.state !== "ready") return first;

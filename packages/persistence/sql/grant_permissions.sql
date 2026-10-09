@@ -59,6 +59,7 @@ GRANT INSERT ON audit_event TO pcb_submission_approver;
 
 -- MFA-gated endpoint administration is isolated from general database administration.
 GRANT SELECT, INSERT, UPDATE ON endpoint_registration TO pcb_endpoint_administrator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON idempotency_record TO pcb_endpoint_administrator;
 GRANT INSERT ON audit_event TO pcb_endpoint_administrator;
 
 GRANT SELECT, INSERT, UPDATE ON task TO pcb_curator, pcb_administrator;

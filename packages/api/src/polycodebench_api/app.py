@@ -33,7 +33,6 @@ from polycodebench_api.benchmark_audit_access import OwnerAuditAccessPolicy
 from polycodebench_api.benchmark_audit_routes import private_router as benchmark_audit_router
 from polycodebench_api.benchmark_audit_routes import (
     public_attestations_router,
-    public_planning_router,
     public_reports_router,
 )
 from polycodebench_api.benchmark_audit_routes import public_router as public_health_router
@@ -230,7 +229,6 @@ def create_app(
     app.include_router(public_health_router)
     app.include_router(public_reports_router)
     app.include_router(public_attestations_router)
-    app.include_router(public_planning_router)
 
     @app.middleware("http")
     async def attach_request_id(request: Request, call_next):  # type: ignore[no-untyped-def]

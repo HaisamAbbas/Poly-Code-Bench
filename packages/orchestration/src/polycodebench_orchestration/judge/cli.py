@@ -163,6 +163,17 @@ def _principal() -> Principal:
     return Principal(subject, frozenset(roles))
 
 
+def _required_permission(command: str) -> Permission | None:
+    """Authorize stored operations before opening database or object-store clients."""
+    if command in {"run", "run-pending"}:
+        return Permission.RUN_PLAN
+    if command == "result":
+        return Permission.RESTRICTED_EVIDENCE_READ
+    if command in {"review-queue", "show", "adjudicate"}:
+        return Permission.EVALUATION_ADJUDICATE
+    return None
+
+
 def _load(path: str | Path) -> Any:
     return parse_json_strict(Path(path).read_bytes())
 
@@ -944,6 +955,9 @@ def main() -> int:
         ):
             print("JUDGE_QUEUE_DISPATCH_DISABLED", file=sys.stderr)
             return EXIT_BLOCKED
+        required_permission = _required_permission(args.command)
+        if required_permission is not None:
+            authorize(_principal(), required_permission)
         world = _world()
         if args.command == "run":
             return _run_packet(world, args)

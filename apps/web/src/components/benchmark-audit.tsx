@@ -97,7 +97,6 @@ export function PublicAuditReport({ report }: { report: PublicBenchmarkHealth })
     </>
   );
 }
-
 export function PublicAuditReportState({ resource }: { resource: Resource<PublicBenchmarkHealth> }) {
   if (resource.state === "ready") return <PublicAuditReport report={resource.value} />;
 
@@ -115,24 +114,5 @@ export function PublicAuditReportState({ resource }: { resource: Resource<Public
       {resource.state === "error" && resource.requestId ? <small>Request {resource.requestId}</small> : null}
       <Link className="button-link" href="/audit-reports">Return to report lookup</Link>
     </section>
-  );
-}
-
-export function CuratorAccessBoundary() {
-  return (
-    <>
-      <PageIntro
-        eyebrow="Private curator workspace"
-        title="Curator access is not configured"
-        description="This workspace keeps private audit evidence behind tenant, role, and object authorization."
-      />
-      <section className="audit-unavailable" role="status">
-        <span className="state-kicker">No private data loaded</span>
-        <h2>A tenant-bound curator identity is required</h2>
-        <p>The current web sign-in flow cannot establish the tenant and curator permissions required by the private audit API. No private API request was sent.</p>
-        <p>Review, temporal, sealed, firewall, replacement, monitoring, and attestation controls will appear only after authorized service transitions and a reviewed curator ACL are connected.</p>
-        <Link className="button-link" href="/audit-reports">Open public audit reports</Link>
-      </section>
-    </>
   );
 }

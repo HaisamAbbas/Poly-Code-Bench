@@ -11,10 +11,28 @@ export interface paths {
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        /** List Model Endpoints */
+        readonly get: operations["list_model_endpoints_v1_admin_model_endpoints_get"];
         readonly put?: never;
         /** Register Model Endpoint */
         readonly post: operations["register_model_endpoint_v1_admin_model_endpoints_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/admin/model-endpoints/{endpoint_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get Model Endpoint */
+        readonly get: operations["get_model_endpoint_v1_admin_model_endpoints__endpoint_id__get"];
+        readonly put?: never;
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -180,6 +198,26 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/v1/benchmark-audit/resource-plan": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /**
+         * Create Audit Resource Plan
+         * @description Calculate a bounded no-dispatch estimate for a tenant-scoped operator.
+         */
+        readonly post: operations["create_audit_resource_plan_v1_benchmark_audit_resource_plan_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/v1/benchmark-audit/runs": {
         readonly parameters: {
             readonly query?: never;
@@ -191,6 +229,26 @@ export interface paths {
         readonly put?: never;
         /** Create Audit Run */
         readonly post: operations["create_audit_run_v1_benchmark_audit_runs_post"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/v1/benchmark-audit/scope-preview": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * Get Audit Scope Preview
+         * @description Expose metadata-only readiness to a tenant-scoped run planner.
+         */
+        readonly get: operations["get_audit_scope_preview_v1_benchmark_audit_scope_preview_get"];
+        readonly put?: never;
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -542,6 +600,11 @@ export interface components {
             readonly data: components["schemas"]["EndpointRegistrationResult"];
             readonly meta: components["schemas"]["ResponseMeta"];
         };
+        /** ApiEnvelope[EndpointReviewView] */
+        readonly ApiEnvelope_EndpointReviewView_: {
+            readonly data: components["schemas"]["EndpointReviewView"];
+            readonly meta: components["schemas"]["ResponseMeta"];
+        };
         /** ApiEnvelope[LanguageProfile] */
         readonly ApiEnvelope_LanguageProfile_: {
             readonly data: components["schemas"]["LanguageProfile"];
@@ -585,6 +648,12 @@ export interface components {
         /** ApiEnvelope[TaskSummary] */
         readonly ApiEnvelope_TaskSummary_: {
             readonly data: components["schemas"]["TaskSummary"];
+            readonly meta: components["schemas"]["ResponseMeta"];
+        };
+        /** ApiEnvelope[list[EndpointReviewView]] */
+        readonly ApiEnvelope_list_EndpointReviewView__: {
+            /** Data */
+            readonly data: readonly components["schemas"]["EndpointReviewView"][];
             readonly meta: components["schemas"]["ResponseMeta"];
         };
         /** ApiEnvelope[list[LeaderboardEntry]] */
@@ -922,6 +991,55 @@ export interface components {
              * @enum {string}
              */
             readonly visibility: "private" | "restricted" | "public";
+        };
+        /** AuditResourcePlan */
+        readonly AuditResourcePlan: {
+            /** Benchmark Counts */
+            readonly benchmark_counts: {
+                readonly [key: string]: number;
+            };
+            /** Benchmark Plans */
+            readonly benchmark_plans: readonly components["schemas"]["BenchmarkResourcePlan"][];
+            /** Blockers */
+            readonly blockers: readonly string[];
+            /** Candidate Ceiling */
+            readonly candidate_ceiling: number;
+            /**
+             * Cost State
+             * @constant
+             */
+            readonly cost_state: "unknown_price";
+            /**
+             * Dispatch Allowed
+             * @constant
+             */
+            readonly dispatch_allowed: false;
+            /** Estimated Cost Usd */
+            readonly estimated_cost_usd: string | null;
+            /** Estimated Storage Bytes */
+            readonly estimated_storage_bytes: number | null;
+            /**
+             * Model Call Ceiling
+             * @constant
+             */
+            readonly model_call_ceiling: 0;
+            /** Plan Version */
+            readonly plan_version: string;
+            /** Policy Version */
+            readonly policy_version: string;
+            /** Query Ceiling */
+            readonly query_ceiling: number;
+            /** Selected Stages */
+            readonly selected_stages: readonly string[];
+            /** Source Plans */
+            readonly source_plans: readonly components["schemas"]["SourceResourcePlan"][];
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "ready_for_review" | "blocked";
+            /** Total Tasks */
+            readonly total_tasks: number;
         };
         /**
          * AuditRunView
@@ -1722,6 +1840,133 @@ export interface components {
              */
             readonly schema_version: 1;
         };
+        /** BenchmarkResourcePlan */
+        readonly BenchmarkResourcePlan: {
+            /**
+             * Access State
+             * @enum {string}
+             */
+            readonly access_state: "public_metadata" | "public_data_review_required" | "gated" | "owner_supplied";
+            /** Benchmark Slug */
+            readonly benchmark_slug: string;
+            /** Blockers */
+            readonly blockers: readonly string[];
+            /**
+             * Importer Status
+             * @enum {string}
+             */
+            readonly importer_status: "not_implemented" | "metadata_only" | "importable" | "audit_conformant" | "blocked";
+            /**
+             * Rights State
+             * @enum {string}
+             */
+            readonly rights_state: "needs_item_review" | "license_review_required" | "gated_access_required" | "owner_contract_required" | "approved_for_declared_scope";
+            /** Selected Tasks */
+            readonly selected_tasks: number;
+            /**
+             * Split State
+             * @enum {string}
+             */
+            readonly split_state: "pinned" | "partially_documented" | "unresolved";
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "ready_for_authorized_import" | "blocked";
+            /**
+             * Version State
+             * @enum {string}
+             */
+            readonly version_state: "dataset_version_pinned" | "repository_snapshot_pinned" | "metadata_only" | "unresolved";
+        };
+        /**
+         * BenchmarkScopeEvidence
+         * @description Normalized scope and readiness evidence for one §5 registry family.
+         */
+        readonly BenchmarkScopeEvidence: {
+            /**
+             * Access State
+             * @enum {string}
+             */
+            readonly access_state: "public_metadata" | "public_data_review_required" | "gated" | "owner_supplied";
+            /** Benchmark Slug */
+            readonly benchmark_slug: string;
+            /** Component Scope */
+            readonly component_scope: readonly string[];
+            /**
+             * Conformance State
+             * @enum {string}
+             */
+            readonly conformance_state: "not_run" | "fixture_only" | "live_verified" | "blocked";
+            /**
+             * Family
+             * @enum {string}
+             */
+            readonly family: "code" | "knowledge" | "math" | "reasoning" | "agent" | "multimodal" | "private";
+            /**
+             * Fixture Evidence State
+             * @enum {string}
+             */
+            readonly fixture_evidence_state: "synthetic_source_fixture" | "catalog_contract_only";
+            /**
+             * Importer State
+             * @enum {string}
+             */
+            readonly importer_state: "not_implemented" | "metadata_only" | "importable" | "audit_conformant" | "blocked";
+            /** Live Blockers */
+            readonly live_blockers: readonly string[];
+            /**
+             * Live State
+             * @enum {string}
+             */
+            readonly live_state: "pending" | "blocked" | "live_verified";
+            /** Name */
+            readonly name: string;
+            /** Official Url */
+            readonly official_url: string;
+            /** Required Modalities */
+            readonly required_modalities: readonly string[];
+            /**
+             * Rights State
+             * @enum {string}
+             */
+            readonly rights_state: "needs_item_review" | "license_review_required" | "gated_access_required" | "owner_contract_required" | "approved_for_declared_scope";
+            /**
+             * Runtime State
+             * @enum {string}
+             */
+            readonly runtime_state: "not_required_for_metadata" | "not_implemented" | "blocked" | "conformant";
+            /** Source Groups */
+            readonly source_groups: readonly string[];
+            /** Source Pins */
+            readonly source_pins: readonly components["schemas"]["SourceRevisionPin"][];
+            /** Split Policy */
+            readonly split_policy: string;
+            /**
+             * Split State
+             * @enum {string}
+             */
+            readonly split_state: "pinned" | "partially_documented" | "unresolved";
+            /** Supported Components */
+            readonly supported_components: readonly string[];
+            /** Supported Modalities */
+            readonly supported_modalities: readonly string[];
+            /** Test References */
+            readonly test_references: readonly string[];
+            /** Unsupported Components */
+            readonly unsupported_components: readonly string[];
+            /** Unsupported Modalities */
+            readonly unsupported_modalities: readonly string[];
+            /** Upstream Lineage */
+            readonly upstream_lineage: readonly string[];
+            /** Version */
+            readonly version: string | null;
+            /**
+             * Version State
+             * @enum {string}
+             */
+            readonly version_state: "dataset_version_pinned" | "repository_snapshot_pinned" | "metadata_only" | "unresolved";
+        };
         /** BenchmarkSnapshotDocument */
         readonly BenchmarkSnapshotDocument: {
             /**
@@ -2494,6 +2739,64 @@ export interface components {
              * @constant
              */
             readonly status: "pending";
+        };
+        /** EndpointReviewView */
+        readonly EndpointReviewView: {
+            /**
+             * Approval Status
+             * @enum {string}
+             */
+            readonly approval_status: "pending" | "approved" | "rejected" | "revoked";
+            /** Approved At */
+            readonly approved_at: string | null;
+            /** Approved By */
+            readonly approved_by: string | null;
+            /** Base Url */
+            readonly base_url: string;
+            /** Capabilities Digest */
+            readonly capabilities_digest: string;
+            /** Conformance Report */
+            readonly conformance_report: {
+                readonly [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            readonly created_at: string;
+            /** Decision Reason */
+            readonly decision_reason: string | null;
+            /** Declared Capabilities */
+            readonly declared_capabilities: {
+                readonly [key: string]: unknown;
+            };
+            /** Endpoint Registration Id */
+            readonly endpoint_registration_id: string;
+            /**
+             * Kind
+             * @default endpoint_review_view
+             * @constant
+             */
+            readonly kind: "endpoint_review_view";
+            /** Network Policy */
+            readonly network_policy: {
+                readonly [key: string]: unknown;
+            };
+            /** Network Policy Id */
+            readonly network_policy_id: string;
+            readonly provider_kind: components["schemas"]["ProviderKind"];
+            /** Registered By */
+            readonly registered_by: string;
+            /** Row Version */
+            readonly row_version: number;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Secret Configured */
+            readonly secret_configured: boolean;
         };
         /** EntityRef */
         readonly EntityRef: {
@@ -4121,6 +4424,46 @@ export interface components {
             /** Unscanned Tasks */
             readonly unscanned_tasks: number;
         };
+        /** PublicAuditResourcePlanResult */
+        readonly PublicAuditResourcePlanResult: {
+            readonly data: components["schemas"]["AuditResourcePlan"];
+            readonly meta: components["schemas"]["AuditApiMeta"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
+        /** PublicAuditWorkspaceData */
+        readonly PublicAuditWorkspaceData: {
+            /** Benchmarks */
+            readonly benchmarks: readonly components["schemas"]["BenchmarkScopeEvidence"][];
+            /** Catalog Version */
+            readonly catalog_version: string;
+            readonly limits: components["schemas"]["ResourceLimits"];
+            /** Observed On */
+            readonly observed_on: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+            /** Sources */
+            readonly sources: readonly components["schemas"]["SourceGroupPolicy"][];
+        };
+        /** PublicAuditWorkspaceResult */
+        readonly PublicAuditWorkspaceResult: {
+            readonly data: components["schemas"]["PublicAuditWorkspaceData"];
+            readonly meta: components["schemas"]["AuditApiMeta"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            readonly schema_version: 1;
+        };
         /**
          * PublicHealthView
          * @description Allowlisted, reviewed summary; raw audit documents are never public responses.
@@ -4779,6 +5122,8 @@ export interface components {
              * @default []
              */
             readonly filters: readonly string[];
+            /** Fixture Kind */
+            readonly fixture_kind: string | null;
             /** Limit */
             readonly limit: number | null;
             /** Next Cursor */
@@ -5376,6 +5721,27 @@ export interface components {
              */
             readonly schema_version: 1;
         };
+        /** SourceResourcePlan */
+        readonly SourceResourcePlan: {
+            /**
+             * Authorization State
+             * @enum {string}
+             */
+            readonly authorization_state: "not_approved" | "approved_scoped" | "gated";
+            /** Blockers */
+            readonly blockers: readonly string[];
+            /** Planned Query Units */
+            readonly planned_query_units: number;
+            /** Request Cap */
+            readonly request_cap: number;
+            /** Source Group */
+            readonly source_group: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            readonly state: "ready_for_authorized_execution" | "blocked";
+        };
         /** SourceRevisionPin */
         readonly SourceRevisionPin: {
             /** Commit Sha */
@@ -5460,6 +5826,9 @@ export interface components {
             readonly reviewer_subject: string | null;
             /** Row Version */
             readonly row_version: number;
+            readonly run_progress: components["schemas"]["SubmissionRunProgress"] | null;
+            /** Run Status */
+            readonly run_status: string | null;
             /**
              * Schema Version
              * @default 1
@@ -5739,10 +6108,44 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly list_model_endpoints_v1_admin_model_endpoints_get: {
+        readonly parameters: {
+            readonly query?: {
+                readonly status?: readonly string[] | null;
+                readonly limit?: number;
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiEnvelope_list_EndpointReviewView__"];
+                };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     readonly register_model_endpoint_v1_admin_model_endpoints_post: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header?: {
+                readonly "Idempotency-Key"?: string | null;
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -5772,10 +6175,43 @@ export interface operations {
             };
         };
     };
-    readonly decide_model_endpoint_v1_admin_model_endpoints__endpoint_id__decision_post: {
+    readonly get_model_endpoint_v1_admin_model_endpoints__endpoint_id__get: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
+            readonly path: {
+                readonly endpoint_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiEnvelope_EndpointReviewView_"];
+                };
+            };
+            /** @description Validation Error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readonly decide_model_endpoint_v1_admin_model_endpoints__endpoint_id__decision_post: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: {
+                readonly "Idempotency-Key"?: string | null;
+            };
             readonly path: {
                 readonly endpoint_id: string;
             };
@@ -6220,6 +6656,122 @@ export interface operations {
             };
         };
     };
+    readonly create_audit_resource_plan_v1_benchmark_audit_resource_plan_post: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Average Item Bytes */
+                    readonly average_item_bytes: number | null;
+                    /** Source Groups */
+                    readonly source_groups: readonly string[];
+                    /** Stages */
+                    readonly stages: readonly string[];
+                    /** Task Counts */
+                    readonly task_counts: {
+                        readonly [key: string]: number;
+                    };
+                };
+            };
+        };
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["PublicAuditResourcePlanResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     readonly create_audit_run_v1_benchmark_audit_runs_post: {
         readonly parameters: {
             readonly query?: {
@@ -6263,6 +6815,107 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["AuditMutationResult"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 412: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 429: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+            /** @description Safe correlated API error */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuditApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    readonly get_audit_scope_preview_v1_benchmark_audit_scope_preview_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Successful Response */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["PublicAuditWorkspaceResult"];
                 };
             };
             /** @description Safe correlated API error */

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import re
+from datetime import datetime
 from typing import Annotated, Literal
-from uuid import UUID
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from fastapi import APIRouter, Header, Query, Request
 from polycodebench_core.endpoint_policy import EndpointNetworkPolicy, parse_endpoint_url
@@ -107,6 +109,36 @@ class EndpointDecisionResult(PublicationModel):
     kind: Literal["endpoint_decision_result"] = "endpoint_decision_result"
     endpoint_registration_id: str
     status: Literal["approved", "rejected", "revoked"]
+
+
+class EndpointReviewView(PublicationModel):
+    kind: Literal["endpoint_review_view"] = "endpoint_review_view"
+    endpoint_registration_id: str
+    provider_kind: ProviderKind
+    base_url: str
+    secret_configured: bool
+    network_policy_id: str
+    approval_status: Literal["pending", "approved", "rejected", "revoked"]
+    capabilities_digest: str
+    registered_by: str
+    network_policy: dict[str, object]
+    declared_capabilities: dict[str, object]
+    conformance_report: dict[str, object] | None
+    approved_by: str | None
+    approved_at: datetime | None
+    decision_reason: str | None
+    row_version: int = Field(ge=0)
+    created_at: datetime
+
+    @field_validator("provider_kind", mode="before")
+    @classmethod
+    def parse_json_provider_kind(cls, value: object) -> object:
+        if isinstance(value, str):
+            try:
+                return ProviderKind(value)
+            except ValueError:
+                raise ValueError("provider_kind is invalid") from None
+        return value
 
 
 def _meta(payload: object) -> ResponseMeta:
@@ -217,7 +249,9 @@ def list_model_submissions_for_review(
     rows = services_of(request).submissions.list_for_review(
         statuses=tuple(status or ("pending", "under_review")), limit=limit
     )
-    views = tuple(SubmissionReviewView.model_validate(row) for row in rows)
+    views = tuple(
+        SubmissionReviewView.model_validate(_with_run_status(request, dict(row))) for row in rows
+    )
     return respond(
         request,
         envelope(views, _meta([row.model_dump(mode="json") for row in views])),
@@ -231,7 +265,10 @@ def list_model_submissions_for_review(
 )
 def get_model_submission_for_review(request: Request, submission_id: UUID) -> Response:
     _require_mfa_permission(request, Permission.SUBMISSION_REVIEW)
-    result = services_of(request).submissions.get_for_review(submission_id=str(submission_id))
+    result = _with_run_status(
+        request,
+        services_of(request).submissions.get_for_review(submission_id=str(submission_id)),
+    )
     view = SubmissionReviewView.model_validate(result)
     return respond(request, envelope(view, _meta(view)), cache=NO_STORE)
 
@@ -346,14 +383,21 @@ def approve_model_submission(
 def register_model_endpoint(
     request: Request,
     registration: EndpointRegistrationInput,
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
 ) -> Response:
     services = services_of(request)
     principal = _require_mfa_permission(request, Permission.ENDPOINT_APPROVE)
     if services.endpoints is None:
         raise ApiError("DEPENDENCY_UNAVAILABLE")
+    if idempotency_key is None or not re.fullmatch(r"[A-Za-z0-9._:-]{8,128}", idempotency_key):
+        raise ApiError("SCHEMA_INVALID")
     try:
         endpoint_id = services.endpoints.register(
             _principal(principal),
+            registration_id=uuid5(
+                NAMESPACE_URL,
+                f"polycodebench.endpoint-registration:{principal.subject_id}:{idempotency_key}",
+            ),
             provider_kind=registration.provider_kind,
             base_url=registration.base_url,
             secret_ref=registration.secret_ref,
@@ -371,6 +415,50 @@ def register_model_endpoint(
     )
 
 
+@router.get(
+    "/admin/model-endpoints",
+    response_model=ApiEnvelope[list[EndpointReviewView]],
+)
+def list_model_endpoints(
+    request: Request,
+    status: Annotated[list[str] | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
+) -> Response:
+    principal = _require_mfa_permission(request, Permission.ENDPOINT_APPROVE)
+    services = services_of(request)
+    if services.endpoints is None:
+        raise ApiError("DEPENDENCY_UNAVAILABLE")
+    statuses = tuple(status or ("pending", "approved", "rejected", "revoked"))
+    if not statuses or any(
+        value not in {"pending", "approved", "rejected", "revoked"} for value in statuses
+    ):
+        raise ApiError("SCHEMA_INVALID")
+    rows = services.endpoints.list_registrations(
+        _principal(principal), statuses=statuses, limit=limit
+    )
+    views = tuple(EndpointReviewView.model_validate(row) for row in rows)
+    return respond(
+        request,
+        envelope(list(views), _meta([view.model_dump(mode="json") for view in views])),
+        cache=NO_STORE,
+    )
+
+
+@router.get(
+    "/admin/model-endpoints/{endpoint_id}",
+    response_model=ApiEnvelope[EndpointReviewView],
+)
+def get_model_endpoint(request: Request, endpoint_id: UUID) -> Response:
+    principal = _require_mfa_permission(request, Permission.ENDPOINT_APPROVE)
+    services = services_of(request)
+    if services.endpoints is None:
+        raise ApiError("DEPENDENCY_UNAVAILABLE")
+    view = EndpointReviewView.model_validate(
+        services.endpoints.get_registration(_principal(principal), endpoint_id)
+    )
+    return respond(request, envelope(view, _meta(view)), cache=NO_STORE)
+
+
 @router.post(
     "/admin/model-endpoints/{endpoint_id}/decision",
     response_model=ApiEnvelope[EndpointDecisionResult],
@@ -379,11 +467,14 @@ def decide_model_endpoint(
     request: Request,
     endpoint_id: UUID,
     decision: EndpointDecisionInput,
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
 ) -> Response:
     services = services_of(request)
     principal = _require_mfa_permission(request, Permission.ENDPOINT_APPROVE)
     if services.endpoints is None:
         raise ApiError("DEPENDENCY_UNAVAILABLE")
+    if idempotency_key is None or not re.fullmatch(r"[A-Za-z0-9._:-]{8,128}", idempotency_key):
+        raise ApiError("SCHEMA_INVALID")
     try:
         services.endpoints.decide(
             _principal(principal),
@@ -392,6 +483,7 @@ def decide_model_endpoint(
             reason=decision.reason,
             expected_version=decision.expected_version,
             conformance_report=decision.conformance_report,
+            request_id=idempotency_key,
         )
     except EndpointPolicyViolation:
         raise ApiError("SCHEMA_INVALID") from None

@@ -62,9 +62,14 @@ REQUIRED_REVISION = "c41e1d8ab0f6"
 
 
 def _test_database_url() -> str:
-    value = os.environ.get("PCB_TEST_DATABASE_URL")
-    if not value:
+    owner_url = os.environ.get("PCB_TEST_DATABASE_URL")
+    if not owner_url:
         pytest.skip("PCB_TEST_DATABASE_URL is not configured")
+    value = os.environ.get("PCB_TEST_API_DATABASE_URL") or owner_url
+    if "PCB_TEST_API_DATABASE_URL" in os.environ and (
+        make_url(value).database != make_url(owner_url).database
+    ):
+        pytest.fail("PCB_TEST_API_DATABASE_URL must target PCB_TEST_DATABASE_URL's database")
     if "test" not in (make_url(value).database or "").lower():
         pytest.fail("submission integration requires a disposable PostgreSQL test database")
     return value
@@ -421,7 +426,10 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 client,
                 "POST",
                 "/v1/admin/model-endpoints",
-                headers=headers,
+                headers={
+                    **headers,
+                    "Idempotency-Key": f"endpoint-register-32-1-{request_suffix}",
+                },
                 json={
                     "provider_kind": "openai_compatible",
                     "base_url": endpoint_url,
@@ -478,7 +486,7 @@ def test_approved_submission_recovers_one_bounded_postgres_run(
                 client,
                 "POST",
                 f"/v1/admin/model-endpoints/{endpoint_id}/decision",
-                headers=headers,
+                headers={**headers, "Idempotency-Key": f"endpoint-decision-{request_suffix}"},
                 json={
                     "decision": "approved",
                     "reason": "Synthetic fixture conformance; no endpoint was contacted.",

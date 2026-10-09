@@ -31,6 +31,7 @@ from model_gateway_support import (
     single_shot_protocol,
 )
 from polycodebench_core.application_errors import (
+    IdempotencyConflict,
     InvalidState,
     LeaseLost,
     PersistenceConflict,
@@ -361,8 +362,30 @@ def test_endpoint_registration_approval_and_immutability(
     with pytest.raises(EndpointNotApproved):  # pending endpoints are not usable
         repo.get_approved(endpoint_id)
     repo.decide(
-        endpoint_id, decision="approved", actor="admin", reason="reviewed", expected_version=0
+        endpoint_id,
+        decision="approved",
+        actor="admin",
+        reason="reviewed",
+        expected_version=0,
+        request_id="endpoint-approval-0001",
     )
+    repo.decide(
+        endpoint_id,
+        decision="approved",
+        actor="admin",
+        reason="reviewed",
+        expected_version=0,
+        request_id="endpoint-approval-0001",
+    )
+    with pytest.raises(IdempotencyConflict):
+        repo.decide(
+            endpoint_id,
+            decision="approved",
+            actor="admin",
+            reason="different decision text",
+            expected_version=0,
+            request_id="endpoint-approval-0001",
+        )
     assert repo.get_approved(endpoint_id).secret_ref == "secret://models/anthropic-primary"
     # stale version and identity edits are refused by the database
     with pytest.raises(Exception):  # noqa: B017 - version conflict from optimistic locking

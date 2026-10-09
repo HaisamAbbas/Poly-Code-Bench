@@ -57,7 +57,9 @@ def _micro_usd(prompt_tokens: int, completion_tokens: int) -> int:
     return -(-numerator // 1_000_000)
 
 
-def _post(api_key: str, prompt: str, max_tokens: int, temperature: float) -> dict[str, object] | None:
+def _post(
+    api_key: str, prompt: str, max_tokens: int, temperature: float
+) -> dict[str, object] | None:
     """Return the parsed reply, or None when the request failed or timed out (spend uncertain)."""
     body = json.dumps(
         {
@@ -176,7 +178,9 @@ def main() -> int:
         calls_log.append(entry)
         time.sleep(1)
 
-    (out / "candidates.json").write_text(dumps_candidates(tuple(candidates)) + "\n", encoding="utf-8")
+    (out / "candidates.json").write_text(
+        dumps_candidates(tuple(candidates)) + "\n", encoding="utf-8"
+    )
     (out / "exposure-events.json").write_text(json.dumps(events, indent=2) + "\n", encoding="utf-8")
     manifest = {
         "model": MODEL,

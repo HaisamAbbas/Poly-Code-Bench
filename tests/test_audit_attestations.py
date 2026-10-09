@@ -384,7 +384,7 @@ def test_cli_verifies_local_json_and_reports_signature_without_current_endorseme
         canonical_json_bytes(
             AttestationTrustStore(
                 schema_version=1,
-                checked_at=NOW_TEXT,
+                checked_at=datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
                 keys=(trusted,),
             ).model_dump(mode="json")
         )

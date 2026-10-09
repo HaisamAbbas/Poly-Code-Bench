@@ -1,5 +1,8 @@
 # Local development
 
+Private operator workflows use the CLI documented in [operator-cli.md](operator-cli.md); the web app
+contains the public, published-results experience.
+
 ## Pinned tools
 
 - Python 3.12.10 (`.python-version`) and `uv` 0.12.17. Install `uv` from its official installer or a managed package source, then verify with `uv --version`.

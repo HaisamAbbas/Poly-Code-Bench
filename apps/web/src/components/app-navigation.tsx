@@ -9,20 +9,14 @@ const primaryItems = [
   { href: "/languages", label: "Languages", paths: ["/languages"] },
   { href: "/compare", label: "Compare", paths: ["/compare"] },
   { href: "/tasks", label: "Tasks", paths: ["/tasks", "/scorecards"] },
-];
-
-const supportingItems = [
   { href: "/audit-reports", label: "Audit reports", paths: ["/audit-reports"] },
   { href: "/audit-attestations", label: "Verify attestation", paths: ["/audit-attestations"] },
-  { href: "/model-submissions", label: "Submit model", paths: ["/model-submissions"] },
-  { href: "/benchmark-audit", label: "Curator access", paths: ["/benchmark-audit"] },
 ];
 
 export function AppNavigation() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
-  const hasSupportingRoute = supportingItems.some((item) => item.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`)));
 
   function closeFromKeyboard(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape" && open) {
@@ -42,33 +36,18 @@ export function AppNavigation() {
       <nav id="primary-navigation" className="primary-nav" aria-label="Main navigation" data-open={open}>
         {primaryItems.map((item) => {
           const active = item.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
-          const props = {
-            href: item.href,
-            "aria-current": active ? "page" as const : undefined,
-            onClick: () => setOpen(false),
-            onKeyDown: closeFromKeyboard,
-          };
-          return <Link key={item.href} {...props}>{item.label}</Link>;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              onClick={() => setOpen(false)}
+              onKeyDown={closeFromKeyboard}
+            >
+              {item.label}
+            </Link>
+          );
         })}
-        <details className="nav-more" open={hasSupportingRoute}>
-          <summary aria-current={hasSupportingRoute ? "page" : undefined}>More</summary>
-          <div className="nav-more-menu">
-            {supportingItems.map((item) => {
-              const active = item.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => setOpen(false)}
-                  onKeyDown={closeFromKeyboard}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </details>
       </nav>
     </div>
   );

@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from polycodebench_core.application_errors import (
+    IdempotencyConflict,
     InvalidState,
     NotFound,
     OptimisticVersionConflict,
+    PersistenceUnavailable,
 )
-from polycodebench_core.canonical import canonical_digest
+from polycodebench_core.canonical import canonical_digest, canonical_json_bytes, sha256_bytes
 from polycodebench_core.endpoint_policy import (
     EndpointNetworkPolicy,
     RegisteredEndpoint,
@@ -25,15 +27,17 @@ from polycodebench_core.model_contracts import (
     ModelCapabilities,
     ProviderKind,
 )
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import DBAPIError
 
 from polycodebench_persistence.errors import map_database_error
-from polycodebench_persistence.models import audit_event, endpoint_registration
+from polycodebench_persistence.models import audit_event, endpoint_registration, idempotency_record
 
 # Native hosted providers must carry a secret reference; only LOCAL may be unauthenticated.
 NO_SECRET = "none"
+IDEMPOTENCY_TTL = timedelta(hours=24)
 
 
 class PostgresEndpointRepository:
@@ -51,6 +55,7 @@ class PostgresEndpointRepository:
     def register(
         self,
         *,
+        registration_id: UUID | None = None,
         provider_kind: ProviderKind,
         base_url: str,
         secret_ref: str,
@@ -72,30 +77,81 @@ class PostgresEndpointRepository:
                 )
         else:
             parse_secret_ref(secret_ref)
-        endpoint_id = uuid4()
+        endpoint_id = registration_id or uuid4()
+        capabilities = declared_capabilities.model_dump(mode="json")
+        policy_document = policy.model_dump(mode="json")
+        expected = {
+            "provider_kind": provider_kind.value,
+            "base_url_ref": parsed.url,
+            "secret_ref": secret_ref,
+            "network_policy_id": policy.kind.value,
+            "network_policy": policy_document,
+            "declared_capabilities": capabilities,
+            "capabilities_digest": canonical_digest(capabilities),
+            "registered_by": registered_by,
+        }
         try:
             with self._engine.begin() as connection:
                 self._set_database_role(connection)
-                connection.execute(
-                    insert(endpoint_registration).values(
+                created = connection.execute(
+                    postgres_insert(endpoint_registration)
+                    .values(
                         id=endpoint_id,
-                        provider_kind=provider_kind.value,
-                        base_url_ref=parsed.url,
-                        secret_ref=secret_ref,
-                        network_policy_id=policy.kind.value,
-                        network_policy=policy.model_dump(mode="json"),
-                        declared_capabilities=declared_capabilities.model_dump(mode="json"),
+                        **expected,
                         approval_status="pending",
-                        capabilities_digest=canonical_digest(
-                            declared_capabilities.model_dump(mode="json")
-                        ),
-                        registered_by=registered_by,
                     )
+                    .on_conflict_do_nothing(index_elements=[endpoint_registration.c.id])
                 )
-                _audit(connection, registered_by, "endpoint.register", endpoint_id)
+                if created.rowcount == 0:
+                    existing = (
+                        connection.execute(
+                            select(endpoint_registration).where(
+                                endpoint_registration.c.id == endpoint_id
+                            )
+                        )
+                        .mappings()
+                        .one_or_none()
+                    )
+                    if existing is None or any(
+                        existing[name] != value for name, value in expected.items()
+                    ):
+                        raise IdempotencyConflict("endpoint registration key was reused")
+                else:
+                    _audit(connection, registered_by, "endpoint.register", endpoint_id)
         except DBAPIError as error:
             raise map_database_error(error) from None
         return endpoint_id
+
+    def list_registrations(
+        self, *, statuses: tuple[str, ...], limit: int
+    ) -> tuple[dict[str, Any], ...]:
+        if not 1 <= limit <= 200 or not statuses:
+            raise ValueError("endpoint query needs valid statuses and a bounded limit")
+        with self._engine.connect() as connection:
+            self._set_database_role(connection)
+            rows = (
+                connection.execute(
+                    select(endpoint_registration)
+                    .where(endpoint_registration.c.approval_status.in_(statuses))
+                    .order_by(endpoint_registration.c.created_at.desc(), endpoint_registration.c.id)
+                    .limit(limit)
+                )
+                .mappings()
+                .all()
+            )
+        return tuple(_review_row(row) for row in rows)
+
+    def get_registration(self, endpoint_id: UUID) -> dict[str, Any] | None:
+        with self._engine.connect() as connection:
+            self._set_database_role(connection)
+            row = (
+                connection.execute(
+                    select(endpoint_registration).where(endpoint_registration.c.id == endpoint_id)
+                )
+                .mappings()
+                .one_or_none()
+            )
+        return _review_row(row) if row is not None else None
 
     def decide(
         self,
@@ -106,13 +162,100 @@ class PostgresEndpointRepository:
         reason: str,
         expected_version: int,
         conformance_report: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> None:
         if decision not in {"approved", "rejected", "revoked"} or not reason.strip():
             raise InvalidState("endpoint decision and reason are required")
         now = datetime.now(UTC)
+        route = f"POST /v1/admin/model-endpoints/{endpoint_id}/decision"
+        response_payload = {"endpoint_id": str(endpoint_id), "status": decision}
+        request_digest = sha256_bytes(
+            canonical_json_bytes(
+                {
+                    "endpoint_id": str(endpoint_id),
+                    "decision": decision,
+                    "reason": reason,
+                    "expected_version": expected_version,
+                    "conformance_report": conformance_report,
+                }
+            )
+        )
         try:
             with self._engine.begin() as connection:
                 self._set_database_role(connection)
+                idempotency_id: UUID | None = None
+                if request_id is not None:
+                    if not request_id or not request_id.isascii() or len(request_id) > 128:
+                        raise InvalidState("endpoint decision idempotency key is invalid")
+                    idempotency_id = uuid4()
+                    claim = connection.execute(
+                        postgres_insert(idempotency_record)
+                        .values(
+                            id=idempotency_id,
+                            subject=actor,
+                            route=route,
+                            key=request_id,
+                            request_digest=request_digest,
+                            state="in_progress",
+                            expires_at=now + IDEMPOTENCY_TTL,
+                        )
+                        .on_conflict_do_nothing(
+                            index_elements=[
+                                idempotency_record.c.subject,
+                                idempotency_record.c.route,
+                                idempotency_record.c.key,
+                            ]
+                        )
+                        .returning(idempotency_record.c.id)
+                    ).scalar_one_or_none()
+                    if claim is None:
+                        existing = (
+                            connection.execute(
+                                select(idempotency_record)
+                                .where(
+                                    idempotency_record.c.subject == actor,
+                                    idempotency_record.c.route == route,
+                                    idempotency_record.c.key == request_id,
+                                )
+                                .with_for_update()
+                            )
+                            .mappings()
+                            .one_or_none()
+                        )
+                        if existing is None:
+                            raise PersistenceUnavailable()
+                        if existing["expires_at"] <= now:
+                            connection.execute(
+                                delete(idempotency_record).where(
+                                    idempotency_record.c.id == existing["id"]
+                                )
+                            )
+                            claim = connection.execute(
+                                postgres_insert(idempotency_record)
+                                .values(
+                                    id=idempotency_id,
+                                    subject=actor,
+                                    route=route,
+                                    key=request_id,
+                                    request_digest=request_digest,
+                                    state="in_progress",
+                                    expires_at=now + IDEMPOTENCY_TTL,
+                                )
+                                .on_conflict_do_nothing()
+                                .returning(idempotency_record.c.id)
+                            ).scalar_one_or_none()
+                            if claim is None:
+                                raise PersistenceUnavailable()
+                        else:
+                            if existing["request_digest"] != request_digest:
+                                raise IdempotencyConflict()
+                            if existing["state"] != "completed":
+                                raise PersistenceUnavailable()
+                            if existing["response_payload"] != response_payload:
+                                raise PersistenceUnavailable()
+                            return
+                    if claim is None:
+                        raise PersistenceUnavailable()
                 row = (
                     connection.execute(
                         select(endpoint_registration)
@@ -150,7 +293,23 @@ class PostgresEndpointRepository:
                     .where(endpoint_registration.c.id == endpoint_id)
                     .values(**values)
                 )
-                _audit(connection, actor, f"endpoint.{decision}", endpoint_id)
+                _audit(
+                    connection,
+                    actor,
+                    f"endpoint.{decision}",
+                    endpoint_id,
+                    request_id=request_id,
+                )
+                if idempotency_id is not None:
+                    connection.execute(
+                        update(idempotency_record)
+                        .where(idempotency_record.c.id == idempotency_id)
+                        .values(
+                            state="completed",
+                            response_code=200,
+                            response_payload=response_payload,
+                        )
+                    )
         except DBAPIError as error:
             raise map_database_error(error) from None
 
@@ -200,7 +359,14 @@ class PostgresEndpointRepository:
             connection.exec_driver_sql(f"SET LOCAL ROLE {self._database_role}")
 
 
-def _audit(connection: Any, actor: str, action: str, endpoint_id: UUID) -> None:
+def _audit(
+    connection: Any,
+    actor: str,
+    action: str,
+    endpoint_id: UUID,
+    *,
+    request_id: str | None = None,
+) -> None:
     connection.execute(
         insert(audit_event).values(
             id=uuid4(),
@@ -208,7 +374,28 @@ def _audit(connection: Any, actor: str, action: str, endpoint_id: UUID) -> None:
             action=action,
             resource_type="endpoint_registration",
             resource_id=str(endpoint_id),
-            request_id=f"endpoint-{uuid4()}",
+            request_id=request_id or f"endpoint-{uuid4()}",
             details={},
         )
     )
+
+
+def _review_row(row: Any) -> dict[str, Any]:
+    return {
+        "endpoint_registration_id": str(row["id"]),
+        "provider_kind": row["provider_kind"],
+        "base_url": row["base_url_ref"],
+        "secret_configured": row["secret_ref"] != NO_SECRET,
+        "network_policy_id": row["network_policy_id"],
+        "approval_status": row["approval_status"],
+        "capabilities_digest": row["capabilities_digest"],
+        "registered_by": row["registered_by"],
+        "network_policy": row["network_policy"],
+        "declared_capabilities": row["declared_capabilities"],
+        "conformance_report": row["conformance_report"],
+        "approved_by": row["approved_by"],
+        "approved_at": row["approved_at"],
+        "decision_reason": row["decision_reason"],
+        "row_version": row["row_version"],
+        "created_at": row["created_at"],
+    }

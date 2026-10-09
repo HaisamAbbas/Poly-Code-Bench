@@ -1,4 +1,4 @@
-"""Draft complete Python task packages with GLM 5.3 Flash, screen them, then run the existing pipeline.
+"""Draft Python task packages with GLM 5.3 Flash, screen them, then run the existing pipeline.
 
 One-off, owner-authorised batch. It reuses the call, cost and spend-guard code in
 glm_generation_batch.py and is not routed through the model gateway (see that file's docstring).
@@ -119,7 +119,8 @@ Reply with ONLY a JSON object, no prose and no markdown fences. Keys and types:
      that this bug makes fail, as strings like "test_hidden.py::test_name".
   2. {{"variant": "alternative", "solution": ..., "expectation": {{}}}}
      A DIFFERENT correct solution.py (different algorithm or structure), passing all hidden tests.
-  3. {{"variant": "quality_defective", "solution": ..., "expectation": {{"expected_issue_families": ["bare-except"]}}}}
+  3. {{"variant": "quality_defective", "solution": ...,
+       "expectation": {{"expected_issue_families": ["bare-except"]}}}}
      A solution.py that is correct for every hidden test but contains a bare `except:` clause.
   4. {{"variant": "timeout", "solution": ..., "expectation": {{}}}}
      A solution.py that is plausible but loops forever on large inputs.

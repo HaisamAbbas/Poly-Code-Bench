@@ -11,7 +11,11 @@ import httpx
 from polycodebench_api.app import create_app
 from polycodebench_api.dev_fixture import create_synthetic_release
 from polycodebench_api.envelope import ApiEnvelope
-from polycodebench_api.submission_routes import EndpointDecisionResult, EndpointRegistrationResult
+from polycodebench_api.submission_routes import (
+    EndpointDecisionResult,
+    EndpointRegistrationResult,
+    EndpointReviewView,
+)
 from polycodebench_api.submissions import ModelSubmission, SubmissionReviewView
 from polycodebench_publication.aggregation import PublicationModel
 from polycodebench_publication.projections import (
@@ -64,6 +68,8 @@ SUCCESS_RESPONSES: tuple[tuple[str, str, str, type[Any], bool], ...] = (
         SubmissionReviewView,
         False,
     ),
+    ("get", "/v1/admin/model-endpoints", "200", EndpointReviewView, True),
+    ("get", "/v1/admin/model-endpoints/{endpoint_id}", "200", EndpointReviewView, False),
     ("post", "/v1/admin/model-endpoints", "201", EndpointRegistrationResult, False),
     (
         "post",

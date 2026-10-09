@@ -44,6 +44,57 @@ safe_fk_action_replacements:
       rationale: >-
         Keeps the immediate parent-delete restriction on durable repair state while making the
         model action explicit; the replacement is atomic in the PostgreSQL migration transaction.
+# Exact check-constraint replacements that expand the accepted audit schema. Every rule must
+# match one drop and one later create on the same table; all other drops remain release-blocking.
+safe_check_constraint_replacements:
+  c3a4e14f8b29:
+    - constraint: ck_stage_job_one_scope
+      table: stage_job
+      replacement_constraint: one_scope
+      rationale: Adds the three new exclusive audit/curation/discovery queue scopes.
+    - constraint: ck_budget_account_scope_kind
+      table: budget_account
+      replacement_constraint: scope_kind
+      rationale: Adds the dedicated audit_run budget-account scope.
+    - constraint: ck_call_intent_one_scope
+      table: call_intent
+      replacement_constraint: one_scope
+      rationale: Adds audit_run as a mutually exclusive model-call scope.
+  d52a7e11b30f:
+    - constraint: ck_benchmark_item_source_digest
+      table: benchmark_item
+      replacement_constraint: source_digest
+      rationale: Allows legacy unverified rows to remain explicitly source-less during import admission.
+  1a2b3c4d5e6f:
+    - constraint: ck_audit_document_schema_version_v1
+      table: audit_document
+      replacement_constraint: ck_audit_document_schema_version_supported
+      rationale: Adds schema version 2 while retaining existing version 1 documents.
+  92a10b7c6d5e:
+    - constraint: ck_audit_document_kind
+      table: audit_document
+      rationale: Adds the model_context evidence document kind.
+  93b11c2d7e4f:
+    - constraint: ck_audit_document_kind
+      table: audit_document
+      rationale: Adds sealed-access and canary observation evidence kinds.
+  a194d6c3e781:
+    - constraint: ck_audit_document_kind
+      table: audit_document
+      rationale: Adds behavioral diagnostic evidence kinds.
+  d4f7b2a196c3:
+    - constraint: ck_audit_document_kind
+      table: audit_document
+      rationale: Adds firewall and replacement evidence kinds.
+  e5c7b2a94d10:
+    - constraint: ck_audit_document_kind
+      table: audit_document
+      rationale: Adds monitoring alert evidence kind.
+safe_not_null_transitions:
+  e9b30a7c1f42:
+    - table: fingerprint
+      column: private_artifact_id
+      precondition: "fp.private_artifact_id IS NULL"
 # Tables holding published provenance; no migration may drop or truncate them.
 provenance_tables:
   - artifact

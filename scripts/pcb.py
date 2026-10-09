@@ -296,9 +296,6 @@ def _suite_evidence(
 def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
     importer = TaskPackageImporter()
     imported = importer.import_package(args.package)
-    subject = os.environ.get("PCB_CLI_SUBJECT")
-    if not subject:
-        raise ValueError("verified PCB_CLI_SUBJECT is required")
     raw = _load_json(args.report)
     evidence: AdmissionExecutionReport | dict[str, object]
     if raw.get("kind") == "suite_admission_report":
@@ -335,6 +332,9 @@ def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
         "admission_report": admission_report.model_dump(mode="json"),
     }
     document = TaskVersion.model_validate_json(json.dumps(task_document, ensure_ascii=False))
+    subject = os.environ.get("PCB_CLI_SUBJECT")
+    if not subject:
+        raise ValueError("verified PCB_CLI_SUBJECT is required")
     database, service, principal = _service()
     try:
         task_version_id = service.freeze_task_version(

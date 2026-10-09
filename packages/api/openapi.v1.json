@@ -69,6 +69,23 @@
         "title": "ApiEnvelope[EndpointRegistrationResult]",
         "type": "object"
       },
+      "ApiEnvelope_EndpointReviewView_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EndpointReviewView"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[EndpointReviewView]",
+        "type": "object"
+      },
       "ApiEnvelope_LanguageProfile_": {
         "additionalProperties": false,
         "properties": {
@@ -220,6 +237,27 @@
           "meta"
         ],
         "title": "ApiEnvelope[TaskSummary]",
+        "type": "object"
+      },
+      "ApiEnvelope_list_EndpointReviewView__": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EndpointReviewView"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ApiEnvelope[list[EndpointReviewView]]",
         "type": "object"
       },
       "ApiEnvelope_list_LeaderboardEntry__": {
@@ -6424,6 +6462,148 @@
           "status"
         ],
         "title": "EndpointRegistrationResult",
+        "type": "object"
+      },
+      "EndpointReviewView": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "revoked"
+            ],
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "capabilities_digest": {
+            "title": "Capabilities Digest",
+            "type": "string"
+          },
+          "conformance_report": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conformance Report"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Reason"
+          },
+          "declared_capabilities": {
+            "additionalProperties": true,
+            "title": "Declared Capabilities",
+            "type": "object"
+          },
+          "endpoint_registration_id": {
+            "title": "Endpoint Registration Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "endpoint_review_view",
+            "default": "endpoint_review_view",
+            "title": "Kind",
+            "type": "string"
+          },
+          "network_policy": {
+            "additionalProperties": true,
+            "title": "Network Policy",
+            "type": "object"
+          },
+          "network_policy_id": {
+            "title": "Network Policy Id",
+            "type": "string"
+          },
+          "provider_kind": {
+            "$ref": "#/components/schemas/ProviderKind"
+          },
+          "registered_by": {
+            "title": "Registered By",
+            "type": "string"
+          },
+          "row_version": {
+            "minimum": 0.0,
+            "title": "Row Version",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "secret_configured": {
+            "title": "Secret Configured",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "endpoint_registration_id",
+          "provider_kind",
+          "base_url",
+          "secret_configured",
+          "network_policy_id",
+          "approval_status",
+          "capabilities_digest",
+          "registered_by",
+          "network_policy",
+          "declared_capabilities",
+          "conformance_report",
+          "approved_by",
+          "approved_at",
+          "decision_reason",
+          "row_version",
+          "created_at"
+        ],
+        "title": "EndpointReviewView",
         "type": "object"
       },
       "EntityRef": {
@@ -14825,6 +15005,27 @@
             "title": "Row Version",
             "type": "integer"
           },
+          "run_progress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubmissionRunProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "run_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Status"
+          },
           "schema_version": {
             "const": 1,
             "default": 1,
@@ -14878,7 +15079,9 @@
           "rejection_reason",
           "permission_review",
           "approved_plan",
-          "resulting_run_id"
+          "resulting_run_id",
+          "run_status",
+          "run_progress"
         ],
         "title": "SubmissionReviewView",
         "type": "object"
@@ -15652,8 +15855,85 @@
   "openapi": "3.1.0",
   "paths": {
     "/v1/admin/model-endpoints": {
+      "get": {
+        "operationId": "list_model_endpoints_v1_admin_model_endpoints_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_list_EndpointReviewView__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Model Endpoints"
+      },
       "post": {
         "operationId": "register_model_endpoint_v1_admin_model_endpoints_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -15689,6 +15969,46 @@
         "summary": "Register Model Endpoint"
       }
     },
+    "/v1/admin/model-endpoints/{endpoint_id}": {
+      "get": {
+        "operationId": "get_model_endpoint_v1_admin_model_endpoints__endpoint_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Endpoint Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_EndpointReviewView_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Model Endpoint"
+      }
+    },
     "/v1/admin/model-endpoints/{endpoint_id}/decision": {
       "post": {
         "operationId": "decide_model_endpoint_v1_admin_model_endpoints__endpoint_id__decision_post",
@@ -15701,6 +16021,22 @@
               "format": "uuid",
               "title": "Endpoint Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
             }
           }
         ],
@@ -16354,6 +16690,178 @@
         ]
       }
     },
+    "/v1/benchmark-audit/resource-plan": {
+      "post": {
+        "description": "Calculate a bounded no-dispatch estimate for a tenant-scoped operator.",
+        "operationId": "create_audit_resource_plan_v1_benchmark_audit_resource_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "average_item_bytes": {
+                    "anyOf": [
+                      {
+                        "maximum": 1099511627776.0,
+                        "minimum": 1.0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Average Item Bytes"
+                  },
+                  "source_groups": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "title": "Source Groups",
+                    "type": "array"
+                  },
+                  "stages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "title": "Stages",
+                    "type": "array"
+                  },
+                  "task_counts": {
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "maxProperties": 100,
+                    "minProperties": 1,
+                    "title": "Task Counts",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "task_counts",
+                  "source_groups",
+                  "stages",
+                  "average_item_bytes"
+                ],
+                "title": "AuditResourceRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAuditResourcePlanResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Create Audit Resource Plan",
+        "tags": [
+          "benchmark-audit-private"
+        ]
+      }
+    },
     "/v1/benchmark-audit/runs": {
       "post": {
         "operationId": "create_audit_run_v1_benchmark_audit_runs_post",
@@ -16558,6 +17066,118 @@
           }
         },
         "summary": "Create Audit Run",
+        "tags": [
+          "benchmark-audit-private"
+        ]
+      }
+    },
+    "/v1/benchmark-audit/scope-preview": {
+      "get": {
+        "description": "Expose metadata-only readiness to a tenant-scoped run planner.",
+        "operationId": "get_audit_scope_preview_v1_benchmark_audit_scope_preview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAuditWorkspaceResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Get Audit Scope Preview",
         "tags": [
           "benchmark-audit-private"
         ]
@@ -17517,230 +18137,6 @@
         "summary": "Get Public Health Report",
         "tags": [
           "benchmark-health-public"
-        ]
-      }
-    },
-    "/v1/public/benchmark-audit/resource-plan": {
-      "post": {
-        "description": "Calculate a bounded no-dispatch estimate from public catalog metadata.",
-        "operationId": "create_public_resource_plan_v1_public_benchmark_audit_resource_plan_post",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PublicAuditResourcePlanResult"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          }
-        },
-        "summary": "Create Public Resource Plan",
-        "tags": [
-          "benchmark-audit-public-planning"
-        ]
-      }
-    },
-    "/v1/public/benchmark-audit/scope-preview": {
-      "get": {
-        "description": "Expose the versioned metadata-only catalog and deterministic scope checks.",
-        "operationId": "get_public_scope_preview_v1_public_benchmark_audit_scope_preview_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PublicAuditWorkspaceResult"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "412": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Safe correlated API error"
-          }
-        },
-        "summary": "Get Public Scope Preview",
-        "tags": [
-          "benchmark-audit-public-planning"
         ]
       }
     },

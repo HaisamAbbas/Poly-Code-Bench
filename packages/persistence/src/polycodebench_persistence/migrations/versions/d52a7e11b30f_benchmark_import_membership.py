@@ -305,8 +305,8 @@ def upgrade() -> None:
             SELECT content_digest, visibility, status INTO source_row
             FROM artifact WHERE id = NEW.source_artifact_id;
             IF source_row.status <> 'verified' OR source_row.content_digest <> NEW.source_digest
-            OR source_row.visibility <> CASE NEW.storage_visibility
-                WHEN 'private' THEN 'hidden' ELSE 'internal' END THEN
+            OR source_row.visibility <> (CASE NEW.storage_visibility
+                WHEN 'private' THEN 'hidden' ELSE 'internal' END) THEN
                 RAISE EXCEPTION 'benchmark source artifact is not verified against its manifest';
             END IF;
             SELECT content_digest, visibility, status INTO rights_row
@@ -363,13 +363,8 @@ def upgrade() -> None:
         "FOR EACH ROW EXECUTE FUNCTION pcb_validate_benchmark_import_membership()"
     )
 
-    for table_name in (
-        "benchmark_snapshot",
-        "benchmark_item",
-        "audit_component",
-        "benchmark_import_manifest",
-        "benchmark_item_lineage",
-    ):
+    # benchmark_snapshot, benchmark_item and audit_component are already immutable (c3a4e14f8b29).
+    for table_name in ("benchmark_import_manifest", "benchmark_item_lineage"):
         op.execute(
             f"CREATE TRIGGER immutable_{table_name} BEFORE UPDATE OR DELETE ON {table_name} "
             "FOR EACH ROW EXECUTE FUNCTION pcb_reject_immutable_change()"
@@ -401,13 +396,7 @@ def downgrade() -> None:
     op.execute(
         "REVOKE SELECT, INSERT ON benchmark_import_manifest, benchmark_item_lineage FROM pcb_operator, pcb_administrator"
     )
-    for table_name in (
-        "benchmark_item_lineage",
-        "benchmark_import_manifest",
-        "audit_component",
-        "benchmark_item",
-        "benchmark_snapshot",
-    ):
+    for table_name in ("benchmark_item_lineage", "benchmark_import_manifest"):
         op.execute(f"DROP TRIGGER IF EXISTS immutable_{table_name} ON {table_name}")
     op.drop_index("ix_benchmark_item_lineage_parent", table_name="benchmark_item_lineage")
     op.drop_table("benchmark_item_lineage")

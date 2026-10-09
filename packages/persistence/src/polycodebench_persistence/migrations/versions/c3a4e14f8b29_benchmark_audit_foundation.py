@@ -488,7 +488,7 @@ def upgrade() -> None:
     op.create_foreign_key("fk_stage_job_curation_round_id_curation_round", "stage_job", "curation_round", ["curation_round_id"], ["id"])
     op.create_foreign_key("fk_stage_job_discovery_search_id_discovery_search", "stage_job", "discovery_search", ["discovery_search_id"], ["id"])
     op.create_foreign_key("fk_stage_job_audit_run_id_audit_run", "stage_job", "audit_run", ["audit_run_id"], ["id"])
-    op.drop_constraint("ck_stage_job_one_scope", "stage_job", type_="check")
+    op.drop_constraint(op.f("ck_stage_job_one_scope"), "stage_job", type_="check")
     op.create_check_constraint(
         "one_scope",
         "stage_job",
@@ -502,7 +502,7 @@ def upgrade() -> None:
         sa.Column("audit_capable", sa.Boolean(), server_default=sa.text("false"), nullable=False),
     )
 
-    op.drop_constraint("ck_budget_account_scope_kind", "budget_account", type_="check")
+    op.drop_constraint(op.f("ck_budget_account_scope_kind"), "budget_account", type_="check")
     op.create_check_constraint(
         "scope_kind",
         "budget_account",
@@ -518,7 +518,7 @@ def upgrade() -> None:
         ["diagnostic_audit_run_id"],
         ["id"],
     )
-    op.drop_constraint("ck_call_intent_one_scope", "call_intent", type_="check")
+    op.drop_constraint(op.f("ck_call_intent_one_scope"), "call_intent", type_="check")
     op.create_check_constraint(
         "one_scope", "call_intent", "num_nonnulls(attempt_id,evaluation_id,audit_run_id) = 1"
     )
@@ -589,27 +589,27 @@ def downgrade() -> None:
 
     op.drop_index("ix_call_intent_diagnostic_audit_run", table_name="call_intent")
     op.drop_constraint(
-        "ck_call_intent_diagnostic_audit_context_scope", "call_intent", type_="check"
+        op.f("ck_call_intent_diagnostic_audit_context_scope"), "call_intent", type_="check"
     )
     op.drop_constraint(
         "fk_call_intent_diagnostic_audit_run_id_audit_run", "call_intent", type_="foreignkey"
     )
     op.drop_column("call_intent", "diagnostic_audit_run_id")
     op.drop_index("uq_call_intent_audit_run_key", table_name="call_intent")
-    op.drop_constraint("ck_call_intent_one_scope", "call_intent", type_="check")
+    op.drop_constraint(op.f("ck_call_intent_one_scope"), "call_intent", type_="check")
     op.create_check_constraint(
         "one_scope", "call_intent", "num_nonnulls(attempt_id,evaluation_id) = 1"
     )
     op.drop_constraint("fk_call_intent_audit_run_id_audit_run", "call_intent", type_="foreignkey")
     op.drop_column("call_intent", "audit_run_id")
-    op.drop_constraint("ck_budget_account_scope_kind", "budget_account", type_="check")
+    op.drop_constraint(op.f("ck_budget_account_scope_kind"), "budget_account", type_="check")
     op.create_check_constraint(
         "scope_kind", "budget_account", "scope_kind IN ('campaign','run','attempt','evaluation')"
     )
     op.drop_column("worker_registration", "audit_capable")
 
     op.drop_index("ix_stage_job_audit_run", table_name="stage_job")
-    op.drop_constraint("ck_stage_job_one_scope", "stage_job", type_="check")
+    op.drop_constraint(op.f("ck_stage_job_one_scope"), "stage_job", type_="check")
     op.create_check_constraint(
         "one_scope", "stage_job", "num_nonnulls(attempt_id,evaluation_id,release_id) = 1"
     )
@@ -621,7 +621,7 @@ def downgrade() -> None:
         op.drop_constraint(constraint, "stage_job", type_="foreignkey")
         op.drop_column("stage_job", column)
 
-    op.drop_constraint("ck_run_purpose_audit_scope", "run", type_="check")
+    op.drop_constraint(op.f("ck_run_purpose_audit_scope"), "run", type_="check")
     op.drop_constraint("fk_run_audit_run_id_audit_run", "run", type_="foreignkey")
     op.drop_column("run", "purpose")
     op.drop_column("run", "audit_run_id")

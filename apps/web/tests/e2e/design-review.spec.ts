@@ -136,6 +136,30 @@ test("leaderboard search, language filter, sorting, and browser history stay in 
   await expect(page.locator(".results-section .data-table tbody tr")).toHaveCount(1);
 });
 
+test("Languages navigation opens the release-backed directory and language details", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto("/leaderboard");
+  const release = await page.locator("#release-select").inputValue();
+
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Languages" }).click();
+  await expect(page).toHaveURL("/languages");
+  await expect(page.getByRole("heading", { name: "Explore languages." })).toBeVisible();
+  await expect(page.locator(".language-directory-link").first()).toBeVisible();
+
+  const language = (await page.locator(".language-directory-name").first().textContent())?.trim();
+  expect(language).toBeTruthy();
+  await page.locator(".language-directory-link").first().click();
+  await expect(page).toHaveURL(new RegExp(`/languages/${encodeURIComponent(language!)}\\?release=${encodeURIComponent(release)}`));
+  await expect(page.getByRole("heading", { name: language!, level: 1 })).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/leaderboard");
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Languages" }).click();
+  await expect(page).toHaveURL("/languages");
+  await expect(page.getByRole("heading", { name: "Explore languages." })).toBeVisible();
+});
+
 test("mobile navigation, skip link, focus and reduced-motion loading", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto("/audit-reports");

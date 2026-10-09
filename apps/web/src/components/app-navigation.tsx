@@ -6,7 +6,7 @@ import { useRef, useState, type KeyboardEvent } from "react";
 
 const primaryItems = [
   { href: "/leaderboard", label: "Leaderboard", paths: ["/leaderboard", "/models"] },
-  { href: "/leaderboard#language-filter", label: "Languages", paths: ["/languages"] },
+  { href: "/languages", label: "Languages", paths: ["/languages"] },
   { href: "/compare", label: "Compare", paths: ["/compare"] },
   { href: "/tasks", label: "Tasks", paths: ["/tasks", "/scorecards"] },
 ];

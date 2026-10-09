@@ -3076,6 +3076,59 @@ h3 {
   }
 }
 
+.language-directory {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.language-directory li {
+  border-top: 1px solid var(--color-border);
+}
+
+.language-directory-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 3px 12px;
+  min-height: 68px;
+  padding: 12px 6px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.language-directory-link:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+
+.language-directory-name {
+  font-size: 16px;
+  font-weight: var(--weight-semibold);
+}
+
+.language-directory-count {
+  grid-column: 1;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.language-directory-action {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+}
+
+.language-directory-note {
+  margin: 14px 2px 0;
+}
+
 @media (min-width: 1200px) {
   .leaderboard-table-wrap[data-layout="cards"] .data-table {
     display: table;

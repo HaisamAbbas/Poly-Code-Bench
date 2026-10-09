@@ -1,0 +1,72 @@
+# Render Blueprint for the PolyCodeBench public site (read-only: leaderboard, tasks, methodology).
+# Evaluations run on the owner's PC; finished signed releases are published INTO pcb-db with
+# scripts/render/publish_remote.py. See docs/operations/render-deployment.md before applying.
+#
+# Service names are fixed on purpose: pcb-web is built with the API's PUBLIC URL baked in
+# (Next.js rewrites are compiled at build time), so the API URL must be known before the web
+# image builds. If "pcb-api" is already taken on Render the API gets a suffixed URL; then edit
+# PCB_PUBLIC_API_URL on pcb-web below/in the dashboard and redeploy pcb-web (see the doc).
+# Render passes every env var of a Docker service to `docker build` as a build ARG, which is how
+# PCB_PUBLIC_API_URL reaches Dockerfile.web.
+services:
+  - type: web
+    name: pcb-api
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /readyz
+    autoDeploy: false
+    envVars:
+      # Image CMD binds 8000; tell Render's router the same.
+      - key: PORT
+        value: "8000"
+      # Fail-closed mode: needs the cursor key, the web signing key and an identity file below.
+      - key: PCB_ENVIRONMENT
+        value: production
+      - key: PCB_PUBLIC_RELEASE_BACKEND
+        value: postgres
+      # Must equal --target of publish_remote.py (its default).
+      - key: PCB_PUBLICATION_TARGET
+        value: render:board
+      # Scoped login role pcb_render_api (NOT the owner). Value comes from
+      # .local/render/render-secrets.env after scripts/render/bootstrap_remote.py.
+      - key: PCB_DATABASE_URL
+        sync: false
+      # 64 hex chars; same file as above.
+      - key: PCB_CURSOR_SIGNING_KEY
+        sync: false
+      # Required by production mode even though sign-in is off; any >= 32-byte secret.
+      - key: PCB_WEB_AUTH_SIGNING_KEY
+        generateValue: true
+      # No bearer principals: every authenticated route answers 401.
+      - key: PCB_API_IDENTITY_JSON
+        value: '{"schema_version":1,"principals":[]}'
+
+  - type: web
+    name: pcb-web
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile.web
+    dockerContext: .
+    healthCheckPath: /
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: "3000"
+      # Build ARG and runtime variable. Must be the API's public https URL including /v1.
+      - key: PCB_PUBLIC_API_URL
+        value: https://pcb-api.onrender.com/v1
+      # No OIDC variables on purpose: the sign-in and submission pages stay disabled.
+
+databases:
+  - name: pcb-db
+    databaseName: pcb
+    user: pcb_owner
+    region: singapore
+    plan: free
+    postgresMajorVersion: "17"
+    # External access defaults to all IPs (needed by bootstrap/publish from your PC). After setup,
+    # restrict it in the dashboard (or add ipAllowList with your own CIDR here).

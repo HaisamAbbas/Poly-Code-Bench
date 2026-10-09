@@ -28,3 +28,5 @@ docs
 .env
 .env.*
 !.env.example
+# apps/web playwright configs import this helper, and `next build` type-checks them.
+!apps/web/tests/e2e/browser-artifacts.ts

@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import local_stack  # noqa: E402
 from polycodebench_api.dev_fixture import _persistent_fixture_signer  # noqa: E402
+from polycodebench_core.canonical import canonical_digest  # noqa: E402
 from polycodebench_operations.live_release import (  # noqa: E402
     build_live_release,
     write_live_release,
@@ -61,7 +62,10 @@ def publish(
     keyring: Path,
 ) -> dict[str, Any]:
     """Run the reviewed lifecycle to publication, resuming an interrupted earlier attempt."""
-    prefix = "live-" + str(projection["cohort_digest"]).removeprefix("sha256:")[:24]
+    # Key on the cohort AND the document bytes: a reworded disclosure over the same cohort is a new
+    # release (successor), not a replay of the old key with different content.
+    document_digest = canonical_digest({"content": content, "projection": projection})
+    prefix = "live-" + document_digest.removeprefix("sha256:")[:24]
     doc = store.get(store.draft(PRINCIPAL, content, projection, f"{prefix}-draft")["id"])
     receipts = tuple(ValidationEvidence(**row) for row in evidence)
     while doc["state"] != "published":

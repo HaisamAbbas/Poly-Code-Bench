@@ -343,6 +343,9 @@ def live_release_documents(
         f"{len(entry_ids)} run(s); unscored attempts reduce coverage and are never imputed.",
         f"{len(model_failures)} attempt(s) ended in a model failure (invalid or unparseable "
         "model output) and are scored as zero, not treated as missing coverage.",
+        "The scoring policy and language profiles behind these scorecards are not calibrated, so "
+        "scorecards stay in needs_review and no total score is computed; read the per-task "
+        "outcomes and coverage, not a single number.",
         "Uncertainty intervals, judge calibration, scorer replay, native labels and rights "
         "review were not performed; they are recorded as not applicable to this exploratory "
         "release.",

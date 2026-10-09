@@ -126,6 +126,8 @@ class SubmissionReviewView(PublicationModel):
     permission_review: dict[str, object] | None = None
     approved_plan: dict[str, object] | None = None
     resulting_run_id: str | None = None
+    run_status: str | None = None
+    run_progress: SubmissionRunProgress | None = None
 
 
 class PermissionReviewRecord(PublicationModel):

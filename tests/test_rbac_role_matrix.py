@@ -15,6 +15,8 @@ EXPECTED_PERMISSIONS = {
         Permission.RELEASE_REVIEW,
     },
     Role.PUBLISHER: {Permission.RELEASE_PUBLISH},
+    # Judge gateway service identity: may only plan bounded judge runs (see Dockerfile.judge).
+    Role.JUDGE_SERVICE: {Permission.RUN_PLAN},
     Role.ADMINISTRATOR: set(Permission),
 }
 

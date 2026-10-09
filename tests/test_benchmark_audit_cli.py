@@ -24,6 +24,31 @@ def test_registry_dry_run_is_local_and_has_a_real_read_route(
     assert output["path"] == "/v1/benchmark-audit/registry"
 
 
+def test_resource_plan_dry_run_is_local_and_respects_api_body_limit(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    def no_request(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise AssertionError("dry-run must not make HTTP requests")
+
+    monkeypatch.setattr(audit_cli, "_request", no_request)
+    request = tmp_path / "resource-request.json"
+    request.write_text(
+        '{"task_counts":{"humaneval":1},"source_groups":["github"],'
+        '"stages":["lexical"],"average_item_bytes":null}',
+        encoding="utf-8",
+    )
+    assert audit_cli.main(["audit", "resource-plan", "--payload", str(request), "--dry-run"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["method"] == "POST"
+    assert result["remote_work"] == "none"
+
+    request.write_text("{}" + (" " * (64 * 1024)), encoding="utf-8")
+    assert audit_cli.main(["audit", "resource-plan", "--payload", str(request), "--dry-run"]) == 2
+    assert "64 KiB API request limit" in capsys.readouterr().err
+
+
 def test_unsupported_transition_is_blocked_without_http(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -72,6 +97,7 @@ def test_health_dry_run_does_not_claim_a_projection_adapter(
     )
     output = json.loads(capsys.readouterr().out)
     assert result == 5
+    assert output["command"] == "audit health"
     assert output["server_capability"] == "blocked"
     assert output["input"]["projection_available"] is False
 
@@ -83,6 +109,10 @@ def test_cli_rejects_remote_http_and_redirects_are_disabled() -> None:
         audit_cli._safe_base_url("https://user:password@example.com")
     with pytest.raises(ValueError, match="absolute"):
         audit_cli._safe_base_url("https://:password@example.com")
+    with pytest.raises(ValueError, match="path"):
+        audit_cli._safe_base_url("https://api.example.com/proxy")
+    with pytest.raises(ValueError, match="invalid port"):
+        audit_cli._safe_base_url("https://api.example.com:not-a-port")
 
     handler = audit_cli._NoRedirectHandler()
     from urllib.request import Request

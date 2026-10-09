@@ -217,10 +217,10 @@ class PostgresModelLedger:
         try:
             self._retire_stale_in_flight(scope, logical_call_key, in_flight_grace)
             with self._engine.begin() as connection:
-                diagnostic_audit_run_id = self._diagnostic_audit_context(connection, scope)
                 intent = self._lock_intent(connection, scope, logical_call_key)
                 if intent is None:
                     self._chain(connection, scope)  # no budget account: refuse before any insert
+                    diagnostic_audit_run_id = self._diagnostic_audit_context(connection, scope)
                     intent_id = uuid4()
                     connection.execute(
                         insert(call_intent).values(
@@ -236,6 +236,7 @@ class PostgresModelLedger:
                         )
                     )
                     return self._new_delivery(connection, scope, intent_id, 0, plan, 0)
+                diagnostic_audit_run_id = self._diagnostic_audit_context(connection, scope)
                 if intent["diagnostic_audit_run_id"] != diagnostic_audit_run_id:
                     raise PersistenceConflict(
                         "model call replay changed its diagnostic audit metadata"

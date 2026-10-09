@@ -239,9 +239,7 @@ def test_plan_rejects_storage_estimates_over_the_frozen_limit() -> None:
 
 def test_source_specific_budget_overrun_blocks_only_in_the_dry_run() -> None:
     bundle = _bundle()
-    first_policy = bundle.source_policies.groups[0].model_copy(
-        update={"max_requests_per_plan": 5}
-    )
+    first_policy = bundle.source_policies.groups[0].model_copy(update={"max_requests_per_plan": 5})
     source_policies = bundle.source_policies.model_copy(
         update={"groups": (first_policy, *bundle.source_policies.groups[1:])}
     )

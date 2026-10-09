@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID, uuid4
 
-from polycodebench_core.canonical import canonical_document_digest
+from polycodebench_core.canonical import canonical_digest, canonical_document_digest
 from polycodebench_core.models import AdmissionExecutionReport, TaskSet, TaskVersion
 from polycodebench_core.tasksets import package_snapshot_digest, validate_cluster_split_assignments
 from sqlalchemy import insert, select, text, update
@@ -23,6 +25,30 @@ from polycodebench_persistence.models import (
     task_version,
 )
 
+# Executable suite admission (language-plugin ``admission-v1``) observed in the development
+# sandbox. It is accepted for authored tasks only and never for scored or held-out splits.
+SUITE_ADMISSION_PROFILE = "admission-v1"
+SUITE_ADMISSION_SOURCE_KINDS = frozenset({"authored_fixture", "authored_conformance_fixture"})
+SUITE_ADMISSION_CHECK_IDS = {
+    "reference": "reference-acceptance",
+    "faulty": "known-fault-rejection",
+    "alternative": "alternative-solution-acceptance",
+    "flakiness": "five-reference-repetitions",
+    "rights": "rights-and-provenance",
+    "disclosure": "disclosure-scan",
+}
+SPLITS_BY_EXECUTION_TIER = {
+    "local_fixture": frozenset({"fixture"}),
+    "development_sandbox": frozenset({"fixture", "public_development"}),
+}
+AdmissionEvidence = AdmissionExecutionReport | Mapping[str, Any]
+
+
+def _evidence_document(evidence: AdmissionEvidence) -> dict[str, Any]:
+    if isinstance(evidence, AdmissionExecutionReport):
+        return evidence.model_dump(mode="json")
+    return dict(json.loads(json.dumps(dict(evidence))))
+
 
 class PostgresTaskRepository:
     def __init__(self, engine: Engine) -> None:
@@ -33,7 +59,7 @@ class PostgresTaskRepository:
         *,
         actor_subject: str,
         document: TaskVersion,
-        execution_report: AdmissionExecutionReport,
+        execution_report: AdmissionEvidence,
         manifest_digest: str,
         manifest_artifact_id: UUID,
         visible_artifact_id: UUID,
@@ -122,7 +148,7 @@ class PostgresTaskRepository:
                         frozen_at=datetime.now(UTC),
                         schema_version=document.schema_version,
                         document=document.model_dump(mode="json"),
-                        admission_evidence=execution_report.model_dump(mode="json"),
+                        admission_evidence=_evidence_document(execution_report),
                     )
                 )
                 connection.execute(
@@ -303,27 +329,32 @@ class PostgresTaskRepository:
 
     @staticmethod
     def _validate_admission(
-        document: TaskVersion, execution_report: AdmissionExecutionReport, manifest_digest: str
+        document: TaskVersion, execution_report: AdmissionEvidence, manifest_digest: str
     ) -> None:
         report = document.admission_report
-        if report.execution_tier != "local_fixture":
+        if report.execution_tier not in SPLITS_BY_EXECUTION_TIER:
             raise ValueError("production admission requires a trusted worker evidence authority")
+        snapshot = package_snapshot_digest(
+            manifest_digest, document.visible_bundle.digest, document.hidden_bundle.digest
+        )
+        if report.execution_tier == "development_sandbox":
+            _validate_suite_admission(document, _evidence_document(execution_report), snapshot)
+            return
         if (
             report.profile_id != "admission-v1-authored-fixture"
             or document.source.source_kind != "authored_fixture"
         ):
             raise ValueError("only authored fixture admission is supported")
-        observed = AdmissionExecutionReport.model_validate_json(execution_report.model_dump_json())
+        observed = AdmissionExecutionReport.model_validate_json(
+            json.dumps(_evidence_document(execution_report))
+        )
         if (
             not observed.passed
             or observed.execution_tier != report.execution_tier
             or observed.profile_id != report.profile_id
             or observed.report_digest != report.report_digest
             or observed.runtime_image_digest != document.runtime.image_digest
-            or observed.package_digest
-            != package_snapshot_digest(
-                manifest_digest, document.visible_bundle.digest, document.hidden_bundle.digest
-            )
+            or observed.package_digest != snapshot
         ):
             raise ValueError("admission evidence does not match the frozen task snapshot")
         for name in ("reference", "faulty", "alternative", "flakiness", "rights", "disclosure"):
@@ -364,13 +395,15 @@ class PostgresTaskRepository:
             ):
                 raise ValueError("task bundle artifact IDs must match the frozen task contract")
             report = version.admission_report
-            if report.execution_tier != "local_fixture":
+            allowed_splits = SPLITS_BY_EXECUTION_TIER.get(report.execution_tier)
+            if allowed_splits is None:
                 raise ValueError(
                     "production admission requires a trusted worker evidence authority"
                 )
-            if report.execution_tier == "local_fixture" and document.split != "fixture":
+            if document.split not in allowed_splits:
                 raise ValueError(
-                    "local fixture evidence cannot enter a scored or held-out task set"
+                    f"{report.execution_tier.replace('_', ' ')} evidence cannot enter a "
+                    f"{document.split} task set"
                 )
             manifest = connection.execute(
                 select(artifact.c.content_digest, artifact.c.status, artifact.c.visibility).where(
@@ -383,11 +416,8 @@ class PostgresTaskRepository:
                 or manifest.visibility != "internal"
             ):
                 raise ValueError("task manifest must be a verified internal artifact")
-            observed = AdmissionExecutionReport.model_validate_json(
-                json.dumps(row["admission_evidence"])
-            )
             PostgresTaskRepository._validate_admission(
-                version, observed, str(manifest.content_digest)
+                version, row["admission_evidence"], str(manifest.content_digest)
             )
             if (
                 version.source.first_public_at != member.earliest_public_at
@@ -412,6 +442,44 @@ class PostgresTaskRepository:
         assignments = [(str(row.cluster_id), str(row.split)) for row in existing_assignments]
         assignments.extend((cluster_id, document.split) for cluster_id in clusters)
         validate_cluster_split_assignments(assignments)
+
+
+def _validate_suite_admission(
+    document: TaskVersion, evidence: Mapping[str, Any], snapshot: str
+) -> None:
+    """Bind a stored language-plugin suite admission report to the frozen task snapshot."""
+    report = document.admission_report
+    if (
+        report.profile_id != SUITE_ADMISSION_PROFILE
+        or document.source.source_kind not in SUITE_ADMISSION_SOURCE_KINDS
+    ):
+        raise ValueError("development sandbox admission is only supported for authored tasks")
+    checks = evidence.get("checks")
+    content = {key: value for key, value in evidence.items() if key != "report_digest"}
+    if (
+        evidence.get("kind") != "suite_admission_report"
+        or not isinstance(checks, list)
+        or not checks
+        or not all(isinstance(item, Mapping) for item in checks)
+        or canonical_digest(content) != evidence.get("report_digest")
+    ):
+        raise ValueError("suite admission evidence is malformed or does not match its digest")
+    statuses = {str(item.get("check_id")): item.get("status") for item in checks}
+    if (
+        evidence.get("executable_admission_passed") is not True
+        or any(status != "pass" for status in statuses.values())
+        or evidence.get("execution_tier") != report.execution_tier
+        or evidence.get("profile_id") != report.profile_id
+        or evidence.get("report_digest") != report.report_digest
+        or evidence.get("task_id") != document.task_id
+        or evidence.get("task_version") != document.version
+        or document.runtime.image_digest not in (evidence.get("image_digests") or ())
+        or evidence.get("package_digest") != snapshot
+    ):
+        raise ValueError("admission evidence does not match the frozen task snapshot")
+    for name, check_id in SUITE_ADMISSION_CHECK_IDS.items():
+        if statuses.get(check_id) != getattr(report, f"{name}_check"):
+            raise ValueError("admission summary contradicts its observed evidence")
 
 
 def _parse_timestamp(value: str | None) -> datetime | None:

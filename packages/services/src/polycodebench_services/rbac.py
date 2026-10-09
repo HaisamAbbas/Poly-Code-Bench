@@ -15,6 +15,7 @@ class Role(StrEnum):
     REVIEWER = "reviewer"
     PUBLISHER = "publisher"
     ADMINISTRATOR = "administrator"
+    JUDGE_SERVICE = "judge-service"
 
 
 class Permission(StrEnum):
@@ -46,6 +47,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
         }
     ),
     Role.PUBLISHER: frozenset({Permission.RELEASE_PUBLISH}),
+    Role.JUDGE_SERVICE: frozenset({Permission.RUN_PLAN}),
     Role.ADMINISTRATOR: frozenset(Permission),
 }
 

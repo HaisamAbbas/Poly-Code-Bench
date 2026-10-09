@@ -44,6 +44,9 @@ class ResponseMeta(BaseModel):
     current_release_id: str | None = Field(default=None, max_length=120)
     release_digest: str = Field(min_length=1, max_length=200)
     exploratory: bool | None = None
+    #: Release kind of the resolved release: ``synthetic_internal`` (authored fixture),
+    #: ``live_exploratory`` (real unranked runs) or ``unknown``; ``None`` for listings.
+    fixture_kind: str | None = Field(default=None, max_length=64)
     total: int | None = Field(default=None, ge=0)
     returned: int | None = Field(default=None, ge=0)
     limit: int | None = Field(default=None, ge=1, le=200)

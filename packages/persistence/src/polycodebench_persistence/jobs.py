@@ -53,6 +53,8 @@ HEARTBEAT_SECONDS = 30
 REAPER_SECONDS = 30
 RETRY_DELAYS_SECONDS = (10, 60)
 TERMINAL_JOB_STATES = frozenset({"succeeded", "dead", "cancelled", "skipped"})
+#: Attempt failure class for a candidate-attributable failure (Architecture v1 section 5.4).
+MODEL_FAILURE_CLASS = "model_failure"
 
 
 @dataclass(frozen=True)
@@ -2014,7 +2016,7 @@ class PostgresJobRepository:
                     .values(
                         state="failed" if model_failure or infrastructure_failure else "completed",
                         failure_class=(
-                            "model_failure"
+                            MODEL_FAILURE_CLASS
                             if model_failure
                             else "infra_blocked"
                             if infrastructure_failure
@@ -2098,18 +2100,23 @@ class PostgresJobRepository:
         if run_status in {"completed", "failed", "cancelled"}:
             return
 
-        attempt_states = tuple(
-            connection.execute(select(attempt.c.state).where(attempt.c.run_id == run_id))
-            .scalars()
-            .all()
-        )
+        attempt_rows = connection.execute(
+            select(attempt.c.state, attempt.c.failure_class).where(attempt.c.run_id == run_id)
+        ).all()
+        attempt_states = tuple(row.state for row in attempt_rows)
         terminal = {"completed", "failed", "cancelled", "skipped"}
         if not attempt_states or any(state not in terminal for state in attempt_states):
             return
 
+        # Architecture v1 sections 5.4 and 10.3: a model failure (the candidate's own invalid or
+        # unparseable output) is a terminal attempt outcome that counts as zero inside a run that
+        # still completes. Only infrastructure/system failures are missing data that fail the run.
         if run_status == "cancelling" or all(state == "cancelled" for state in attempt_states):
             final_status = "cancelled"
-        elif any(state == "failed" for state in attempt_states):
+        elif any(
+            row.state == "failed" and row.failure_class != MODEL_FAILURE_CLASS
+            for row in attempt_rows
+        ):
             final_status = "failed"
         elif any(state == "cancelled" for state in attempt_states):
             final_status = "cancelled"

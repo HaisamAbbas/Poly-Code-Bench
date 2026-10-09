@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
 import httpx
+from fastapi.testclient import TestClient
+from polycodebench_api import audit_cli
 from polycodebench_api.app import create_app
 from polycodebench_api.auth import ApiPrincipal, TokenDirectory
 from polycodebench_api.context import AuditAccessPolicy
@@ -293,6 +296,90 @@ def test_private_pages_are_bounded_and_cursors_bind_the_tenant(tmp_path: Path) -
             assert cross_tenant.json()["error"]["code"] == "INVALID_CURSOR"
 
     asyncio.run(verify())
+
+
+def test_audit_cli_covers_catalog_planning_and_stored_document_reads(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _AuditRepository()
+    app = _app(tmp_path, repo)
+    config_dir = Path(__file__).resolve().parents[1] / "config" / "benchmark-audit"
+    monkeypatch.setenv("PCB_AUDIT_CONFIG_DIR", str(config_dir))
+
+    def request(method, url, token, body, extra_headers):  # type: ignore[no-untyped-def]
+        from urllib.parse import urlsplit
+
+        parsed = urlsplit(url)
+        response = client.request(
+            method,
+            parsed.path + (f"?{parsed.query}" if parsed.query else ""),
+            content=body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                **({"Content-Type": "application/json"} if body is not None else {}),
+                **extra_headers,
+            },
+        )
+        return response.status_code, response.content
+
+    with TestClient(app) as client:
+        monkeypatch.setattr(audit_cli, "_request", request)
+        auth = ["--token", OPERATOR_TOKEN, "--api-url", "http://127.0.0.1:8000"]
+
+        assert audit_cli.main(["audit", "scope-preview", *auth]) == 0
+        scope = json.loads(capsys.readouterr().out)["data"]
+        assert scope["catalog_version"]
+        assert scope["benchmarks"]
+
+        resource_request = tmp_path / "resource-request.json"
+        resource_request.write_text(
+            json.dumps(
+                {
+                    "task_counts": {"humaneval": 2},
+                    "source_groups": ["github"],
+                    "stages": ["lexical"],
+                    "average_item_bytes": 1024,
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert (
+            audit_cli.main(["audit", "resource-plan", "--payload", str(resource_request), *auth])
+            == 0
+        )
+        estimate = json.loads(capsys.readouterr().out)["data"]
+        assert estimate["dispatch_allowed"] is False
+        assert estimate["total_tasks"] == 2
+
+        plan = _plan()
+        plan_file = tmp_path / "plan.json"
+        plan_file.write_text(plan.model_dump_json(), encoding="utf-8")
+        assert (
+            audit_cli.main(
+                [
+                    "audit",
+                    "plan",
+                    "--payload",
+                    str(plan_file),
+                    "--idempotency-key",
+                    "audit-cli-plan-001",
+                    *auth,
+                ]
+            )
+            == 0
+        )
+        created = json.loads(capsys.readouterr().out)["data"]
+        assert created["state"] == "planned"
+        assert created["dispatch_authorized"] is False
+
+        assert audit_cli.main(["audit", "list", "plans", *auth]) == 0
+        page = json.loads(capsys.readouterr().out)["data"]
+        assert [document["id"] for document in page] == [str(plan.id)]
+
+        assert audit_cli.main(["audit", "show", "plans", str(plan.id), *auth]) == 0
+        detail = json.loads(capsys.readouterr().out)["data"]
+        assert detail["id"] == str(plan.id)
+        assert detail["kind"] == "audit_plan"
 
 
 def test_restricted_evidence_reads_require_reviewer_mfa(tmp_path: Path) -> None:

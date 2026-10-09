@@ -55,6 +55,13 @@ def is_exploratory(document: dict[str, Any]) -> bool:
     return scope == "exploratory"
 
 
+def fixture_kind_of(document: Mapping[str, Any]) -> str:
+    """The release kind label every release-scoped response carries in ``meta.fixture_kind``."""
+    projection = document.get("projection")
+    kind = projection.get("fixture_kind") if isinstance(projection, Mapping) else None
+    return kind if isinstance(kind, str) and kind else "unknown"
+
+
 def registry_of(document: dict[str, Any]) -> MetricRegistry:
     """The release's own metric definitions, so no consumer implements its own scoring formula."""
     content = content_of(document)
@@ -89,6 +96,7 @@ __all__ = [
     "LATEST",
     "LISTING_SCOPE",
     "content_of",
+    "fixture_kind_of",
     "is_exploratory",
     "load_public_document",
     "public_documents",

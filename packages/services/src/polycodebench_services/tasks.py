@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from collections.abc import Mapping
+from typing import Any, Protocol
 from uuid import UUID
 
 from polycodebench_core.models import AdmissionExecutionReport, TaskSet, TaskVersion
@@ -16,7 +17,7 @@ class TaskRepository(Protocol):
         *,
         actor_subject: str,
         document: TaskVersion,
-        execution_report: AdmissionExecutionReport,
+        execution_report: AdmissionExecutionReport | Mapping[str, Any],
         manifest_digest: str,
         manifest_artifact_id: UUID,
         visible_artifact_id: UUID,
@@ -52,7 +53,7 @@ class TaskAdmissionService:
         *,
         principal: Principal,
         document: TaskVersion,
-        execution_report: AdmissionExecutionReport,
+        execution_report: AdmissionExecutionReport | Mapping[str, Any],
         manifest_digest: str,
         manifest_artifact_id: UUID,
         visible_artifact_id: UUID,

@@ -1,0 +1,16 @@
+[Unit]
+Description=PolyCodeBench public API (loopback)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+User=@USER@
+WorkingDirectory=@ROOT@
+EnvironmentFile=@ROOT@/.env
+ExecStart=@ROOT@/.venv/bin/uvicorn polycodebench_api.app:app --host 127.0.0.1 --port 8010 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

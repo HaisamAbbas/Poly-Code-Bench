@@ -1,0 +1,46 @@
+#cloud-config
+# Rendered by Terraform templatefile(); variables: ssh_public_key (a PUBLIC key) and public_web.
+# Installs Docker Engine + compose plugin (arm64) and creates a non-root deploy user.
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - git
+  - openssl
+
+users:
+  - default
+  - name: deploy
+    gecos: PolyCodeBench POC deploy user
+    shell: /bin/bash
+    lock_passwd: true
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+write_files:
+  - path: /usr/local/sbin/pcb-install-docker.sh
+    permissions: "0750"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      [ "$(uname -m)" = "aarch64" ] || { echo "not an arm64 host" >&2; exit 1; }
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      . /etc/os-release
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" > /etc/apt/sources.list.d/docker.list
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+      usermod -aG docker deploy
+      touch /var/lib/pcb-docker-installed
+
+runcmd:
+  - [/usr/local/sbin/pcb-install-docker.sh]
+%{ if public_web ~}
+  # OCI Ubuntu images ship an iptables REJECT rule after SSH; allow the reverse proxy ports.
+  - iptables -I INPUT 5 -p tcp -m state --state NEW -m multiport --dports 80,443 -j ACCEPT
+  - netfilter-persistent save
+%{ endif ~}

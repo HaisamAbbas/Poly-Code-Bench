@@ -29,6 +29,7 @@ members = [
     "polycodebench-scoring",
     "polycodebench-services",
     "polycodebench-suites-swebench",
+    "polycodebench-taskgen",
     "polycodebench-workspace",
 ]
 
@@ -1394,6 +1395,21 @@ requires-dist = [
     { name = "polycodebench-runner", editable = "packages/runner" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "swebench", specifier = "==5.0.2" },
+]
+
+[[package]]
+name = "polycodebench-taskgen"
+version = "0.1.0"
+source = { editable = "packages/taskgen" }
+dependencies = [
+    { name = "polycodebench-core" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "polycodebench-core", editable = "packages/core" },
+    { name = "pydantic", specifier = "==2.13.5" },
 ]
 
 [[package]]

@@ -1,0 +1,18 @@
+[Unit]
+Description=PolyCodeBench web (Next.js, loopback)
+After=pcb-api.service
+
+[Service]
+User=@USER@
+WorkingDirectory=@ROOT@/apps/web
+EnvironmentFile=@ROOT@/.env
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=PCB_PUBLIC_API_URL=http://127.0.0.1:8010/v1
+ExecStart=@ROOT@/apps/web/node_modules/.bin/next start --hostname 127.0.0.1 --port 3001
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

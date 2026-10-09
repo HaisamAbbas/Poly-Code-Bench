@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "kind": "live_campaign_models",
+  "_comment": "Operator-declared model snapshots for scripts/live_campaign.py. Prices are operator-declared snapshots, NOT verified by this repository: the operator MUST check each provider's current price page (and whether max_tokens bounds reasoning output) before a live run and update price.effective_date/source. Bump immutable_revision whenever the endpoint, price or provider model changes; the model_revision row is keyed by provider/model/immutable_revision.",
+  "models": {
+    "openrouter-qwen3-coder": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "qwen/qwen3-coder",
+      "immutable_revision": "openrouter:qwen/qwen3-coder@2026-10-09",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 262144,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens"
+      },
+      "price": {
+        "price_id": "openrouter-qwen3-coder-2026-10-09",
+        "input_micro_usd_per_million_tokens": 400000,
+        "output_micro_usd_per_million_tokens": 1600000,
+        "basis": "published_list_price",
+        "source": "Operator-declared conservative snapshot of https://openrouter.ai/qwen/qwen3-coder; operator must verify before a live run.",
+        "effective_date": "2026-10-09"
+      }
+    },
+    "openrouter-glm-4.6": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "z-ai/glm-4.6",
+      "immutable_revision": "openrouter:z-ai/glm-4.6@2026-10-09",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 200000,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens"
+      },
+      "price": {
+        "price_id": "openrouter-glm-4-6-2026-10-09",
+        "input_micro_usd_per_million_tokens": 600000,
+        "output_micro_usd_per_million_tokens": 2200000,
+        "basis": "published_list_price",
+        "source": "Operator-declared conservative snapshot of https://openrouter.ai/z-ai/glm-4.6; operator must verify before a live run.",
+        "effective_date": "2026-10-09"
+      }
+    },
+    "zhipu-glm-4.6": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://api.z.ai/api/paas/v4",
+      "allowed_hosts": [
+        "api.z.ai"
+      ],
+      "secret_ref": "secret://models/zhipu",
+      "model": "glm-4.6",
+      "immutable_revision": "zhipu:glm-4.6@2026-10-09",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 200000,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens"
+      },
+      "price": {
+        "price_id": "zhipu-glm-4-6-2026-10-09",
+        "input_micro_usd_per_million_tokens": 600000,
+        "output_micro_usd_per_million_tokens": 2200000,
+        "basis": "published_list_price",
+        "source": "Operator-declared snapshot of https://docs.z.ai/guides/overview/pricing; operator must verify before a live run.",
+        "effective_date": "2026-10-09"
+      }
+    },
+    "local-ollama-qwen2.5-coder-1.5b": {
+      "provider_kind": "local",
+      "base_url": "http://127.0.0.1:11434/v1",
+      "allowed_cidrs": [
+        "127.0.0.1/32"
+      ],
+      "secret_ref": "secret://models/ollama",
+      "model": "qwen2.5-coder:1.5b",
+      "immutable_revision": "ollama:qwen2.5-coder:1.5b@d7372fd82851",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 768,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 32768,
+        "max_output_tokens_limit": 768,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens"
+      },
+      "price": {
+        "price_id": "ollama-local-zero",
+        "input_micro_usd_per_million_tokens": 0,
+        "output_micro_usd_per_million_tokens": 0,
+        "basis": "published_list_price",
+        "source": "Self-hosted Ollama on loopback; no provider fee (local hardware/electricity excluded).",
+        "effective_date": "2026-10-09"
+      },
+      "_comment": "Pipeline smoke model at $0. single-shot-v1 reserves 32000 input tokens, so output is capped at 768 to stay within the 32768 window; start Ollama with OLLAMA_CONTEXT_LENGTH=32768 so the window is real."
+    },
+    "openrouter-qwen3-coder-next": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "qwen/qwen3-coder-next",
+      "immutable_revision": "openrouter:qwen/qwen3-coder-next@2026-10-10",
+      "temperature": "0.000000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 262144,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens"
+      },
+      "price": {
+        "price_id": "openrouter-qwen3-coder-next-2026-10-10",
+        "input_micro_usd_per_million_tokens": 120000,
+        "output_micro_usd_per_million_tokens": 800000,
+        "basis": "published_list_price",
+        "source": "qwen/qwen3-coder-next https://openrouter.ai/api/v1/models, read 2026-10-10.",
+        "effective_date": "2026-10-10"
+      }
+    },
+    "openrouter-deepseek-v4-flash": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "deepseek/deepseek-v4-flash-0731",
+      "immutable_revision": "openrouter:deepseek/deepseek-v4-flash-0731@2026-10-10",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 1048576,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens",
+        "reasoning_efforts": [
+          "low"
+        ]
+      },
+      "price": {
+        "price_id": "openrouter-deepseek-v4-flash-0731-2026-10-10",
+        "input_micro_usd_per_million_tokens": 7000,
+        "output_micro_usd_per_million_tokens": 1280000,
+        "basis": "published_list_price",
+        "source": "deepseek/deepseek-v4-flash-0731 https://openrouter.ai/api/v1/models, read 2026-10-10.",
+        "effective_date": "2026-10-10"
+      },
+      "reasoning": {
+        "effort": "low"
+      }
+    },
+    "openrouter-mimo-v2.6-pro": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "immutable_revision": "openrouter:xiaomi/mimo-v2.6-pro@2026-10-10",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 1048576,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens",
+        "reasoning_efforts": [
+          "low"
+        ]
+      },
+      "price": {
+        "price_id": "openrouter-mimo-v2.6-pro-2026-10-10",
+        "input_micro_usd_per_million_tokens": 435000,
+        "output_micro_usd_per_million_tokens": 870000,
+        "basis": "published_list_price",
+        "source": "xiaomi/mimo-v2.6-pro https://openrouter.ai/api/v1/models, read 2026-10-10.",
+        "effective_date": "2026-10-10"
+      },
+      "reasoning": {
+        "effort": "low"
+      }
+    },
+    "openrouter-glm-5.3-flash": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "z-ai/glm-5.3-flash",
+      "immutable_revision": "openrouter:z-ai/glm-5.3-flash@2026-10-10",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 1048576,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens",
+        "reasoning_efforts": [
+          "low"
+        ]
+      },
+      "price": {
+        "price_id": "openrouter-glm-5.3-flash-2026-10-10",
+        "input_micro_usd_per_million_tokens": 150000,
+        "output_micro_usd_per_million_tokens": 500000,
+        "basis": "published_list_price",
+        "source": "z-ai/glm-5.3-flash https://openrouter.ai/api/v1/models, read 2026-10-10.",
+        "effective_date": "2026-10-10"
+      },
+      "reasoning": {
+        "effort": "low"
+      }
+    },
+    "openrouter-qwen3-30b-a3b": {
+      "provider_kind": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "allowed_hosts": [
+        "openrouter.ai"
+      ],
+      "secret_ref": "secret://models/openrouter",
+      "model": "qwen/qwen3-30b-a3b",
+      "immutable_revision": "openrouter:qwen/qwen3-30b-a3b@2026-10-10",
+      "temperature": "0.200000",
+      "seed_policy": "omit",
+      "max_output_tokens": 8000,
+      "capabilities": {
+        "native_tools": false,
+        "structured_output": false,
+        "seed": false,
+        "temperature": true,
+        "context_limit_tokens": 40960,
+        "max_output_tokens_limit": 8000,
+        "usage_counters": [
+          "input",
+          "output"
+        ],
+        "output_cap_bounds_all_billed_output": true,
+        "output_limit_parameter": "max_tokens",
+        "reasoning_efforts": [
+          "low"
+        ]
+      },
+      "price": {
+        "price_id": "openrouter-qwen3-30b-a3b-2026-10-10",
+        "input_micro_usd_per_million_tokens": 120000,
+        "output_micro_usd_per_million_tokens": 500000,
+        "basis": "published_list_price",
+        "source": "qwen/qwen3-30b-a3b https://openrouter.ai/api/v1/models, read 2026-10-10.",
+        "effective_date": "2026-10-10"
+      },
+      "reasoning": {
+        "effort": "low"
+      }
+    }
+  }
+}

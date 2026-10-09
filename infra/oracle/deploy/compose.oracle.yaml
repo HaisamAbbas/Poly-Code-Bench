@@ -1,0 +1,31 @@
+# Overlay for the Oracle POC VM: docker compose -f compose.yaml -f infra/oracle/deploy/compose.oracle.yaml
+# --env-file .env --env-file infra/oracle/deploy/.deploy.env --profile local-auth up -d
+# Postgres, SeaweedFS and Keycloak keep their loopback-only ports from compose.yaml.
+services:
+  postgres:
+    restart: unless-stopped
+  object-store:
+    restart: unless-stopped
+  keycloak:
+    command:
+      - start-dev
+      - --import-realm
+      - --http-port=8080
+      - --http-relative-path=/kc
+      - --hostname=https://${PCB_PUBLIC_DOMAIN:?run scripts/oracle/configure_public.py}/kc
+      - --proxy-headers=xforwarded
+      - --hostname-strict=true
+  caddy:
+    image: caddy:2.10.0
+    network_mode: host
+    environment:
+      PCB_PUBLIC_DOMAIN: ${PCB_PUBLIC_DOMAIN:?run scripts/oracle/configure_public.py}
+      PCB_ACME_EMAIL: ${PCB_ACME_EMAIL:-}
+    volumes:
+      - ./infra/oracle/deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+volumes:
+  caddy-data:
+  caddy-config:

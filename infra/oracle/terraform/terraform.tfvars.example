@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars (ignored by git). Placeholders only; fill in from the OCI console.
+owner_spend_acknowledged = false # set true only after the owner completes the runbook pre-checks
+home_region              = ""    # tenancy home region identifier
+compartment_ocid         = "ocid1.compartment.oc1..REPLACE_ME"
+image_id                 = "ocid1.image.oc1..REPLACE_ME" # Ubuntu 24.04 aarch64, home region
+allowed_ssh_cidr         = "203.0.113.10/32"             # documentation address; use your own /32
+ssh_public_key           = "ssh-ed25519 AAAA...REPLACE_ME owner@example"
+access_mode              = "bastion"
+ocpus                    = 2
+memory_in_gbs            = 12
+boot_volume_size_in_gbs  = 100

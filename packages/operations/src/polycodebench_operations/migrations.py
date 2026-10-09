@@ -112,7 +112,11 @@ def linear_chain(found: dict[str, Revision]) -> list[str]:
 
 
 def _upgrade_violations(
-    path: Path, provenance: set[str], safe_fk_rules: list[Any] | None = None
+    path: Path,
+    provenance: set[str],
+    safe_fk_rules: list[Any] | None = None,
+    safe_check_rules: list[Any] | None = None,
+    safe_not_null_rules: list[Any] | None = None,
 ) -> list[str]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     upgrade = next(
@@ -127,12 +131,18 @@ def _upgrade_violations(
         return [f"{path.name}: no upgrade()"]
     problems: list[str] = []
     safe_replacements = _safe_fk_action_replacements(path, upgrade, safe_fk_rules or [])
+    safe_check_replacements = _safe_check_constraint_replacements(
+        path, upgrade, safe_check_rules or []
+    )
+    safe_not_null = _safe_not_null_transitions(path, upgrade, safe_not_null_rules or [])
     for node in ast.walk(upgrade):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
             continue
         name = node.func.attr
         if name in _DESTRUCTIVE_OPS:
-            if name != "drop_constraint" or id(node) not in safe_replacements[0]:
+            if name != "drop_constraint" or (
+                id(node) not in safe_replacements[0] and id(node) not in safe_check_replacements[0]
+            ):
                 problems.append(f"{path.name}:{node.lineno}: upgrade {_DESTRUCTIVE_OPS[name]}")
         if name == "alter_column":
             keywords = {keyword.arg for keyword in node.keywords}
@@ -142,6 +152,7 @@ def _upgrade_violations(
                 keyword.arg == "nullable"
                 and isinstance(keyword.value, ast.Constant)
                 and keyword.value.value is False
+                and id(node) not in safe_not_null[0]
                 for keyword in node.keywords
             ):
                 problems.append(
@@ -165,7 +176,145 @@ def _upgrade_violations(
                             problems.append(
                                 f"{path.name}:{node.lineno}: drops provenance table {table}"
                             )
-    return [*problems, *safe_replacements[1]]
+    return [*problems, *safe_replacements[1], *safe_check_replacements[1], *safe_not_null[1]]
+
+
+def _effective_constraint_name(node: ast.AST | None, table: str) -> str | None:
+    """Resolve a literal constraint name using the repository's ck_<table> naming rule."""
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "f"
+    ):
+        node = node.args[0] if node.args else None
+    if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+        return None
+    value = node.value
+    return value if value.startswith("ck_") else f"ck_{table}_{value}"
+
+
+def _safe_check_constraint_replacements(
+    path: Path, upgrade: ast.FunctionDef, rules: list[Any]
+) -> tuple[set[int], list[str]]:
+    """Allow exact-name check replacements only when each drop has one paired add.
+
+    Generic constraint drops remain blocked. The policy pins every permitted table and both
+    constraint names, with a rationale for the reviewed schema expansion.
+    """
+    calls = [
+        node
+        for node in ast.walk(upgrade)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    ]
+    drops = [call for call in calls if call.func.attr == "drop_constraint"]
+    creates = [call for call in calls if call.func.attr == "create_check_constraint"]
+    approved: set[int] = set()
+    problems: list[str] = []
+    for index, rule in enumerate(rules):
+        if not isinstance(rule, dict):
+            problems.append(f"{path.name}: safe check replacement {index} is not an object")
+            continue
+        table = rule.get("table")
+        dropped_name = rule.get("constraint")
+        created_name = rule.get("replacement_constraint", dropped_name)
+        rationale = rule.get("rationale")
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (table, dropped_name, created_name, rationale)
+        ):
+            problems.append(f"{path.name}: safe check replacement {index} is incomplete")
+            continue
+        assert isinstance(table, str) and isinstance(dropped_name, str)
+        assert isinstance(created_name, str)
+        expected_drop = (
+            dropped_name if dropped_name.startswith("ck_") else f"ck_{table}_{dropped_name}"
+        )
+        expected_create = (
+            created_name if created_name.startswith("ck_") else f"ck_{table}_{created_name}"
+        )
+        matching_drops = [
+            call
+            for call in drops
+            if _effective_constraint_name(call.args[0] if call.args else None, table)
+            == expected_drop
+            and _literal_argument(call, 1) == table
+            and _literal_argument(call, 2, "type_") == "check"
+        ]
+        matching_creates = [
+            call
+            for call in creates
+            if _effective_constraint_name(call.args[0] if call.args else None, table)
+            == expected_create
+            and _literal_argument(call, 1) == table
+            and len(call.args) >= 3
+        ]
+        if len(matching_drops) != 1 or len(matching_creates) != 1:
+            problems.append(
+                f"{path.name}: safe check replacement for {table}.{expected_drop} "
+                "is not an exact pair"
+            )
+            continue
+        drop, create = matching_drops[0], matching_creates[0]
+        if create.lineno <= drop.lineno:
+            problems.append(
+                f"{path.name}: safe check replacement for {table}.{expected_drop} "
+                "must recreate after drop"
+            )
+            continue
+        approved.add(id(drop))
+    return approved, problems
+
+
+def _safe_not_null_transitions(
+    path: Path, upgrade: ast.FunctionDef, rules: list[Any]
+) -> tuple[set[int], list[str]]:
+    """Allow NOT NULL only after a pinned SQL precondition rejects incompatible old rows."""
+    calls = [
+        node
+        for node in ast.walk(upgrade)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    ]
+    alters = [call for call in calls if call.func.attr == "alter_column"]
+    approved: set[int] = set()
+    problems: list[str] = []
+    for index, rule in enumerate(rules):
+        if not isinstance(rule, dict):
+            problems.append(f"{path.name}: safe NOT NULL transition {index} is not an object")
+            continue
+        table, column, marker = rule.get("table"), rule.get("column"), rule.get("precondition")
+        if not all(isinstance(value, str) and value.strip() for value in (table, column, marker)):
+            problems.append(f"{path.name}: safe NOT NULL transition {index} is incomplete")
+            continue
+        assert isinstance(table, str) and isinstance(column, str) and isinstance(marker, str)
+        matching = [
+            call
+            for call in alters
+            if _literal_argument(call, 0) == table
+            and _literal_argument(call, 1) == column
+            and any(
+                keyword.arg == "nullable"
+                and isinstance(keyword.value, ast.Constant)
+                and keyword.value.value is False
+                for keyword in call.keywords
+            )
+        ]
+        guarded = False
+        if len(matching) == 1:
+            guarded = any(
+                call.lineno < matching[0].lineno
+                and marker.casefold() in str(_literal_argument(call, 0)).casefold()
+                and "raise exception" in str(_literal_argument(call, 0)).casefold()
+                for call in calls
+                if call.func.attr in {"execute", "exec_driver_sql"}
+            )
+        if len(matching) != 1 or not guarded:
+            problems.append(
+                f"{path.name}: safe NOT NULL transition for {table}.{column} "
+                "lacks its exact fail-closed precondition"
+            )
+            continue
+        approved.add(id(matching[0]))
+    return approved, problems
 
 
 def _literal_argument(call: ast.Call, index: int, keyword: str | None = None) -> Any:
@@ -247,8 +396,7 @@ def _safe_fk_action_replacements(
         identity_creates = [
             call
             for call in creates
-            if _literal_argument(call, 0) == name
-            and _literal_argument(call, 1) == table
+            if _literal_argument(call, 0) == name and _literal_argument(call, 1) == table
         ]
         matching_creates = [
             call
@@ -258,11 +406,7 @@ def _safe_fk_action_replacements(
             and _literal_argument(call, 4) == referenced_columns
             and _literal_argument(call, 0, "ondelete") == "RESTRICT"
         ]
-        if (
-            len(matching_drops) != 1
-            or len(identity_creates) != 1
-            or len(matching_creates) != 1
-        ):
+        if len(matching_drops) != 1 or len(identity_creates) != 1 or len(matching_creates) != 1:
             problems.append(
                 f"{path.name}: safe FK replacement for {table}.{name} is not an exact pair"
             )
@@ -290,21 +434,37 @@ def check_expand_only(
     report = ExpandReport(released_revision=released, head=chain[-1])
     approved = policy.get("approved_contract_migrations") or {}
     safe_fk_replacements = policy.get("safe_fk_action_replacements") or {}
+    safe_check_replacements = policy.get("safe_check_constraint_replacements") or {}
+    safe_not_null_transitions = policy.get("safe_not_null_transitions") or {}
     if not isinstance(safe_fk_replacements, dict):
         raise ValueError("safe_fk_action_replacements must be a revision mapping")
-    unknown_safe_fk_revisions = set(safe_fk_replacements) - set(found)
-    if unknown_safe_fk_revisions:
+    if not isinstance(safe_check_replacements, dict):
+        raise ValueError("safe_check_constraint_replacements must be a revision mapping")
+    if not isinstance(safe_not_null_transitions, dict):
+        raise ValueError("safe_not_null_transitions must be a revision mapping")
+    unknown_safe_revisions = (
+        set(safe_fk_replacements) | set(safe_check_replacements) | set(safe_not_null_transitions)
+    ) - set(found)
+    if unknown_safe_revisions:
         raise ValueError(
-            "safe FK action replacement policy references unknown revisions: "
-            + ", ".join(sorted(unknown_safe_fk_revisions))
+            "safe migration policy references unknown revisions: "
+            + ", ".join(sorted(unknown_safe_revisions))
         )
     provenance = set(policy.get("provenance_tables") or ())
     for revision in chain[chain.index(released) + 1 :]:
         report.checked.append(revision)
         rules = safe_fk_replacements.get(revision) or []
+        check_rules = safe_check_replacements.get(revision) or []
+        not_null_rules = safe_not_null_transitions.get(revision) or []
         if not isinstance(rules, list):
             raise ValueError(f"safe FK action replacements for {revision} must be a list")
-        problems = _upgrade_violations(found[revision].path, provenance, rules)
+        if not isinstance(check_rules, list):
+            raise ValueError(f"safe check replacements for {revision} must be a list")
+        if not isinstance(not_null_rules, list):
+            raise ValueError(f"safe NOT NULL transitions for {revision} must be a list")
+        problems = _upgrade_violations(
+            found[revision].path, provenance, rules, check_rules, not_null_rules
+        )
         if problems and not (
             isinstance(approved.get(revision), dict) and approved[revision].get("retention_plan")
         ):

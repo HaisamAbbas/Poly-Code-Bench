@@ -56,7 +56,7 @@ class OpenAICompatibleAdapter(BaseAdapter):
         seed_max=2**63 - 1,
         temperature=True,
         reasoning_efforts=("minimal", "low", "medium", "high"),
-        reasoning_budget_tokens=False,
+        reasoning_budget_tokens=True,
         streaming=False,
         usage_counters=frozenset(
             {
@@ -105,6 +105,10 @@ class OpenAICompatibleAdapter(BaseAdapter):
             body["seed"] = request.seed
         if request.reasoning is not None and request.reasoning.effort is not None:
             body["reasoning_effort"] = request.reasoning.effort
+        elif request.reasoning is not None and request.reasoning.budget_tokens is not None:
+            # Opt-in only (the model config must declare reasoning_budget_tokens): OpenRouter's
+            # documented nested object, which caps reasoning tokens.
+            body["reasoning"] = {"max_tokens": request.reasoning.budget_tokens}
         return WireRequest(
             path="/chat/completions",
             headers={"content-type": "application/json", "accept": "application/json"},

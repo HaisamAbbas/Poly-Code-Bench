@@ -1,0 +1,15 @@
+{
+  "kind": "screening_policy",
+  "schema_version": 1,
+  "policy_id": "screening-pilot-v1",
+  "ngram": 8,
+  "union_threshold_bp": 7000,
+  "document_threshold_bp": 5000,
+  "link_threshold_bp": 3000,
+  "approved_external_generators": ["glm-5.3-flash"],
+  "split_ratios": {
+    "public_development_bp": 3000,
+    "public_validation_bp": 1000,
+    "private_heldout_bp": 6000
+  }
+}

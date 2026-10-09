@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "resource_spec",
+  "resource_class": "local-fixture-small",
+  "lane": "solve",
+  "image": "docker.io/library/python:3.12-slim@sha256:950206c37262dd86c55659797f6ee418fee30535072f65a82ed470d985f5cda5",
+  "image_digest": "sha256:950206c37262dd86c55659797f6ee418fee30535072f65a82ed470d985f5cda5",
+  "cpu_millis": 1000,
+  "memory_bytes": 536870912,
+  "disk_bytes": 134217728,
+  "pids_limit": 128,
+  "timeout_seconds": 720,
+  "ttl_seconds": 900,
+  "executable_workspace": false
+}

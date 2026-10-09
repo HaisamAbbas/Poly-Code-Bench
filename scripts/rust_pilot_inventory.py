@@ -27,6 +27,18 @@ from polycodebench_services.task_packages import TaskPackageImporter
 TARGET_CLUSTERS = 12
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def protected_location(package: Path) -> str:
+    """Repository-relative location of a protected package (any pilot pack directory)."""
+    resolved = package.resolve()
+    try:
+        return resolved.relative_to(ROOT).as_posix()
+    except ValueError:
+        return resolved.as_posix()
+
+
 def entry(package: Path, reports: Path) -> dict[str, Any]:
     imported = TaskPackageImporter().import_package(package)
     manifest = imported.manifest
@@ -90,7 +102,7 @@ def entry(package: Path, reports: Path) -> dict[str, Any]:
         "manifest_digest": imported.manifest_digest,
         "visible_bundle_digest": imported.visible_digest,
         "hidden_bundle_digest": imported.hidden_digest,
-        "protected_location": f".protected/taskpacks/rust-pilot/{package.name}",
+        "protected_location": protected_location(package),
         "exposure": {
             "first_public_at": exposure["first_public_at"],
             "public_exposure_review": exposure["public_exposure_review"],

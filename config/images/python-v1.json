@@ -12,13 +12,13 @@
   "guest_digest": "sha256:4162764848630890d5228c43f3eca953d7d8e600bf990c775b6ecc7d980d79e6",
   "images": {
     "evaluator": {
-      "digest": "sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+      "digest": "sha256:15b55474bb749a5b1a63686a79ec878d5fb20ecb111d76ded16a13950be462a6",
       "guest_and_rules_digest": "sha256:d8fcd47c14304709bb9a234cb4f136eec4e66e0e0007973210ccb225eea7b57b",
       "installed_package_count": 80,
       "lock_digest": "sha256:e467cecd6ac043aab4a1bbaeeb8c3a5de27312958340f028e77362cdac641f14",
       "lock_file": "infra/images/python/evaluator.lock",
       "python": "Python 3.12.14",
-      "reference": "pcb-python-evaluator@sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99",
+      "reference": "pcb-python-evaluator@sha256:15b55474bb749a5b1a63686a79ec878d5fb20ecb111d76ded16a13950be462a6",
       "tag": "pcb-python-evaluator:v1",
       "tools": {
         "bandit": "1.9.2",
@@ -30,13 +30,13 @@
       }
     },
     "runtime": {
-      "digest": "sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "digest": "sha256:d70a32e18e4337d5efc9aebee971d8a22c7b32a7099bf3a001c1f510e0236efd",
       "guest_and_rules_digest": "sha256:d8fcd47c14304709bb9a234cb4f136eec4e66e0e0007973210ccb225eea7b57b",
       "installed_package_count": 8,
       "lock_digest": "sha256:cc10c52a3a2751b2240fcb8eb234aaf05f63493a49375de68fe9ac5580664a30",
       "lock_file": "infra/images/python/runtime.lock",
       "python": "Python 3.12.14",
-      "reference": "pcb-python-runtime@sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa",
+      "reference": "pcb-python-runtime@sha256:d70a32e18e4337d5efc9aebee971d8a22c7b32a7099bf3a001c1f510e0236efd",
       "tag": "pcb-python-runtime:v1",
       "tools": {
         "hypothesis": "6.150.2",

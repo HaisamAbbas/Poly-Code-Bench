@@ -42,7 +42,7 @@ rights:
 runtime:
   schema_version: 1
   kind: task_runtime
-  image_digest: sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
+  image_digest: sha256:d70a32e18e4337d5efc9aebee971d8a22c7b32a7099bf3a001c1f510e0236efd
   language_plugin_id: python
   language_plugin_version: 0.1.0
   build_recipe_digest: sha256:f3b87d4410263b7c814bb0afcf05f009ded356f56244f548a190e6886c1bd150

@@ -225,9 +225,15 @@ def _capture(name: str, *command: str) -> tuple[str, ...]:
     )
 
 
-def _outputs(name: str, fmt: str = "json") -> tuple[PlanOutput, ...]:
+def _outputs(
+    name: str, fmt: str = "json", *, empty_is_clean: bool = False
+) -> tuple[PlanOutput, ...]:
     return (
-        PlanOutput(path=f"out/{name}.json", format=fmt),  # type: ignore[arg-type]
+        PlanOutput(
+            path=f"out/{name}.json",  # type: ignore[arg-type]
+            format=fmt,  # type: ignore[arg-type]
+            empty_is_clean=empty_is_clean,
+        ),
         PlanOutput(path=f"out/{name}.err", format="text", required=False),
     )
 
@@ -338,7 +344,9 @@ def analysis_plans(ids: ImageIdentities, context: AnalysisContext) -> list[Analy
                     "--no-error-summary",
                     *work,
                 ),
-                outputs=_outputs("mypy", "jsonl"),
+                # mypy's contract: exit 0 with empty stdout and stderr is a clean run, which the
+                # parser checks against the supervisor's evidence.
+                outputs=_outputs("mypy", "jsonl", empty_is_clean=True),
                 semantics=findings,
                 output_schema="mypy-json-lines-v1",
                 timeout=90,

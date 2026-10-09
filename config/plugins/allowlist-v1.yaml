@@ -47,8 +47,8 @@ plugins:
   api_version: 1
   plugin_version: 0.1.0
   image_digests:
-  - sha256:beb3dd62e10bd3f6082a3e687c37b8b8bf325acf22f7afcdc2503bb2b1b30ffa
-  - sha256:dd801029a0638924b650e829cac0e6b85bd6c055da2694c52da716b6d2ab4a99
+  - sha256:d70a32e18e4337d5efc9aebee971d8a22c7b32a7099bf3a001c1f510e0236efd
+  - sha256:15b55474bb749a5b1a63686a79ec878d5fb20ecb111d76ded16a13950be462a6
 - plugin_id: rust
   entry_point: polycodebench_lang_rust.plugin:RustLanguagePlugin
   api_version: 1

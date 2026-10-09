@@ -472,3 +472,14 @@ def test_suite_admission_report_is_reused_only_for_the_exact_passing_snapshot(
     failed = {**body, "executable_admission_passed": False}
     (reports / "rate-limiter.json").write_text(json.dumps(failed), encoding="utf-8")
     assert not lc.suite_admission_report(package, _digest("a"), reports, target)
+
+
+def test_model_config_carries_declared_reasoning_effort() -> None:
+    models = lc.load_models(ROOT / "config" / "live" / "models.json")
+    spec = models["openrouter-glm-5.3-flash"]
+    assert spec["reasoning"] == {"effort": "low"}
+    config = lc.build_model_config(spec, str(uuid4()))
+    assert config.reasoning is not None and config.reasoning.effort == "low"
+    assert "low" in config.declared_capabilities.reasoning_efforts
+    plain = lc.build_model_config(models["openrouter-qwen3-coder"], str(uuid4()))
+    assert plain.reasoning is None

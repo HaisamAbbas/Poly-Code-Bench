@@ -846,8 +846,14 @@ def step_tasks(ctx: Context) -> None:
 
     members = [tasks[key] for key in selected]
     split = task_set_split([str(item.get("admission_tier", "local_fixture")) for item in members])
-    policy_digest = canonical_document_digest(load_scoring_policy(DEFAULT_SCORING_POLICY))
-    name_hash = canonical_digest_of([item["task_digest"] for item in members])[7:19]
+    policy_digest = canonical_document_digest(
+        load_scoring_policy(args.scoring_policy or DEFAULT_SCORING_POLICY)
+    )
+    name_inputs: list[str] = [item["task_digest"] for item in members]
+    if args.scoring_policy is not None:
+        # A task set freezes its scoring policy digest, so a different policy is a new set.
+        name_inputs.append(policy_digest)
+    name_hash = canonical_digest_of(name_inputs)[7:19]
     name = f"live-{args.pack_dir.name.lower().replace('_', '-')}-{name_hash}"[:63].strip("-")
     document = TaskSet.model_validate(
         build_task_set_document(
@@ -929,7 +935,7 @@ def build_model_config(spec: Mapping[str, Any], endpoint_id: str) -> Any:
             "price": spec["price"],
             "temperature": spec["temperature"],
             "seed_policy": spec["seed_policy"],
-            "reasoning": None,
+            "reasoning": spec.get("reasoning"),
             "max_output_tokens": spec["max_output_tokens"],
             "cost_policy": "provider_bound",
             "strict_money_cap": True,
@@ -1200,7 +1206,7 @@ def step_run(ctx: Context) -> None:
         temperature=config.temperature,
         seed_policy=config.seed_policy,
         evaluation_policy_digest=canonical_document_digest(
-            load_scoring_policy(DEFAULT_SCORING_POLICY)
+            load_scoring_policy(args.scoring_policy or DEFAULT_SCORING_POLICY)
         ),
         hardware_class="local-docker-development",
     )
@@ -1460,7 +1466,16 @@ def step_grade(ctx: Context) -> None:
         _, output = call_cli(
             "pcb-worker local-grading-register",
             worker_main,
-            ["local-grading-register", "--workload-identity", "live-campaign-grading-1"],
+            [
+                "local-grading-register",
+                "--workload-identity",
+                "live-campaign-grading-1",
+                *(
+                    ["--scoring-policy", str(ctx.args.scoring_policy)]
+                    if ctx.args.scoring_policy
+                    else []
+                ),
+            ],
             env={"PCB_LOCAL_WORKER_SETUP_ENABLED": "true"},
         )
         grading.update(
@@ -1668,6 +1683,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--subject")
     parser.add_argument("--grant-local-roles", action="store_true")
     parser.add_argument("--allow-spend", action="store_true")
+    parser.add_argument("--scoring-policy", type=Path, help="frozen scoring policy for grading")
     parser.add_argument("--publish", action="store_true", help="include publish in 'all'")
     parser.add_argument("--poll-seconds", type=float, default=5.0)
     parser.add_argument("--idle-timeout", type=float, default=600.0)

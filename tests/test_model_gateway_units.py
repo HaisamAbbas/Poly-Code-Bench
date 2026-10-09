@@ -1024,3 +1024,27 @@ def test_conformance_passes_only_when_every_claim_holds() -> None:
     )
     assert not skipped["passed"]
     assert {c["check"]: c["passed"] for c in skipped["checks"]}["native_tool_call"] is False
+
+
+def test_openai_reasoning_budget_is_opt_in_nested_object() -> None:
+    adapter = OpenAICompatibleAdapter()
+    budget = ReasoningRequest(budget_tokens=2000)
+    declared = FULL_CAPS.model_copy(update={"reasoning_budget_tokens": True})
+    config = make_config(
+        uuid4(), provider=ProviderKind.OPENAI_COMPATIBLE, capabilities=declared, reasoning=budget
+    )
+    body = json.loads(adapter.build_request(config, make_request(reasoning=budget)).body)
+    assert body["reasoning"] == {"max_tokens": 2000} and "reasoning_effort" not in body
+    # Not declared by the operator: refused, never silently dropped.
+    undeclared = make_config(
+        uuid4(),
+        provider=ProviderKind.OPENAI_COMPATIBLE,
+        capabilities=FULL_CAPS.model_copy(update={"reasoning_budget_tokens": False}),
+        reasoning=budget,
+    )
+    with pytest.raises(CapabilityUnsupported):
+        adapter.build_request(undeclared, make_request(reasoning=budget))
+    # Default (no reasoning control): nothing is sent.
+    plain = make_config(uuid4(), provider=ProviderKind.OPENAI_COMPATIBLE)
+    plain_body = json.loads(adapter.build_request(plain, make_request()).body)
+    assert "reasoning" not in plain_body and "reasoning_effort" not in plain_body

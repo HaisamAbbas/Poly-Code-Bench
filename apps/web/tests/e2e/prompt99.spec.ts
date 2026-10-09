@@ -61,7 +61,7 @@ test("E2E: invalid public projection fails closed without exposing a private fie
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`/audit-reports/${privateFieldReportId}`);
-  await expect(page.getByRole("alert")).toContainText("Public audit report not found");
+  await expect(page.locator(".audit-unavailable[role='alert']")).toContainText("Public audit report not found");
   await expect(page.locator("body")).not.toContainText(privateSentinel);
 });
 

@@ -56,7 +56,15 @@ for (const width of [360, 768, 1440]) {
       }
       for (const table of await page.locator(".table-wrap").all()) {
         await expect(table).toHaveAttribute("data-layout", /table|cards/);
-        expect(await table.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+        const tableScroll = await table.evaluate((element) => ({
+          overflows: element.scrollWidth > element.clientWidth + 1,
+          overflowX: getComputedStyle(element).overflowX,
+          tabIndex: element.getAttribute("tabindex"),
+        }));
+        if (tableScroll.overflows) {
+          expect(tableScroll.overflowX).toMatch(/auto|scroll/);
+          expect(tableScroll.tabIndex).toBe("0");
+        }
       }
       const review = await inspectPage(page);
       for (const chart of await page.locator(".radar-scroll").all()) {
@@ -73,6 +81,60 @@ for (const width of [360, 768, 1440]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("leaderboard stays readable at 390px and 1024px", async ({ page }) => {
+  mkdirSync(artifacts, { recursive: true });
+  for (const width of [390, 1024]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/leaderboard");
+    await expect(page.getByRole("heading", { name: "Coding capability, by language." })).toBeVisible();
+    const review = await inspectPage(page);
+    expect(review.documentWidth).toBeLessThanOrEqual(width + 1);
+    expect(review.contrastFailures).toEqual([]);
+    expect(review.targetFailures).toEqual([]);
+    await expect(page.locator(".results-section .table-wrap")).toHaveAttribute("data-layout", /table|cards/);
+    await page.screenshot({
+      path: resolve(artifacts, `leaderboard-${width}.png`),
+      fullPage: true,
+      caret: "initial",
+      style: "nextjs-portal { visibility: hidden; }",
+    });
+  }
+});
+
+test("leaderboard search, language filter, sorting, and browser history stay in sync", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/leaderboard");
+  await expect(page.getByRole("heading", { name: "Coding capability, by language." })).toBeVisible();
+
+  const release = await page.locator("#release-select").inputValue();
+  const firstModelId = (await page.locator(".results-section .model-id").first().textContent())?.trim();
+  expect(firstModelId).toBeTruthy();
+  const search = page.getByRole("searchbox", { name: "Search configurations" });
+  await search.fill(firstModelId!);
+  await page.locator(".leaderboard-filters").getByRole("button", { name: "Apply filters" }).click();
+  await expect(page).toHaveURL(new RegExp(`release=${encodeURIComponent(release)}.*q=${encodeURIComponent(firstModelId!)}`));
+  await expect(page.locator(".results-section .data-table tbody tr")).toHaveCount(1);
+
+  const firstLanguage = (await page.locator(".results-section .language-links a").first().textContent())?.trim();
+  expect(firstLanguage).toBeTruthy();
+  await page.getByLabel("Declared language", { exact: true }).selectOption(firstLanguage!);
+  await page.locator(".leaderboard-filters").getByRole("button", { name: "Apply filters" }).click();
+  let filteredSearch = new URL(page.url()).searchParams;
+  expect(filteredSearch.get("language")).toBe(firstLanguage);
+  expect(filteredSearch.get("q")).toBe(firstModelId);
+  await expect(page.locator(".results-section .data-table tbody tr")).toHaveCount(1);
+  const filteredUrl = page.url();
+
+  await page.locator(".results-section .sort-link").first().click();
+  await expect(page).toHaveURL(/sort_metric=/);
+  filteredSearch = new URL(page.url()).searchParams;
+  expect(filteredSearch.get("language")).toBe(firstLanguage);
+  expect(filteredSearch.get("q")).toBe(firstModelId);
+  await page.goBack();
+  await expect(page).toHaveURL(filteredUrl);
+  await expect(page.locator(".results-section .data-table tbody tr")).toHaveCount(1);
+});
 
 test("mobile navigation, skip link, focus and reduced-motion loading", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });

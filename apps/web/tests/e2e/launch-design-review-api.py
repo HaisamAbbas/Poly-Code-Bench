@@ -1,5 +1,6 @@
 """Combine existing synthetic public fixtures for visual review; no live sources."""
 
+import os
 from pathlib import Path
 from runpy import run_path
 
@@ -21,7 +22,8 @@ def main() -> None:
     )
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=8151, log_level="warning")
+    port = int(os.environ.get("PCB_DESIGN_REVIEW_API_PORT", "8151"))
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
 
 
 if __name__ == "__main__":

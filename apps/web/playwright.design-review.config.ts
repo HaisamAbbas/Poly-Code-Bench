@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 
 const repoRoot = resolve(__dirname, "../..");
 const store = resolve(repoRoot, `.cache/design-review-${process.pid}.sqlite3`);
+const apiPort = Number(process.env.PCB_DESIGN_REVIEW_API_PORT ?? 8151);
+const webPort = Number(process.env.PCB_DESIGN_REVIEW_WEB_PORT ?? 3151);
 mkdirSync(resolve(repoRoot, ".cache/frontend-design-review"), { recursive: true });
 process.env.PCB_TEST_RELEASE_STORE_PATH = store;
 
@@ -19,24 +21,28 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   outputDir: resolve(repoRoot, ".cache/playwright/design-review"),
-  use: { baseURL: "http://127.0.0.1:3151", screenshot: "only-on-failure" },
+  use: { baseURL: `http://127.0.0.1:${webPort}`, screenshot: "only-on-failure" },
   webServer: [
     {
       command: "uv run --locked --group dev python apps/web/tests/e2e/launch-design-review-api.py",
       cwd: repoRoot,
-      url: "http://127.0.0.1:8151/healthz",
+      url: `http://127.0.0.1:${apiPort}/healthz`,
       timeout: 120_000,
-      env: { PCB_RELEASE_STORE_PATH: store, PCB_ENVIRONMENT: "development" },
+      env: {
+        PCB_RELEASE_STORE_PATH: store,
+        PCB_DESIGN_REVIEW_API_PORT: String(apiPort),
+        PCB_ENVIRONMENT: "development",
+      },
     },
     {
-      command: "node ./node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 3151",
+      command: `node ./node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port ${webPort}`,
       cwd: __dirname,
-      url: "http://127.0.0.1:3151/leaderboard",
+      url: `http://127.0.0.1:${webPort}/leaderboard`,
       timeout: 180_000,
       env: {
-        PCB_PUBLIC_API_URL: "http://127.0.0.1:8151/v1",
+        PCB_PUBLIC_API_URL: `http://127.0.0.1:${apiPort}/v1`,
         PCB_ENVIRONMENT: "development",
-        PCB_NEXT_DIST_DIR: ".next/design-review",
+        PCB_NEXT_DIST_DIR: `.next/design-review-${process.pid}`,
       },
     },
   ],

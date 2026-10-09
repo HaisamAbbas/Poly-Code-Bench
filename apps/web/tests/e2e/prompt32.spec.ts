@@ -9,10 +9,12 @@ const webOrigin = "http://127.0.0.1:3123";
 
 async function openSubmissionPage(page: Page) {
   await page.goto("/leaderboard");
-  await expect(page.getByRole("heading", { name: "Leaderboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Coding capability, by language." })).toBeVisible();
   const menu = page.getByRole("button", { name: "Menu", exact: true });
   if (await menu.isVisible()) await menu.click();
-  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Submit model" }).click();
+  const navigation = page.getByRole("navigation", { name: "Main navigation" });
+  await navigation.getByText("More", { exact: true }).click();
+  await navigation.getByRole("link", { name: "Submit model" }).click();
   await expect(page.getByRole("heading", { name: "Request a model evaluation" })).toBeVisible();
   await expect(page.getByText("Synthetic internal test data", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Sign in with your account" }).click();

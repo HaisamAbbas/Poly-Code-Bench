@@ -7,7 +7,7 @@ const artifactDirectory = browserArtifacts(30);
 
 async function openBoard(page: Page): Promise<string> {
   await page.goto("/leaderboard");
-  await expect(page.getByRole("heading", { name: "Leaderboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Coding capability, by language." })).toBeVisible();
   return page.locator("#release-select").inputValue();
 }
 
@@ -24,7 +24,7 @@ test("E2E-39 segment: release-backed leaderboard values link to their source sco
   await expect(page.getByText("N/A", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Missing", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Pending review", { exact: true }).first()).toBeVisible();
-  await expect(page.locator(".scope-facts")).toContainText("exploratory");
+  await expect(page.locator(".release-facts")).toContainText("exploratory");
 
   const scoreLink = page.getByRole("link", { name: /Code score: Measured, 89.750000 score/i }).first();
   const href = await scoreLink.getAttribute("href");
@@ -42,10 +42,10 @@ test("E2E-39 segment: release-backed leaderboard values link to their source sco
 
 test("E2E-39 segment: URL filters, metric sorting, release selection, and language diagnostics stay in scope", async ({ page }) => {
   const releaseId = await openBoard(page);
-  await page.locator("#language-select").selectOption("javascript");
-  await page.getByRole("button", { name: "Apply filter" }).click();
+  await page.getByLabel("Declared language", { exact: true }).selectOption("javascript");
+  await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/language=javascript/);
-  await expect(page.getByText(/Metrics and coverage remain release-wide/)).toBeVisible();
+  await expect(page.getByText(/Metrics remain release-wide; open the language view/)).toBeVisible();
   await expect(page.getByRole("row", { name: /Fixture Code System A/ })).toBeVisible();
   await expect(page.getByRole("row", { name: /Fixture Code System B/ })).toHaveCount(0);
 
@@ -119,6 +119,8 @@ test("E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API 
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "PolyCodeBench home" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Repository" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Menu", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");

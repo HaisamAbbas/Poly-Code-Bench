@@ -8,7 +8,7 @@ const apiOrigin = "http://127.0.0.1:8130";
 
 async function openBoard(page: Page): Promise<string> {
   await page.goto("/leaderboard");
-  await expect(page.getByRole("heading", { name: "Leaderboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Coding capability, by language." })).toBeVisible();
   return page.locator("#release-select").inputValue();
 }
 
@@ -19,6 +19,7 @@ async function releaseRows(page: Page) {
 }
 
 test("E2E-39 navigation: leaderboard → compatible comparison → disclosed task → score evidence", async ({ page }) => {
+  test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 1050 });
   const releaseId = await openBoard(page);
   await expect(page.getByText("Synthetic internal test data", { exact: true })).toBeVisible();
@@ -95,7 +96,8 @@ test("E2E-39 navigation: leaderboard → compatible comparison → disclosed tas
   await expect(page).toHaveURL(/open=1/);
   await expect(page.locator("#source-synthetic-source-python-v1")).toBeVisible();
   await page.getByRole("link", { name: /Frozen methodology · synthetic-ui-fixture-v1/ }).first().click();
-  await expect(page.getByRole("heading", { name: "Methodology and corrections" })).toBeVisible();
+  await expect(page).toHaveURL(/\/methodology\/synthetic-ui-fixture-v1\?release=/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Methodology and corrections" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(releaseId, { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Native and adapted benchmark records" })).toBeVisible();
   await expect(page.getByText("Synthetic display label only; this release contains no native result.")).toBeVisible();

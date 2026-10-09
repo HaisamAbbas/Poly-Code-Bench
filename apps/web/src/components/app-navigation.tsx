@@ -15,7 +15,6 @@ const supportingItems = [
   { href: "/audit-reports", label: "Audit reports", paths: ["/audit-reports"] },
   { href: "/audit-attestations", label: "Verify attestation", paths: ["/audit-attestations"] },
   { href: "/model-submissions", label: "Submit model", paths: ["/model-submissions"] },
-  { href: "/benchmark-audit", label: "Benchmark audit", paths: ["/benchmark-audit"] },
 ];
 
 export function AppNavigation() {

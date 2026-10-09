@@ -471,6 +471,40 @@ class MatchEvidencePayloadV2(StrictAuditModel):
         return self
 
 
+MatchOpinionDecision = Literal["accepted", "rejected", "disputed"]
+
+
+class MatchReviewOpinion(StrictAuditModel):
+    """One independent human opinion persisted in the append-only match-review ledger."""
+
+    opinion_id: UUID
+    candidate_ref: AuditDocumentRef
+    candidate_author_subject: ShortText
+    reviewer_subject: ShortText
+    reviewer_kind: Literal["human"] = "human"
+    review_seq: int = Field(ge=1, le=1_000_000)
+    decision: MatchOpinionDecision
+    relation: MatchRelation
+    reason: ShortText
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
+    decision_artifact_ref: ImmutableArtifactRef
+    created_at: UtcTimestamp
+
+    @model_validator(mode="after")
+    def reviewer_is_independent(self) -> MatchReviewOpinion:
+        if self.candidate_ref.kind != "match_evidence":
+            raise ValueError("match review opinions must bind match evidence")
+        if self.reviewer_subject == self.candidate_author_subject:
+            raise ValueError("a match author cannot review or approve their own evidence")
+        if self.decision_artifact_ref.visibility == "public":
+            raise ValueError("match review decision artifacts must remain private or restricted")
+        if len({(item.kind, item.document_id) for item in self.evidence_refs}) != len(
+            self.evidence_refs
+        ):
+            raise ValueError("match review evidence references must be unique")
+        return self
+
+
 class RiskPolicyPayload(StrictAuditModel):
     component_mapping: dict[str, str]
     weights: dict[str, Decimal6]

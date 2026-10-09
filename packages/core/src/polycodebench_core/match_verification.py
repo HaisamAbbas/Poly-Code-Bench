@@ -10,12 +10,15 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from polycodebench_core.benchmark_audit_documents import (
     AuditDocumentRef,
     ImmutableArtifactRef,
+    MatchEvidenceDocumentV2,
+    MatchOpinionDecision,
     MatchRelation,
+    MatchReviewOpinion,
     ShortText,
+    audit_document_digest,
 )
 from polycodebench_core.models import Digest, UtcTimestamp
 
-MatchOpinionDecision = Literal["accepted", "rejected", "disputed"]
 MatchLedgerState = Literal["proposed", "accepted", "rejected", "disputed", "adjudicated"]
 MatchAdjudicationDecision = Literal["accepted", "rejected"]
 MATCH_RELATION_RUBRIC_DEFINITIONS = (
@@ -64,35 +67,6 @@ class MatchContentVerification(BaseModel):
         return self
 
 
-class MatchReviewOpinion(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-    opinion_id: UUID
-    candidate_ref: AuditDocumentRef
-    candidate_author_subject: ShortText
-    reviewer_subject: ShortText
-    reviewer_kind: Literal["human"] = "human"
-    review_seq: int = Field(ge=1, le=1_000_000)
-    decision: MatchOpinionDecision
-    relation: MatchRelation
-    reason: ShortText
-    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
-    decision_artifact_ref: ImmutableArtifactRef
-    created_at: UtcTimestamp
-
-    @model_validator(mode="after")
-    def reviewer_is_independent(self) -> MatchReviewOpinion:
-        if self.candidate_ref.kind != "match_evidence":
-            raise ValueError("match review opinions must bind match evidence")
-        if self.reviewer_subject == self.candidate_author_subject:
-            raise ValueError("a match author cannot review or approve their own evidence")
-        if len({(item.kind, item.document_id) for item in self.evidence_refs}) != len(
-            self.evidence_refs
-        ):
-            raise ValueError("match review evidence references must be unique")
-        return self
-
-
 class MatchAdjudication(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
@@ -120,6 +94,50 @@ class MatchAdjudication(BaseModel):
             self.evidence_refs
         ):
             raise ValueError("adjudication evidence references must be unique")
+        return self
+
+
+class MatchReviewSubmission(BaseModel):
+    """Reviewer-supplied decision fields; identity, sequence and time are server-owned."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    decision: MatchOpinionDecision
+    relation: MatchRelation
+    reason: ShortText
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
+    decision_artifact_ref: ImmutableArtifactRef
+
+    @model_validator(mode="after")
+    def evidence_refs_are_unique(self) -> MatchReviewSubmission:
+        if len({(item.kind, item.document_id) for item in self.evidence_refs}) != len(
+            self.evidence_refs
+        ):
+            raise ValueError("match review evidence references must be unique")
+        if self.decision_artifact_ref.visibility == "public":
+            raise ValueError("match review decision artifacts must remain private or restricted")
+        return self
+
+
+class MatchAdjudicationSubmission(BaseModel):
+    """Adjudicator-supplied fields; identity, opinion set and time are server-owned."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    decision: MatchAdjudicationDecision
+    relation: MatchRelation
+    reason: ShortText
+    evidence_refs: tuple[AuditDocumentRef, ...] = Field(min_length=1, max_length=32)
+    decision_artifact_ref: ImmutableArtifactRef
+
+    @model_validator(mode="after")
+    def evidence_refs_are_unique_and_private(self) -> MatchAdjudicationSubmission:
+        if len({(item.kind, item.document_id) for item in self.evidence_refs}) != len(
+            self.evidence_refs
+        ):
+            raise ValueError("match adjudication evidence references must be unique")
+        if self.decision_artifact_ref.visibility == "public":
+            raise ValueError("match adjudication artifacts must remain private or restricted")
         return self
 
 
@@ -188,6 +206,117 @@ class MatchReviewLedger(BaseModel):
         if self.state != expected_state or self.resolved_relation != expected_relation:
             raise ValueError("match review ledger state must derive from its append-only events")
         return self
+
+
+def _match_document_ref(document: MatchEvidenceDocumentV2) -> AuditDocumentRef:
+    return AuditDocumentRef(
+        document_id=document.id,
+        digest=audit_document_digest(document),
+        kind="match_evidence",
+    )
+
+
+def initial_match_review_ledger(document: MatchEvidenceDocumentV2) -> MatchReviewLedger:
+    author = document.payload.author_subject
+    if author is None:
+        raise ValueError("review lifecycle requires a recorded candidate author")
+    return MatchReviewLedger(
+        candidate_ref=_match_document_ref(document),
+        candidate_author_subject=author,
+        opinions=(),
+        adjudication=None,
+        state="proposed",
+        resolved_relation=None,
+    )
+
+
+def append_match_review(
+    ledger: MatchReviewLedger,
+    *,
+    opinion_id: UUID,
+    reviewer_subject: str,
+    decision: MatchOpinionDecision,
+    relation: MatchRelation,
+    reason: ShortText,
+    evidence_refs: tuple[AuditDocumentRef, ...],
+    decision_artifact_ref: ImmutableArtifactRef,
+    created_at: str,
+) -> MatchReviewLedger:
+    if ledger.adjudication is not None:
+        raise ValueError("cannot append an ordinary review after adjudication")
+    opinion = MatchReviewOpinion(
+        opinion_id=opinion_id,
+        candidate_ref=ledger.candidate_ref,
+        candidate_author_subject=ledger.candidate_author_subject,
+        reviewer_subject=reviewer_subject,
+        review_seq=len(ledger.opinions) + 1,
+        decision=decision,
+        relation=relation,
+        reason=reason,
+        evidence_refs=evidence_refs,
+        decision_artifact_ref=decision_artifact_ref,
+        created_at=created_at,
+    )
+    opinions = (*ledger.opinions, opinion)
+    decisions = {item.decision for item in opinions}
+    conflict = "accepted" in decisions and "rejected" in decisions
+    if conflict or "disputed" in decisions:
+        state: MatchLedgerState = "disputed"
+        resolved_relation = None
+    else:
+        latest = opinions[-1]
+        state = latest.decision
+        resolved_relation = latest.relation
+    return MatchReviewLedger(
+        candidate_ref=ledger.candidate_ref,
+        candidate_author_subject=ledger.candidate_author_subject,
+        opinions=opinions,
+        adjudication=None,
+        state=state,
+        resolved_relation=resolved_relation,
+    )
+
+
+def adjudicate_match_reviews(
+    ledger: MatchReviewLedger,
+    *,
+    adjudication_id: UUID,
+    adjudicator_subject: str,
+    decision: MatchAdjudicationDecision,
+    relation: MatchRelation,
+    reason: ShortText,
+    evidence_refs: tuple[AuditDocumentRef, ...],
+    decision_artifact_ref: ImmutableArtifactRef,
+    created_at: str,
+) -> MatchReviewLedger:
+    if ledger.state != "disputed":
+        raise ValueError("match adjudication requires unresolved conflicting opinions")
+    conflict_ids = tuple(
+        item.opinion_id for item in ledger.opinions if item.decision in {"accepted", "rejected"}
+    )
+    if len(conflict_ids) < 2:
+        raise ValueError("match adjudication requires both accepted and rejected opinions")
+    decision_record = MatchAdjudication(
+        adjudication_id=adjudication_id,
+        candidate_ref=ledger.candidate_ref,
+        candidate_author_subject=ledger.candidate_author_subject,
+        adjudicator_subject=adjudicator_subject,
+        reviewed_opinion_ids=conflict_ids,
+        decision=decision,
+        relation=relation,
+        reason=reason,
+        evidence_refs=evidence_refs,
+        decision_artifact_ref=decision_artifact_ref,
+        created_at=created_at,
+    )
+    return MatchReviewLedger(
+        candidate_ref=ledger.candidate_ref,
+        candidate_author_subject=ledger.candidate_author_subject,
+        opinions=ledger.opinions,
+        adjudication=decision_record,
+        state="adjudicated",
+        resolved_relation=decision_record.relation,
+    )
 
 
 class MatchJudgeSpan(BaseModel):

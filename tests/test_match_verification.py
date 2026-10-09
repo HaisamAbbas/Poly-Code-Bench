@@ -21,9 +21,11 @@ from polycodebench_core.benchmark_audit_documents import (
 )
 from polycodebench_core.canonical import canonical_digest, canonical_json_bytes
 from polycodebench_core.match_verification import (
+    MatchAdjudicationSubmission,
     MatchJudgePacket,
     MatchJudgeSpan,
     MatchRelationRubric,
+    MatchReviewSubmission,
 )
 from polycodebench_core.retrieval import (
     CandidateSelectionResult,
@@ -231,6 +233,82 @@ def test_match_evidence_schema_v2_round_trips_without_changing_v1() -> None:
     assert isinstance(parsed, MatchEvidenceDocumentV2)
     assert parsed.schema_version == 2
     assert parsed.payload.retrieval_result_digest == document.payload.retrieval_result_digest
+
+
+def test_match_review_submission_is_strict_and_requires_unique_evidence() -> None:
+    evidence_ref = _audit_ref("corpus_snapshot", 210)
+    submission = MatchReviewSubmission(
+        decision="accepted",
+        relation="exact_component",
+        reason="Reviewed source evidence confirms this relation.",
+        evidence_refs=(evidence_ref,),
+        decision_artifact_ref=_review_artifact(211),
+    )
+    assert submission.decision == "accepted"
+
+    with pytest.raises(ValidationError, match="unique"):
+        MatchReviewSubmission(
+            decision="accepted",
+            relation="exact_component",
+            reason="Reviewed source evidence confirms this relation.",
+            evidence_refs=(evidence_ref, evidence_ref),
+            decision_artifact_ref=_review_artifact(212),
+        )
+    with pytest.raises(ValidationError, match="reviewer_subject"):
+        MatchReviewSubmission.model_validate(
+            {
+                **submission.model_dump(mode="python"),
+                "reviewer_subject": "caller-controlled-reviewer",
+            },
+            strict=True,
+        )
+    with pytest.raises(ValidationError, match="private or restricted"):
+        MatchReviewSubmission(
+            decision="accepted",
+            relation="exact_component",
+            reason="Reviewed source evidence confirms this relation.",
+            evidence_refs=(evidence_ref,),
+            decision_artifact_ref=ImmutableArtifactRef(
+                artifact_id=_uuid(213),
+                digest=AUDIT_DIGEST,
+                visibility="public",
+                media_type="application/json",
+            ),
+        )
+
+
+def test_match_adjudication_submission_is_strict_and_keeps_artifacts_private() -> None:
+    evidence_ref = _audit_ref("corpus_snapshot", 214)
+    submission = MatchAdjudicationSubmission(
+        decision="accepted",
+        relation="semantic_duplicate",
+        reason="Independent adjudication resolves the conflicting evidence reviews.",
+        evidence_refs=(evidence_ref,),
+        decision_artifact_ref=_review_artifact(215),
+    )
+    assert submission.decision == "accepted"
+
+    with pytest.raises(ValidationError, match="unique"):
+        MatchAdjudicationSubmission(
+            decision="accepted",
+            relation="semantic_duplicate",
+            reason="Independent adjudication resolves the conflicting evidence reviews.",
+            evidence_refs=(evidence_ref, evidence_ref),
+            decision_artifact_ref=_review_artifact(216),
+        )
+    with pytest.raises(ValidationError, match="private or restricted"):
+        MatchAdjudicationSubmission(
+            decision="accepted",
+            relation="semantic_duplicate",
+            reason="Independent adjudication resolves the conflicting evidence reviews.",
+            evidence_refs=(evidence_ref,),
+            decision_artifact_ref=ImmutableArtifactRef(
+                artifact_id=_uuid(217),
+                digest=AUDIT_DIGEST,
+                visibility="public",
+                media_type="application/json",
+            ),
+        )
 
 
 def test_content_verifier_binds_plan_candidate_artifacts_and_byte_spans() -> None:

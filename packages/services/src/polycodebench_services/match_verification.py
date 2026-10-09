@@ -14,23 +14,18 @@ from polycodebench_core.benchmark_audit_documents import (
     ImmutableArtifactRef,
     MatchEvidenceDocumentV2,
     MatchEvidencePayloadV2,
-    MatchRelation,
-    ShortText,
     audit_document_digest,
 )
 from polycodebench_core.canonical import canonical_digest
 from polycodebench_core.match_verification import (
-    MatchAdjudication,
-    MatchAdjudicationDecision,
     MatchContentEligibility,
     MatchContentState,
     MatchContentVerification,
     MatchCorrectionRecord,
-    MatchLedgerState,
-    MatchOpinionDecision,
     MatchRelationRubric,
-    MatchReviewLedger,
-    MatchReviewOpinion,
+    adjudicate_match_reviews,
+    append_match_review,
+    initial_match_review_ledger,
 )
 from polycodebench_core.models import Digest
 from polycodebench_core.retrieval import (
@@ -44,6 +39,16 @@ from polycodebench_services.retrieval import retrieval_plan_digest
 MAX_SOURCE_EVIDENCE_BYTES = 64 * 1024 * 1024
 MAX_COMPONENT_EVIDENCE_BYTES = 16 * 1024 * 1024
 _NORMALIZATION_VERSION = "text-nfc-lf-preserve-v1"
+
+__all__ = [
+    "adjudicate_match_reviews",
+    "append_match_review",
+    "build_match_correction_record",
+    "build_match_successor",
+    "initial_match_review_ledger",
+    "match_relation_rubric_digest",
+    "verify_match_evidence_content",
+]
 
 
 def _digest(data: bytes) -> str:
@@ -278,109 +283,6 @@ def verify_match_evidence_content(
         source_digest=_digest(source_bytes),
         span_digests=tuple(verified_spans),
         reason_codes=reasons,
-    )
-
-
-def initial_match_review_ledger(document: MatchEvidenceDocumentV2) -> MatchReviewLedger:
-    author = document.payload.author_subject
-    if author is None:
-        raise ValueError("review lifecycle requires a recorded candidate author")
-    return MatchReviewLedger(
-        candidate_ref=_document_ref(document),
-        candidate_author_subject=author,
-        opinions=(),
-        adjudication=None,
-        state="proposed",
-        resolved_relation=None,
-    )
-
-
-def append_match_review(
-    ledger: MatchReviewLedger,
-    *,
-    opinion_id: UUID,
-    reviewer_subject: str,
-    decision: MatchOpinionDecision,
-    relation: MatchRelation,
-    reason: ShortText,
-    evidence_refs: tuple[AuditDocumentRef, ...],
-    decision_artifact_ref: ImmutableArtifactRef,
-    created_at: str,
-) -> MatchReviewLedger:
-    if ledger.adjudication is not None:
-        raise ValueError("cannot append an ordinary review after adjudication")
-    opinion = MatchReviewOpinion(
-        opinion_id=opinion_id,
-        candidate_ref=ledger.candidate_ref,
-        candidate_author_subject=ledger.candidate_author_subject,
-        reviewer_subject=reviewer_subject,
-        review_seq=len(ledger.opinions) + 1,
-        decision=decision,
-        relation=relation,
-        reason=reason,
-        evidence_refs=evidence_refs,
-        decision_artifact_ref=decision_artifact_ref,
-        created_at=created_at,
-    )
-    opinions = (*ledger.opinions, opinion)
-    decisions = {item.decision for item in opinions}
-    conflict = "accepted" in decisions and "rejected" in decisions
-    if conflict or "disputed" in decisions:
-        state: MatchLedgerState = "disputed"
-        resolved_relation = None
-    else:
-        latest = opinions[-1]
-        state = latest.decision
-        resolved_relation = latest.relation
-    return MatchReviewLedger(
-        candidate_ref=ledger.candidate_ref,
-        candidate_author_subject=ledger.candidate_author_subject,
-        opinions=opinions,
-        adjudication=None,
-        state=state,
-        resolved_relation=resolved_relation,
-    )
-
-
-def adjudicate_match_reviews(
-    ledger: MatchReviewLedger,
-    *,
-    adjudication_id: UUID,
-    adjudicator_subject: str,
-    decision: MatchAdjudicationDecision,
-    relation: MatchRelation,
-    reason: ShortText,
-    evidence_refs: tuple[AuditDocumentRef, ...],
-    decision_artifact_ref: ImmutableArtifactRef,
-    created_at: str,
-) -> MatchReviewLedger:
-    if ledger.state != "disputed":
-        raise ValueError("match adjudication requires unresolved conflicting opinions")
-    conflict_ids = tuple(
-        item.opinion_id for item in ledger.opinions if item.decision in {"accepted", "rejected"}
-    )
-    if len(conflict_ids) < 2:
-        raise ValueError("match adjudication requires both accepted and rejected opinions")
-    decision_record = MatchAdjudication(
-        adjudication_id=adjudication_id,
-        candidate_ref=ledger.candidate_ref,
-        candidate_author_subject=ledger.candidate_author_subject,
-        adjudicator_subject=adjudicator_subject,
-        reviewed_opinion_ids=conflict_ids,
-        decision=decision,
-        relation=relation,
-        reason=reason,
-        evidence_refs=evidence_refs,
-        decision_artifact_ref=decision_artifact_ref,
-        created_at=created_at,
-    )
-    return MatchReviewLedger(
-        candidate_ref=ledger.candidate_ref,
-        candidate_author_subject=ledger.candidate_author_subject,
-        opinions=ledger.opinions,
-        adjudication=decision_record,
-        state="adjudicated",
-        resolved_relation=decision_record.relation,
     )
 
 

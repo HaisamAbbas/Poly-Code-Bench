@@ -12,10 +12,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en">
       <body>
+        <a className="skip-link" href="#main-content">Skip to content</a>
         <AppHeader />
-        <main id="main-content" className="page-shell">{children}</main>
+        <main id="main-content" className="page-shell" tabIndex={-1}>{children}</main>
         <footer className="site-footer">
           <span>PolyCodeBench public release explorer</span>
           <span>Every result is tied to a versioned release.</span>

@@ -101,7 +101,7 @@ export function ModelSubmissionForm({
         {identity ? (
           <div className="submission-help submission-identity">
             <span>Signed in with verified account <strong>{identity.email}</strong>.</span>
-            <form action="/auth/sign-out" method="post"><button className="button-link" type="submit">Sign out</button></form>
+            <form action="/auth/sign-out" method="post"><button className="button-link button-secondary" type="submit">Sign out</button></form>
           </div>
         ) : (
           <div className="submission-help submission-identity" role="status">
@@ -146,7 +146,7 @@ export function ModelSubmissionForm({
             <span>I am authorized to request evaluation of this model and its submitted source.</span>
           </label>
           <div className="submission-field-wide">
-            <button type="submit" disabled={sending || Boolean(result)}>
+            <button type="submit" aria-busy={sending} disabled={sending || Boolean(result)}>
               {sending ? "Sending request…" : result ? "Request received" : "Send for review"}
             </button>
           </div>
@@ -176,7 +176,7 @@ export function ModelSubmissionForm({
             <input required autoComplete="off" value={submissionId} onChange={(event) => setSubmissionId(event.currentTarget.value)} />
           </label>
           <p className="submission-help">Only requests owned by {identity.email} can be shown here.</p>
-          <button type="submit" disabled={checking || !submissionId.trim()}>
+          <button type="submit" aria-busy={checking} disabled={checking || !submissionId.trim()}>
             {checking ? "Checking…" : "Check status"}
           </button>
         </form> : <p className="submission-help">Sign in above to check request status.</p>}

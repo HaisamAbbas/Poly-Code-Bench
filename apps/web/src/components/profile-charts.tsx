@@ -1,3 +1,4 @@
+import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 import Link from "next/link";
 import type {
   DimensionBreakdown,
@@ -39,7 +40,7 @@ export function LanguageMeasurementsTable({
   const definitionById = new Map(definitions.map((definition) => [definition.metric_id, definition]));
 
   return (
-    <div className="table-wrap" role="region" aria-label={`${language} language-specific measurements`} tabIndex={0}>
+    <KeyboardScrollRegion className="table-wrap" label={`${language} language-specific measurements`}>
       <table className="data-table">
         <caption className="sr-only">
           Language-specific metrics from each configuration release profile, with applicable task and opportunity counts.
@@ -108,7 +109,7 @@ export function LanguageMeasurementsTable({
           ))}
         </tbody>
       </table>
-    </div>
+    </KeyboardScrollRegion>
   );
 }
 
@@ -167,7 +168,7 @@ export function CodeRadar({
         </div>
         <p>Points show measured values on each API-declared metric domain. No polygon fills missing dimensions.</p>
       </div>
-      <div className="radar-scroll" role="region" aria-label="Scrollable code-only dimension radar" tabIndex={0}>
+      <div className="radar-scroll" role="region" aria-label="Code-only dimension radar" tabIndex={0}>
         <svg
           className="radar-svg"
           viewBox={`0 0 ${width} ${height}`}
@@ -251,7 +252,7 @@ export function LanguageHeatmap({
     for (const row of profile.dimensions) lookup.set(`${profile.language_id}\u0000${row.dimension}`, row);
   }
   return (
-    <div className="table-wrap" role="region" aria-label="Language by dimension coverage" tabIndex={0}>
+    <KeyboardScrollRegion className="table-wrap" label="Language by dimension coverage">
       <table className="data-table heatmap-table">
         <caption className="sr-only">
           Language by dimension source metrics. A blank cell means this release published no language-specific measurement for that combination.
@@ -280,7 +281,7 @@ export function LanguageHeatmap({
           })}
         </tbody>
       </table>
-    </div>
+    </KeyboardScrollRegion>
   );
 }
 
@@ -296,7 +297,7 @@ export function DimensionTable({
   caption: string;
 }) {
   return (
-    <div className="table-wrap" role="region" aria-label={caption} tabIndex={0}>
+    <KeyboardScrollRegion className="table-wrap" label={caption}>
       <table className="data-table dimension-table">
         <caption className="sr-only">{caption}</caption>
         <thead>
@@ -318,7 +319,7 @@ export function DimensionTable({
           ))}
         </tbody>
       </table>
-    </div>
+    </KeyboardScrollRegion>
   );
 }
 

@@ -110,7 +110,7 @@ export function PublicAuditReportState({ resource }: { resource: Resource<Public
   return (
     <section className="audit-unavailable" role={resource.state === "error" ? "alert" : "status"}>
       <span className="state-kicker">Public report unavailable</span>
-      <h2>{resource.state === "error" ? resource.title : "No public report is available"}</h2>
+      <h1>{resource.state === "error" ? resource.title : "No public report is available"}</h1>
       <p>{message}</p>
       {resource.state === "error" && resource.requestId ? <small>Request {resource.requestId}</small> : null}
       <Link className="button-link" href="/audit-reports">Return to report lookup</Link>

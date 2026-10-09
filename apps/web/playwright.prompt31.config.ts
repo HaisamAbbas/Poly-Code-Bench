@@ -1,10 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { browserArtifacts } from "./tests/e2e/browser-artifacts";
 
 const webRoot = __dirname;
 const repoRoot = resolve(webRoot, "../..");
-const artifacts = resolve(repoRoot, "docs/implementation/evidence/prompt-31");
+const artifacts = browserArtifacts(31);
 const releaseStore = resolve(repoRoot, `.cache/prompt31-e2e-${process.pid}.sqlite3`);
 const apiOrigin = "http://127.0.0.1:8130";
 const webOrigin = "http://127.0.0.1:3121";

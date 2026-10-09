@@ -33,13 +33,14 @@ export function AuditReportLookupForm({ invalidQuery = false }: { invalidQuery?:
         autoComplete="off"
         maxLength={36}
         pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-        aria-describedby="audit-report-id-help"
+        aria-invalid={invalidQuery || hasInvalidId || undefined}
+        aria-describedby={`audit-report-id-help${invalidQuery || hasInvalidId ? " audit-report-id-error" : ""}`}
         required
         onChange={() => setHasInvalidId(false)}
       />
       <p id="audit-report-id-help">Enter a complete UUID. The report page shows only the public allowlisted projection.</p>
       {invalidQuery || hasInvalidId ? (
-        <p className="audit-form-error" role="alert">Enter one valid public report ID in UUID format.</p>
+        <p id="audit-report-id-error" className="audit-form-error" role="alert">Enter one valid public report ID in UUID format.</p>
       ) : null}
       {isOpening ? <p role="status" aria-live="polite" aria-busy="true">Loading public report; retrieving the reviewed aggregate.</p> : null}
       <button type="submit" disabled={isOpening}>{isOpening ? "Opening report…" : "Open report"}</button>

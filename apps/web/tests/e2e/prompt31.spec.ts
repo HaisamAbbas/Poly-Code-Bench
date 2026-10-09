@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { browserArtifacts } from "./browser-artifacts";
 
-const artifactDirectory = resolve(__dirname, "../../../../docs/implementation/evidence/prompt-31");
+const artifactDirectory = browserArtifacts(31);
 const apiOrigin = "http://127.0.0.1:8130";
 
 async function openBoard(page: Page): Promise<string> {

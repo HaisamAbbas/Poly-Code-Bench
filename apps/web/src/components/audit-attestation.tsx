@@ -163,7 +163,7 @@ export function PublicAuditAttestationState({ resource }: { resource: Resource<P
   return (
     <section className="audit-unavailable" role={resource.state === "error" ? "alert" : "status"}>
       <span className="state-kicker">Public attestation unavailable</span>
-      <h2>{resource.state === "error" ? resource.title : "No public attestation is available"}</h2>
+      <h1>{resource.state === "error" ? resource.title : "No public attestation is available"}</h1>
       <p>{message}</p>
       {resource.state === "error" && resource.requestId ? <small>Request {resource.requestId}</small> : null}
       <Link className="button-link" href="/audit-attestations">Return to attestation lookup</Link>

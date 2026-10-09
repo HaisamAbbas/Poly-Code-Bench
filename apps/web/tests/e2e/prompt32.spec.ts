@@ -1,13 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { inspectPage } from "./design-inspection";
+import { browserArtifacts } from "./browser-artifacts";
 
-const artifactDirectory = resolve(__dirname, "../../../../docs/implementation/evidence/prompt-32");
+const artifactDirectory = browserArtifacts(32);
 const webOrigin = "http://127.0.0.1:3123";
 
 async function openSubmissionPage(page: Page) {
   await page.goto("/leaderboard");
   await expect(page.getByRole("heading", { name: "Leaderboard" })).toBeVisible();
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  if (await menu.isVisible()) await menu.click();
   await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Submit model" }).click();
   await expect(page.getByRole("heading", { name: "Request a model evaluation" })).toBeVisible();
   await expect(page.getByText("Synthetic internal test data", { exact: true })).toBeVisible();
@@ -108,6 +112,19 @@ test("E2E-41 and E2E-39: OIDC request is pending and only the owner can track it
   });
   expect(crossOriginSubmission.status()).toBe(403);
   await completeRequestForm(page);
+  const reviewDirectory = resolve(__dirname, "../../../../.cache/frontend-design-review");
+  mkdirSync(reviewDirectory, { recursive: true });
+  const signedFormReviews: Awaited<ReturnType<typeof inspectPage>>[] = [];
+  for (const width of [360, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const review = await inspectPage(page);
+    expect(review.documentWidth).toBeLessThanOrEqual(width + 1);
+    expect(review.contrastFailures).toEqual([]);
+    expect(review.targetFailures).toEqual([]);
+    signedFormReviews.push(review);
+    await page.screenshot({ path: resolve(reviewDirectory, `submission-form-${width}.png`), fullPage: true, caret: "initial", style: "nextjs-portal { visibility: hidden; }" });
+  }
+  writeFileSync(resolve(reviewDirectory, "submission-form-review.json"), JSON.stringify(signedFormReviews, null, 2));
   await page.getByRole("button", { name: "Send for review" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toContainText("pending");

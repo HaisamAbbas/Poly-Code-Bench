@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { scoreEvidenceHref, type ApiEnvelope, type PublicTaskContent, type Resource } from "@/lib/public-api";
+import { ContentSkeleton } from "@/components/content-skeleton";
 
 function errorMessage(body: unknown): string {
   if (typeof body === "object" && body !== null && "error" in body) {
@@ -64,7 +65,7 @@ export function LazyTaskContent({
     const target = document.getElementById(targetId);
     const section = target?.classList.contains("anchor-alias") ? target.parentElement : target;
     section?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      behavior: "auto",
       block: "start",
     });
   }, [resource.state]);
@@ -82,7 +83,7 @@ export function LazyTaskContent({
           <h2 id={`task-content-${taskId}`}>Public statement, sources, patches and findings</h2>
           <p>Payloads are fetched only when opened. Source and diff text is displayed inertly as plain text.</p>
         </div>
-        <button type="button" aria-expanded={expanded} onClick={toggle}>
+        <button className="button-secondary" type="button" aria-expanded={expanded} onClick={toggle}>
           {expanded ? "Hide details" : "Load public details"}
         </button>
       </div>
@@ -93,7 +94,7 @@ export function LazyTaskContent({
 
 function TaskPayload({ resource, releaseId }: { resource: Resource<PublicTaskContent>; releaseId: string }) {
   if (resource.state === "loading") {
-    return <p className="payload-state" role="status" aria-live="polite">Loading bounded public task details…</p>;
+    return <div className="payload-state" role="status" aria-live="polite"><p>Loading bounded public task details…</p><ContentSkeleton /></div>;
   }
   if (resource.state === "error") {
     return <div className="payload-state payload-error" role="alert"><strong>{resource.title}</strong><p>{resource.message}</p></div>;

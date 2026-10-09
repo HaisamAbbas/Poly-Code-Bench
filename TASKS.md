@@ -29,7 +29,16 @@ User-authorized sequence: implement Prompts 83–106 from the benchmark audit sp
 - [x] Prompt 105 — integrated end-to-end demonstration and reviewed projections (partial; the synthetic contract pipeline and existing API/CLI/browser regressions pass, while trusted source/reviewer/persistence/publication transitions remain unavailable).
 - [x] Prompt 106 — final traceability audit, fixes and operator handoff (partial foundations; live/source/rights/reviewer/database/crypto/calibration/runtime/modality gates remain open; read-only audit command is recorded).
 
-## Persistent blockers
+## Frontend design refresh — all modules
+
+- [x] Inspect the existing palette, typography, layout, controls and accessibility; save the ranked audit in `docs/frontend/design-refresh.md`.
+- [x] Establish semantic palette/type/spacing/radius/shadow/motion tokens using the existing palette and font.
+- [x] Polish shared shell, navigation, forms, cards, tables, loading/empty/error states and every module's existing pages.
+- [x] Inspect every page route at 360px, 768px and 1440px; verify contrast, focus, keyboard and overflow (66 views, all eight table templates).
+- [x] Run production build, lint, typecheck and existing browser tests; fix regressions (20 browser tests, API type check and shared contract suite passed).
+- [x] Save actual verification, UI-only changes and remaining recommendations; review and deliver the finished refresh.
+
+## Benchmark audit prerequisites retained
 
 - No approved benchmark/corpus snapshots, source bytes, rights scope or trusted source-artifact resolver are available. Never turn candidate or fixture evidence into accepted live findings.
 - No independent match detector or observed-risk calibration set is available. Low/medium risk tiers require a policy with validated calibration and complete finite scope.

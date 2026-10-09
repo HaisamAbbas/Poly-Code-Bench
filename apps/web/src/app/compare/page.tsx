@@ -1,3 +1,4 @@
+import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -203,7 +204,7 @@ function ComparisonView({ result, release }: { result: ComparisonResult; release
       <section className="section-card">
         <SectionHeading id="common-task-versions" title="Exact common task versions" description="A row appears only when every selected configuration has a public scorecard for this task ID and version." />
         <p className="common-task-count"><a href="#common-task-versions"><strong>{result.common_tasks}</strong> common disclosed tasks</a>{result.common_independent_clusters === null ? " · common independent-cluster count not disclosed" : ` · ${result.common_independent_clusters} common independent clusters`}</p>
-        {result.common_task_refs.length ? <div className="table-wrap" role="region" aria-label="Exact common task scorecards" tabIndex={0}>
+        {result.common_task_refs.length ? <KeyboardScrollRegion className="table-wrap" label="Exact common task scorecards">
           <table className="data-table compact-table"><caption className="sr-only">Common disclosed task versions with selected configuration scorecards.</caption>
             <thead><tr><th scope="col">Task version</th><th scope="col">Scope</th><th scope="col">Source scorecards</th></tr></thead>
             <tbody>{result.common_task_refs.map((task) => <tr key={`${task.task_id}@${task.task_version}`}>
@@ -212,12 +213,12 @@ function ComparisonView({ result, release }: { result: ComparisonResult; release
               <td><ul className="inline-scorecards">{task.scorecards.map((card) => <li key={card.model_config_id}><Link href={`/scorecards/${encodeURIComponent(card.scorecard_id)}${asUrlQuery({ release: result.release_id })}`}>{card.model_config_id}: {card.scorecard_id}</Link></li>)}</ul></td>
             </tr>)}</tbody>
           </table>
-        </div> : <p className="payload-state">No public task scorecards matched this release and filter.</p>}
+        </KeyboardScrollRegion> : <p className="payload-state">No public task scorecards matched this release and filter.</p>}
       </section>
 
       <section className="section-card">
         <SectionHeading title="Paired task differences" description="Candidate minus the first selected configuration, as calculated and returned by the release API for each shared task scorecard." />
-        {pairs.size ? <div className="table-wrap" role="region" aria-label="Paired task metric differences" tabIndex={0}>
+        {pairs.size ? <KeyboardScrollRegion className="table-wrap" label="Paired task metric differences">
           <table className="data-table compact-table"><caption className="sr-only">API paired differences, reported interval difference bounds and source scorecards.</caption>
             <thead><tr><th scope="col">Task</th><th scope="col">Metric</th><th scope="col">Baseline → candidate</th><th scope="col">Published values</th><th scope="col">Difference</th><th scope="col">Interval statement</th><th scope="col">Status</th></tr></thead>
             <tbody>{[...pairs.entries()].flatMap(([key, rows]) => rows.map((delta) => <tr key={`${key}-${delta.candidate_model_config_id}-${delta.metric_id}`}>
@@ -230,7 +231,7 @@ function ComparisonView({ result, release }: { result: ComparisonResult; release
               <td><span className={`status-tag status-${delta.status}`}>{delta.status.replaceAll("_", " ")}</span>{delta.reason ? <small className="row-subline">{delta.reason}</small> : null}</td>
             </tr>))}</tbody>
           </table>
-        </div> : <p className="payload-state">The API did not return measured paired task differences for this common cohort.</p>}
+        </KeyboardScrollRegion> : <p className="payload-state">The API did not return measured paired task differences for this common cohort.</p>}
         <p className="form-help">Interval bounds are only the API’s difference of the released scorecard interval endpoints. They are not described as a paired bootstrap confidence interval. See each source scorecard and the frozen methodology for its formula and limits.</p>
       </section>
       {result.limitations.length ? <section className="section-card"><SectionHeading title="Release limitations" /><ul>{result.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></section> : null}

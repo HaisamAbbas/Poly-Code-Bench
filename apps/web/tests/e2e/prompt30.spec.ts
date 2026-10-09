@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { browserArtifacts } from "./browser-artifacts";
 
-const artifactDirectory = resolve(__dirname, "../../../../docs/implementation/evidence/prompt-30");
+const artifactDirectory = browserArtifacts(30);
 
 async function openBoard(page: Page): Promise<string> {
   await page.goto("/leaderboard");
@@ -115,8 +116,12 @@ test("E2E-40 subcase: keyboard access, narrow and wide viewports, empty and API 
   await page.screenshot({ path: resolve(artifactDirectory, "leaderboard-mobile.png"), fullPage: true });
 
   await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "PolyCodeBench home" })).toBeFocused();
-  for (let index = 0; index < 6; index += 1) await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Menu", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.locator("#release-select")).toBeFocused();
   const releaseOptions = await page.locator("#release-select option").evaluateAll((nodes) =>
     nodes.map((node) => (node as HTMLOptionElement).value),

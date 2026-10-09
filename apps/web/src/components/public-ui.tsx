@@ -11,6 +11,8 @@ import {
   scoreEvidenceHref,
 } from "@/lib/public-api";
 import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
+import { AppNavigation } from "@/components/app-navigation";
+import { ContentSkeleton } from "@/components/content-skeleton";
 
 export function AppHeader() {
   return (
@@ -19,17 +21,8 @@ export function AppHeader() {
         <span className="brand-mark" aria-hidden="true">P</span>
         <span>PolyCodeBench</span>
       </Link>
-      <nav className="primary-nav" aria-label="Main navigation">
-        <Link href="/leaderboard">Leaderboard</Link>
-        <a href="/leaderboard#language-filter">Languages</a>
-        <Link href="/compare">Compare</Link>
-        <Link href="/tasks">Tasks</Link>
-        <Link href="/audit-reports">Audit reports</Link>
-        <Link href="/audit-attestations">Verify attestation</Link>
-        <Link href="/benchmark-audit">Curator access</Link>
-        <Link href="/model-submissions">Submit model</Link>
-      </nav>
       <span className="header-caption">Public release explorer</span>
+      <AppNavigation />
     </header>
   );
 }
@@ -68,6 +61,7 @@ export function ResourceState<T>({
       <section className="state-card" aria-live="polite" aria-busy="true">
         <span className="state-kicker">Loading release data</span>
         <p>Connecting to the public release API…</p>
+        <ContentSkeleton />
       </section>
     );
   }
@@ -88,6 +82,7 @@ export function ResourceState<T>({
         <span className="state-kicker">No rows</span>
         <h2>{resource.title || emptyTitle}</h2>
         <p>{resource.message || emptyMessage}</p>
+        <Link className="button-link button-secondary" href="/leaderboard">Browse published releases</Link>
       </section>
     );
   }
@@ -100,6 +95,7 @@ export function EmptyState({ title, children }: { title: string; children: React
       <span className="state-kicker">No rows</span>
       <h2>{title}</h2>
       <p>{children}</p>
+      <Link className="button-link button-secondary" href="/leaderboard">Browse published releases</Link>
     </section>
   );
 }

@@ -41,9 +41,11 @@ export default async function AuditAttestationLookupPage({
             maxLength={36}
             pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
             required
+            aria-invalid={invalid || undefined}
+            aria-describedby={`attestation-id-help${invalid ? " attestation-id-error" : ""}`}
           />
           <p id="attestation-id-help">The verifier displays only signed allowlisted aggregates and validity information.</p>
-          {invalid && !attestationId ? <p className="audit-form-error" role="alert">Enter one valid attestation ID in UUID format.</p> : null}
+          {invalid ? <p id="attestation-id-error" className="audit-form-error" role="alert">Enter one valid attestation ID in UUID format.</p> : null}
           <button type="submit">Verify attestation</button>
         </form>
       </section>

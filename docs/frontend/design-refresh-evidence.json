@@ -1,0 +1,1325 @@
+{
+  "recorded_on": "2026-10-09",
+  "scope": "Visual refresh of all existing frontend modules; synthetic fixtures only.",
+  "page_templates": [
+    "audit-attestations/[attestationId]/page.tsx",
+    "audit-attestations/page.tsx",
+    "audit-reports/[reportId]/page.tsx",
+    "audit-reports/page.tsx",
+    "benchmark-audit/page.tsx",
+    "compare/page.tsx",
+    "languages/[language]/page.tsx",
+    "leaderboard/page.tsx",
+    "methodology/[version]/page.tsx",
+    "model-submissions/page.tsx",
+    "models/[modelConfigId]/page.tsx",
+    "page.tsx",
+    "scorecards/[scorecardId]/page.tsx",
+    "tasks/[taskId]/page.tsx",
+    "tasks/page.tsx"
+  ],
+  "viewport_widths": [
+    360,
+    768,
+    1440
+  ],
+  "reviewed_views": 66,
+  "visually_reviewed_plates": 22,
+  "table_instance_checks": 36,
+  "source_audit": {
+    "palette_seeds": [
+      "#10513f",
+      "#172522",
+      "#176c54",
+      "#1d2926",
+      "#275888",
+      "#64716d",
+      "#7c510b",
+      "#8d302d",
+      "#94d7b5",
+      "#dce3de",
+      "#f3f6f3",
+      "#f6faf7",
+      "#ffffff"
+    ],
+    "new_palette_seeds": [],
+    "hardcoded_colors_in_global_styles": [],
+    "undefined_tokens": [],
+    "changed_api_auth_or_data_modules": [],
+    "page_templates": 15,
+    "stylesheet_sha256": "675653b5e0d9cc9f9fdcb650d22871017cd44ed83c986641cfe7544e484ea22e",
+    "tokens_sha256": "4c0f014292b9d0d09cb163eb63b6ce26aae27c9a0b1f85438e25ccc984b34a4f"
+  },
+  "existing_exported_interfaces_preserved": [
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "AppHeader",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "PageIntro",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "ResourceState",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "EmptyState",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "ReleaseSelector",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "ReleaseNotice",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "CoverageBadge",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "MetricValue",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "SortableLeaderboard",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "LanguageFilter",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "ScopeFacts",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "StatLink",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "SectionHeading",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "formatMicros",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-ui.tsx",
+      "component": "ReleaseMethodologyLink",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-evidence.tsx",
+      "component": "LazyTaskContent",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/public-evidence.tsx",
+      "component": "scorecardUrl",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/model-submission-form.tsx",
+      "component": "ModelSubmissionForm",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/audit-report-lookup-form.tsx",
+      "component": "AuditReportLookupForm",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/benchmark-audit.tsx",
+      "component": "PublicAuditReport",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/benchmark-audit.tsx",
+      "component": "PublicAuditReportState",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/benchmark-audit.tsx",
+      "component": "CuratorAccessBoundary",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/audit-attestation.tsx",
+      "component": "PublicAuditAttestation",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/audit-attestation.tsx",
+      "component": "PublicAuditAttestationState",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/profile-charts.tsx",
+      "component": "LanguageMeasurementsTable",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/profile-charts.tsx",
+      "component": "CodeRadar",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/profile-charts.tsx",
+      "component": "LanguageHeatmap",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/profile-charts.tsx",
+      "component": "DimensionTable",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/profile-charts.tsx",
+      "component": "ProfileSectionTitle",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/components/keyboard-scroll-region.tsx",
+      "component": "KeyboardScrollRegion",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/app/audit-attestations/page.tsx",
+      "component": "AuditAttestationLookupPage",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/app/compare/page.tsx",
+      "component": "ComparePage",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/app/scorecards/[scorecardId]/page.tsx",
+      "component": "ScorecardPage",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/app/methodology/[version]/page.tsx",
+      "component": "MethodologyPage",
+      "public_parameters_preserved": true
+    },
+    {
+      "file": "apps/web/src/app/layout.tsx",
+      "component": "RootLayout",
+      "public_parameters_preserved": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "build",
+      "package": "@polycodebench/web",
+      "script": "build",
+      "exit_code": 0
+    },
+    {
+      "name": "typecheck",
+      "package": "@polycodebench/web",
+      "script": "typecheck",
+      "exit_code": 0
+    },
+    {
+      "name": "lint",
+      "package": "@polycodebench/web",
+      "script": "lint",
+      "exit_code": 0
+    },
+    {
+      "name": "api-types-check",
+      "package": "@polycodebench/web",
+      "script": "api:types:check",
+      "exit_code": 0
+    },
+    {
+      "name": "contracts",
+      "package": "@polycodebench/contracts",
+      "script": "test:contracts",
+      "exit_code": 0
+    }
+  ],
+  "browser_tests": [
+    {
+      "config": "playwright.config.ts",
+      "exit_code": 0,
+      "passed": 4
+    },
+    {
+      "config": "playwright.prompt31.config.ts",
+      "exit_code": 0,
+      "passed": 3
+    },
+    {
+      "config": "playwright.prompt32.config.ts",
+      "exit_code": 0,
+      "passed": 2
+    },
+    {
+      "config": "playwright.prompt99.config.ts",
+      "exit_code": 0,
+      "passed": 4
+    },
+    {
+      "config": "playwright.prompt100.config.ts",
+      "exit_code": 0,
+      "passed": 3
+    },
+    {
+      "config": "playwright.design-review.config.ts",
+      "exit_code": 0,
+      "passed": 4
+    }
+  ],
+  "views": [
+    {
+      "name": "leaderboard",
+      "route": "/leaderboard?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Scrollable published configuration metrics",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 4,
+          "labelledCells": 48
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/leaderboard-360.png",
+      "screenshot_sha256": "ea364f1b1d3aec533996ec57a7ad2367655238b9bd6a8c4e23376a75c440bfae"
+    },
+    {
+      "name": "language",
+      "route": "/languages/javascript?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "javascript language-specific measurements",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 2,
+          "labelledCells": 4
+        },
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "cards",
+          "clientWidth": 226,
+          "contentWidth": 226,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Fixture Code System A diagnostic measurements and opportunities",
+          "layout": "cards",
+          "clientWidth": 260,
+          "contentWidth": 260,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "cards",
+          "clientWidth": 226,
+          "contentWidth": 226,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Fixture Code System C diagnostic measurements and opportunities",
+          "layout": "cards",
+          "clientWidth": 260,
+          "contentWidth": 260,
+          "rows": 1,
+          "labelledCells": 4
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/language-360.png",
+      "screenshot_sha256": "cf0ab706a5536f6f990e071410a04675091a7ae2346346edcdbc9d4caeb751fb"
+    },
+    {
+      "name": "model-code",
+      "route": "/models/synthetic-code-a?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "cards",
+          "clientWidth": 260,
+          "contentWidth": 260,
+          "rows": 6,
+          "labelledCells": 24
+        },
+        {
+          "label": "Language by dimension coverage",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 3,
+          "labelledCells": 9
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/model-code-360.png",
+      "screenshot_sha256": "8168e618def05a260cb4f91676f4dab0d9ff0bd6fb671e2db51f25087cddb0ba"
+    },
+    {
+      "name": "model-answer",
+      "route": "/models/synthetic-answer-only?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/model-answer-360.png",
+      "screenshot_sha256": "54d9e298f4e53707e1a6df24d089a274390f23ce3a385b7c25f496ecd03fb7b2"
+    },
+    {
+      "name": "compare-selection",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/compare-selection-360.png",
+      "screenshot_sha256": "dc298814084594452438dff781ac31f83657f0dea569999b7a9bf4fbf0152850"
+    },
+    {
+      "name": "compare-compatible",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6&models=synthetic-code-a&models=synthetic-code-c",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Exact common task scorecards",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 3,
+          "labelledCells": 9
+        },
+        {
+          "label": "Paired task metric differences",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 6,
+          "labelledCells": 42
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/compare-compatible-360.png",
+      "screenshot_sha256": "618cdc124c1b81b9bdd0f3d8c7b257dbd03d4021825d26fe4e1948c699b9b36a"
+    },
+    {
+      "name": "compare-incompatible",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6&models=synthetic-code-a&models=synthetic-code-b",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/compare-incompatible-360.png",
+      "screenshot_sha256": "f8ff1a45c4c563752cde313623f46da17fe1a942305ea5f442367c598b6597a3"
+    },
+    {
+      "name": "tasks",
+      "route": "/tasks?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/tasks-360.png",
+      "screenshot_sha256": "9b8b6e7e12c4b0806bec5ff838b35b9f1621a6ec460087e677922019a6b13144"
+    },
+    {
+      "name": "task-detail",
+      "route": "/tasks/synthetic-task-example?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/task-detail-360.png",
+      "screenshot_sha256": "17b92a5ed5b4ac257d0845c4e2e5dd4b4d60b8e68d7e8c3591c917bd945cc7dd"
+    },
+    {
+      "name": "scorecard",
+      "route": "/scorecards/synthetic-scorecard-a?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Released score contributions",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 1,
+          "labelledCells": 6
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/scorecard-360.png",
+      "screenshot_sha256": "9ddbde037bbeda4be8eb6a8355055e8937b58f4d99c78ccb6acadcd2e3bb9a75"
+    },
+    {
+      "name": "methodology",
+      "route": "/methodology/synthetic-ui-fixture-v1?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Native and adapted benchmark descriptions",
+          "layout": "cards",
+          "clientWidth": 294,
+          "contentWidth": 294,
+          "rows": 2,
+          "labelledCells": 4
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/methodology-360.png",
+      "screenshot_sha256": "007f38ca79dbb253dca139e247c568d11f622f276dd854d92e30ad801ef1bcc6"
+    },
+    {
+      "name": "model-missing",
+      "route": "/models/not-in-this-release?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/model-missing-360.png",
+      "screenshot_sha256": "b686e7028c25d9fa5387db8aae8371fec1fba15018cefb93fa703b5795112f27"
+    },
+    {
+      "name": "submission",
+      "route": "/model-submissions",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/submission-360.png",
+      "screenshot_sha256": "8ddf5c666324da26ab4bc6037277f55fd65f4c85f2b6924705faa9b7f94c16c5"
+    },
+    {
+      "name": "audit-lookup",
+      "route": "/audit-reports",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-lookup-360.png",
+      "screenshot_sha256": "401de7434810e4da95778f6192a804a5ba6a7a61853e3dc67aa351955abd78b4"
+    },
+    {
+      "name": "audit-report",
+      "route": "/audit-reports/50000000-0000-4000-8000-000000000099",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-report-360.png",
+      "screenshot_sha256": "7a427f3eb14c155c51fb1e4d77b9dcce3b6e32a302d8077429fabc6ee9ce4d6a"
+    },
+    {
+      "name": "audit-missing",
+      "route": "/audit-reports/00000000-0000-4000-8000-000000000099",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-missing-360.png",
+      "screenshot_sha256": "10f5ab58aca28f6e3644494883d51659d1591714543d64896fc64e7823de8791"
+    },
+    {
+      "name": "curator",
+      "route": "/benchmark-audit",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/curator-360.png",
+      "screenshot_sha256": "6a7613b2c6152f400798452e8ecde6465b744f3057b27eb1b2338b33d780b234"
+    },
+    {
+      "name": "attestation-lookup",
+      "route": "/audit-attestations",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-lookup-360.png",
+      "screenshot_sha256": "4acc1c700917e849eaafafe763a72c32e86227944cc400f8a2edb0df737e4e13"
+    },
+    {
+      "name": "attestation-invalid",
+      "route": "/audit-attestations?attestation_id=not-a-uuid",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-invalid-360.png",
+      "screenshot_sha256": "466311dd8b8cee9052ce5051bf44b113466389585fbe4625caba9988ab52a452"
+    },
+    {
+      "name": "attestation-valid",
+      "route": "/audit-attestations/50000000-0000-4000-8000-000000000100",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-valid-360.png",
+      "screenshot_sha256": "cc9f47d2ea5bd3f4d9de2c1e23978ab0f248277df11ae0be08cf93ef4c4c3a1e"
+    },
+    {
+      "name": "attestation-revoked",
+      "route": "/audit-attestations/80000000-0000-4000-8000-000000000100",
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-revoked-360.png",
+      "screenshot_sha256": "53c4bfbb50f1ca7487ac513035671443f7ecf67d21b6b3123c698beec54ad52b"
+    },
+    {
+      "name": "leaderboard",
+      "route": "/leaderboard?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Scrollable published configuration metrics",
+          "layout": "cards",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 4,
+          "labelledCells": 48
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/leaderboard-768.png",
+      "screenshot_sha256": "c06e4d0b3dd1fb08331c7c94cf76f05c1cc364712cd2dddea2dac992a189fa1c"
+    },
+    {
+      "name": "language",
+      "route": "/languages/javascript?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "javascript language-specific measurements",
+          "layout": "cards",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 2,
+          "labelledCells": 4
+        },
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "table",
+          "clientWidth": 602,
+          "contentWidth": 602,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Fixture Code System A diagnostic measurements and opportunities",
+          "layout": "table",
+          "clientWidth": 636,
+          "contentWidth": 636,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "table",
+          "clientWidth": 602,
+          "contentWidth": 602,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Fixture Code System C diagnostic measurements and opportunities",
+          "layout": "table",
+          "clientWidth": 636,
+          "contentWidth": 636,
+          "rows": 1,
+          "labelledCells": 4
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/language-768.png",
+      "screenshot_sha256": "ef5f47b1b409b733acf71b50b88b45cda9e304bacb497d7e77004f0d8fc6a367"
+    },
+    {
+      "name": "model-code",
+      "route": "/models/synthetic-code-a?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "table",
+          "clientWidth": 636,
+          "contentWidth": 636,
+          "rows": 6,
+          "labelledCells": 24
+        },
+        {
+          "label": "Language by dimension coverage",
+          "layout": "table",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 3,
+          "labelledCells": 9
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/model-code-768.png",
+      "screenshot_sha256": "49a50b0daaedbf4616faf5f260bd5187dccb0af77d2fbaff8031fb373e137aad"
+    },
+    {
+      "name": "model-answer",
+      "route": "/models/synthetic-answer-only?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/model-answer-768.png",
+      "screenshot_sha256": "61254fbc1a809388fdc8463f26e847e452ce8fbfae714597c37ba11b92b5bf09"
+    },
+    {
+      "name": "compare-selection",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/compare-selection-768.png",
+      "screenshot_sha256": "e3f1a82c7b02d9b40909c51eb9265c78518ae9d005cffdd8d8fb31799ad8ee68"
+    },
+    {
+      "name": "compare-compatible",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6&models=synthetic-code-a&models=synthetic-code-c",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Exact common task scorecards",
+          "layout": "cards",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 3,
+          "labelledCells": 9
+        },
+        {
+          "label": "Paired task metric differences",
+          "layout": "cards",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 6,
+          "labelledCells": 42
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/compare-compatible-768.png",
+      "screenshot_sha256": "be3f7811527ca4c2e6599f1d0996831cce37fc42592cd1a7b8b29b45cb68a1a1"
+    },
+    {
+      "name": "compare-incompatible",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6&models=synthetic-code-a&models=synthetic-code-b",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/compare-incompatible-768.png",
+      "screenshot_sha256": "a24a12a1d43a6227586be7adc4360f99796ebbf8e5c74c89bec1288198461051"
+    },
+    {
+      "name": "tasks",
+      "route": "/tasks?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/tasks-768.png",
+      "screenshot_sha256": "8c8f39d2b659fcdab1271d1e6dadea9f7a377563a3407bd6a3043b2380847cf7"
+    },
+    {
+      "name": "task-detail",
+      "route": "/tasks/synthetic-task-example?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/task-detail-768.png",
+      "screenshot_sha256": "0636568b83b71ce4bdd22de419ead088550f53ee4186f2df8bd50d70917b3e25"
+    },
+    {
+      "name": "scorecard",
+      "route": "/scorecards/synthetic-scorecard-a?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Released score contributions",
+          "layout": "cards",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 1,
+          "labelledCells": 6
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/scorecard-768.png",
+      "screenshot_sha256": "c92e4764ace060ed5be418d65f8b75da1dfb450a5a1f10573254c399c92d4915"
+    },
+    {
+      "name": "methodology",
+      "route": "/methodology/synthetic-ui-fixture-v1?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Native and adapted benchmark descriptions",
+          "layout": "cards",
+          "clientWidth": 670,
+          "contentWidth": 670,
+          "rows": 2,
+          "labelledCells": 4
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/methodology-768.png",
+      "screenshot_sha256": "cbc09b79dcc64757becdb050bd3197d178b4c27d41e2e941cd933115fd6e84e4"
+    },
+    {
+      "name": "model-missing",
+      "route": "/models/not-in-this-release?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/model-missing-768.png",
+      "screenshot_sha256": "05181cafe8b8f4b71eaeb5d19ecefb0f0a3eec119ca828bf99c24b44c00e17f3"
+    },
+    {
+      "name": "submission",
+      "route": "/model-submissions",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/submission-768.png",
+      "screenshot_sha256": "3a74ea8bb33c79364ff6ab047dfeec70e59015fd6fd32e9c72f0c7acfdbe095f"
+    },
+    {
+      "name": "audit-lookup",
+      "route": "/audit-reports",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-lookup-768.png",
+      "screenshot_sha256": "a1355ab2d9fbdc4e63417dd283e8c5060a643eb1c78236a2b41eecd04727aace"
+    },
+    {
+      "name": "audit-report",
+      "route": "/audit-reports/50000000-0000-4000-8000-000000000099",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-report-768.png",
+      "screenshot_sha256": "2e743b36669ade2fe1dc08c97e3282319f09a0ccae6f8d01ece180f89e6e3d42"
+    },
+    {
+      "name": "audit-missing",
+      "route": "/audit-reports/00000000-0000-4000-8000-000000000099",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-missing-768.png",
+      "screenshot_sha256": "892676750048921e3219286c8243a1da20e001c1bc7440736e73892e4ecdd3e7"
+    },
+    {
+      "name": "curator",
+      "route": "/benchmark-audit",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/curator-768.png",
+      "screenshot_sha256": "241c13ec06b135fddd09b12e5067286e55ad924f1c5960244943ded8b36ca6fd"
+    },
+    {
+      "name": "attestation-lookup",
+      "route": "/audit-attestations",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-lookup-768.png",
+      "screenshot_sha256": "04458e9f1e6c020516de7199ec1dabd5e8607ad834e4330a6c9c62f5f71f9fea"
+    },
+    {
+      "name": "attestation-invalid",
+      "route": "/audit-attestations?attestation_id=not-a-uuid",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-invalid-768.png",
+      "screenshot_sha256": "1979f9bb7a8525cffdf117dbcb4cd8a406f197dc0bb974c6225e0ac936bced8d"
+    },
+    {
+      "name": "attestation-valid",
+      "route": "/audit-attestations/50000000-0000-4000-8000-000000000100",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-valid-768.png",
+      "screenshot_sha256": "66b92d9059665f966fe8c39557869af6654e97be88c266d86f8540170372ae3e"
+    },
+    {
+      "name": "attestation-revoked",
+      "route": "/audit-attestations/80000000-0000-4000-8000-000000000100",
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-revoked-768.png",
+      "screenshot_sha256": "e3d15517d049b015daaffd1e6ca6d477b1e7a70f58cab8ffde63228fb0d33d5d"
+    },
+    {
+      "name": "leaderboard",
+      "route": "/leaderboard?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Scrollable published configuration metrics",
+          "layout": "cards",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 4,
+          "labelledCells": 48
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/leaderboard-1440.png",
+      "screenshot_sha256": "4aa5425b5a91aeb4e4bd1b25def9c9ca38d43598fbbd95eb20149fbc80f7bd22"
+    },
+    {
+      "name": "language",
+      "route": "/languages/javascript?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "javascript language-specific measurements",
+          "layout": "table",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 2,
+          "labelledCells": 4
+        },
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "table",
+          "clientWidth": 636,
+          "contentWidth": 636,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Fixture Code System A diagnostic measurements and opportunities",
+          "layout": "table",
+          "clientWidth": 606,
+          "contentWidth": 606,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "table",
+          "clientWidth": 636,
+          "contentWidth": 636,
+          "rows": 1,
+          "labelledCells": 4
+        },
+        {
+          "label": "Fixture Code System C diagnostic measurements and opportunities",
+          "layout": "table",
+          "clientWidth": 606,
+          "contentWidth": 606,
+          "rows": 1,
+          "labelledCells": 4
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/language-1440.png",
+      "screenshot_sha256": "344da73d455673090abdccf9d38c20d53c259417deba38f80893bd9e64df9088"
+    },
+    {
+      "name": "model-code",
+      "route": "/models/synthetic-code-a?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Code dimensions and their source score evidence",
+          "layout": "table",
+          "clientWidth": 1292,
+          "contentWidth": 1292,
+          "rows": 6,
+          "labelledCells": 24
+        },
+        {
+          "label": "Language by dimension coverage",
+          "layout": "table",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 3,
+          "labelledCells": 9
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/model-code-1440.png",
+      "screenshot_sha256": "7cef5be42c18f58d99a4e14cf285bedc5942b1a64a9cb4437c4532f6019ed780"
+    },
+    {
+      "name": "model-answer",
+      "route": "/models/synthetic-answer-only?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/model-answer-1440.png",
+      "screenshot_sha256": "8e8e8033add0fe3b52f3b20d709749ac9011f551532beef588e935962b52cb15"
+    },
+    {
+      "name": "compare-selection",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/compare-selection-1440.png",
+      "screenshot_sha256": "bb55d62754810fb195ee9bd7867fad98ca9fbc709b592c43f29d800d638351f8"
+    },
+    {
+      "name": "compare-compatible",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6&models=synthetic-code-a&models=synthetic-code-c",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Exact common task scorecards",
+          "layout": "table",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 3,
+          "labelledCells": 9
+        },
+        {
+          "label": "Paired task metric differences",
+          "layout": "table",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 6,
+          "labelledCells": 42
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/compare-compatible-1440.png",
+      "screenshot_sha256": "805c86fa0652fc9788039ad901ff749ddb7752b8448de12988af2cdba18f144e"
+    },
+    {
+      "name": "compare-incompatible",
+      "route": "/compare?release=b770f45b-58f5-4420-bba4-6ec050fd39a6&models=synthetic-code-a&models=synthetic-code-b",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/compare-incompatible-1440.png",
+      "screenshot_sha256": "5ee6ea8c3b5fa5c5c3a06f9e2f7ff29ee3e4185ca67ea7491163a1dd3d11fe3a"
+    },
+    {
+      "name": "tasks",
+      "route": "/tasks?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/tasks-1440.png",
+      "screenshot_sha256": "9356044723a9c4f14b1815330457cd188d528c19bba2711b37e65cbf99db4ecd"
+    },
+    {
+      "name": "task-detail",
+      "route": "/tasks/synthetic-task-example?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/task-detail-1440.png",
+      "screenshot_sha256": "be075750342378c3e680aa37ee40f8a79e4d1981c7e9d005c0c3b6211875c8a6"
+    },
+    {
+      "name": "scorecard",
+      "route": "/scorecards/synthetic-scorecard-a?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Released score contributions",
+          "layout": "table",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 1,
+          "labelledCells": 6
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/scorecard-1440.png",
+      "screenshot_sha256": "d8a50b4cc066bc6562e17d4be9334e0a172f26600085848d0cb912cae2bb8959"
+    },
+    {
+      "name": "methodology",
+      "route": "/methodology/synthetic-ui-fixture-v1?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [
+        {
+          "label": "Native and adapted benchmark descriptions",
+          "layout": "table",
+          "clientWidth": 1326,
+          "contentWidth": 1326,
+          "rows": 2,
+          "labelledCells": 4
+        }
+      ],
+      "screenshot": ".cache/frontend-design-review/methodology-1440.png",
+      "screenshot_sha256": "b23aa9758304d6bc9989feb698d36199f4499fe63bd3a27297a91bbc2172dc7e"
+    },
+    {
+      "name": "model-missing",
+      "route": "/models/not-in-this-release?release=b770f45b-58f5-4420-bba4-6ec050fd39a6",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/model-missing-1440.png",
+      "screenshot_sha256": "1dc0ff85909538e495a75e5408e67b4c3e103925a437500f7b37876d16f502fe"
+    },
+    {
+      "name": "submission",
+      "route": "/model-submissions",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/submission-1440.png",
+      "screenshot_sha256": "a13d96fc8af0bdea490af83aca95b8dce478360d3628e21ea7742426169ffe95"
+    },
+    {
+      "name": "audit-lookup",
+      "route": "/audit-reports",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-lookup-1440.png",
+      "screenshot_sha256": "d387263ec63158fecfed47656e1b4260349bf2b30e3a59568ec5883fd8748be5"
+    },
+    {
+      "name": "audit-report",
+      "route": "/audit-reports/50000000-0000-4000-8000-000000000099",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-report-1440.png",
+      "screenshot_sha256": "b546bcc52d1bd5e22e41b4dfbac498df50945f0be66500d7ac06f854b7c43b2d"
+    },
+    {
+      "name": "audit-missing",
+      "route": "/audit-reports/00000000-0000-4000-8000-000000000099",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/audit-missing-1440.png",
+      "screenshot_sha256": "80750b9d975d97c32c31f28440e3cd14c94c707ec79c3a7319234d50a69527a9"
+    },
+    {
+      "name": "curator",
+      "route": "/benchmark-audit",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/curator-1440.png",
+      "screenshot_sha256": "df86f775767641b2dc6dad497d0267cfe36d2adf051c542c5cf342138796ef3c"
+    },
+    {
+      "name": "attestation-lookup",
+      "route": "/audit-attestations",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-lookup-1440.png",
+      "screenshot_sha256": "0d0b5bdabde8a26c1c1681881ab8e75c832e4a108ff7ef3b6eed7312faf57375"
+    },
+    {
+      "name": "attestation-invalid",
+      "route": "/audit-attestations?attestation_id=not-a-uuid",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-invalid-1440.png",
+      "screenshot_sha256": "0a4a2f3af42aa893592e5fae66581ad0e628e21fa8e4b62a0861638ce8ec5c20"
+    },
+    {
+      "name": "attestation-valid",
+      "route": "/audit-attestations/50000000-0000-4000-8000-000000000100",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-valid-1440.png",
+      "screenshot_sha256": "b0144f5b11dfa32b294f2965a0d06d53493b70f3240601b20328d5476a052e1a"
+    },
+    {
+      "name": "attestation-revoked",
+      "route": "/audit-attestations/80000000-0000-4000-8000-000000000100",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "screenshot": ".cache/frontend-design-review/attestation-revoked-1440.png",
+      "screenshot_sha256": "17622ddd528e41c75f6a01425574577a44c5f14a8a0b64c66745fcba3bd02e63"
+    },
+    {
+      "viewport": 360,
+      "documentWidth": 360,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "name": "submission-form",
+      "screenshot": ".cache/frontend-design-review/submission-form-360.png",
+      "screenshot_sha256": "ac9b2ff0346fc1b4b46c502da6ac4b6dbd0a1680b31254a20a94807c56bc7e20"
+    },
+    {
+      "viewport": 768,
+      "documentWidth": 768,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "name": "submission-form",
+      "screenshot": ".cache/frontend-design-review/submission-form-768.png",
+      "screenshot_sha256": "37f74f9b0255a09d566a29e654f3f4346d2f877e192a1ba2934ea016df3f107a"
+    },
+    {
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "contrastFailures": [],
+      "targetFailures": [],
+      "tables": [],
+      "name": "submission-form",
+      "screenshot": ".cache/frontend-design-review/submission-form-1440.png",
+      "screenshot_sha256": "6c1f1fe40da9a49eb0bdd78fd7e022885d01ff70e701b9bd0c9385ec8ed7d1cb"
+    }
+  ]
+}

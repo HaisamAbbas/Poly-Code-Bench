@@ -1,0 +1,91 @@
+/* Palette seeds retained from the original stylesheet. */
+:root {
+  color-scheme: light;
+  --palette-ink: #1d2926;
+  --palette-muted: #64716d;
+  --palette-line: #dce3de;
+  --palette-paper: #ffffff;
+  --palette-canvas: #f3f6f3;
+  --palette-green: #176c54;
+  --palette-green-dark: #10513f;
+  --palette-amber: #7c510b;
+  --palette-red: #8d302d;
+  --palette-blue: #275888;
+  --palette-header: #172522;
+  --palette-on-header: #f6faf7;
+  --palette-mint: #94d7b5;
+
+  --color-primary: var(--palette-green);
+  --color-primary-hover: var(--palette-green-dark);
+  --color-primary-active: color-mix(in srgb, var(--palette-green-dark) 85%, var(--palette-ink));
+  --color-surface: var(--palette-paper);
+  --color-surface-muted: var(--palette-canvas);
+  --color-canvas: var(--palette-canvas);
+  --color-border: var(--palette-line);
+  --color-border-control: var(--palette-muted);
+  --color-text: var(--palette-ink);
+  --color-text-muted: var(--palette-muted);
+  --color-success: var(--palette-green);
+  --color-warning: var(--palette-amber);
+  --color-danger: var(--palette-red);
+  --color-info: var(--palette-blue);
+  --color-success-soft: color-mix(in srgb, var(--color-success) 6%, var(--color-surface));
+  --color-success-border: color-mix(in srgb, var(--color-success) 30%, var(--color-surface));
+  --color-warning-soft: color-mix(in srgb, var(--color-warning) 7%, var(--color-surface));
+  --color-warning-border: color-mix(in srgb, var(--color-warning) 30%, var(--color-surface));
+  --color-danger-soft: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
+  --color-danger-border: color-mix(in srgb, var(--color-danger) 30%, var(--color-surface));
+  --color-info-soft: color-mix(in srgb, var(--color-info) 6%, var(--color-surface));
+  --color-info-border: color-mix(in srgb, var(--color-info) 30%, var(--color-surface));
+  --color-header: var(--palette-header);
+  --color-on-header: var(--palette-on-header);
+  --color-on-header-muted: color-mix(in srgb, var(--color-on-header) 78%, var(--color-header));
+  --color-brand-mark: var(--palette-mint);
+  --color-focus: var(--color-primary);
+
+  --font-family: Arial, Helvetica, sans-serif;
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-base: 1rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.25rem;
+  --font-2xl: 1.5rem;
+  --font-3xl: 1.875rem;
+  --font-4xl: 2.25rem;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-18: 4.5rem;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-surface: 0 1px 3px color-mix(in srgb, var(--color-text) 5%, transparent);
+  --shadow-raised: 0 8px 24px color-mix(in srgb, var(--color-text) 8%, transparent);
+  --motion-fast: 160ms;
+  --motion-ease: ease-out;
+
+  /* Existing variable names remain aliases for the semantic foundation. */
+  --ink: var(--color-text);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --paper: var(--color-surface);
+  --canvas: var(--color-canvas);
+  --green: var(--color-primary);
+  --green-dark: var(--color-primary-hover);
+  --amber: var(--color-warning);
+  --red: var(--color-danger);
+  --blue: var(--color-info);
+}

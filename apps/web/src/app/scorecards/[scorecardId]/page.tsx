@@ -1,3 +1,4 @@
+import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageIntro, ReleaseNotice, ResourceState, SectionHeading } from "@/components/public-ui";
@@ -58,7 +59,7 @@ function ScorecardView({ card, definitions, releaseId, methodologyVersion }: { c
 
     <section className="section-card">
       <SectionHeading title="Contribution and evidence chain" description="Each row is copied from the released scorecard, including nominal, effective and presentation weights and its recorded arithmetic." />
-      {card.contributions.length ? <div className="table-wrap" role="region" aria-label="Released score contributions" tabIndex={0}>
+      {card.contributions.length ? <KeyboardScrollRegion className="table-wrap" label="Released score contributions">
         <table className="data-table compact-table"><caption className="sr-only">Published contribution values, effective weights, arithmetic and public evidence links.</caption>
           <thead><tr><th scope="col">Item</th><th scope="col">Dimension</th><th scope="col">Raw item value</th><th scope="col">Weights in basis points</th><th scope="col">Recorded arithmetic</th><th scope="col">Public evidence</th></tr></thead>
           <tbody>{card.contributions.map((row) => <tr id={`item-${row.item_id}`} key={row.item_id}>
@@ -68,7 +69,7 @@ function ScorecardView({ card, definitions, releaseId, methodologyVersion }: { c
             <td>{row.evidence_refs.length ? <ul className="evidence-ref-list">{row.evidence_refs.map((ref) => <li key={ref}><Link href={`/tasks/${encodeURIComponent(card.task_id)}${asUrlQuery({ release: releaseId, open: "1" })}#evidence-${encodeURIComponent(ref)}`}>{ref}</Link></li>)}</ul> : <span>None published</span>}</td>
           </tr>)}</tbody>
         </table>
-      </div> : <div className="empty-state"><h2>No code contribution rows</h2><p>This scorecard does not publish item-level code contributions. It may score an answer-only task; no code dimensions are inferred.</p></div>}
+      </KeyboardScrollRegion> : <div className="empty-state"><h2>No code contribution rows</h2><p>This scorecard does not publish item-level code contributions. It may score an answer-only task; no code dimensions are inferred.</p></div>}
       {card.redacted_evidence_count ? <p className="privacy-note">{card.redacted_evidence_count} evidence reference(s) were omitted because they do not resolve to public task content in this release. Private and held-out identifiers are not returned.</p> : null}
       <p className="form-help">Reconstruct the released value from the unrounded contribution records and versioned formula at <Link href={methodologyHref}>{card.formula_version}</Link>. Display formatting does not replace the source decimal strings above.</p>
     </section>

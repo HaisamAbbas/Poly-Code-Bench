@@ -1,3 +1,4 @@
+import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageIntro, ReleaseNotice, ResourceState, SectionHeading } from "@/components/public-ui";
@@ -51,7 +52,7 @@ function MethodologyView({ methodology, definitions, release }: { methodology: M
 
     <section className="section-card">
       <SectionHeading title="Native and adapted benchmark records" description="The public release records the source classification and its explanation. The interface does not upgrade adapted work into a native result." />
-      {methodology.native_benchmarks.length ? <div className="table-wrap" role="region" aria-label="Native and adapted benchmark descriptions" tabIndex={0}><table className="data-table compact-table"><caption className="sr-only">Published benchmark labels and their source or adaptation descriptions.</caption><thead><tr><th scope="col">Published classification</th><th scope="col">Record</th></tr></thead><tbody>{methodology.native_benchmarks.map(([classification, detail], index) => <tr key={`${classification}-${index}`}><th scope="row"><span className={`classification-badge classification-${classification.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{classification}</span></th><td>{detail}</td></tr>)}</tbody></table></div> : <p className="plain-note">No native or adapted benchmark records were included in this release.</p>}
+      {methodology.native_benchmarks.length ? <KeyboardScrollRegion className="table-wrap" label="Native and adapted benchmark descriptions"><table className="data-table compact-table"><caption className="sr-only">Published benchmark labels and their source or adaptation descriptions.</caption><thead><tr><th scope="col">Published classification</th><th scope="col">Record</th></tr></thead><tbody>{methodology.native_benchmarks.map(([classification, detail], index) => <tr key={`${classification}-${index}`}><th scope="row"><span className={`classification-badge classification-${classification.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{classification}</span></th><td>{detail}</td></tr>)}</tbody></table></KeyboardScrollRegion> : <p className="plain-note">No native or adapted benchmark records were included in this release.</p>}
     </section>
 
     <section className="section-card">

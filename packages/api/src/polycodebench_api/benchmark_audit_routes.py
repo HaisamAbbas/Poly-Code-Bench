@@ -30,7 +30,14 @@ from polycodebench_core.benchmark_audit_documents import (
     audit_document_value,
     parse_audit_document,
 )
-from polycodebench_core.benchmark_audit_registry import AuditCatalogBundle
+from polycodebench_core.benchmark_audit_registry import (
+    AuditCatalogBundle,
+    AuditResourcePlan,
+    AuditResourceRequest,
+    BenchmarkScopeEvidence,
+    ResourceLimits,
+    SourceGroupPolicy,
+)
 from polycodebench_core.canonical import canonical_json_bytes, sha256_bytes
 from polycodebench_persistence.benchmark_audit import PostgresBenchmarkAuditRepository
 from polycodebench_publication.aggregation import PublicationModel
@@ -38,7 +45,9 @@ from polycodebench_publication.projections import ERROR_STATUS, Cursor, ErrorCod
 from polycodebench_services.audit_attestations import verify_public_attestation
 from polycodebench_services.benchmark_audit_catalog import (
     BenchmarkAuditCatalogError,
+    build_scope_conformance_report,
     load_audit_catalog,
+    plan_audit_resources,
 )
 from polycodebench_services.rbac import Permission
 from pydantic import Field, ValidationError, field_validator, model_validator
@@ -243,6 +252,24 @@ class AuditDocumentResult(PublicationModel):
     meta: AuditApiMeta
 
 
+class PublicAuditWorkspaceData(PublicationModel):
+    catalog_version: str
+    observed_on: str
+    benchmarks: tuple[BenchmarkScopeEvidence, ...]
+    sources: tuple[SourceGroupPolicy, ...]
+    limits: ResourceLimits
+
+
+class PublicAuditWorkspaceResult(PublicationModel):
+    data: PublicAuditWorkspaceData
+    meta: AuditApiMeta
+
+
+class PublicAuditResourcePlanResult(PublicationModel):
+    data: AuditResourcePlan
+    meta: AuditApiMeta
+
+
 class PublicAuditAttestationView(PublicationModel):
     attestation: SignedPublicAuditAttestation
     verification: AttestationVerification
@@ -342,6 +369,75 @@ def _catalog() -> AuditCatalogBundle:
         return load_audit_catalog(config_dir)
     except BenchmarkAuditCatalogError:
         raise ApiError("DEPENDENCY_UNAVAILABLE") from None
+
+
+@private_router.get("/scope-preview", response_model=PublicAuditWorkspaceResult)
+def get_audit_scope_preview(request: Request) -> Response:
+    """Expose metadata-only readiness to a tenant-scoped run planner."""
+    principal = require_permission(request, services_of(request).tokens, Permission.RUN_PLAN)
+    _tenant_id(principal)
+    catalog = _catalog()
+    scope = build_scope_conformance_report(catalog)
+    data = PublicAuditWorkspaceData(
+        catalog_version=scope.catalog_version,
+        observed_on=scope.observed_on,
+        benchmarks=scope.benchmarks,
+        sources=catalog.source_policies.groups,
+        limits=catalog.limits,
+    )
+    data_json = data.model_dump(mode="json")
+    body = PublicAuditWorkspaceResult(
+        data=data,
+        meta=AuditApiMeta(
+            release_digest=_meta_digest(data_json),
+            returned=len(scope.benchmarks),
+            total=len(scope.benchmarks),
+            limit=len(scope.benchmarks),
+        ),
+    )
+    return respond(request, body.model_dump(mode="json"), cache=NO_STORE)
+
+
+@private_router.post(
+    "/resource-plan",
+    response_model=PublicAuditResourcePlanResult,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {"schema": AuditResourceRequest.model_json_schema()}
+            },
+        }
+    },
+)
+async def create_audit_resource_plan(request: Request) -> Response:
+    """Calculate a bounded no-dispatch estimate for a tenant-scoped operator."""
+    principal = require_permission(request, services_of(request).tokens, Permission.RUN_PLAN)
+    _tenant_id(principal)
+    content_type = request.headers.get("content-type", "").partition(";")[0].strip().lower()
+    if content_type != "application/json":
+        raise ApiError("SCHEMA_INVALID")
+    raw_body = await _read_bounded_body(request, 64 * 1024)
+    try:
+        _reject_duplicate_json_members(raw_body)
+        plan_request = AuditResourceRequest.model_validate_json(raw_body, strict=True)
+    except (UnicodeError, ValueError, ValidationError):
+        raise ApiError("SCHEMA_INVALID") from None
+    try:
+        plan = plan_audit_resources(_catalog(), plan_request)
+    except BenchmarkAuditCatalogError:
+        raise ApiError("SCHEMA_INVALID") from None
+    data = plan.model_dump(mode="json")
+    body = PublicAuditResourcePlanResult(
+        data=plan,
+        meta=AuditApiMeta(
+            release_digest=_meta_digest(data),
+            returned=1,
+            total=1,
+            limit=1,
+        ),
+    )
+    return respond(request, body.model_dump(mode="json"), cache=NO_STORE)
 
 
 def _doc_data(document: AuditDocument) -> dict[str, Any]:

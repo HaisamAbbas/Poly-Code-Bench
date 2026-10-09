@@ -1403,6 +1403,135 @@
         "title": "AuditPlanPayload",
         "type": "object"
       },
+      "AuditResourcePlan": {
+        "additionalProperties": false,
+        "properties": {
+          "benchmark_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Benchmark Counts",
+            "type": "object"
+          },
+          "benchmark_plans": {
+            "items": {
+              "$ref": "#/components/schemas/BenchmarkResourcePlan"
+            },
+            "title": "Benchmark Plans",
+            "type": "array"
+          },
+          "blockers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "candidate_ceiling": {
+            "minimum": 0.0,
+            "title": "Candidate Ceiling",
+            "type": "integer"
+          },
+          "cost_state": {
+            "const": "unknown_price",
+            "title": "Cost State",
+            "type": "string"
+          },
+          "dispatch_allowed": {
+            "const": false,
+            "title": "Dispatch Allowed",
+            "type": "boolean"
+          },
+          "estimated_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Cost Usd"
+          },
+          "estimated_storage_bytes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Storage Bytes"
+          },
+          "model_call_ceiling": {
+            "const": 0,
+            "title": "Model Call Ceiling",
+            "type": "integer"
+          },
+          "plan_version": {
+            "title": "Plan Version",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "query_ceiling": {
+            "minimum": 0.0,
+            "title": "Query Ceiling",
+            "type": "integer"
+          },
+          "selected_stages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Selected Stages",
+            "type": "array"
+          },
+          "source_plans": {
+            "items": {
+              "$ref": "#/components/schemas/SourceResourcePlan"
+            },
+            "title": "Source Plans",
+            "type": "array"
+          },
+          "state": {
+            "enum": [
+              "ready_for_review",
+              "blocked"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "total_tasks": {
+            "minimum": 1.0,
+            "title": "Total Tasks",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_version",
+          "policy_version",
+          "benchmark_counts",
+          "total_tasks",
+          "selected_stages",
+          "benchmark_plans",
+          "source_plans",
+          "query_ceiling",
+          "candidate_ceiling",
+          "estimated_storage_bytes",
+          "estimated_cost_usd",
+          "cost_state",
+          "model_call_ceiling",
+          "dispatch_allowed",
+          "state",
+          "blockers"
+        ],
+        "title": "AuditResourcePlan",
+        "type": "object"
+      },
       "AuditRunView": {
         "additionalProperties": false,
         "description": "Safe, schema-derived audit-run projection; idempotency keys are never returned.",
@@ -3948,6 +4077,340 @@
           "benchmarks"
         ],
         "title": "BenchmarkRegistry",
+        "type": "object"
+      },
+      "BenchmarkResourcePlan": {
+        "additionalProperties": false,
+        "properties": {
+          "access_state": {
+            "enum": [
+              "public_metadata",
+              "public_data_review_required",
+              "gated",
+              "owner_supplied"
+            ],
+            "title": "Access State",
+            "type": "string"
+          },
+          "benchmark_slug": {
+            "title": "Benchmark Slug",
+            "type": "string"
+          },
+          "blockers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "importer_status": {
+            "enum": [
+              "not_implemented",
+              "metadata_only",
+              "importable",
+              "audit_conformant",
+              "blocked"
+            ],
+            "title": "Importer Status",
+            "type": "string"
+          },
+          "rights_state": {
+            "enum": [
+              "needs_item_review",
+              "license_review_required",
+              "gated_access_required",
+              "owner_contract_required",
+              "approved_for_declared_scope"
+            ],
+            "title": "Rights State",
+            "type": "string"
+          },
+          "selected_tasks": {
+            "minimum": 1.0,
+            "title": "Selected Tasks",
+            "type": "integer"
+          },
+          "split_state": {
+            "enum": [
+              "pinned",
+              "partially_documented",
+              "unresolved"
+            ],
+            "title": "Split State",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "ready_for_authorized_import",
+              "blocked"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version_state": {
+            "enum": [
+              "dataset_version_pinned",
+              "repository_snapshot_pinned",
+              "metadata_only",
+              "unresolved"
+            ],
+            "title": "Version State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "benchmark_slug",
+          "selected_tasks",
+          "version_state",
+          "split_state",
+          "access_state",
+          "rights_state",
+          "importer_status",
+          "state",
+          "blockers"
+        ],
+        "title": "BenchmarkResourcePlan",
+        "type": "object"
+      },
+      "BenchmarkScopeEvidence": {
+        "additionalProperties": false,
+        "description": "Normalized scope and readiness evidence for one §5 registry family.",
+        "properties": {
+          "access_state": {
+            "enum": [
+              "public_metadata",
+              "public_data_review_required",
+              "gated",
+              "owner_supplied"
+            ],
+            "title": "Access State",
+            "type": "string"
+          },
+          "benchmark_slug": {
+            "title": "Benchmark Slug",
+            "type": "string"
+          },
+          "component_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Component Scope",
+            "type": "array"
+          },
+          "conformance_state": {
+            "enum": [
+              "not_run",
+              "fixture_only",
+              "live_verified",
+              "blocked"
+            ],
+            "title": "Conformance State",
+            "type": "string"
+          },
+          "family": {
+            "enum": [
+              "code",
+              "knowledge",
+              "math",
+              "reasoning",
+              "agent",
+              "multimodal",
+              "private"
+            ],
+            "title": "Family",
+            "type": "string"
+          },
+          "fixture_evidence_state": {
+            "enum": [
+              "synthetic_source_fixture",
+              "catalog_contract_only"
+            ],
+            "title": "Fixture Evidence State",
+            "type": "string"
+          },
+          "importer_state": {
+            "enum": [
+              "not_implemented",
+              "metadata_only",
+              "importable",
+              "audit_conformant",
+              "blocked"
+            ],
+            "title": "Importer State",
+            "type": "string"
+          },
+          "live_blockers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Live Blockers",
+            "type": "array"
+          },
+          "live_state": {
+            "enum": [
+              "pending",
+              "blocked",
+              "live_verified"
+            ],
+            "title": "Live State",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "official_url": {
+            "title": "Official Url",
+            "type": "string"
+          },
+          "required_modalities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Modalities",
+            "type": "array"
+          },
+          "rights_state": {
+            "enum": [
+              "needs_item_review",
+              "license_review_required",
+              "gated_access_required",
+              "owner_contract_required",
+              "approved_for_declared_scope"
+            ],
+            "title": "Rights State",
+            "type": "string"
+          },
+          "runtime_state": {
+            "enum": [
+              "not_required_for_metadata",
+              "not_implemented",
+              "blocked",
+              "conformant"
+            ],
+            "title": "Runtime State",
+            "type": "string"
+          },
+          "source_groups": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Groups",
+            "type": "array"
+          },
+          "source_pins": {
+            "items": {
+              "$ref": "#/components/schemas/SourceRevisionPin"
+            },
+            "title": "Source Pins",
+            "type": "array"
+          },
+          "split_policy": {
+            "title": "Split Policy",
+            "type": "string"
+          },
+          "split_state": {
+            "enum": [
+              "pinned",
+              "partially_documented",
+              "unresolved"
+            ],
+            "title": "Split State",
+            "type": "string"
+          },
+          "supported_components": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Supported Components",
+            "type": "array"
+          },
+          "supported_modalities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Supported Modalities",
+            "type": "array"
+          },
+          "test_references": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Test References",
+            "type": "array"
+          },
+          "unsupported_components": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unsupported Components",
+            "type": "array"
+          },
+          "unsupported_modalities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unsupported Modalities",
+            "type": "array"
+          },
+          "upstream_lineage": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Upstream Lineage",
+            "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "version_state": {
+            "enum": [
+              "dataset_version_pinned",
+              "repository_snapshot_pinned",
+              "metadata_only",
+              "unresolved"
+            ],
+            "title": "Version State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "benchmark_slug",
+          "name",
+          "family",
+          "official_url",
+          "version",
+          "version_state",
+          "source_pins",
+          "split_policy",
+          "split_state",
+          "upstream_lineage",
+          "access_state",
+          "rights_state",
+          "component_scope",
+          "supported_components",
+          "unsupported_components",
+          "source_groups",
+          "required_modalities",
+          "supported_modalities",
+          "unsupported_modalities",
+          "importer_state",
+          "runtime_state",
+          "conformance_state",
+          "fixture_evidence_state",
+          "test_references",
+          "live_state",
+          "live_blockers"
+        ],
+        "title": "BenchmarkScopeEvidence",
         "type": "object"
       },
       "BenchmarkSnapshotDocument": {
@@ -10425,6 +10888,100 @@
         "title": "PublicAuditHealthSummary",
         "type": "object"
       },
+      "PublicAuditResourcePlanResult": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AuditResourcePlan"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditApiMeta"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "data",
+          "meta"
+        ],
+        "title": "PublicAuditResourcePlanResult",
+        "type": "object"
+      },
+      "PublicAuditWorkspaceData": {
+        "additionalProperties": false,
+        "properties": {
+          "benchmarks": {
+            "items": {
+              "$ref": "#/components/schemas/BenchmarkScopeEvidence"
+            },
+            "title": "Benchmarks",
+            "type": "array"
+          },
+          "catalog_version": {
+            "title": "Catalog Version",
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/ResourceLimits"
+          },
+          "observed_on": {
+            "title": "Observed On",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceGroupPolicy"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "catalog_version",
+          "observed_on",
+          "benchmarks",
+          "sources",
+          "limits"
+        ],
+        "title": "PublicAuditWorkspaceData",
+        "type": "object"
+      },
+      "PublicAuditWorkspaceResult": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicAuditWorkspaceData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditApiMeta"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "data",
+          "meta"
+        ],
+        "title": "PublicAuditWorkspaceResult",
+        "type": "object"
+      },
       "PublicHealthView": {
         "additionalProperties": false,
         "description": "Allowlisted, reviewed summary; raw audit documents are never public responses.",
@@ -14001,6 +14558,59 @@
         "title": "SourcePolicyRegistry",
         "type": "object"
       },
+      "SourceResourcePlan": {
+        "additionalProperties": false,
+        "properties": {
+          "authorization_state": {
+            "enum": [
+              "not_approved",
+              "approved_scoped",
+              "gated"
+            ],
+            "title": "Authorization State",
+            "type": "string"
+          },
+          "blockers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "planned_query_units": {
+            "minimum": 0.0,
+            "title": "Planned Query Units",
+            "type": "integer"
+          },
+          "request_cap": {
+            "minimum": 1.0,
+            "title": "Request Cap",
+            "type": "integer"
+          },
+          "source_group": {
+            "title": "Source Group",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "ready_for_authorized_execution",
+              "blocked"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_group",
+          "planned_query_units",
+          "request_cap",
+          "authorization_state",
+          "state",
+          "blockers"
+        ],
+        "title": "SourceResourcePlan",
+        "type": "object"
+      },
       "SourceRevisionPin": {
         "additionalProperties": false,
         "properties": {
@@ -15731,6 +16341,178 @@
         ]
       }
     },
+    "/v1/benchmark-audit/resource-plan": {
+      "post": {
+        "description": "Calculate a bounded no-dispatch estimate for a tenant-scoped operator.",
+        "operationId": "create_audit_resource_plan_v1_benchmark_audit_resource_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "average_item_bytes": {
+                    "anyOf": [
+                      {
+                        "maximum": 1099511627776.0,
+                        "minimum": 1.0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Average Item Bytes"
+                  },
+                  "source_groups": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "title": "Source Groups",
+                    "type": "array"
+                  },
+                  "stages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "title": "Stages",
+                    "type": "array"
+                  },
+                  "task_counts": {
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "maxProperties": 100,
+                    "minProperties": 1,
+                    "title": "Task Counts",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "task_counts",
+                  "source_groups",
+                  "stages",
+                  "average_item_bytes"
+                ],
+                "title": "AuditResourceRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAuditResourcePlanResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Create Audit Resource Plan",
+        "tags": [
+          "benchmark-audit-private"
+        ]
+      }
+    },
     "/v1/benchmark-audit/runs": {
       "post": {
         "operationId": "create_audit_run_v1_benchmark_audit_runs_post",
@@ -15935,6 +16717,118 @@
           }
         },
         "summary": "Create Audit Run",
+        "tags": [
+          "benchmark-audit-private"
+        ]
+      }
+    },
+    "/v1/benchmark-audit/scope-preview": {
+      "get": {
+        "description": "Expose metadata-only readiness to a tenant-scoped run planner.",
+        "operationId": "get_audit_scope_preview_v1_benchmark_audit_scope_preview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAuditWorkspaceResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Safe correlated API error"
+          }
+        },
+        "summary": "Get Audit Scope Preview",
         "tags": [
           "benchmark-audit-private"
         ]

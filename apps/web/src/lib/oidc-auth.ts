@@ -304,12 +304,14 @@ export function readSessionToken(token: string | undefined): WebSession | null {
 export function createApiBearer(session: WebSession): string {
   const settings = oidcSettings();
   const issuedAt = nowSeconds();
+  const auditTenantId = webAuditOperatorTenant(session.subject);
   return signJwt(
     {
       iss: API_ISSUER,
       aud: API_AUDIENCE,
       sub: session.subject,
-      roles: ["submitter"],
+      roles: auditTenantId ? ["submitter", "operator"] : ["submitter"],
+      ...(auditTenantId ? { tenant_id: auditTenantId } : {}),
       email: session.email,
       email_verified: true,
       iat: issuedAt,
@@ -318,6 +320,31 @@ export function createApiBearer(session: WebSession): string {
     },
     settings.signingKey,
   );
+}
+
+/** Return a tenant only for an exact, server-configured OIDC subject grant. */
+export function webAuditOperatorTenant(subject: string): string | null {
+  const raw = process.env.PCB_WEB_AUDIT_OPERATOR_ACCESS_JSON;
+  if (!raw || raw.length > 256_000) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isJsonObject(parsed) || !hasExactKeys(parsed, ["schema_version", "principals"]) || parsed.schema_version !== 1) return null;
+    if (!Array.isArray(parsed.principals) || parsed.principals.length > 1000) return null;
+    const seen = new Set<string>();
+    let matchedTenant: string | null = null;
+    for (const row of parsed.principals) {
+      if (!isJsonObject(row) || !hasExactKeys(row, ["subject", "tenant_id"])) return null;
+      if (
+        typeof row.subject !== "string" || !row.subject || row.subject.length > 512 || row.subject.trim() !== row.subject ||
+        typeof row.tenant_id !== "string" || !isUuid(row.tenant_id) || seen.has(row.subject)
+      ) return null;
+      seen.add(row.subject);
+      if (row.subject === subject) matchedTenant = row.tenant_id.toLowerCase();
+    }
+    return matchedTenant;
+  } catch {
+    return null;
+  }
 }
 
 export async function getCurrentSession(cookieHeader: string | null): Promise<WebSession | null> {
@@ -536,6 +563,15 @@ function validEmail(value: string): boolean {
 
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasExactKeys(value: JsonObject, keys: readonly string[]): boolean {
+  const actual = Object.keys(value);
+  return actual.length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function trustedUrl(value: string, production: boolean): URL {

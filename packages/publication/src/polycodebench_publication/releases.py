@@ -42,6 +42,26 @@ REQUIRED_CHECKS = frozenset(
 )
 _DIGEST = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
+#: Authored fixtures that exercise the publication path; never model results.
+SYNTHETIC_INTERNAL = "synthetic_internal"
+#: Real persisted scorecards published unranked. Never eligible for a ranked scope.
+LIVE_EXPLORATORY = "live_exploratory"
+FIXTURE_KINDS = frozenset({SYNTHETIC_INTERNAL, LIVE_EXPLORATORY})
+#: Mandatory public label carried verbatim in every live exploratory projection.
+LIVE_EXPLORATORY_DISCLOSURE = (
+    "Live exploratory release: real model runs scored by the local pipeline; unranked, "
+    "not calibrated and not a ranked benchmark result."
+)
+
+#: Receipt outcomes. ``verified`` is the only outcome synthetic releases may use.
+VERIFIED = "verified"
+NOT_APPLICABLE_EXPLORATORY = "not_applicable_exploratory"
+#: Checks whose evidence cannot exist for unranked live data. A live exploratory release records
+#: them explicitly as ``not_applicable_exploratory``; every other check needs a verified receipt.
+EXPLORATORY_NOT_APPLICABLE_CHECKS = frozenset(
+    {"judge_calibration", "coverage_intervals", "native_labels", "rights", "scorer_replay"}
+)
+
 
 def canonical_bytes(value: Any) -> bytes:
     return canonical_json_bytes(value)
@@ -77,6 +97,15 @@ class ValidationEvidence:
     expected_digest: str
     observed_digest: str
     reference: str
+    outcome: str = VERIFIED
+
+
+def receipt_document(item: ValidationEvidence) -> dict[str, Any]:
+    """Receipt as recorded; verified receipts keep their original shape and digests."""
+    document = asdict(item)
+    if item.outcome == VERIFIED:
+        del document["outcome"]
+    return document
 
 
 def validate_projection(projection: dict[str, Any]) -> None:
@@ -87,8 +116,8 @@ def validate_projection(projection: dict[str, Any]) -> None:
         or projection["schema_version"] != 1
     ):
         raise InvalidState("projection fields are outside the public allowlist")
-    if projection["fixture_kind"] != "synthetic_internal" or projection["scope"] != "exploratory":
-        raise InvalidState("local synthetic reports must be explicitly exploratory")
+    if projection["fixture_kind"] not in FIXTURE_KINDS or projection["scope"] != "exploratory":
+        raise InvalidState("local synthetic and live reports must be explicitly exploratory")
     if not isinstance(projection["cohort_digest"], str) or not _DIGEST.fullmatch(
         projection["cohort_digest"]
     ):
@@ -145,7 +174,26 @@ def validate_projection(projection: dict[str, Any]) -> None:
             raise InvalidState("invalid interval projection")
         if metric["value"] is None and low is not None:
             raise InvalidState("unavailable metrics cannot carry an uncertainty interval")
+    if (
+        projection["fixture_kind"] == LIVE_EXPLORATORY
+        and LIVE_EXPLORATORY_DISCLOSURE not in projection["limitations"]
+    ):
+        raise InvalidState("live exploratory projections must carry the unranked disclosure")
     canonical_bytes(projection)
+
+
+def validate_release_kind(content: Any, projection: dict[str, Any]) -> None:
+    """Live exploratory content may not carry any ranking claim, even where the API hides it."""
+    validate_projection(projection)
+    if projection["fixture_kind"] != LIVE_EXPLORATORY:
+        return
+    if not isinstance(content, dict) or content.get("kind") != "release_content":
+        raise InvalidState("live exploratory releases require typed public release content")
+    entries = content.get("entries", [])
+    if not isinstance(entries, list) or any(
+        not isinstance(entry, dict) or entry.get("rank") is not None for entry in entries
+    ):
+        raise InvalidState("live exploratory releases cannot rank entries")
 
 
 def verify_manifest(manifest: dict[str, Any], public_key: Ed25519PublicKey) -> bool:
@@ -295,7 +343,7 @@ class ReleaseStore:
             elif correction_reason:
                 raise InvalidState("correction requires predecessor")
             canonical_bytes(content)
-            validate_projection(projection)
+            validate_release_kind(content, projection)
             return {
                 "id": str(uuid4()),
                 "version": 1,
@@ -337,7 +385,7 @@ class ReleaseStore:
         def operation(db: sqlite3.Connection) -> dict[str, Any]:
             doc = self._get(db, release_id)
             self._editable(doc, expected_version)
-            validate_projection(projection)
+            validate_release_kind(content, projection)
             doc.update(
                 content=content,
                 projection=projection,
@@ -370,7 +418,8 @@ class ReleaseStore:
         def operation(db: sqlite3.Connection) -> dict[str, Any]:
             doc = self._get(db, release_id)
             self._editable(doc, expected_version)
-            validate_projection(doc["projection"])
+            validate_release_kind(doc["content"], doc["projection"])
+            live = doc["projection"]["fixture_kind"] == LIVE_EXPLORATORY
             if (
                 len(evidence) != len(REQUIRED_CHECKS)
                 or {item.check for item in evidence} != REQUIRED_CHECKS
@@ -384,10 +433,17 @@ class ReleaseStore:
                     or item.expected_digest != item.observed_digest
                 ):
                     raise InvalidState("validation evidence mismatch or stale snapshot")
+                if item.outcome == NOT_APPLICABLE_EXPLORATORY:
+                    if not live or item.check not in EXPLORATORY_NOT_APPLICABLE_CHECKS:
+                        raise InvalidState(
+                            "only live exploratory releases may record this check as not applicable"
+                        )
+                elif item.outcome != VERIFIED:
+                    raise InvalidState("unknown validation receipt outcome")
             report = {
                 "subject_digest": doc["content_digest"],
                 "receipts": sorted(
-                    [asdict(item) for item in evidence], key=lambda item: item["check"]
+                    [receipt_document(item) for item in evidence], key=lambda item: item["check"]
                 ),
             }
             doc.update(
@@ -405,7 +461,7 @@ class ReleaseStore:
             "validate",
             request_id,
             locals_payload(
-                release_id, expected_version, evidence=[asdict(item) for item in evidence]
+                release_id, expected_version, evidence=[receipt_document(item) for item in evidence]
             ),
             operation,
         )
@@ -503,7 +559,7 @@ class ReleaseStore:
                 or doc["approval"]["content_digest"] != doc["content_digest"]
             ):
                 raise InvalidState("publication requires approval of exact content")
-            validate_projection(doc["projection"])
+            validate_release_kind(doc["content"], doc["projection"])
             manifest = {
                 "schema_version": 1,
                 "release_id": release_id,

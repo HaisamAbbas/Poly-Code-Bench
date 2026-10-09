@@ -52,6 +52,7 @@ from polycodebench_api.documents import (
     LATEST,
     LISTING_SCOPE,
     content_of,
+    fixture_kind_of,
     is_exploratory,
     load_public_document,
     public_documents,
@@ -88,7 +89,7 @@ def _cache(pinned: bool) -> str:
 def single_meta(
     release_id: str,
     digest: str,
-    exploratory: bool,
+    document: Mapping[str, Any],
     *,
     registry: MetricRegistry | None = None,
     filters: FilterSet | None = None,
@@ -96,7 +97,8 @@ def single_meta(
     return ResponseMeta(
         release_id=release_id,
         release_digest=digest,
-        exploratory=exploratory,
+        exploratory=is_exploratory(dict(document)),
+        fixture_kind=fixture_kind_of(document),
         total=1,
         returned=1,
         limit=1,
@@ -174,7 +176,7 @@ def get_release(request: Request, release_id: str) -> Response:
     published_at = publication_times(services).get(resolved)
     if published_at:
         summary = summary.model_copy(update={"published_at": published_at})
-    meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+    meta = single_meta(resolved, release_digest(document), document)
     return respond(request, envelope(summary, meta), cache=REVALIDATE_CACHE)
 
 
@@ -224,6 +226,7 @@ def get_leaderboard(
         release_id=resolved,
         release_digest=release_digest(document),
         exploratory=is_exploratory(document),
+        fixture_kind=fixture_kind_of(document),
         total=len(ordered),
         returned=len(window),
         limit=page.limit,
@@ -246,7 +249,7 @@ def get_model(request: Request, model_config_id: str, release: str = LATEST) -> 
     meta = single_meta(
         resolved,
         release_digest(document),
-        is_exploratory(document),
+        document,
         registry=registry_of(document),
     )
     return respond(request, envelope(profile, meta), cache=_cache(pinned))
@@ -260,7 +263,7 @@ def get_language(request: Request, language_id: str, release: str = LATEST) -> R
     meta = single_meta(
         resolved,
         release_digest(document),
-        is_exploratory(document),
+        document,
         registry=registry_of(document),
     )
     return respond(request, envelope(profile, meta), cache=_cache(pinned))
@@ -300,7 +303,7 @@ def get_compare(
     meta = single_meta(
         resolved,
         release_digest(document),
-        is_exploratory(document),
+        document,
         registry=registry_of(document),
         filters=filters,
     )
@@ -356,6 +359,7 @@ def list_tasks(
         release_id=resolved,
         release_digest=release_digest(document),
         exploratory=is_exploratory(document),
+        fixture_kind=fixture_kind_of(document),
         total=len(rows),
         returned=len(window),
         limit=page.limit,
@@ -372,7 +376,7 @@ def get_task(request: Request, task_id: str, release: str = LATEST) -> Response:
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
     task = task_summary(document, task_id)
-    meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+    meta = single_meta(resolved, release_digest(document), document)
     return respond(request, envelope(task, meta), cache=_cache(pinned))
 
 
@@ -382,7 +386,7 @@ def get_task_content(request: Request, task_id: str, release: str = LATEST) -> R
     services = services_of(request)
     resolved, document, pinned = load_public_document(services, release)
     detail = task_content(document, task_id)
-    meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+    meta = single_meta(resolved, release_digest(document), document)
     return respond(request, envelope(detail, meta), cache=_cache(pinned))
 
 
@@ -394,7 +398,7 @@ def get_scorecard(request: Request, scorecard_id: str, release: str = LATEST) ->
     meta = single_meta(
         resolved,
         release_digest(document),
-        is_exploratory(document),
+        document,
         registry=registry_of(document),
     )
     return respond(request, envelope(card, meta), cache=_cache(pinned))
@@ -425,7 +429,7 @@ def get_methodology(request: Request, version: str, release: str = LATEST) -> Re
             raise ApiError("NOT_FOUND") from None
         if methods.version != version:
             raise ApiError("NOT_FOUND")
-        meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+        meta = single_meta(resolved, release_digest(document), document)
         return respond(request, envelope(methods, meta), cache=_cache(True))
     for document in public_documents(services):
         identifier = str(document.get("id", ""))
@@ -437,7 +441,7 @@ def get_methodology(request: Request, version: str, release: str = LATEST) -> Re
         except PublicApiError:
             continue
         if methods.version == version:
-            meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+            meta = single_meta(resolved, release_digest(document), document)
             return respond(request, envelope(methods, meta), cache=_cache(pinned))
     raise ApiError("NOT_FOUND")
 
@@ -470,7 +474,7 @@ def get_artifact_download_link(
         raise ApiError("NOT_FOUND") from None
     download_url, expires_at = mint_download_token(services, artifact_id, resolved)
     result = reference.model_copy(update={"download_url": download_url, "expires_at": expires_at})
-    meta = single_meta(resolved, release_digest(document), is_exploratory(document))
+    meta = single_meta(resolved, release_digest(document), document)
     return respond(request, envelope(result, meta), cache=NO_STORE)
 
 

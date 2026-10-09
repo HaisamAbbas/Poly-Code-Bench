@@ -2,6 +2,19 @@
 
 Public API for reviewed release projections and private authenticated benchmark-audit resources.
 
+The metadata-only audit workspace uses two additional public routes:
+
+- `GET /v1/public/benchmark-audit/scope-preview` returns the versioned benchmark scope report,
+  source-policy rows, and configured planning limits. It reads local catalog configuration only.
+- `POST /v1/public/benchmark-audit/resource-plan` accepts bounded task counts, registered source
+  groups, a stage count, and an optional average item size. It returns a deterministic capacity
+  estimate with blocker reasons. The request never fetches a source, creates a private plan/run,
+  reserves budget, calls a model, or authorizes dispatch.
+
+These routes expose catalog metadata and preflight estimates only. Private audit documents,
+containment evidence, review transitions, scans, signing, and publication remain behind their
+existing tenant, role, evidence, and service gates.
+
 Private benchmark-audit reads require a bearer identity with a tenant claim, an RBAC permission,
 and object-level access. New audit documents are tenant-bound; legacy rows without a tenant remain
 invisible to this API. The default policy grants an owner access only to their own tenant-scoped

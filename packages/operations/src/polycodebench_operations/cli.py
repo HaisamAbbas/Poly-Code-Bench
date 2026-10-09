@@ -14,6 +14,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 import yaml
 from polycodebench_core.application_errors import InvalidState
@@ -167,6 +168,14 @@ def _parser() -> argparse.ArgumentParser:
     sync_releases.add_argument("--keyring", type=Path, required=True)
     sync_releases.add_argument("--target", required=True)
     sync_releases.add_argument("--source-target", default="local:board")
+    build_live = releases_sub.add_parser(
+        "build-live",
+        help="build unranked live_exploratory release documents from persisted scorecards",
+    )
+    build_live.add_argument(
+        "--run-id", type=UUID, action="append", required=True, help="completed run (repeatable)"
+    )
+    build_live.add_argument("--output-dir", type=Path, required=True)
 
     alerts = commands.add_parser("alerts", help="alert rules")
     alerts_sub = alerts.add_subparsers(dest="action", required=True)
@@ -591,6 +600,35 @@ def _sync_publication(args: argparse.Namespace) -> int:
     return 0
 
 
+def _build_live(args: argparse.Namespace) -> int:
+    from polycodebench_operations.live_release import build_live_release, write_live_release
+
+    database = None
+    try:
+        database = _database()
+        content, projection, evidence = build_live_release(database.engine, args.run_id)
+        paths = write_live_release(args.output_dir, content, projection, evidence)
+    except (InvalidState, ValueError, OSError) as error:
+        _emit({"built": False, "error": type(error).__name__, "reason": str(error)[:300]})
+        return 1
+    finally:
+        if database is not None:
+            database.dispose()
+    _emit(
+        {
+            "built": True,
+            "fixture_kind": projection["fixture_kind"],
+            "scope": projection["scope"],
+            "entries": [entry["model_config_id"] for entry in content["entries"]],
+            "not_applicable_checks": sorted(
+                row["check"] for row in evidence if row.get("outcome") is not None
+            ),
+            **paths,
+        }
+    )
+    return 0
+
+
 def check_alert_rules(path: Path = ALERT_RULES) -> list[str]:
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
     names = {spec.name for spec in REQUIRED_METRICS}
@@ -665,6 +703,8 @@ def main(argv: list[str] | None = None) -> int:
             return _keys(args)
         if args.command == "releases" and args.action == "sync-publication":
             return _sync_publication(args)
+        if args.command == "releases" and args.action == "build-live":
+            return _build_live(args)
         if args.command != "alerts":
             raise AssertionError(f"unhandled command {args.command!r}")
         problems = check_alert_rules()

@@ -13,7 +13,7 @@ from polycodebench_publication.releases import (
     ReleaseStore,
     content_digest,
     digest,
-    validate_projection,
+    validate_release_kind,
 )
 
 
@@ -66,7 +66,7 @@ def verified_publication_snapshot(
         if manifest.get("projection_digest") != digest(projection):
             raise InvalidState("signed manifest does not bind the public projection")
         try:
-            validate_projection(projection)
+            validate_release_kind(content, projection)
             ReleaseContent.model_validate(content)
         except (TypeError, ValueError) as error:
             raise InvalidState("published release does not match the public API schema") from error

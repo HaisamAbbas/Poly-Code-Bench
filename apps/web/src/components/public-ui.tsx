@@ -22,6 +22,9 @@ export function AppHeader() {
         <span>PolyCodeBench</span>
       </Link>
       <span className="header-caption">Public release explorer</span>
+      <a className="repository-link" href="https://github.com/HaisamAbbas/Poly-Code-Bench">
+        Repository <span aria-hidden="true">↗</span>
+      </a>
       <AppNavigation />
     </header>
   );
@@ -147,6 +150,7 @@ export function ReleaseNotice({ release }: { release: ReleaseSummary }) {
       <div className="release-facts" aria-label="Release scope and version">
         <span><b>Scope</b> {release.scope.replaceAll("_", " ")}</span>
         <span><b>Version</b> {release.version}</span>
+        {release.published_at ? <span><b>Published</b> <time dateTime={release.published_at}>{release.published_at.slice(0, 10)}</time></span> : null}
       </div>
       {release.state === "withdrawn" ? (
         <p className="withdrawal-copy">
@@ -244,6 +248,7 @@ export function SortableLeaderboard({
   metricDefinitions,
   releaseId,
   language,
+  searchQuery,
   sort,
   direction,
   basePath = "/leaderboard",
@@ -252,6 +257,7 @@ export function SortableLeaderboard({
   metricDefinitions: readonly MetricDefinition[];
   releaseId: string;
   language?: string;
+  searchQuery?: string;
   sort?: string;
   direction?: "asc" | "desc";
   basePath?: string;
@@ -272,7 +278,7 @@ export function SortableLeaderboard({
   const showRank = entries.some((entry) => entry.rank !== null);
 
   return (
-    <KeyboardScrollRegion className="table-wrap" label="Scrollable published configuration metrics">
+    <KeyboardScrollRegion className="table-wrap leaderboard-table-wrap" label="Scrollable published configuration metrics">
       <p className="table-scroll-hint">
         If columns extend beyond the page, scroll this region horizontally to view the remaining metrics. Tab to the region and use the left and right arrow keys, or scroll with touch or pointer.
       </p>
@@ -289,9 +295,10 @@ export function SortableLeaderboard({
               const nextDirection = active
                 ? selectedDirection === "desc" ? "asc" : "desc"
                 : metric.definition?.direction === "lower" ? "asc" : "desc";
-              const query = asUrlQuery({
+              const nextQuery = asUrlQuery({
                 release: releaseId,
                 language,
+                q: searchQuery,
                 sort_metric: metric.id,
                 direction: nextDirection,
               });
@@ -301,10 +308,15 @@ export function SortableLeaderboard({
                   scope="col"
                   aria-sort={active ? (selectedDirection === "asc" ? "ascending" : "descending") : "none"}
                 >
-                  <Link className="sort-link" href={`${basePath}${query}`}>
+              <Link className="sort-link" href={`${basePath}${nextQuery}`}>
                     {metric.label}{active ? <span aria-hidden="true"> {selectedDirection === "asc" ? "↑" : "↓"}</span> : null}
                     <span className="sr-only">{active ? `, sorted ${selectedDirection}` : ", sort by this metric"}</span>
-                  </Link>
+                </Link>{" "}
+              {metric.definition ? (
+                <span className="metric-direction">
+                  {metric.definition.direction === "lower" ? "Lower" : "Higher"} is better · {metric.definition.unit}
+                </span>
+              ) : null}
                 </th>
               );
             })}
@@ -378,27 +390,41 @@ export function LanguageFilter({
   languages,
   releaseId,
   selected,
+  query,
   sort,
   direction,
 }: {
   languages: readonly string[];
   releaseId: string;
   selected?: string;
+  query?: string;
   sort?: string;
   direction?: string;
 }) {
   return (
-    <form id="language-filter" className="filter-form" action="/leaderboard" method="get">
+    <form id="language-filter" className="filter-form leaderboard-filters" action="/leaderboard" method="get">
       <input type="hidden" name="release" value={releaseId} />
       {sort ? <input type="hidden" name="sort_metric" value={sort} /> : null}
       {direction ? <input type="hidden" name="direction" value={direction} /> : null}
-      <label htmlFor="language-select">Language coverage</label>
-      <select id="language-select" name="language" defaultValue={selected ?? ""}>
-        <option value="">All declared languages</option>
-        {languages.map((id) => <option key={id} value={id}>{id}</option>)}
-      </select>
-      <button type="submit">Apply filter</button>
-      {selected ? <Link href={`/leaderboard${asUrlQuery({ release: releaseId })}`}>Clear language filter</Link> : null}
+      <div className="filter-field">
+        <label htmlFor="configuration-search">Search configurations</label>
+        <input
+          id="configuration-search"
+          name="q"
+          type="search"
+          defaultValue={query ?? ""}
+          placeholder="Name or configuration ID"
+        />
+      </div>
+      <div className="filter-field">
+        <label htmlFor="language-select">Declared language</label>
+        <select id="language-select" name="language" defaultValue={selected ?? ""}>
+          <option value="">All languages</option>
+          {languages.map((id) => <option key={id} value={id}>{id}</option>)}
+        </select>
+      </div>
+      <button type="submit">Apply filters</button>
+      {selected || query || sort ? <Link className="filter-reset" href={`/leaderboard${asUrlQuery({ release: releaseId })}`}>Reset</Link> : null}
     </form>
   );
 }

@@ -1,28 +1,28 @@
-/* Palette seeds retained from the original stylesheet. */
 :root {
   color-scheme: light;
-  --palette-ink: #1d2926;
-  --palette-muted: #64716d;
-  --palette-line: #dce3de;
-  --palette-paper: #ffffff;
-  --palette-canvas: #f3f6f3;
-  --palette-green: #176c54;
-  --palette-green-dark: #10513f;
-  --palette-amber: #7c510b;
-  --palette-red: #8d302d;
-  --palette-blue: #275888;
-  --palette-header: #172522;
-  --palette-on-header: #f6faf7;
-  --palette-mint: #94d7b5;
 
-  --color-primary: var(--palette-green);
-  --color-primary-hover: var(--palette-green-dark);
-  --color-primary-active: color-mix(in srgb, var(--palette-green-dark) 85%, var(--palette-ink));
+  --palette-ink: #18201d;
+  --palette-muted: #59635d;
+  --palette-line: #dce1da;
+  --palette-paper: #ffffff;
+  --palette-canvas: #f7f7f3;
+  --palette-green: #17634a;
+  --palette-green-dark: #124b38;
+  --palette-amber: #754806;
+  --palette-red: #8b302b;
+  --palette-blue: #244bd8;
+  --palette-header: #ffffff;
+  --palette-on-header: #18201d;
+  --palette-mint: #244bd8;
+
+  --color-primary: var(--palette-blue);
+  --color-primary-hover: #1d3eb4;
+  --color-primary-active: #172f8f;
   --color-surface: var(--palette-paper);
-  --color-surface-muted: var(--palette-canvas);
+  --color-surface-muted: #f1f3ef;
   --color-canvas: var(--palette-canvas);
   --color-border: var(--palette-line);
-  --color-border-control: var(--palette-muted);
+  --color-border-control: #69736d;
   --color-text: var(--palette-ink);
   --color-text-muted: var(--palette-muted);
   --color-success: var(--palette-green);
@@ -39,23 +39,25 @@
   --color-info-border: color-mix(in srgb, var(--color-info) 30%, var(--color-surface));
   --color-header: var(--palette-header);
   --color-on-header: var(--palette-on-header);
-  --color-on-header-muted: color-mix(in srgb, var(--color-on-header) 78%, var(--color-header));
+  --color-on-header-muted: color-mix(in srgb, var(--color-on-header) 74%, var(--color-header));
   --color-brand-mark: var(--palette-mint);
   --color-focus: var(--color-primary);
 
   --font-family: Arial, Helvetica, sans-serif;
-  --font-xs: 0.75rem;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-xs: 0.8125rem;
   --font-sm: 0.875rem;
   --font-base: 1rem;
   --font-lg: 1.125rem;
   --font-xl: 1.25rem;
   --font-2xl: 1.5rem;
   --font-3xl: 1.875rem;
-  --font-4xl: 2.25rem;
+  --font-4xl: 2.5rem;
   --weight-normal: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
-  --leading-tight: 1.2;
+  --leading-tight: 1.18;
   --leading-normal: 1.5;
   --leading-relaxed: 1.65;
 
@@ -71,13 +73,12 @@
   --space-16: 4rem;
   --space-18: 4.5rem;
   --radius-sm: 4px;
-  --radius-md: 8px;
-  --shadow-surface: 0 1px 3px color-mix(in srgb, var(--color-text) 5%, transparent);
-  --shadow-raised: 0 8px 24px color-mix(in srgb, var(--color-text) 8%, transparent);
+  --radius-md: 6px;
+  --shadow-surface: none;
+  --shadow-raised: 0 8px 24px rgb(24 32 29 / 12%);
   --motion-fast: 160ms;
   --motion-ease: ease-out;
 
-  /* Existing variable names remain aliases for the semantic foundation. */
   --ink: var(--color-text);
   --muted: var(--color-text-muted);
   --line: var(--color-border);

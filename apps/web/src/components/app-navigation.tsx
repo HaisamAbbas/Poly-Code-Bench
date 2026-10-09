@@ -4,21 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
 
-const items = [
+const primaryItems = [
   { href: "/leaderboard", label: "Leaderboard", paths: ["/leaderboard", "/models"] },
-  { href: "/leaderboard#language-filter", label: "Languages", paths: ["/languages"], anchor: true },
+  { href: "/leaderboard#language-filter", label: "Languages", paths: ["/languages"] },
   { href: "/compare", label: "Compare", paths: ["/compare"] },
-  { href: "/tasks", label: "Tasks", paths: ["/tasks", "/scorecards", "/methodology"] },
+  { href: "/tasks", label: "Tasks", paths: ["/tasks", "/scorecards"] },
+];
+
+const supportingItems = [
   { href: "/audit-reports", label: "Audit reports", paths: ["/audit-reports"] },
   { href: "/audit-attestations", label: "Verify attestation", paths: ["/audit-attestations"] },
-  { href: "/benchmark-audit", label: "Curator access", paths: ["/benchmark-audit"] },
   { href: "/model-submissions", label: "Submit model", paths: ["/model-submissions"] },
+  { href: "/benchmark-audit", label: "Curator access", paths: ["/benchmark-audit"] },
 ];
 
 export function AppNavigation() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
+  const hasSupportingRoute = supportingItems.some((item) => item.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`)));
 
   function closeFromKeyboard(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape" && open) {
@@ -36,7 +40,7 @@ export function AppNavigation() {
         Menu
       </button>
       <nav id="primary-navigation" className="primary-nav" aria-label="Main navigation" data-open={open}>
-        {items.map((item) => {
+        {primaryItems.map((item) => {
           const active = item.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
           const props = {
             href: item.href,
@@ -44,10 +48,27 @@ export function AppNavigation() {
             onClick: () => setOpen(false),
             onKeyDown: closeFromKeyboard,
           };
-          return item.anchor
-            ? <a key={item.href} {...props}>{item.label}</a>
-            : <Link key={item.href} {...props}>{item.label}</Link>;
+          return <Link key={item.href} {...props}>{item.label}</Link>;
         })}
+        <details className="nav-more" open={hasSupportingRoute}>
+          <summary aria-current={hasSupportingRoute ? "page" : undefined}>More</summary>
+          <div className="nav-more-menu">
+            {supportingItems.map((item) => {
+              const active = item.paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => setOpen(false)}
+                  onKeyDown={closeFromKeyboard}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </details>
       </nav>
     </div>
   );

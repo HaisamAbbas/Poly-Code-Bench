@@ -1256,11 +1256,64 @@ match_review = Table(
     Column("reviewer_subject", String(255), nullable=False),
     Column("decision", String(24), nullable=False),
     fk("review_document_id", "audit_document.id"),
+    Column("opinion", JSONB, nullable=True),
+    Column("idempotency_key", String(255), nullable=True),
+    Column("request_digest", String(71), nullable=True),
     created_at(),
     UniqueConstraint("candidate_id", "review_seq"),
     CheckConstraint("review_seq >= 1", name="review_seq_positive"),
     CheckConstraint("decision IN ('accepted','rejected','disputed','superseded')", name="decision"),
+    CheckConstraint(
+        "(opinion IS NULL AND idempotency_key IS NULL AND request_digest IS NULL) OR "
+        "COALESCE((jsonb_typeof(opinion) = 'object' AND "
+        "idempotency_key ~ '^[A-Za-z0-9._~-]{1,255}$' AND "
+        "request_digest ~ '^sha256:[0-9a-f]{64}$' AND "
+        "opinion->>'opinion_id' = id::text AND "
+        "opinion->>'reviewer_subject' = reviewer_subject AND "
+        "opinion->>'decision' = decision AND "
+        "opinion->>'review_seq' = review_seq::text AND "
+        "opinion->'candidate_ref'->>'document_id' = review_document_id::text), false)",
+        name="opinion_shape",
+    ),
     Index("ix_match_review_candidate", "candidate_id", "review_seq"),
+    Index(
+        "uq_match_review_candidate_reviewer",
+        "candidate_id",
+        "reviewer_subject",
+        unique=True,
+        postgresql_where=text("idempotency_key IS NOT NULL"),
+    ),
+)
+
+match_adjudication = Table(
+    "match_adjudication",
+    metadata,
+    pk(),
+    fk("candidate_id", "match_candidate.id"),
+    Column("adjudicator_subject", String(255), nullable=False),
+    Column("decision", String(24), nullable=False),
+    Column("relation", String(32), nullable=False),
+    Column("adjudication", JSONB, nullable=False),
+    Column("idempotency_key", String(255), nullable=False),
+    Column("request_digest", String(71), nullable=False),
+    created_at(),
+    UniqueConstraint("candidate_id", name="candidate"),
+    CheckConstraint("decision IN ('accepted','rejected')", name="decision"),
+    CheckConstraint(
+        "relation IN ('exact_component','near_exact_component','semantic_duplicate',"
+        "'shared_family','shared_concept','no_substantive_match','unresolved')",
+        name="relation",
+    ),
+    CheckConstraint(
+        "COALESCE((jsonb_typeof(adjudication) = 'object' AND "
+        "idempotency_key ~ '^[A-Za-z0-9._~-]{1,255}$' AND "
+        "request_digest ~ '^sha256:[0-9a-f]{64}$' AND "
+        "adjudication->>'adjudication_id' = id::text AND "
+        "adjudication->>'adjudicator_subject' = adjudicator_subject AND "
+        "adjudication->>'decision' = decision AND "
+        "adjudication->>'relation' = relation), false)",
+        name="adjudication_shape",
+    ),
 )
 
 risk_assessment = Table(

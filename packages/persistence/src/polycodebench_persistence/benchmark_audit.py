@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, localcontext
@@ -45,6 +47,7 @@ from polycodebench_core.benchmark_audit_documents import (
     MatchEvidenceDocument,
     MatchEvidenceDocumentV2,
     MatchEvidencePayloadV2,
+    MatchReviewOpinion,
     ModelContextDocument,
     MonitorAlertDocument,
     MonitorPolicyDocumentV2,
@@ -73,6 +76,16 @@ from polycodebench_core.benchmark_firewall import (
 from polycodebench_core.canonical import (
     canonical_document_digest,
     canonical_json_bytes,
+    sha256_bytes,
+)
+from polycodebench_core.match_verification import (
+    MatchAdjudication,
+    MatchAdjudicationSubmission,
+    MatchReviewLedger,
+    MatchReviewSubmission,
+    adjudicate_match_reviews,
+    append_match_review,
+    initial_match_review_ledger,
 )
 from polycodebench_core.models import AdmissionExecutionReport
 from polycodebench_core.models import TaskVersion as TaskVersionContract
@@ -100,7 +113,9 @@ from polycodebench_persistence.models import (
     campaign,
     config_document,
     idempotency_record,
+    match_adjudication,
     match_candidate,
+    match_review,
     model_revision,
     monitor_alert_inbox,
     monitor_slot,
@@ -295,6 +310,23 @@ class MonitorSlotWrite:
     row_version: int
 
 
+@dataclass(frozen=True)
+class MatchReviewWrite:
+    opinion_id: UUID
+    digest: str
+    created: bool
+    review_seq: int
+    state: Literal["accepted", "rejected", "disputed"]
+
+
+@dataclass(frozen=True)
+class MatchAdjudicationWrite:
+    adjudication_id: UUID
+    digest: str
+    created: bool
+    state: Literal["adjudicated"] = "adjudicated"
+
+
 class PostgresBenchmarkAuditRepository:
     """PostgreSQL audit persistence; no method dispatches a remote source or model call."""
 
@@ -312,6 +344,419 @@ class PostgresBenchmarkAuditRepository:
                 return self._save_document_in_connection(connection, document, tenant_id=tenant_id)
         except (InvalidReference, InvalidState, PersistenceConflict):
             raise
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def append_match_review(
+        self,
+        *,
+        candidate_document_id: UUID,
+        submission: MatchReviewSubmission,
+        reviewer_subject: str,
+        idempotency_key: str,
+        request_digest: str,
+        tenant_id: UUID,
+    ) -> MatchReviewWrite:
+        """Append an independent opinion and atomically update its candidate projection."""
+        if (
+            not reviewer_subject
+            or len(reviewer_subject) > 255
+            or not isinstance(tenant_id, UUID)
+            or not idempotency_key
+            or len(idempotency_key) > 255
+            or not re.fullmatch(r"[A-Za-z0-9._~-]{1,255}", idempotency_key, re.ASCII)
+            or not re.fullmatch(r"sha256:[0-9a-f]{64}", request_digest, re.ASCII)
+        ):
+            raise InvalidState("match review request identity is invalid")
+
+        try:
+            with self._engine.begin() as connection:
+                candidate_row = (
+                    connection.execute(
+                        select(audit_document)
+                        .where(
+                            audit_document.c.id == candidate_document_id,
+                            audit_document.c.kind == "match_evidence",
+                            audit_document.c.tenant_id == tenant_id,
+                        )
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if candidate_row is None:
+                    raise InvalidReference("match evidence is unavailable")
+                candidate = self._document_from_row(candidate_row)
+                if not isinstance(candidate, MatchEvidenceDocumentV2):
+                    raise InvalidState("only versioned match evidence can be reviewed")
+                if candidate.payload.author_subject is None:
+                    raise InvalidState("match evidence has no recorded author")
+
+                candidate_record = (
+                    connection.execute(
+                        select(match_candidate)
+                        .where(match_candidate.c.evidence_document_id == candidate_document_id)
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if candidate_record is None or candidate_record["state"] == "superseded":
+                    raise InvalidReference("match candidate is unavailable")
+
+                replay = (
+                    connection.execute(
+                        select(match_review).where(
+                            match_review.c.candidate_id == candidate_record["id"],
+                            match_review.c.reviewer_subject == reviewer_subject,
+                            match_review.c.idempotency_key == idempotency_key,
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if replay is not None:
+                    if replay["request_digest"] != request_digest:
+                        raise IdempotencyConflict("match review idempotency key was reused")
+                    opinion = self._match_review_opinion_from_row(
+                        connection,
+                        replay,
+                        candidate=candidate,
+                        candidate_document_id=candidate_document_id,
+                        tenant_id=tenant_id,
+                    )
+                    return MatchReviewWrite(
+                        opinion_id=opinion.opinion_id,
+                        digest=sha256_bytes(canonical_json_bytes(opinion.model_dump(mode="json"))),
+                        created=False,
+                        review_seq=opinion.review_seq,
+                        state=cast(
+                            Literal["accepted", "rejected", "disputed"],
+                            candidate_record["state"],
+                        ),
+                    )
+
+                prior_rows = (
+                    connection.execute(
+                        select(match_review)
+                        .where(match_review.c.candidate_id == candidate_record["id"])
+                        .order_by(match_review.c.review_seq)
+                    )
+                    .mappings()
+                    .all()
+                )
+                adjudication_row = (
+                    connection.execute(
+                        select(match_adjudication).where(
+                            match_adjudication.c.candidate_id == candidate_record["id"]
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                ledger = self._match_review_ledger_from_rows(
+                    connection,
+                    prior_rows,
+                    adjudication_row,
+                    candidate=candidate,
+                    candidate_document_id=candidate_document_id,
+                    candidate_record=candidate_record,
+                    tenant_id=tenant_id,
+                )
+                if ledger.adjudication is not None:
+                    raise InvalidState("match candidate has already been adjudicated")
+                if not prior_rows and candidate_record["state"] not in {
+                    "proposed",
+                    "verified",
+                    "review_required",
+                    "disputed",
+                }:
+                    raise InvalidState("match candidate cannot accept another review")
+
+                created_at = (
+                    datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
+                )
+                ledger = append_match_review(
+                    ledger,
+                    opinion_id=uuid4(),
+                    reviewer_subject=reviewer_subject,
+                    decision=submission.decision,
+                    relation=submission.relation,
+                    reason=submission.reason,
+                    evidence_refs=submission.evidence_refs,
+                    decision_artifact_ref=submission.decision_artifact_ref,
+                    created_at=created_at,
+                )
+                opinion = ledger.opinions[-1]
+                self._validate_references(connection, opinion, tenant_id=tenant_id)
+                connection.execute(
+                    insert(match_review).values(
+                        id=opinion.opinion_id,
+                        candidate_id=candidate_record["id"],
+                        review_seq=opinion.review_seq,
+                        reviewer_subject=reviewer_subject,
+                        decision=opinion.decision,
+                        review_document_id=candidate_document_id,
+                        opinion=opinion.model_dump(mode="json"),
+                        idempotency_key=idempotency_key,
+                        request_digest=request_digest,
+                    )
+                )
+                state = cast(Literal["accepted", "rejected", "disputed"], ledger.state)
+                changed = connection.execute(
+                    update(match_candidate)
+                    .where(match_candidate.c.id == candidate_record["id"])
+                    .values(state=state)
+                ).rowcount
+                if changed != 1:
+                    raise PersistenceConflict("match candidate state changed during review")
+                return MatchReviewWrite(
+                    opinion_id=opinion.opinion_id,
+                    digest=sha256_bytes(canonical_json_bytes(opinion.model_dump(mode="json"))),
+                    created=True,
+                    review_seq=opinion.review_seq,
+                    state=state,
+                )
+        except (
+            IdempotencyConflict,
+            InvalidReference,
+            InvalidState,
+            PersistenceConflict,
+        ):
+            raise
+        except ValueError:
+            raise InvalidState("match review violates the review contract") from None
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def append_match_adjudication(
+        self,
+        *,
+        candidate_document_id: UUID,
+        submission: MatchAdjudicationSubmission,
+        adjudicator_subject: str,
+        idempotency_key: str,
+        request_digest: str,
+        tenant_id: UUID,
+    ) -> MatchAdjudicationWrite:
+        """Append an independent conflict adjudication and update its state projection."""
+        if (
+            not adjudicator_subject
+            or len(adjudicator_subject) > 255
+            or not isinstance(tenant_id, UUID)
+            or not idempotency_key
+            or len(idempotency_key) > 255
+            or not re.fullmatch(r"[A-Za-z0-9._~-]{1,255}", idempotency_key, re.ASCII)
+            or not re.fullmatch(r"sha256:[0-9a-f]{64}", request_digest, re.ASCII)
+        ):
+            raise InvalidState("match adjudication request identity is invalid")
+
+        try:
+            with self._engine.begin() as connection:
+                candidate_row = (
+                    connection.execute(
+                        select(audit_document)
+                        .where(
+                            audit_document.c.id == candidate_document_id,
+                            audit_document.c.kind == "match_evidence",
+                            audit_document.c.tenant_id == tenant_id,
+                        )
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if candidate_row is None:
+                    raise InvalidReference("match evidence is unavailable")
+                candidate = self._document_from_row(candidate_row)
+                if not isinstance(candidate, MatchEvidenceDocumentV2):
+                    raise InvalidState("only versioned match evidence can be adjudicated")
+                if candidate.payload.author_subject is None:
+                    raise InvalidState("match evidence has no recorded author")
+
+                candidate_record = (
+                    connection.execute(
+                        select(match_candidate)
+                        .where(match_candidate.c.evidence_document_id == candidate_document_id)
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if candidate_record is None or candidate_record["state"] == "superseded":
+                    raise InvalidReference("match candidate is unavailable")
+
+                prior_adjudication = (
+                    connection.execute(
+                        select(match_adjudication).where(
+                            match_adjudication.c.candidate_id == candidate_record["id"]
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                review_rows = (
+                    connection.execute(
+                        select(match_review)
+                        .where(match_review.c.candidate_id == candidate_record["id"])
+                        .order_by(match_review.c.review_seq)
+                    )
+                    .mappings()
+                    .all()
+                )
+                ledger = self._match_review_ledger_from_rows(
+                    connection,
+                    review_rows,
+                    prior_adjudication,
+                    candidate=candidate,
+                    candidate_document_id=candidate_document_id,
+                    candidate_record=candidate_record,
+                    tenant_id=tenant_id,
+                )
+                if prior_adjudication is not None:
+                    if (
+                        prior_adjudication["adjudicator_subject"] != adjudicator_subject
+                        or prior_adjudication["idempotency_key"] != idempotency_key
+                    ):
+                        raise InvalidState("match candidate has already been adjudicated")
+                    if prior_adjudication["request_digest"] != request_digest:
+                        raise IdempotencyConflict("match adjudication idempotency key was reused")
+                    record = ledger.adjudication
+                    if record is None:
+                        raise PersistenceConflict("match adjudication ledger is incomplete")
+                    return MatchAdjudicationWrite(
+                        adjudication_id=record.adjudication_id,
+                        digest=sha256_bytes(canonical_json_bytes(record.model_dump(mode="json"))),
+                        created=False,
+                    )
+
+                if ledger.state != "disputed":
+                    raise InvalidState("match adjudication requires unresolved conflicting reviews")
+                created_at = (
+                    datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
+                )
+                ledger = adjudicate_match_reviews(
+                    ledger,
+                    adjudication_id=uuid4(),
+                    adjudicator_subject=adjudicator_subject,
+                    decision=submission.decision,
+                    relation=submission.relation,
+                    reason=submission.reason,
+                    evidence_refs=submission.evidence_refs,
+                    decision_artifact_ref=submission.decision_artifact_ref,
+                    created_at=created_at,
+                )
+                adjudication = ledger.adjudication
+                if adjudication is None:
+                    raise PersistenceConflict("match adjudication was not appended")
+                self._validate_references(connection, adjudication, tenant_id=tenant_id)
+                connection.execute(
+                    insert(match_adjudication).values(
+                        id=adjudication.adjudication_id,
+                        candidate_id=candidate_record["id"],
+                        adjudicator_subject=adjudicator_subject,
+                        decision=adjudication.decision,
+                        relation=adjudication.relation,
+                        adjudication=adjudication.model_dump(mode="json"),
+                        idempotency_key=idempotency_key,
+                        request_digest=request_digest,
+                    )
+                )
+                changed = connection.execute(
+                    update(match_candidate)
+                    .where(
+                        match_candidate.c.id == candidate_record["id"],
+                        match_candidate.c.state == "disputed",
+                    )
+                    .values(state=adjudication.decision)
+                ).rowcount
+                if changed != 1:
+                    raise PersistenceConflict("match candidate state changed during adjudication")
+                return MatchAdjudicationWrite(
+                    adjudication_id=adjudication.adjudication_id,
+                    digest=sha256_bytes(canonical_json_bytes(adjudication.model_dump(mode="json"))),
+                    created=True,
+                )
+        except (
+            IdempotencyConflict,
+            InvalidReference,
+            InvalidState,
+            PersistenceConflict,
+        ):
+            raise
+        except ValueError:
+            raise InvalidState("match adjudication violates the review contract") from None
+        except DBAPIError as error:
+            raise map_database_error(error) from None
+
+    def list_match_reviews(
+        self, *, candidate_document_id: UUID, tenant_id: UUID
+    ) -> MatchReviewLedger:
+        """Read and verify the complete immutable opinion history for tenant-scoped evidence."""
+        if not isinstance(candidate_document_id, UUID) or not isinstance(tenant_id, UUID):
+            raise InvalidState("match review history scope is invalid")
+        try:
+            with self._engine.connect() as connection:
+                candidate_row = (
+                    connection.execute(
+                        select(audit_document)
+                        .where(
+                            audit_document.c.id == candidate_document_id,
+                            audit_document.c.kind == "match_evidence",
+                            audit_document.c.tenant_id == tenant_id,
+                        )
+                        .with_for_update(read=True)
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if candidate_row is None:
+                    raise InvalidReference("match evidence is unavailable")
+                candidate = self._document_from_row(candidate_row)
+                if not isinstance(candidate, MatchEvidenceDocumentV2):
+                    raise InvalidState("only versioned match evidence has a review history")
+                candidate_record = (
+                    connection.execute(
+                        select(match_candidate).where(
+                            match_candidate.c.evidence_document_id == candidate_document_id
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if candidate_record is None:
+                    raise InvalidReference("match candidate is unavailable")
+                rows = (
+                    connection.execute(
+                        select(match_review)
+                        .where(match_review.c.candidate_id == candidate_record["id"])
+                        .order_by(match_review.c.review_seq)
+                    )
+                    .mappings()
+                    .all()
+                )
+                adjudication_row = (
+                    connection.execute(
+                        select(match_adjudication).where(
+                            match_adjudication.c.candidate_id == candidate_record["id"]
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                return self._match_review_ledger_from_rows(
+                    connection,
+                    rows,
+                    adjudication_row,
+                    candidate=candidate,
+                    candidate_document_id=candidate_document_id,
+                    candidate_record=candidate_record,
+                    tenant_id=tenant_id,
+                )
+        except (InvalidReference, InvalidState, PersistenceConflict):
+            raise
+        except ValueError:
+            raise PersistenceConflict("stored match review history is invalid") from None
         except DBAPIError as error:
             raise map_database_error(error) from None
 
@@ -1159,13 +1604,62 @@ class PostgresBenchmarkAuditRepository:
                     ]
                     if not match_docs:
                         raise InvalidReference("match outcomes require reviewed v2 match evidence")
+                    review_projection_rows = (
+                        connection.execute(
+                            select(
+                                match_candidate.c.evidence_document_id,
+                                match_candidate.c.state,
+                                match_adjudication.c.decision,
+                                match_adjudication.c.relation,
+                                match_review.c.opinion,
+                            )
+                            .select_from(
+                                match_candidate.outerjoin(
+                                    match_adjudication,
+                                    match_adjudication.c.candidate_id == match_candidate.c.id,
+                                ).outerjoin(
+                                    match_review,
+                                    match_review.c.candidate_id == match_candidate.c.id,
+                                )
+                            )
+                            .where(
+                                match_candidate.c.evidence_document_id.in_(
+                                    [item.id for item in match_docs]
+                                )
+                            )
+                            .order_by(match_review.c.review_seq)
+                        )
+                        .mappings()
+                        .all()
+                    )
+                    review_projections: dict[UUID, Any] = {}
+                    for projection in review_projection_rows:
+                        review_projections[projection["evidence_document_id"]] = projection
                     if not any(
                         item.payload.task_ref == scope_payload.task_ref
                         and item.payload.source_snapshot_ref == unit.source_ref
                         and unit.component_ref in item.payload.component_refs
-                        and item.payload.relation == outcome.relation
-                        and item.payload.review_state == "accepted"
+                        and (
+                            projection["relation"]
+                            if projection is not None and projection["decision"] is not None
+                            else (
+                                projection["opinion"].get("relation")
+                                if projection is not None
+                                and isinstance(projection["opinion"], dict)
+                                else item.payload.relation
+                            )
+                        )
+                        == outcome.relation
+                        and (
+                            (
+                                projection["state"] == "accepted"
+                                and projection["decision"] != "rejected"
+                            )
+                            if projection is not None
+                            else item.payload.review_state == "accepted"
+                        )
                         for item in match_docs
+                        for projection in (review_projections.get(item.id),)
                     ):
                         raise InvalidState(
                             "match finding does not bind the exact task/source scope"
@@ -3527,6 +4021,160 @@ class PostgresBenchmarkAuditRepository:
             raise
         except DBAPIError as error:
             raise map_database_error(error) from None
+
+    @classmethod
+    def _match_review_opinion_from_row(
+        cls,
+        connection: Any,
+        row: Any,
+        *,
+        candidate: MatchEvidenceDocumentV2,
+        candidate_document_id: UUID,
+        tenant_id: UUID,
+    ) -> MatchReviewOpinion:
+        raw_opinion = row["opinion"]
+        if not isinstance(raw_opinion, dict):
+            raise PersistenceConflict("legacy match review row has no complete opinion")
+        try:
+            opinion = MatchReviewOpinion.model_validate_json(
+                canonical_json_bytes(raw_opinion), strict=True
+            )
+        except ValueError:
+            raise PersistenceConflict("stored match review opinion is invalid") from None
+        expected_candidate_ref = initial_match_review_ledger(candidate).candidate_ref
+        if (
+            row["id"] != opinion.opinion_id
+            or row["reviewer_subject"] != opinion.reviewer_subject
+            or row["decision"] != opinion.decision
+            or row["review_seq"] != opinion.review_seq
+            or row["review_document_id"] != candidate_document_id
+            or opinion.candidate_ref != expected_candidate_ref
+        ):
+            raise PersistenceConflict("stored match review projection is invalid")
+        request = MatchReviewSubmission(
+            decision=opinion.decision,
+            relation=opinion.relation,
+            reason=opinion.reason,
+            evidence_refs=opinion.evidence_refs,
+            decision_artifact_ref=opinion.decision_artifact_ref,
+        )
+        if not re.fullmatch(r"[A-Za-z0-9._~-]{1,255}", row["idempotency_key"], re.ASCII) or row[
+            "request_digest"
+        ] != sha256_bytes(canonical_json_bytes(request.model_dump(mode="json"))):
+            raise PersistenceConflict("stored match review request binding is invalid")
+        cls._validate_references(connection, opinion, tenant_id=tenant_id)
+        return opinion
+
+    @classmethod
+    def _match_adjudication_from_row(
+        cls,
+        connection: Any,
+        row: Any,
+        *,
+        candidate: MatchEvidenceDocumentV2,
+        candidate_document_id: UUID,
+        candidate_id: UUID,
+        tenant_id: UUID,
+    ) -> MatchAdjudication:
+        raw_adjudication = row["adjudication"]
+        if not isinstance(raw_adjudication, dict):
+            raise PersistenceConflict("stored match adjudication is incomplete")
+        try:
+            adjudication = MatchAdjudication.model_validate_json(
+                canonical_json_bytes(raw_adjudication), strict=True
+            )
+        except ValueError:
+            raise PersistenceConflict("stored match adjudication is invalid") from None
+        expected_candidate_ref = initial_match_review_ledger(candidate).candidate_ref
+        if (
+            row["id"] != adjudication.adjudication_id
+            or row["adjudicator_subject"] != adjudication.adjudicator_subject
+            or row["decision"] != adjudication.decision
+            or row["relation"] != adjudication.relation
+            or adjudication.candidate_ref != expected_candidate_ref
+            or row["candidate_id"] != candidate_id
+            or adjudication.candidate_author_subject != candidate.payload.author_subject
+        ):
+            raise PersistenceConflict("stored match adjudication projection is invalid")
+        if candidate_document_id != adjudication.candidate_ref.document_id:
+            raise PersistenceConflict("stored match adjudication targets another candidate")
+        request = MatchAdjudicationSubmission(
+            decision=adjudication.decision,
+            relation=adjudication.relation,
+            reason=adjudication.reason,
+            evidence_refs=adjudication.evidence_refs,
+            decision_artifact_ref=adjudication.decision_artifact_ref,
+        )
+        if not re.fullmatch(r"[A-Za-z0-9._~-]{1,255}", row["idempotency_key"], re.ASCII) or row[
+            "request_digest"
+        ] != sha256_bytes(canonical_json_bytes(request.model_dump(mode="json"))):
+            raise PersistenceConflict("stored match adjudication request binding is invalid")
+        cls._validate_references(connection, adjudication, tenant_id=tenant_id)
+        return adjudication
+
+    @classmethod
+    def _match_review_ledger_from_rows(
+        cls,
+        connection: Any,
+        rows: Sequence[Any],
+        adjudication_row: Any | None,
+        *,
+        candidate: MatchEvidenceDocumentV2,
+        candidate_document_id: UUID,
+        candidate_record: Any,
+        tenant_id: UUID,
+    ) -> MatchReviewLedger:
+        ledger = initial_match_review_ledger(candidate)
+        for row in rows:
+            opinion = cls._match_review_opinion_from_row(
+                connection,
+                row,
+                candidate=candidate,
+                candidate_document_id=candidate_document_id,
+                tenant_id=tenant_id,
+            )
+            ledger = append_match_review(
+                ledger,
+                opinion_id=opinion.opinion_id,
+                reviewer_subject=opinion.reviewer_subject,
+                decision=opinion.decision,
+                relation=opinion.relation,
+                reason=opinion.reason,
+                evidence_refs=opinion.evidence_refs,
+                decision_artifact_ref=opinion.decision_artifact_ref,
+                created_at=opinion.created_at,
+            )
+            if ledger.opinions[-1] != opinion:
+                raise PersistenceConflict("stored match review opinion is not canonical")
+        if adjudication_row is not None:
+            adjudication = cls._match_adjudication_from_row(
+                connection,
+                adjudication_row,
+                candidate=candidate,
+                candidate_document_id=candidate_document_id,
+                candidate_id=candidate_record["id"],
+                tenant_id=tenant_id,
+            )
+            ledger = adjudicate_match_reviews(
+                ledger,
+                adjudication_id=adjudication.adjudication_id,
+                adjudicator_subject=adjudication.adjudicator_subject,
+                decision=adjudication.decision,
+                relation=adjudication.relation,
+                reason=adjudication.reason,
+                evidence_refs=adjudication.evidence_refs,
+                decision_artifact_ref=adjudication.decision_artifact_ref,
+                created_at=adjudication.created_at,
+            )
+            if ledger.adjudication != adjudication:
+                raise PersistenceConflict("stored match adjudication is not canonical")
+        if rows or adjudication_row is not None:
+            expected_state = (
+                ledger.adjudication.decision if ledger.adjudication is not None else ledger.state
+            )
+            if candidate_record["state"] != expected_state:
+                raise PersistenceConflict("match candidate state differs from review history")
+        return ledger
 
     @staticmethod
     def _validate_references(

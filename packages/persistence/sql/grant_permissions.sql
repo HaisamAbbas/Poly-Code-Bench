@@ -75,8 +75,10 @@ GRANT SELECT, INSERT ON audit_document, benchmark_registry, benchmark_snapshot,
     benchmark_item, benchmark_import_manifest, benchmark_item_lineage,
     audit_component, fingerprint, corpus_source, corpus_snapshot,
     corpus_document, audit_run, audit_query, audit_checkpoint, match_candidate,
-    match_review, risk_assessment, temporal_assessment TO pcb_operator, pcb_administrator;
+    match_review, match_adjudication, risk_assessment, temporal_assessment
+    TO pcb_operator, pcb_administrator;
 GRANT UPDATE (state, row_version) ON audit_run TO pcb_operator;
+GRANT UPDATE (state) ON match_candidate TO pcb_operator, pcb_administrator;
 GRANT SELECT ON artifact TO pcb_operator;
 GRANT INSERT ON audit_event TO pcb_operator;
 

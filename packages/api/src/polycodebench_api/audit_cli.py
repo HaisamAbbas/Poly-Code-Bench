@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -21,12 +22,14 @@ from polycodebench_core.audit_attestations import (
 )
 from polycodebench_core.benchmark_audit_documents import AuditPlanDocument, parse_audit_document
 from polycodebench_core.benchmark_audit_registry import AuditResourceRequest
+from polycodebench_core.benchmark_imports import BenchmarkImportPlan
 from polycodebench_core.canonical import canonical_json_bytes, parse_json_strict
 from polycodebench_core.match_verification import (
     MatchAdjudicationSubmission,
     MatchReviewSubmission,
 )
 from polycodebench_services.audit_attestations import verify_public_attestation
+from polycodebench_services.benchmark_importers import MAX_SOURCE_BYTES, parse_benchmark_snapshot
 
 from polycodebench_api.submission_routes import (
     EndpointDecisionInput,
@@ -55,9 +58,12 @@ _AUDIT_CAPABILITIES = {
         "audit matches review (MFA reviewer, immutable opinion)",
         "audit matches adjudicate (independent MFA conflict resolution)",
     ],
-    "local_only": ["audit verify-attestation"],
+    "local_only": [
+        "audit import (parse a frozen plan and local source snapshot; no persistence)",
+        "audit verify-attestation",
+    ],
     "blocked_without_reviewed_adapters": [
-        "audit import (durable import and membership admission)",
+        "audit import persistence and membership admission (no reviewed artifact/database adapter)",
         "audit temporal assess",
         "audit sealed create",
         "audit firewall evaluate",
@@ -122,9 +128,10 @@ def _parser() -> argparse.ArgumentParser:
     show_document.add_argument("resource", choices=audit_resources)
     show_document.add_argument("document_id", type=UUID)
 
-    imported = commands.add_parser("import", help="inspect a local benchmark package")
-    imported.add_argument("--benchmark", required=True)
-    imported.add_argument("--revision", required=True)
+    imported = commands.add_parser(
+        "import", help="parse a frozen plan and local source snapshot without persistence"
+    )
+    imported.add_argument("--plan", type=Path, required=True)
     imported.add_argument("--file", type=Path, required=True)
 
     plan = commands.add_parser("plan", help="validate or persist a frozen audit plan")
@@ -422,10 +429,30 @@ def _validate_local_input(args: argparse.Namespace) -> dict[str, Any]:
     if args.command == "show":
         return {"resource": args.resource, "document_id": str(args.document_id)}
     if args.command == "import":
-        size = args.file.stat().st_size
-        if size > _MAX_LOCAL_BYTES:
-            raise ValueError("benchmark file exceeds the 10 MiB local input limit")
-        return {"benchmark": args.benchmark, "revision": args.revision, "input_bytes": size}
+        plan_bytes = _read_local_file(args.plan, "benchmark import plan")
+        if len(plan_bytes) > _MAX_AUDIT_REQUEST_BYTES:
+            raise ValueError("benchmark import plan exceeds the 64 KiB local input limit")
+        parse_json_strict(plan_bytes)
+        plan = BenchmarkImportPlan.model_validate_json(plan_bytes, strict=True)
+        source_bytes = _read_benchmark_source(args.file)
+        import_result = parse_benchmark_snapshot(plan, source_bytes)
+        return {
+            "benchmark_slug": plan.benchmark_slug,
+            "revision": plan.revision,
+            "plan_digest": import_result.plan_digest,
+            "membership_digest": import_result.membership_digest,
+            "expected_source_digest": import_result.source_digest,
+            "observed_source_digest": import_result.observed_source_digest,
+            "state": import_result.state,
+            "item_counts": dict(
+                sorted(Counter(item.state for item in import_result.items).items())
+            ),
+            "source_error_codes": import_result.source_error_codes,
+            "input_bytes": len(source_bytes),
+            "persisted": False,
+            "rights_review": "plan_claim_not_independently_verified",
+            "validation_scope": "local_frozen_snapshot_parse",
+        }
     if args.command == "run":
         if (
             not 0 <= args.query_units <= _MAX_SAFE_INTEGER
@@ -498,6 +525,16 @@ def _read_local_file(path: Path, label: str) -> bytes:
         content = stream.read(_MAX_LOCAL_BYTES + 1)
     if len(content) > _MAX_LOCAL_BYTES:
         raise ValueError(f"{label} file exceeds the 10 MiB local input limit")
+    return content
+
+
+def _read_benchmark_source(path: Path) -> bytes:
+    if path.stat().st_size > MAX_SOURCE_BYTES:
+        raise ValueError("benchmark source exceeds the 128 MiB parser limit")
+    with path.open("rb") as stream:
+        content = stream.read(MAX_SOURCE_BYTES + 1)
+    if len(content) > MAX_SOURCE_BYTES:
+        raise ValueError("benchmark source exceeds the 128 MiB parser limit")
     return content
 
 
@@ -624,6 +661,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.root_command == "audit" and args.command == "verify-attestation":
             print(json.dumps(local_input, sort_keys=True))
             return 0 if local_input["signature_valid"] else 4
+        if args.root_command == "audit" and args.command == "import":
+            print(
+                json.dumps(
+                    {
+                        "command": _command_name(args),
+                        "remote_work": "none",
+                        **local_input,
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0 if local_input["state"] == "complete" else 3
         route = _command_route(args)
         if args.dry_run:
             method, path = route if route is not None else (None, None)

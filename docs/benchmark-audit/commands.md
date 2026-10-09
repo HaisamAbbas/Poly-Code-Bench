@@ -348,3 +348,13 @@ Date: 2026-10-08 (Asia/Karachi). A command is marked passed only if it ran.
 | Workspace format check | Existing failures | `ruff format --check .` reports extensive drift in unrelated files; no repository-wide formatting was applied. Changed files were checked separately. |
 | Workspace mypy and boundary check | Existing failures | Broad mypy errors are in unrelated ops/render/publish scripts. Boundary violations are in existing evaluation/orchestration modules; changed modules pass strict mypy. |
 | Workspace smoke check and offline package build | Passed | No external services or database were needed. |
+
+## Local benchmark import CLI preflight (2026-10-10)
+
+| Command/check | Result | Scope |
+|---|---|---|
+| `pcb audit import --plan benchmark-import-plan.json --file benchmark-source.jsonl` | Passed on synthetic frozen HumanEval snapshot | Parses the pinned bytes locally, reports only state counts/digests, and performs no HTTP or persistence. The plan's rights field is explicitly treated as an unverified claim. |
+| CLI, importer and operator-capability tests | Passed: 28 tests | Covers complete and rights-blocked plans, the source-byte limit, content-free output, and absence of HTTP calls. |
+| Full Python suite | Passed: 1,692 passed, 219 skipped, 1 warning | The skips require optional PostgreSQL, Docker, or host-specific integration support. |
+| Ruff check/format and strict mypy for the CLI changes | Passed | `audit_cli.py` has no strict typing errors. |
+| Durable import/membership admission | Still blocked | No reviewed artifact-storage or database writer is available; no source data was persisted. |

@@ -91,6 +91,18 @@ an optional average item size. The API rejects unknown catalog entries and reque
 frozen task, query, source, stage, or storage limits. Its result includes blockers and always sets
 `dispatch_allowed=false`.
 
+`pcb audit import` can locally parse a frozen import plan and its pinned source bytes. It performs
+no network request, prints no task content, and does not persist membership or artifacts:
+
+```powershell
+pcb audit import --plan benchmark-import-plan.json --file benchmark-source.jsonl
+```
+
+The plan must satisfy the strict `BenchmarkImportPlan` schema and the source digest must match.
+The output reports only aggregate item states and digests. Its rights status is a plan claim, not an
+independent rights approval. Durable import and membership admission remain blocked until the
+reviewed artifact-storage and database adapters are available.
+
 An authorized reviewer can append a match opinion after reviewing its evidence. The reviewer token
 must include MFA, restricted-evidence read and adjudication permissions, and the deployment's
 object ACL must grant review access to that match. The decision artifact must already be verified
@@ -128,7 +140,7 @@ for verification results and remaining deployment requirements.
 
 `pcb audit capabilities` also identifies local preparation and operations with no reviewed API
 adapter. Temporal assessment, sealed evaluation, firewall decisions, replacement admission,
-monitoring/alerts, health generation, and the durable benchmark import/membership flow remain
+monitoring/alerts, health generation, and durable benchmark import/membership admission remain
 blocked until their reviewer/tenant authorization, source/artifact and rights validation, database
 writers, and required key or delivery adapters are in place. Validation-only flags and synthetic
 fixtures do not authorize live source access, external model calls, signing, or publication.

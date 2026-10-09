@@ -409,3 +409,10 @@ def test_audit_cli_capabilities_are_local_and_never_claim_dispatch(capsys) -> No
         "audit matches history (MFA reviewer, immutable opinion ledger)" in output["remote_reads"]
     )
     assert "audit plan (immutable document, no dispatch)" in output["remote_writes"]
+    assert any(
+        item.startswith("audit import (parse a frozen plan") for item in output["local_only"]
+    )
+    assert any(
+        item.startswith("audit import persistence and membership admission")
+        for item in output["blocked_without_reviewed_adapters"]
+    )

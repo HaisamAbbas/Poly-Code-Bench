@@ -43,6 +43,10 @@ if ! command -v node >/dev/null || [ "$(node --version)" != "v${NODE_VERSION}" ]
   rm -rf "$tmp"
 fi
 
+step "Close non-essential listeners"
+# Ubuntu cloud images run rpcbind on :111; nothing here needs it.
+sudo systemctl disable --now rpcbind.service rpcbind.socket >/dev/null 2>&1 || true
+
 step "Python environment"
 uv sync --locked --all-packages --group dev
 

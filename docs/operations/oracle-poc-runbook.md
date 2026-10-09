@@ -171,3 +171,51 @@ changes the spend picture) is an owner decision outside this kit.
 - It is not a benchmark release: the data is synthetic `synthetic_internal` display data, no
   model endpoint is contacted and no benchmark run is created.
 - It does not prove OCI Object Storage, instance-principal or Bastion behaviour beyond the VM.
+
+## 8. Public deployment (sslip.io) and publishing from the owner's PC
+
+This is the path actually run on 2026-10-10 against a 1 OCPU / 6 GB A1 VM at
+`155-248-254-59.sslip.io` (public IP, no domain). It supersedes the "private, SSH tunnel only"
+scope above for that VM; sections 1-7 still describe the Terraform and bootstrap kit.
+
+```bash
+scripts/oracle/push.sh 155.248.254.59            # tracked + untracked-not-ignored files only
+ssh -i .local/oracle/pcb_deploy_ed25519 deploy@155.248.254.59 \
+  'cd polycodebench && nohup bash scripts/oracle/deploy.sh --domain 155-248-254-59.sslip.io > ~/deploy.log 2>&1 &'
+```
+
+Facts learned from the first real run:
+
+- `push.sh` uses `git ls-files`, so `.env`, `.local`, `.cache`, `.protected` and `.wheelhouse` never
+  leave the workstation. Because the Windows tree has CRLF endings, push.sh converts scripts, systemd
+  units, the Caddyfile and compose YAML under `scripts/` and `infra/oracle/` to LF on the VM.
+- Add swap before the first deploy (done once; `next build` peaked near 2 GB of RAM plus
+  page cache and completed in about 10 minutes, so swap is a safety margin):
+  `sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile &&
+  sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab`.
+- All four compose images (postgres 17.6, seaweedfs 4.48, keycloak 26.8.0, caddy 2.10.0) publish
+  `linux/arm64` in the pinned index digests; no pin was changed.
+- Caddy: `respond` loses to a later `handle` for the same path, so the blocks for `/v1/admin*`,
+  `/kc/admin*` and `/kc/realms/master*` are `handle @matcher { respond 404 }`. After editing the
+  Caddyfile run `docker restart polycodebench-local-caddy-1` (the single-file bind mount keeps the
+  old inode after a push, so `caddy reload` would not see the change).
+- `deploy.sh` disables `rpcbind` so only :22, :80 and :443 listen on non-loopback addresses.
+- Steady-state memory with the whole stack idle: about 1.6 GB used of 5.9 GB (Keycloak about 0.7 GB,
+  SeaweedFS 0.13 GB, Postgres 0.05 GB, API about 0.15 GB, web about 0.2 GB), 4 GB swap unused.
+
+### Publishing real results from the PC
+
+```bash
+# local build + signing as usual (scripts/publish_live_release.py), then:
+scripts/oracle/publish_to_vm.sh --dry-run          # verify store, keyring, signatures; no network
+scripts/oracle/publish_to_vm.sh                    # only live_exploratory releases are accepted
+scripts/oracle/publish_to_vm.sh --allow-synthetic  # synthetic fixture (for testing the path)
+```
+
+The script reads the publisher DSN and `PCB_PUBLICATION_TARGET` from the VM's `.env` over SSH into
+shell variables, rewrites the DSN to a local tunnel endpoint (`127.0.0.1:47432` by default, override
+with `PCB_VM_TUNNEL_PORT`; some Windows hosts reserve 55xxx ports), runs
+`scripts/render/publish_remote.py` and closes the tunnel on exit. The DSN is never printed or written
+to disk. Re-running is an idempotent replay (`inserted: 0`). The VM does not seed synthetic data
+itself; the synthetic release currently shown is published this way and is labelled
+`meta.fixture_kind = synthetic_internal`.

@@ -3,8 +3,12 @@
 	encode zstd gzip
 
 	# Keycloak (realm discovery, login pages). Its admin console stays private.
-	@kcadmin path /kc/admin*
-	respond @kcadmin 404
+	# `handle` blocks are mutually exclusive and tried in order; a bare `respond` would lose to
+	# the later `handle /kc/*` because respond sorts after handle in Caddy's directive order.
+	@kcadmin path /kc/admin* /kc/realms/master /kc/realms/master/*
+	handle @kcadmin {
+		respond 404
+	}
 	handle /kc/* {
 		reverse_proxy 127.0.0.1:8080
 	}
@@ -12,7 +16,9 @@
 	# Public read API. Administrative and reviewer routes are not exposed publicly;
 	# operators reach them over the SSH tunnel at 127.0.0.1:8010.
 	@admin path /v1/admin*
-	respond @admin 404
+	handle @admin {
+		respond 404
+	}
 	handle /v1/* {
 		reverse_proxy 127.0.0.1:8010
 	}

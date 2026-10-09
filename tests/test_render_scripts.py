@@ -119,3 +119,12 @@ def test_publish_dry_run_verifies_the_local_store_without_a_database(
     assert result["dry_run"] is True and "sync" not in result
     assert all(row["key_id"] for row in result["releases"])
     capsys.readouterr()
+
+
+def test_oracle_publish_script_keeps_the_dsn_off_argv_and_defaults_to_live_only() -> None:
+    script = (ROOT / "scripts" / "oracle" / "publish_to_vm.sh").read_text(encoding="utf-8")
+    assert "\r" not in script
+    assert "--allow-synthetic" in script and "--dry-run" in script
+    assert "export PCB_RENDER_PUBLISHER_DATABASE_URL" in script
+    assert "echo \"$VM_DSN\"" not in script and "echo \"$PCB_RENDER" not in script
+    assert "--target \"$TARGET\"" in script

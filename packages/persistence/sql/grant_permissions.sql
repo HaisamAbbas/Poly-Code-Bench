@@ -65,7 +65,9 @@ GRANT SELECT, INSERT, UPDATE ON task TO pcb_curator, pcb_administrator;
 GRANT SELECT, INSERT ON task_version, task_set_member TO pcb_curator, pcb_administrator;
 GRANT SELECT, INSERT, UPDATE ON task_set TO pcb_curator, pcb_administrator;
 
-GRANT SELECT ON task_set, task_set_member, task_version, config_document, model_revision, campaign TO pcb_operator;
+-- Run creation re-checks that the bound endpoint registration is still approved.
+GRANT SELECT ON task_set, task_set_member, task_version, config_document, model_revision, campaign,
+    endpoint_registration TO pcb_operator;
 GRANT INSERT, SELECT ON run, attempt, idempotency_record TO pcb_operator;
 GRANT UPDATE, DELETE ON idempotency_record TO pcb_operator;
 GRANT SELECT, INSERT ON audit_document, benchmark_registry, benchmark_snapshot,

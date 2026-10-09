@@ -3,13 +3,22 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
+import contextlib
+import importlib.util
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from polycodebench_core.canonical import canonical_digest, canonical_json_bytes, parse_json_strict
+from polycodebench_core.canonical import (
+    canonical_digest,
+    canonical_document_digest,
+    canonical_json_bytes,
+    parse_json_strict,
+)
 from polycodebench_core.models import (
     AdmissionExecutionReport,
     AdmissionReport,
@@ -18,13 +27,18 @@ from polycodebench_core.models import (
 )
 from polycodebench_persistence.database import Database
 from polycodebench_persistence.identities import PostgresIdentityRepository
-from polycodebench_persistence.tasks import PostgresTaskRepository
+from polycodebench_persistence.tasks import (
+    SUITE_ADMISSION_CHECK_IDS,
+    SUITE_ADMISSION_PROFILE,
+    PostgresTaskRepository,
+)
+from polycodebench_plugins_api.admission import SuiteAdmissionReport
 from polycodebench_services.rbac import Principal, Role
 from polycodebench_services.task_fixture_runner import (
     FixtureAdmissionResult,
     validate_authored_fixtures,
 )
-from polycodebench_services.task_packages import TaskPackageImporter
+from polycodebench_services.task_packages import ImportedTaskPackage, TaskPackageImporter
 from polycodebench_services.tasks import TaskAdmissionService
 
 
@@ -170,10 +184,10 @@ def _service() -> tuple[Database, TaskAdmissionService, Principal]:
         raise
 
 
-def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
-    importer = TaskPackageImporter()
-    imported = importer.import_package(args.package)
-    report = AdmissionExecutionReport.model_validate(_load_json(args.report))
+def _authored_fixture_evidence(
+    imported: ImportedTaskPackage, raw: dict[str, object]
+) -> tuple[AdmissionExecutionReport, AdmissionReport]:
+    report = AdmissionExecutionReport.model_validate(raw)
     if report.package_digest != imported.package_digest or not report.passed:
         raise ValueError("admission report does not pass or does not belong to this package")
     if (
@@ -185,27 +199,113 @@ def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
     if replay["report_digest"] != report.report_digest:
         raise ValueError("admission evidence differs from the current authored-fixture replay")
     checks = report.checks
-    subject = os.environ.get("PCB_CLI_SUBJECT")
-    if not subject:
-        raise ValueError("verified PCB_CLI_SUBJECT is required")
-    manifest = imported.manifest
-    admission_report = AdmissionReport.model_validate(
+    return report, _admission_summary(
+        report.profile_id,
+        report.report_digest,
+        report.execution_tier,
+        {
+            "reference": checks.reference,
+            "faulty": checks.faulty,
+            "alternative": checks.alternative,
+            "flakiness": checks.flakiness,
+            "rights": checks.rights,
+            "disclosure": checks.disclosure,
+        },
+    )
+
+
+def _admission_summary(
+    profile_id: str, report_digest: str, execution_tier: str, checks: dict[str, str]
+) -> AdmissionReport:
+    return AdmissionReport.model_validate(
         {
             "schema_version": 1,
             "kind": "admission_report",
-            "profile_id": report.profile_id,
-            "report_digest": report.report_digest,
-            "execution_tier": report.execution_tier,
-            "reference_check": checks.reference,
-            "faulty_check": checks.faulty,
-            "alternative_check": checks.alternative,
-            "flakiness_check": checks.flakiness,
-            "rights_check": checks.rights,
-            "disclosure_check": checks.disclosure,
+            "profile_id": profile_id,
+            "report_digest": report_digest,
+            "execution_tier": execution_tier,
+            **{f"{name}_check": status for name, status in checks.items()},
             "reviewer_id": None,
             "reviewed_at": None,
         }
     )
+
+
+def _replay_suite_admission(package: Path, plugin_id: str) -> SuiteAdmissionReport:
+    """Re-run the language plugin's executable admission in the development sandbox."""
+    tool_path = Path(__file__).resolve().parent / f"{plugin_id}_task_tool.py"
+    if not plugin_id.isidentifier() or not tool_path.is_file():
+        raise ValueError(f"no executable admission tool for language plugin {plugin_id!r}")
+    spec = importlib.util.spec_from_file_location(f"_pcb_{plugin_id}_task_tool", tool_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"cannot load {tool_path.name}")
+    tool = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tool)
+    with tempfile.TemporaryDirectory(prefix="pcb-admission-") as scratch:
+        target = Path(scratch) / "report.json"
+        # The tool narrates every check; keep stdout for this command's JSON result.
+        with contextlib.redirect_stdout(sys.stderr):
+            asyncio.run(tool.admit(package.resolve(), target))
+        if not target.is_file():
+            raise ValueError("suite admission replay produced no report")
+        return SuiteAdmissionReport.model_validate_json(target.read_text(encoding="utf-8"))
+
+
+def _suite_outcome(report: SuiteAdmissionReport) -> tuple[object, ...]:
+    """Replay-stable admission facts (timings and free-text details are excluded)."""
+    return (
+        report.package_digest,
+        report.image_digests,
+        tuple((check.check_id, check.status) for check in report.checks),
+        tuple((run.name, run.variant, run.gates, run.failing_cases) for run in report.runs),
+    )
+
+
+def _suite_evidence(
+    package: Path, imported: ImportedTaskPackage, raw: dict[str, object]
+) -> tuple[dict[str, object], AdmissionReport]:
+    report = SuiteAdmissionReport.model_validate_json(json.dumps(raw))
+    if (
+        report.package_digest != imported.package_digest
+        or report.task_id != imported.manifest.task.task_id
+        or report.task_version != imported.manifest.task.version
+        or not report.executable_admission_passed
+    ):
+        raise ValueError("admission report does not pass or does not belong to this package")
+    if report.execution_tier != "development_sandbox" or report.profile_id != (
+        SUITE_ADMISSION_PROFILE
+    ):
+        raise ValueError("production admission requires a trusted worker evidence authority")
+    if imported.manifest.runtime.image_digest not in report.image_digests:
+        raise ValueError("admission evidence was not observed on the task's runtime image")
+    replay = _replay_suite_admission(package, report.plugin_id)
+    if _suite_outcome(replay) != _suite_outcome(report):
+        raise ValueError("admission evidence differs from the current suite admission replay")
+    statuses = {check.check_id: check.status for check in report.checks}
+    return report.model_dump(mode="json"), _admission_summary(
+        report.profile_id,
+        report.report_digest,
+        report.execution_tier,
+        {
+            name: statuses.get(check_id, "not_run")
+            for name, check_id in SUITE_ADMISSION_CHECK_IDS.items()
+        },
+    )
+
+
+def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
+    importer = TaskPackageImporter()
+    imported = importer.import_package(args.package)
+    subject = os.environ.get("PCB_CLI_SUBJECT")
+    if not subject:
+        raise ValueError("verified PCB_CLI_SUBJECT is required")
+    raw = _load_json(args.report)
+    evidence: AdmissionExecutionReport | dict[str, object]
+    if raw.get("kind") == "suite_admission_report":
+        evidence, admission_report = _suite_evidence(args.package, imported, raw)
+    else:
+        evidence, admission_report = _authored_fixture_evidence(imported, raw)
+    manifest = imported.manifest
     task_document = {
         "schema_version": 1,
         "kind": "task_version",
@@ -240,7 +340,7 @@ def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
         task_version_id = service.freeze_task_version(
             principal=principal,
             document=document,
-            execution_report=report,
+            execution_report=evidence,
             manifest_digest=imported.manifest_digest,
             manifest_artifact_id=UUID(args.manifest_artifact_id),
             visible_artifact_id=UUID(args.visible_artifact_id),
@@ -250,7 +350,9 @@ def _task_freeze(args: argparse.Namespace, request_id: str) -> int:
     finally:
         database.dispose()
     print(
-        json.dumps({"task_version_id": str(task_version_id), "digest": canonical_digest(document)})
+        json.dumps(
+            {"task_version_id": str(task_version_id), "digest": canonical_document_digest(document)}
+        )
     )
     return 0
 
@@ -267,7 +369,9 @@ def _taskset(args: argparse.Namespace, request_id: str) -> int:
                 request_id=request_id,
             )
             print(
-                json.dumps({"task_set_id": str(task_set_id), "digest": canonical_digest(document)})
+                json.dumps(
+                    {"task_set_id": str(task_set_id), "digest": canonical_document_digest(document)}
+                )
             )
             return 0
         service.freeze_task_set(

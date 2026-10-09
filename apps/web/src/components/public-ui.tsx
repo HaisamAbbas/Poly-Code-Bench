@@ -393,6 +393,7 @@ export function LanguageFilter({
   query,
   sort,
   direction,
+  view,
 }: {
   languages: readonly string[];
   releaseId: string;
@@ -400,12 +401,14 @@ export function LanguageFilter({
   query?: string;
   sort?: string;
   direction?: string;
+  view?: string;
 }) {
   return (
     <form id="language-filter" className="filter-form leaderboard-filters" action="/leaderboard" method="get">
       <input type="hidden" name="release" value={releaseId} />
       {sort ? <input type="hidden" name="sort_metric" value={sort} /> : null}
       {direction ? <input type="hidden" name="direction" value={direction} /> : null}
+      {view ? <input type="hidden" name="view" value={view} /> : null}
       <div className="filter-field">
         <label htmlFor="configuration-search">Search configurations</label>
         <input
@@ -424,7 +427,7 @@ export function LanguageFilter({
         </select>
       </div>
       <button type="submit">Apply filters</button>
-      {selected || query || sort ? <Link className="filter-reset" href={`/leaderboard${asUrlQuery({ release: releaseId })}`}>Reset</Link> : null}
+      {selected || query || sort ? <Link className="filter-reset" href={`/leaderboard${asUrlQuery({ release: releaseId, view })}`}>Reset</Link> : null}
     </form>
   );
 }

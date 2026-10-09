@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LeaderboardBars } from "@/components/leaderboard-bars";
 import {
   EmptyState,
   LanguageFilter,
@@ -41,6 +42,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const sort = first(query.sort_metric);
   const requestedDirection = first(query.direction);
   const direction = requestedDirection === "asc" || requestedDirection === "desc" ? requestedDirection : undefined;
+  const view = first(query.view) === "bars" ? "bars" : "table";
   const releaseContext = await loadReleaseContext(requestedRelease);
 
   return (
@@ -60,6 +62,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
             searchQuery={searchQuery}
             sort={sort}
             direction={direction}
+            view={view}
           />
         )}
       </ResourceState>
@@ -75,6 +78,7 @@ async function LeaderboardForRelease({
   searchQuery,
   sort,
   direction,
+  view,
 }: {
   releaseId: string;
   releaseSummary: ReleaseSummary;
@@ -83,6 +87,7 @@ async function LeaderboardForRelease({
   searchQuery?: string;
   sort?: string;
   direction?: "asc" | "desc";
+  view: "table" | "bars";
 }) {
   const result = await publicApi<ApiEnvelope<readonly LeaderboardEntry[]>>(
     `/leaderboard?release=${encodeURIComponent(releaseId)}&limit=200`,
@@ -109,7 +114,7 @@ async function LeaderboardForRelease({
   const sortDefinition = definitions.find((definition) => definition.metric_id === sortId);
   const activeDirection: "asc" | "desc" = direction ?? (sortDefinition?.direction === "lower" ? "asc" : "desc");
   const rows = orderedEntries(filtered, sortId, activeDirection);
-  const resetHref = `/leaderboard${asUrlQuery({ release: releaseId })}`;
+  const resetHref = `/leaderboard${asUrlQuery({ release: releaseId, view: view === "bars" ? view : undefined })}`;
 
   return (
     <>
@@ -118,7 +123,7 @@ async function LeaderboardForRelease({
           releases={releases}
           releaseId={releaseId}
           action="/leaderboard"
-          preserved={{ language: selectedLanguage, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined }}
+          preserved={{ language: selectedLanguage, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined, view: view === "bars" ? view : undefined }}
         />
         <div className="scope-facts" aria-label="Current result coverage">
           <span><b>Configurations</b>{filtered.length}</span>
@@ -135,12 +140,13 @@ async function LeaderboardForRelease({
           query={searchQuery}
           sort={sortId}
           direction={sortId ? activeDirection : undefined}
+          view={view === "bars" ? view : undefined}
         />
         <nav className="language-index" aria-label="Filter by declared language">
           <span className="language-index-label">Language view</span>
           <Link
             className={!selectedLanguage ? "is-active" : undefined}
-            href={`/leaderboard${asUrlQuery({ release: releaseId, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined })}`}
+            href={`/leaderboard${asUrlQuery({ release: releaseId, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined, view: view === "bars" ? view : undefined })}`}
             aria-current={!selectedLanguage ? "page" : undefined}
           >
             All
@@ -149,7 +155,7 @@ async function LeaderboardForRelease({
             <Link
               key={language}
               className={selectedLanguage === language ? "is-active" : undefined}
-              href={`/leaderboard${asUrlQuery({ release: releaseId, language, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined })}`}
+              href={`/leaderboard${asUrlQuery({ release: releaseId, language, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined, view: view === "bars" ? view : undefined })}`}
               aria-current={selectedLanguage === language ? "page" : undefined}
             >
               {language}
@@ -170,8 +176,32 @@ async function LeaderboardForRelease({
           <p className="result-count" aria-live="polite">
             {rows.length} {rows.length === 1 ? "configuration" : "configurations"}
           </p>
+          <nav className="leaderboard-view-toggle" aria-label="Results display">
+            <Link
+              href={`/leaderboard${asUrlQuery({ release: releaseId, language: selectedLanguage, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined })}`}
+              aria-current={view === "table" ? "page" : undefined}
+            >
+              Table
+            </Link>
+            <Link
+              href={`/leaderboard${asUrlQuery({ release: releaseId, language: selectedLanguage, q: searchQuery, sort_metric: sortId, direction: sortId ? activeDirection : undefined, view: "bars" })}`}
+              aria-current={view === "bars" ? "page" : undefined}
+            >
+              Bars
+            </Link>
+          </nav>
         </div>
-        {rows.length ? (
+        {rows.length && view === "bars" ? (
+          <LeaderboardBars
+            entries={filtered}
+            definitions={definitions}
+            releaseId={releaseId}
+            language={selectedLanguage}
+            searchQuery={searchQuery}
+            selectedMetricId={sortId}
+            direction={sortId ? activeDirection : undefined}
+          />
+        ) : rows.length ? (
           <SortableLeaderboard
             entries={rows}
             metricDefinitions={definitions}

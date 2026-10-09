@@ -160,6 +160,34 @@ test("Languages navigation opens the release-backed directory and language detai
   await expect(page.getByRole("heading", { name: "Explore languages." })).toBeVisible();
 });
 
+test("leaderboard bars select a published metric, preserve scope, and open model profiles", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/leaderboard");
+  const release = await page.locator("#release-select").inputValue();
+  await page.getByRole("navigation", { name: "Results display" }).getByRole("link", { name: "Bars" }).click();
+  await expect(page).toHaveURL(/view=bars/);
+  await expect(page.getByRole("heading", { name: "Metric comparison" })).toBeVisible();
+  await expect(page.locator(".leaderboard-bars-row")).not.toHaveCount(0);
+
+  const metric = page.getByLabel("Metric", { exact: true });
+  await metric.selectOption("pass_rate");
+  await page.getByLabel("Order", { exact: true }).selectOption("asc");
+  await page.getByRole("button", { name: "Update bars" }).click();
+  await expect(page).toHaveURL(new RegExp(`release=${encodeURIComponent(release)}.*view=bars.*sort_metric=pass_rate.*direction=asc`));
+  await expect(page.locator(".leaderboard-bars-axis-value")).toHaveText("Pass rate");
+
+  const bar = page.locator(".leaderboard-bars-hit-area").first();
+  await expect(bar).toHaveAttribute("aria-label", /Pass rate/);
+  const review = await inspectPage(page);
+  expect(review.documentWidth).toBeLessThanOrEqual(391);
+  expect(review.contrastFailures).toEqual([]);
+  expect(review.targetFailures).toEqual([]);
+
+  await bar.click();
+  await expect(page).toHaveURL(new RegExp(`/models/[^?]+\\?release=${encodeURIComponent(release)}`));
+  await expect(page.locator("main h1")).toBeVisible();
+});
+
 test("mobile navigation, skip link, focus and reduced-motion loading", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto("/audit-reports");

@@ -8,16 +8,15 @@
   --palette-canvas: #f7f7f3;
   --palette-green: #17634a;
   --palette-green-dark: #124b38;
+  --palette-green-active: #0d392b;
   --palette-amber: #754806;
   --palette-red: #8b302b;
-  --palette-blue: #244bd8;
   --palette-header: #ffffff;
   --palette-on-header: #18201d;
-  --palette-mint: #244bd8;
 
-  --color-primary: var(--palette-blue);
-  --color-primary-hover: #1d3eb4;
-  --color-primary-active: #172f8f;
+  --color-primary: var(--palette-green);
+  --color-primary-hover: var(--palette-green-dark);
+  --color-primary-active: var(--palette-green-active);
   --color-surface: var(--palette-paper);
   --color-surface-muted: #f1f3ef;
   --color-canvas: var(--palette-canvas);
@@ -28,7 +27,7 @@
   --color-success: var(--palette-green);
   --color-warning: var(--palette-amber);
   --color-danger: var(--palette-red);
-  --color-info: var(--palette-blue);
+  --color-info: var(--palette-green);
   --color-success-soft: color-mix(in srgb, var(--color-success) 6%, var(--color-surface));
   --color-success-border: color-mix(in srgb, var(--color-success) 30%, var(--color-surface));
   --color-warning-soft: color-mix(in srgb, var(--color-warning) 7%, var(--color-surface));
@@ -40,7 +39,7 @@
   --color-header: var(--palette-header);
   --color-on-header: var(--palette-on-header);
   --color-on-header-muted: color-mix(in srgb, var(--color-on-header) 74%, var(--color-header));
-  --color-brand-mark: var(--palette-mint);
+  --color-brand-mark: var(--palette-green);
   --color-focus: var(--color-primary);
 
   --font-family: Arial, Helvetica, sans-serif;
@@ -88,5 +87,4 @@
   --green-dark: var(--color-primary-hover);
   --amber: var(--color-warning);
   --red: var(--color-danger);
-  --blue: var(--color-info);
 }

@@ -34,6 +34,7 @@ from polycodebench_core.deployment import (
     VerifiedDeployment,
     resolve_deployment,
 )
+from polycodebench_core.image_platform import architecture_variant
 from polycodebench_core.jobs import CapacitySlotSpec, WorkerRegistrationSpec
 from polycodebench_core.telemetry import configure_logging
 from polycodebench_persistence.artifacts import ArtifactRepository
@@ -75,13 +76,14 @@ from polycodebench_orchestration.worker import WorkerService
 
 SOURCE_ROOT = Path(__file__).resolve().parents[4]
 ROOT = SOURCE_ROOT if (SOURCE_ROOT / "config").is_dir() else Path("/usr/local")
-DEFAULT_RESOURCE_SPEC = ROOT / "config/worker/local-small-resource.json"
-DEFAULT_IMAGE_ALLOWLIST = ROOT / "config/worker/local-image-allowlist.json"
+# Pinned image files are per architecture; an arm64 host reads the ``-arm64`` siblings.
+DEFAULT_RESOURCE_SPEC = architecture_variant(ROOT / "config/worker/local-small-resource.json")
+DEFAULT_IMAGE_ALLOWLIST = architecture_variant(ROOT / "config/worker/local-image-allowlist.json")
 DEFAULT_PROTOCOL_DIRECTORY = ROOT / "config/protocols"
 DEFAULT_BUDGET_PROFILES = ROOT / "config/budgets/pilot-v1.yaml"
 DEFAULT_SANDBOX_STATE = ROOT / ".cache/local-solve-worker"
 DEFAULT_GRADING_SANDBOX_STATE = ROOT / ".cache/local-grading-worker"
-DEFAULT_PLUGIN_ALLOWLIST = ROOT / "config/plugins/allowlist-v1.yaml"
+DEFAULT_PLUGIN_ALLOWLIST = architecture_variant(ROOT / "config/plugins/allowlist-v1.yaml")
 DEFAULT_LANGUAGE_IMAGE_IDENTITIES = ROOT / "config/images"
 DEFAULT_SCORING_POLICY = ROOT / "config/scoring/pilot-v1.yaml"
 DEFAULT_OWNERSHIP_POLICY = ROOT / "config/scoring/evidence_ownership.yaml"
@@ -98,6 +100,7 @@ def _parser() -> argparse.ArgumentParser:
     register.add_argument("--resource-spec", type=Path, default=DEFAULT_RESOURCE_SPEC)
     register.add_argument("--slots", type=int, default=1)
     register.add_argument("--workload-identity", default="local-solve-worker-1")
+    register.add_argument("--image-allowlist", type=Path, default=DEFAULT_IMAGE_ALLOWLIST)
 
     run = commands.add_parser(
         "local-run", help="run one exact solve job, one approved run, or watch the queue"
@@ -242,7 +245,13 @@ def _object_store(*, region_name: str = "us-east-1") -> S3ArtifactStore:
     )
 
 
-def _register_local(resource_path: Path, *, slots: int, workload_identity: str) -> int:
+def _register_local(
+    resource_path: Path,
+    *,
+    slots: int,
+    workload_identity: str,
+    image_allowlist: Path = DEFAULT_IMAGE_ALLOWLIST,
+) -> int:
     _development_only()
     if os.environ.get("PCB_LOCAL_WORKER_SETUP_ENABLED") != "true":
         raise ValueError("set PCB_LOCAL_WORKER_SETUP_ENABLED=true for explicit local registration")
@@ -251,7 +260,7 @@ def _register_local(resource_path: Path, *, slots: int, workload_identity: str) 
     resource = SolveWorkerResourceSpec.model_validate_json(
         resource_path.read_text(encoding="utf-8"), strict=True
     )
-    allowlist = load_image_allowlist(DEFAULT_IMAGE_ALLOWLIST)
+    allowlist = load_image_allowlist(image_allowlist)
     if allowlist.get(resource.image) != resource.image_digest:
         raise ValueError("resource image is not in the pinned local allowlist")
     admin_url = os.environ.get("PCB_MIGRATION_DATABASE_URL")
@@ -462,7 +471,11 @@ def _run_local(
             secret_namespace=os.environ.get("PCB_MODEL_SECRET_NAMESPACE", "models"),
         )
         if not watch:
-            claimed = asyncio.run(worker.run_once(job_id=job_id, run_id=run_id, stage="solve"))
+            # A one-shot claim is a live worker process: refresh the liveness heartbeat first, or
+            # a registration older than the 90-second liveness window can never claim again.
+            claimed = worker.repository.heartbeat_worker(selected_worker) and asyncio.run(
+                worker.run_once(job_id=job_id, run_id=run_id, stage="solve")
+            )
             _emit(
                 {
                     "worker_id": str(selected_worker),
@@ -498,7 +511,9 @@ def _run_local_grading(args: argparse.Namespace) -> int:
             state_dir=args.sandbox_state,
             resource=resource,
         )
-        claimed = asyncio.run(worker.run_once(job_id=args.job_id, stage="evaluate"))
+        claimed = worker.repository.heartbeat_worker(args.worker_id) and asyncio.run(
+            worker.run_once(job_id=args.job_id, stage="evaluate")
+        )
         _emit(
             {
                 "worker_id": str(args.worker_id),
@@ -1484,6 +1499,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.resource_spec,
                 slots=args.slots,
                 workload_identity=args.workload_identity,
+                image_allowlist=args.image_allowlist,
             )
         if args.command == "local-run":
             return _run_local(

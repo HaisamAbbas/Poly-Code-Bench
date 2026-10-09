@@ -7,12 +7,16 @@ import {
   type LeaderboardEntry,
   type MetricDefinition,
 } from "@/lib/public-api";
-import { MetricValue } from "@/components/public-ui";
+import { metricDomain, metricScalePosition } from "@/lib/metric-scale";
+import { KeyboardScrollRegion } from "@/components/keyboard-scroll-region";
 
-function numericDomain(definition: MetricDefinition): readonly [number, number] | null {
-  const low = Number(definition.domain[0]);
-  const high = Number(definition.domain[1]);
-  return Number.isFinite(low) && Number.isFinite(high) && high > low ? [low, high] : null;
+function displayMetricValue(value: string, unit: string): string {
+  const numeric = Number(value);
+  return unit === "score" && Number.isFinite(numeric) ? numeric.toFixed(2) : value;
+}
+
+function statusLabel(status: string): string {
+  return status.replaceAll("_", " ");
 }
 
 export function LeaderboardBars({
@@ -33,12 +37,7 @@ export function LeaderboardBars({
   direction?: "asc" | "desc";
 }) {
   const available = definitions.filter((definition) =>
-    numericDomain(definition) && entries.some((entry) => {
-      const metric = metricFor(entry, definition.metric_id);
-      const value = metric?.value === null || !metric ? Number.NaN : Number(metric.value);
-      const domain = numericDomain(definition);
-      return metric?.status === "measured" && domain !== null && Number.isFinite(value) && value >= domain[0] && value <= domain[1];
-    }),
+    metricDomain(definition) && entries.some((entry) => metricScalePosition(metricFor(entry, definition.metric_id), definition)),
   );
   const selected = available.find((definition) => definition.metric_id === selectedMetricId) ?? available[0];
 
@@ -46,7 +45,7 @@ export function LeaderboardBars({
     return (
       <div className="leaderboard-bars-empty">
         <h3>No declared numeric metric scale</h3>
-        <p>This release has no measured values within a published metric domain to draw as bars. Use the table view for the reported states.</p>
+        <p>This release has no measured values within a published metric domain to chart. Use the table view to inspect all reported states.</p>
       </div>
     );
   }
@@ -54,9 +53,13 @@ export function LeaderboardBars({
   const selectedDirection = selected.metric_id === selectedMetricId
     ? direction ?? (selected.direction === "lower" ? "asc" : "desc")
     : selected.direction === "lower" ? "asc" : "desc";
-  const [low, high] = numericDomain(selected)!;
+  const [low, high] = metricDomain(selected)!;
+  const bestEndpoint = selected.direction === "lower" ? low : high;
+  const worstEndpoint = selected.direction === "lower" ? high : low;
   const ordered = orderedEntries(entries, selected.metric_id, selectedDirection);
-  const evidenceLabel = selected.direction === "lower" ? "Lower values are better" : "Higher values are better";
+  const bestFirstDirection = selected.direction === "lower" ? "asc" : "desc";
+  const axisOrder = selectedDirection === bestFirstDirection ? "Best first" : "Worst first";
+  const evidenceLabel = selected.direction === "lower" ? "lower values are better" : "higher values are better";
 
   return (
     <section className="leaderboard-bars" aria-labelledby="leaderboard-bars-title">
@@ -64,8 +67,7 @@ export function LeaderboardBars({
         <div>
           <h3 id="leaderboard-bars-title">Metric comparison</h3>
           <p>
-            Bars show values on the release-declared scale ({low}–{high} {selected.unit}); {evidenceLabel.toLowerCase()}.
-            Exact values and unmeasured states remain visible.
+            Bar height follows this release’s metric direction, so taller means better. The scale spans {low}–{high} {selected.unit}; {evidenceLabel}.
           </p>
         </div>
         <form className="leaderboard-bars-controls" action="/leaderboard" method="get">
@@ -90,57 +92,80 @@ export function LeaderboardBars({
         </form>
       </div>
 
-      <div className="leaderboard-bars-axis" aria-hidden="true">
-        <span>Configuration</span>
-        <span className="leaderboard-bars-axis-scale"><span>{low}</span><span>{high}</span></span>
-        <span className="leaderboard-bars-axis-value">{selected.label}</span>
+      <div className="leaderboard-bars-axis-summary" aria-hidden="true">
+        <span>Better <strong>{bestEndpoint} {selected.unit}</strong></span>
+        <span>{axisOrder}</span>
+        <span>Worse <strong>{worstEndpoint} {selected.unit}</strong></span>
       </div>
-      <ol className="leaderboard-bars-list" aria-label={`${selected.label} values, ${selectedDirection === "asc" ? "ascending" : "descending"}`}>
-        {ordered.map((entry) => {
-          const metric = metricFor(entry, selected.metric_id);
-          const value = metric?.status === "measured" && metric.value !== null ? Number(metric.value) : Number.NaN;
-          const inDomain = Number.isFinite(value) && value >= low && value <= high;
-          const percentage = inDomain ? ((value - low) / (high - low)) * 100 : null;
-          const profileHref = `/models/${encodeURIComponent(entry.model_config_id)}${asUrlQuery({ release: releaseId })}`;
-          const valueLabel = metric?.value ?? metric?.status.replaceAll("_", " ") ?? "not reported";
+      <KeyboardScrollRegion
+        className="leaderboard-bars-scroll"
+        label={`${selected.label} metric chart; scroll horizontally to compare every configuration`}
+      >
+        <ol className="leaderboard-bars-columns" aria-label={`${selected.label} comparison, ${axisOrder.toLowerCase()}`}>
+          {ordered.map((entry) => {
+            const metric = metricFor(entry, selected.metric_id);
+            const position = metricScalePosition(metric, selected);
+            const profileHref = `/models/${encodeURIComponent(entry.model_config_id)}${asUrlQuery({ release: releaseId })}`;
+            const evidenceHref = scoreEvidenceHref(entry.evidence_url, releaseId);
+            const scoreLabel = metric?.status === "measured" && metric.value !== null
+              ? displayMetricValue(metric.value, selected.unit)
+              : null;
+            const details = [
+              scoreLabel ? `${scoreLabel} ${selected.unit}` : metric ? statusLabel(metric.status) : "Not reported",
+              metric && metric.interval_low !== null && metric.interval_high !== null
+                ? `reported interval ${metric.interval_low} to ${metric.interval_high}`
+                : null,
+              metric?.reason ?? null,
+            ].filter(Boolean).join("; ");
 
-          return (
-            <li className="leaderboard-bars-row" key={entry.model_config_id}>
-              <div className="leaderboard-bars-model">
-                <Link className="model-link" href={profileHref}>{entry.label}</Link>
-                <span className="model-id">{entry.model_config_id}</span>
-              </div>
-              <div className="leaderboard-bars-track-cell">
-                {percentage !== null ? (
-                  <Link
-                    className="leaderboard-bars-hit-area"
-                    href={profileHref}
-                    aria-label={`Open ${entry.label} profile. ${selected.label}: ${metric?.value} ${selected.unit}. Published scale ${low} to ${high}. ${evidenceLabel}.`}
-                    title={`${entry.label}: ${metric?.value} ${selected.unit}`}
-                  >
-                    <span className="leaderboard-bars-track" aria-hidden="true">
-                      <span className="leaderboard-bars-fill" style={{ width: `${percentage}%` }} />
+            return (
+              <li className="leaderboard-bars-column" key={entry.model_config_id}>
+                <div className="leaderboard-bars-score-cell">
+                  {position && scoreLabel ? (
+                    <Link
+                      className="leaderboard-bars-score"
+                      href={evidenceHref}
+                      title={details}
+                      aria-label={`${entry.label}, ${selected.label}: ${details}. Open source score evidence.`}
+                    >
+                      {scoreLabel}
+                    </Link>
+                  ) : (
+                    <span className="leaderboard-bars-unavailable" title={metric?.reason ?? undefined}>
+                      {metric ? statusLabel(metric.status) : "Not reported"}
                     </span>
-                  </Link>
-                ) : (
-                  <span className="leaderboard-bars-unavailable">
-                    {metric && metric.status !== "measured" ? metric.status.replaceAll("_", " ") : metric ? "Outside declared scale" : "Not reported"}
-                  </span>
-                )}
-              </div>
-              <div className="leaderboard-bars-value">
-                {metric ? (
-                  <MetricValue metric={metric} sourceUrl={scoreEvidenceHref(entry.evidence_url, releaseId)} compact />
-                ) : (
-                  <span className="unreported" aria-label={`${selected.label}: not reported`}>{valueLabel}</span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+                  )}
+                </div>
+                <div className="leaderboard-bars-plot">
+                  <div className="leaderboard-bars-grid" aria-hidden="true" />
+                  {position && scoreLabel ? (
+                    <Link
+                      className="leaderboard-bars-hit-area"
+                      href={profileHref}
+                      aria-label={`Open ${entry.label} profile. ${selected.label}: ${details}. Taller bars indicate better performance on this release’s declared scale.`}
+                      title={`Open ${entry.label} profile`}
+                    >
+                      <span
+                        className="leaderboard-bars-fill"
+                        aria-hidden="true"
+                        style={{ height: `${position.performanceRatio * 100}%` }}
+                      />
+                    </Link>
+                  ) : (
+                    <span className="leaderboard-bars-empty-space" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="leaderboard-bars-model">
+                  <Link className="model-link" href={profileHref}>{entry.label}</Link>
+                  <span className="model-id">{entry.model_config_id}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </KeyboardScrollRegion>
       <p className="leaderboard-bars-note">
-        Bar length encodes the raw metric value within its declared range; it does not compare different metrics or estimate missing results. Select a bar or configuration name to open its profile.
+        Each bar uses the selected metric’s published range and direction. Values link to score evidence; bars and configuration names open model profiles. Unmeasured configurations remain in the chart without a score bar.
       </p>
     </section>
   );

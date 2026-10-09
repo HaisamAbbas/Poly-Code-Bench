@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { CuratorAccessBoundary } from "@/components/benchmark-audit";
+import { BenchmarkAuditWorkspace } from "@/components/benchmark-audit-workspace";
 
 export const metadata: Metadata = {
-  title: "Curator access",
-  description: "Private benchmark audit controls require a tenant-bound curator identity and reviewed transitions.",
+  title: "Benchmark audit workspace",
+  description: "Explore benchmark scope readiness and build a bounded no-dispatch resource preflight.",
 };
 
 export default function BenchmarkAuditPage() {
-  return <CuratorAccessBoundary />;
+  return <BenchmarkAuditWorkspace />;
 }
